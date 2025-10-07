@@ -67,9 +67,6 @@ export default async function sendBrevo(
       contactOptions.body = JSON.stringify(contact)
     }
 
-    console.log(contactEndpoint)
-    console.log(contactOptions)
-
     const contactRes = await fetch(contactEndpoint, contactOptions)
     let contactData = null
     if (
@@ -100,9 +97,6 @@ export default async function sendBrevo(
         method: 'POST',
         body: JSON.stringify(event),
       }
-
-      console.log(eventEndpoint)
-      console.log(eventOptions)
 
       const eventRes = await fetch(eventEndpoint, eventOptions)
       let eventData = null

@@ -79,7 +79,7 @@ function buildEvent(data: FormData, tracking: string) {
 
   return {
     identifiers: { email_id: data.email.value },
-    event_name: `test_${tracking}`,
+    event_name: `submit_${tracking}`,
     event_properties: properties,
   }
 }
