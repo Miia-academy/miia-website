@@ -8,8 +8,6 @@ import {
   Textarea,
   Slider,
 } from '@heroui/react'
-import { blob } from 'stream/consumers'
-import { div } from 'framer-motion/client'
 import { useState } from 'react'
 
 interface FieldComponent {
@@ -82,31 +80,36 @@ const NumberField = ({ blok, data, onChange }: FieldComponent) => {
   // debugger
 
   return (
-    <Slider
-      classNames={{
-        trackWrapper: 'my-2',
-        labelWrapper: 'text-sm justify-start gap-3',
-      }}
-      color="foreground"
-      defaultValue={number}
-      label={blok.label}
-      maxValue={Number(options?.max) || 100}
-      minValue={Number(options?.min) || 0}
-      size="sm"
-      renderValue={() => (
-        <span className="font-medium">
-          {number} {options.unit}
-        </span>
-      )}
-      step={Number(options?.step) || 1}
-      onChange={(value) => (Array.isArray(value) ? value[0] : setNumber(value))}
-      onChangeEnd={(value) =>
-        onChange({
-          ...data,
-          value: Array.isArray(value) ? value[0] : setNumber(value),
-        })
-      }
-    />
+    <div>
+      <Slider
+        classNames={{
+          trackWrapper: 'my-2',
+          labelWrapper: 'text-sm justify-start gap-3',
+        }}
+        color="foreground"
+        defaultValue={number}
+        label={blok.label}
+        maxValue={Number(options?.max) || 100}
+        minValue={Number(options?.min) || 0}
+        size="sm"
+        renderValue={() => (
+          <div className="font-medium">
+            {number} {options.unit}
+          </div>
+        )}
+        step={Number(options?.step) || 1}
+        onChange={(value) =>
+          Array.isArray(value) ? value[0] : setNumber(value)
+        }
+        onChangeEnd={(value) =>
+          onChange({
+            ...data,
+            value: Array.isArray(value) ? value[0] : value,
+          })
+        }
+      />
+      {data.error && <p className="text-danger text-xs">{data.error}</p>}
+    </div>
   )
 }
 

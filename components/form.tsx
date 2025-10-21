@@ -65,9 +65,12 @@ function buildEvent(data: FormData, tracking: string) {
   Object.entries(data)
     .filter(([name]) => !eventFilterData.includes(name))
     .map(([name, { value }]) => {
-      if (Array.isArray(value)) value = value.join(', ')
       let dateValue = new Date(value)
-      if (dateValue instanceof Date && !isNaN(dateValue.valueOf())) {
+      if (typeof value === 'number') {
+        value = value
+      } else if (Array.isArray(value)) {
+        value = value.join(', ')
+      } else if (dateValue instanceof Date && !isNaN(dateValue.valueOf())) {
         value = dateValue
         properties[name + '_data'] = dateValue.toLocaleDateString(
           'IT-it',
@@ -330,7 +333,7 @@ export default function Form({
                 />
               </div>
             )}
-            {user && (
+            {state !== 'done' && user && (
               <div className="mb-4">
                 <h4 className="font-semibold text-xl capitalize">
                   Bentornato {user.attributes.NOME?.toString()}{' '}

@@ -5,7 +5,8 @@ interface Validation {
 }
 
 export function fieldValidation({ id, value, required }: Validation) {
-  if (!value?.length && required) return 'Il campo è obbligatorio'
+  if (Array.isArray(value) ? value.length === 0 : !value && required)
+    return 'Il campo è obbligatorio'
   const validation = validations[id]
   if (value && validation) return validation(value)
 
