@@ -30,7 +30,7 @@ interface PriceComponent {
   intersec: boolean;
   amount: number;
   steps: number | null;
-  discount?: number;
+  percent?: number;
   due_date?: string;
   showDiscount?: boolean;
 }
@@ -39,43 +39,66 @@ const Price = ({
   amount,
   steps,
   intersec,
-  discount,
+  percent,
   due_date,
   showDiscount,
-}: PriceComponent) => (
-  <h2
-    className={`font-serif font-bold leading-none align-middle ${intersec ? "hidden md:inline-block" : "mx-2 inline-block"}`}
-  >
-    <p className={intersec ? "inline" : ""}>
-      {!!steps && <span className="text-xl lg:text-3xl">A partire da </span>}
-      <span className="font-black text-3xl lg:text-5xl leading-none mx-1">
-        {amount}
-        <small className="text-xl">€</small>
-      </span>
-    </p>
-    <p className={intersec ? "inline" : ""}>
-      {!!steps && (
-        <span className="text-xl mlg:text-3xl leading-none mr-1">
-          per {steps} mesi
+}: PriceComponent) => {
+  const { container, price, discount, shape, date } = priceClasses();
+  return (
+    <h2 className={container({ intersec })}>
+      <p className={price({ intersec })}>
+        {!!steps && <span className="text-xl lg:text-3xl">A partire da </span>}
+        <span className="font-black text-3xl lg:text-5xl leading-none mx-1">
+          {amount}
+          <small className="text-xl">€</small>
         </span>
-      )}
-      <small className="italic">
-        {" "}
-        <sup>*</sup>iva inclusa
-      </small>
-    </p>
-    {!!discount && !!due_date && showDiscount && (
-      <p className="mt-1 -mb-4 font-bold font-sans flex items-center gap-2 text-secondary">
-        <span className="w-12 h-12 flex items-center justify-center -ml-6 text-background bg-[url(/discount.png)] bg-no-repeat bg-contain">
-          {discount}%
-        </span>
-        <span className="flex-1 text-sm">
-          per iscrizioni entro {getShortDate(due_date)}
+        <span className="block">
+          {!!steps && (
+            <span className="text-xl mlg:text-3xl leading-none mr-1">
+              per {steps} mesi
+            </span>
+          )}
+          <small className="italic">
+            {" "}
+            <sup>*</sup>iva inclusa
+          </small>
         </span>
       </p>
-    )}
-  </h2>
-);
+      {!!percent && !!due_date && showDiscount && (
+        <p className={discount({ intersec })}>
+          <span className={shape()}>{percent}%</span>
+          <span className={date({ intersec })}>
+            per iscrizioni entro <br className="sm:max-md:hidden" />
+            {getShortDate(due_date)}
+          </span>
+        </p>
+      )}
+    </h2>
+  );
+};
+const priceClasses = tv({
+  slots: {
+    container: "flex-1 flex flex-col w-full relative",
+    price: "flex-1 min-w-[216px] font-serif font-semibold",
+    discount: "flex-1 font-bold flex items-center gap-2 text-secondary",
+    shape:
+      "inline-block text-center shrink-0 py-3 w-12 h-12 text-background bg-[url(/discount.png)] bg-no-repeat bg-contain",
+    date: "text-sm leading-tight ",
+  },
+  variants: {
+    intersec: {
+      false: {
+        discount: "sm:-ml-4 mt-1 -mb-2",
+      },
+      true: {
+        container: "flex-row gap-2 text-foreground flex-wrap sm:min-w-[420px]",
+        price: "text-background text-right",
+        discount: "absolute sm:relative",
+        date: "hidden sm:inline-block",
+      },
+    },
+  },
+});
 
 export default function Aside({ blok, locations }: AsideComponent) {
   const options: Array<OptionProps> = [];
@@ -133,7 +156,7 @@ export default function Aside({ blok, locations }: AsideComponent) {
                 amount={blok.amount || 100}
                 steps={blok.steps}
                 intersec={!isIntersecting}
-                discount={blok.discount}
+                percent={blok.discount}
                 due_date={blok.due_date}
                 showDiscount={showDiscount}
               />
@@ -217,7 +240,7 @@ const bannerClasses = tv({
   base: "-bottom-full",
   variants: {
     active: {
-      true: "fixed right-0 left-0 bottom-0 transition-all md:bg-foreground md:text-background",
+      true: "fixed right-0 left-0 bottom-0 transition-all bg-foreground text-background",
       false:
         "flex flex-col align-start justify-start rounded-3xl bg-background text-foreground p-2 shadow-aside transition-all",
     },
@@ -225,10 +248,10 @@ const bannerClasses = tv({
 });
 
 const containerClasses = tv({
-  base: "flex justify-between",
+  base: "flex justify-center",
   variants: {
     active: {
-      true: "px-6 py-2 md:py-6  w-full mx-auto max-w-[1280px] gap-4 [&_button]:w-full [&_button]:sm:w-auto [&_button]:sm:min-w-64",
+      true: "px-6 py-1 sm:py-1.5 md:py-2 lg:py-3 flex-wrap items-center w-full mx-auto max-w-[1280px] gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 [&_button]:w-full [&_button]:sm:w-auto [&_button]:sm:min-w-64",
       false: "flex-col gap-3 pb-1",
     },
   },
