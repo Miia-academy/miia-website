@@ -144,7 +144,7 @@ const wrapperClasses = tv({
 })
 
 const imageClasses = tv({
-  base: 'h-auto max-h-lg',
+  base: 'h-auto max-h-lg opacity-100',
   variants: {
     size: {
       sm: 'max-w-32',
