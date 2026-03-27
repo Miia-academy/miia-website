@@ -73,7 +73,7 @@ function buildEvent(data: FormData, tracking: string) {
       } else if (Array.isArray(value)) {
         if (name === "area") {
           const opendayList = opendays[value[0] as keyof Opendays];
-          const event = opendayList.find(
+          const event = opendayList?.find(
             (event) => new Date(event.date) >= today
           );
           if (event?.date) {
