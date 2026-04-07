@@ -59,10 +59,7 @@ const Person = ({ blok }: PersonComponent) => {
     ...Object.fromEntries(
       data.map((key) => {
         let alias = blok.alias?.content
-        let value =
-          key === 'image'
-            ? blok[key][0] || alias?.[key][0] || null
-            : blok[key] || alias?.[key] || null
+        let value = blok[key] || alias?.[key] || null
         if (!blok.hide) {
           return [key, value]
         } else {
