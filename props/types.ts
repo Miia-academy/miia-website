@@ -354,7 +354,7 @@ export type CourseProps = BlokProps & {
 };
 
 export type PersonData = {
-  image: Array<ImageData> | [];
+  image: ImageData;
   video: string;
   title: string;
   role: Roles;
@@ -375,10 +375,10 @@ export type EventProps = BlokProps & {
   title: string;
   description: string;
   openday:
-    | "interni - primo livello"
-    | "interni - secondo livello"
-    | "moda - primo livello"
-    | "moda - secondo livello";
+  | "interni - primo livello"
+  | "interni - secondo livello"
+  | "moda - primo livello"
+  | "moda - secondo livello";
   location: LocationProps;
   date: string;
   page: LinkProps;

@@ -54,12 +54,15 @@ const defaultPerson: Person = {
 }
 
 const Person = ({ blok }: PersonComponent) => {
+  console.log("blok:\n", blok)
+  console.log("alias:\n", blok.alias.content.image)
+  console.log("image:\n", blok.image)
   const person: Person = {
     ...defaultPerson,
     ...Object.fromEntries(
       data.map((key) => {
         let alias = blok.alias?.content
-        let value = blok[key] || alias?.[key] || null
+        let value = alias?.[key] || blok[key] || null
         if (!blok.hide) {
           return [key, value]
         } else {
@@ -68,7 +71,6 @@ const Person = ({ blok }: PersonComponent) => {
       })
     ),
   }
-
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   const {
