@@ -17,13 +17,7 @@ interface GalleryComponent {
   blok: GalleryProps
 }
 
-const sliderSettings: SwiperProps = {
-  loop: true,
-  slidesPerView: 1,
-  spaceBetween: 24,
-  modules: [Autoplay, Navigation],
-  navigation: { enabled: true },
-}
+
 
 export default function Gallery({ blok }: GalleryComponent) {
   if (!blok.images.length) return null
@@ -36,6 +30,11 @@ export default function Gallery({ blok }: GalleryComponent) {
     setCurrent(index)
     onOpen()
   }
+
+  const modules = []
+  const autoplay = blok.delay > 0 ? { delay: 6500 - 1000 * blok.delay } : false
+  autoplay && modules.push(Autoplay)
+  blok.interface && modules.push(Navigation)
 
   // const sizes = [256, 512, 768, 1024, 1280, 1440]
   const sizes = [256, 512, 768, 1024, 1280]
@@ -73,9 +72,18 @@ export default function Gallery({ blok }: GalleryComponent) {
     }
   )
 
+  const sliderSettings: SwiperProps = {
+
+  }
+
   const SlideShow = (
     <Swiper
-      {...sliderSettings}
+      loop={true}
+      autoplay={autoplay}
+      slidesPerView={1}
+      spaceBetween={24}
+      modules={modules}
+      navigation={blok.interface}
       className="min-h-inherit rounded-xl"
       wrapperClass="min-h-inherit"
     >
@@ -136,7 +144,11 @@ export default function Gallery({ blok }: GalleryComponent) {
         <ModalContent className="p-0">
           <div>
             <Swiper
-              {...sliderSettings}
+              loop={true}
+              slidesPerView={1}
+              spaceBetween={24}
+              modules={[Autoplay, Navigation]}
+              navigation={true}
               initialSlide={current}
               className="items-center max-w-full max-h-full rounded-xl"
               wrapperClass="min-h-inherit"
@@ -146,7 +158,7 @@ export default function Gallery({ blok }: GalleryComponent) {
           </div>
         </ModalContent>
       </Modal>
-    </Fragment>
+    </Fragment >
   )
 
   return (

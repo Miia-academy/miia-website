@@ -18,7 +18,13 @@ export default function Carousel({ blok, parent }: CarouselComponent) {
       className="overflow-visible min-h-inherit"
       key={index}
     >
-      <StoryblokComponent blok={slide} parent={blok.component} />
+      {slide.component === "section" ? (
+        <StoryblokComponent blok={slide} parent={blok.component} />
+      ) : (
+        <div className="flex flex-wrap w-full justify-center">
+          <StoryblokComponent blok={slide} parent={blok.component} />
+        </div>
+      )}
     </SwiperSlide>
   ))
 
@@ -26,13 +32,19 @@ export default function Carousel({ blok, parent }: CarouselComponent) {
 
   const order: any = !!blok.order ? blok.order.toString() : 'none'
 
+  const modules = []
   const autoplay = blok.delay > 0 ? { delay: 6500 - 1000 * blok.delay } : false
+  autoplay && modules.push(Autoplay)
+  blok.interface && modules.push(Navigation)
 
   const view = Number(blok.view)
   const smView = blok.view > 0 ? view : 1
   const mdView = blok.view > 0 ? view + 1 : 1
   const lgView = blok.view > 0 ? (view > 1 ? view * 2 : view + 1) : 1
   const xlView = blok.view > 0 ? (view > 1 ? view * 3 : view + 1) : 1
+
+  console.log(modules.map(m => m.name))
+  console.log(blok.interface)
 
   return (
     <Tag
@@ -56,8 +68,8 @@ export default function Carousel({ blok, parent }: CarouselComponent) {
           1024: { slidesPerView: lgView },
           1280: { slidesPerView: xlView },
         }}
-        modules={[Autoplay, Navigation]}
-        navigation={{ enabled: true }}
+        modules={modules}
+        navigation={blok.interface}
       >
         {slides}
       </Swiper>

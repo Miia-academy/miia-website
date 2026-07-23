@@ -2,13 +2,18 @@ import type { WrapperProps } from '@props/types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
 
+type OrderVariant = 'none' | '1' | '2' | '3' | '4' | '5' | '6'
+
 interface WrapperComponent {
   blok: WrapperProps
   theme?: 'dark' | 'light'
+  parent?: string
 }
 
-export default function Wrapper({ blok, theme }: WrapperComponent) {
-  const order: any = !!blok.order ? blok.order.toString() : 'none'
+export default function Wrapper({ blok, theme, parent }: WrapperComponent) {
+  const order: OrderVariant = blok.order
+    ? (blok.order.toString() as OrderVariant)
+    : 'none'
 
   const background = blok.contents.find(
     (content) => content.component === 'background'
@@ -16,6 +21,8 @@ export default function Wrapper({ blok, theme }: WrapperComponent) {
   const contents = blok.contents.filter(
     (content) => content.component !== 'background'
   )
+
+  const isCarouselChild = parent === "carousel"
 
   return (
     <div
@@ -29,6 +36,7 @@ export default function Wrapper({ blok, theme }: WrapperComponent) {
         row: blok.row,
         justify: `${blok.row ? 'justify' : 'items'}-${blok.justify}`,
         hasBackground: !!background,
+        isCarouselChild,
       })}
     >
       {blok.contents.map((content, index) => (
@@ -111,7 +119,32 @@ const classes = tv({
       '3/4': 'xl:col-span-9',
       '1/1': 'xl:col-span-12',
     },
+    isCarouselChild: {
+      true: "w-full"
+    }
   },
+  compoundVariants: [
+    {
+      isCarouselChild: true,
+      smWidth: "1/2",
+      class: "md:w-1/2"
+    },
+    {
+      isCarouselChild: true,
+      smWidth: "1/3",
+      class: "md:w-1/3"
+    },
+    {
+      isCarouselChild: true,
+      smWidth: "1/4",
+      class: "md:w-1/2"
+    },
+    {
+      isCarouselChild: true,
+      smWidth: "2/3",
+      class: "md:w-2/3"
+    }
+  ]
 })
 
 /* 
