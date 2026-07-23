@@ -1,4 +1,3 @@
-import type { Config } from 'tailwindcss'
 import { heroui } from '@heroui/react'
 
 export default {
@@ -133,6 +132,6 @@ export default {
           },
         },
       },
-    }),
+    }) as any,
   ],
-} satisfies Config
+}

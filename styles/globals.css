@@ -3,30 +3,33 @@
 @tailwind utilities;
 
 @layer utilities {
-  .hide-scroolbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scroolbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .min-h-inherit {
-    min-height: inherit;
-  }
-}
+   .hide-scroolbar::-webkit-scrollbar {
+     display: none;
+   }
 
-:root {
-  --swiper-theme-color: white;
-  --swiper-navigation-size: 2rem;
-}
+   .hide-scroolbar {
+     -ms-overflow-style: none;
+     scrollbar-width: none;
+   }
 
-.swiper-button-prev {
-  text-shadow:
-    0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25),
-    2px 0rem 1px rgba(0, 0, 0, 0.125);
-}
-.swiper-button-next {
-  text-shadow:
-    -0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25),
-    -2px 0rem 1px rgba(0, 0, 0, 0.125);
-}
+   .min-h-inherit {
+     min-height: inherit;
+   }
+ }
+
+ :root {
+   --swiper-theme-color: white;
+   --swiper-navigation-size: 2rem;
+ }
+
+ .swiper-button-prev {
+   text-shadow:
+     0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25),
+     2px 0rem 1px rgba(0, 0, 0, 0.125);
+ }
+
+ .swiper-button-next {
+   text-shadow:
+     -0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25),
+     -2px 0rem 1px rgba(0, 0, 0, 0.125);
+ }

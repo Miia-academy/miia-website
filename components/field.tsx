@@ -77,8 +77,6 @@ const NumberField = ({ blok, data, onChange }: FieldComponent) => {
     !Number.isNaN(blok.placeholder) ? Number(blok.placeholder) : 0
   )
 
-  // debugger
-
   return (
     <div>
       <Slider

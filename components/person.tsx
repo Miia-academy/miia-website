@@ -53,21 +53,28 @@ const defaultPerson: Person = {
   links: null,
 }
 
+function isEmpty(value: unknown): boolean {
+  if (!value) return true // null, undefined, '', 0, false
+  if (Array.isArray(value)) return value.length === 0 || value.every(isEmpty)
+  if (typeof value === 'object' && 'filename' in value) {
+    return !(value as { filename?: string }).filename
+  }
+  return false
+}
+
 const Person = ({ blok }: PersonComponent) => {
-  console.log("blok:\n", blok)
-  console.log("alias:\n", blok.alias.content.image)
-  console.log("image:\n", blok.image)
+  const alias = blok.alias?.content
+
   const person: Person = {
     ...defaultPerson,
     ...Object.fromEntries(
       data.map((key) => {
-        let alias = blok.alias?.content
-        let value = alias?.[key] || blok[key] || null
-        if (!blok.hide) {
-          return [key, value]
-        } else {
-          return [key, !blok.hide.includes(key) ? value : null]
-        }
+        if (blok.hide.includes(key)) return [key, null]
+
+        const ownValue = blok[key]
+        const value = !isEmpty(ownValue) ? ownValue : (alias?.[key] ?? null)
+
+        return [key, value]
       })
     ),
   }

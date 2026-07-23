@@ -160,6 +160,8 @@ export type BackgroundProps = BlokProps & {
 export type GalleryProps = BlokProps & {
   component: "gallery";
   images: Array<ImageArray>;
+  delay: number;
+  interface: boolean;
   fullScreen: boolean;
   aspect: "1/1" | "3/4" | "4/3";
   size: "1/2" | "1/4" | "1/8";
@@ -259,6 +261,7 @@ export type CarouselProps = BlokProps & {
   view: number;
   delay: number;
   order: number;
+  interface: boolean;
 };
 
 export type MapProps = BlokProps & {

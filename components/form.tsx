@@ -363,8 +363,8 @@ export default function Form({
                 </span>
               </div>
             )}
-            {state === "done" &&
-              compiler(message?.title, {
+            {state === "done" && message?.title &&
+              compiler(message.title, {
                 wrapper: null,
                 overrides: Typography({}),
               })}
@@ -404,8 +404,8 @@ export default function Form({
                 .
               </p>
             )}
-            {state === "done" &&
-              compiler(message?.body, {
+            {state === "done" && message?.body &&
+              compiler(message.body, {
                 wrapper: null,
                 overrides: Typography({}),
               })}
@@ -452,9 +452,9 @@ const getData = (fields: Array<FieldProps>) => {
         value =
           input === "select" || input === "multiple" || input === "enroll"
             ? placeholder
-                .split(",")
-                .map((v) => v.trim())
-                .filter(Boolean)
+              .split(",")
+              .map((v) => v.trim())
+              .filter(Boolean)
             : placeholder;
       } else {
         switch (input) {
