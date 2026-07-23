@@ -357,7 +357,7 @@ export type CourseProps = BlokProps & {
 };
 
 export type PersonData = {
-  image: Array<ImageData> | [];
+  image: ImageData;
   video: string;
   title: string;
   role: Roles;
