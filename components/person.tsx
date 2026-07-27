@@ -69,7 +69,7 @@ const Person = ({ blok }: PersonComponent) => {
     ...defaultPerson,
     ...Object.fromEntries(
       data.map((key) => {
-        if (blok.hide.includes(key)) return [key, null]
+        if (blok.hide?.includes(key)) return [key, null]
 
         const ownValue = blok[key]
         const value = !isEmpty(ownValue) ? ownValue : (alias?.[key] ?? null)
