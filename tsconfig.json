@@ -20,11 +20,12 @@
       "@modules/*": ["./modules/*"],
       "@public/*": ["./public/*"],
       "@config/*": ["./config/*"],
+      "@types": ["./.storyblok/types/311109/storyblok-components"],
+      "@commonTypes": ["./.storyblok/types/storyblok.d.ts"],
       "@props/*": ["./props/*"],
-      "@cms/*": ["./cms/*"],
       "@crm/*": ["./crm/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "cms", "**/*.txt"]
+  "exclude": ["node_modules", "**/*.txt"]
 }

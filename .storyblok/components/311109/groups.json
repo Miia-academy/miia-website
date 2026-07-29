@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Contenitori",
+    "id": 487139,
+    "uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "parent_id": null,
+    "parent_uuid": null
+  },
+  {
+    "name": "Elementi",
+    "id": 487138,
+    "uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "parent_id": null,
+    "parent_uuid": null
+  },
+  {
+    "name": "Pagine",
+    "id": 496127,
+    "uuid": "3aee7005-d4d5-4e14-99e1-d9744a656d63",
+    "parent_id": null,
+    "parent_uuid": null
+  },
+  {
+    "name": "Risorse",
+    "id": 487147,
+    "uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "parent_id": null,
+    "parent_uuid": null
+  }
+]
