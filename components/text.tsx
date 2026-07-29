@@ -1,74 +1,75 @@
-import type { TextProps } from '@props/types'
+import type { Text as TextBlok } from '@types'
 import { Typography } from './typography'
 import { storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { tv } from 'tailwind-variants'
 
-interface TextComponent {
-  blok: TextProps
+// Definizioni type-safe per Tailwind Variants
+type JustifyVariant = 'right' | 'center' | 'left'
+type OrderVariant = '1' | '2' | '3' | '4' | '5' | '6'
+type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1'
+
+interface TextComponentProps {
+  blok: TextBlok
 }
 
-export default function Text({ blok }: TextComponent) {
+// 1. Definisci il tipo esatto atteso da Typography
+type ThemeVariant = 'primary' | 'secondary' | 'dark' | 'light' | undefined;
+
+export default function Text({ blok }: TextComponentProps) {
+
+  // 2. Sanifica il dato di Storyblok: se è una stringa vuota, diventa undefined
   const typography = {
-    theme: blok.theme,
-  }
+    theme: (blok.theme === "" ? undefined : blok.theme) as ThemeVariant,
+  };
 
-  const Title = () =>
-    blok.title &&
-    compiler(blok.title, {
-      wrapper: ({ children }) => (
-        <div
-          key={`${blok._uid}_title`}
-          className={titleClases({
-            hide: blok.hide === 'all' || blok.hide.includes('title'),
-          })}
-        >
-          {children}
-        </div>
-      ),
-      forceWrapper: true,
-      overrides: Typography(typography),
-    })
+  // 1. Parsing super-sicuro per il campo "hide" (previene crash se undefined)
+  const hideOptions = Array.isArray(blok.hide)
+    ? blok.hide
+    : typeof blok.hide === 'string'
+      ? [blok.hide]
+      : []
 
-  const Description = () =>
-    blok.description &&
-    compiler(blok.description, {
-      wrapper: ({ children }) => (
-        <div
-          key={`${blok._uid}_description`}
-          className={descriptionClasses({
-            hide: blok.hide === 'all' || blok.hide.includes('description'),
-          })}
-        >
-          {children}
-        </div>
-      ),
-      forceWrapper: true,
-      overrides: Typography(typography),
-    })
+  const hideAll = hideOptions.includes('all')
+  const hideTitle = hideAll || hideOptions.includes('title')
+  const hideDescription = hideAll || hideOptions.includes('description')
 
-  const order: any = !!blok.order ? blok.order.toString() : 'none'
+  const orderAttr = blok.order ? (blok.order.toString() as OrderVariant) : undefined
 
   return (
     <article
       key={blok._uid}
       className={textClasses({
-        order: order,
-        justify: blok.justify,
-        sm: blok.width?.[0],
-        md: blok.width?.[1],
-        lg: blok.width?.[2],
-        xl: blok.width?.[3],
+        order: orderAttr,
+        justify: blok.justify as JustifyVariant | undefined,
+        sm: blok.width?.[0] as WidthVariant | undefined,
+        md: blok.width?.[1] as WidthVariant | undefined,
+        lg: blok.width?.[2] as WidthVariant | undefined,
+        xl: blok.width?.[3] as WidthVariant | undefined,
       })}
-      {...storyblokEditable(blok)}
+      {...storyblokEditable(blok as any)}
     >
-      <Title />
-      <Description />
+      {/* 2. Rendering diretto invece di componenti annidati, elimina problemi di unmount/remount */}
+      {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
+        <div className={titleClasses({ hide: hideTitle })}>
+          {compiler(blok.title, {
+            overrides: Typography(typography),
+          })}
+        </div>
+      ) : null}
+
+      {typeof blok.description === 'string' && blok.description.trim() !== '' ? (
+        <div className={descriptionClasses({ hide: hideDescription })}>
+          {compiler(blok.description, {
+            overrides: Typography(typography),
+          })}
+        </div>
+      ) : null}
     </article>
   )
 }
 
-const titleClases = tv({
+const titleClasses = tv({
   base: 'space-y-2',
   variants: {
     hide: {
@@ -95,12 +96,12 @@ const textClasses = tv({
       left: 'sm:text-left',
     },
     order: {
-      1: '-order-1',
-      2: '-order-2',
-      3: '-order-3',
-      4: '-order-4',
-      5: '-order-5',
-      6: '-order-6',
+      '1': '-order-1',
+      '2': '-order-2',
+      '3': '-order-3',
+      '4': '-order-4',
+      '5': '-order-5',
+      '6': '-order-6',
     },
     sm: {
       '1/4': 'sm:col-span-3',

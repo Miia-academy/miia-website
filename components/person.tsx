@@ -1,22 +1,21 @@
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
-import type {
-  PersonProps,
-  Roles,
-  ImageData,
-  ActionProps,
-  PersonData,
-} from '@props/types'
+import type { Person as PersonBlok, Action as ActionBlok } from '@types'
+import type { StoryblokAsset } from '@commonTypes'
 import { Image, Modal, ModalContent, useDisclosure } from '@heroui/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
 import { tv } from 'tailwind-variants'
 import { YouTubeEmbed } from '@next/third-parties/google'
+import { isStoryResolved } from '@modules/relations'
 
-interface PersonComponent {
-  blok: PersonProps
+interface PersonComponentProps {
+  blok: PersonBlok
 }
 
-const roles: { [key in Roles]: { icon: string; text: string } } = {
+// Estraiamo il tipo esatto 'role' dalle definizioni della CLI Storyblok
+type PersonRole = NonNullable<PersonBlok['role']>
+
+const roles: Record<PersonRole, { icon: string; text: string }> = {
   interior: { icon: 'graduation-cap', text: 'studente' },
   style: { icon: 'design-nib', text: 'estetica' },
   design: { icon: 'ruler-combine', text: 'progettazione' },
@@ -26,7 +25,9 @@ const roles: { [key in Roles]: { icon: string; text: string } } = {
   lighting: { icon: 'light-bulb-on', text: 'illuminotecnica' },
 }
 
-const data: Array<keyof PersonData> = [
+type PersonDataKeys = 'title' | 'description' | 'role' | 'image' | 'video' | 'links'
+
+const dataKeys: PersonDataKeys[] = [
   'title',
   'description',
   'role',
@@ -35,22 +36,13 @@ const data: Array<keyof PersonData> = [
   'links',
 ]
 
-type Person = {
+interface ResolvedPerson {
   title: string | null
   description: string | null
-  role: Roles | null
-  image: ImageData | null
+  role: PersonRole | null
+  image: StoryblokAsset | null
   video: string | null
-  links: Array<ActionProps> | null
-}
-
-const defaultPerson: Person = {
-  title: null,
-  description: null,
-  role: null,
-  image: null,
-  video: null,
-  links: null,
+  links: ActionBlok[] | null
 }
 
 function isEmpty(value: unknown): boolean {
@@ -62,22 +54,44 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
-const Person = ({ blok }: PersonComponent) => {
-  const alias = blok.alias?.content
+const Person = ({ blok }: PersonComponentProps) => {
+  // 1. Type Narrowing pulito: Risolviamo l'alias usando la Type Guard isStoryResolved
+  const aliasContent = isStoryResolved<PersonBlok>(blok.alias)
+    ? blok.alias.content
+    : null
 
-  const person: Person = {
-    ...defaultPerson,
-    ...Object.fromEntries(
-      data.map((key) => {
-        if (blok.hide?.includes(key)) return [key, null]
+  // 2. Mappatura dei dati con riduzione fortemente tipizzata
+  const person = dataKeys.reduce<ResolvedPerson>(
+    (acc, key) => {
+      // Se la proprietà è presente nell'array `hide`, la forziamo a null
+      if (blok.hide?.includes(key as any)) {
+        acc[key] = null as any
+        return acc
+      }
 
-        const ownValue = blok[key]
-        const value = !isEmpty(ownValue) ? ownValue : (alias?.[key] ?? null)
+      const ownValue = blok[key]
+      const aliasValue = aliasContent?.[key]
 
-        return [key, value]
-      })
-    ),
-  }
+      // Valutazione prioritaria: prima proprio valore, poi valore alias
+      const resolvedValue = !isEmpty(ownValue)
+        ? ownValue
+        : !isEmpty(aliasValue)
+          ? aliasValue
+          : null
+
+      acc[key] = resolvedValue as any
+      return acc
+    },
+    {
+      title: null,
+      description: null,
+      role: null,
+      image: null,
+      video: null,
+      links: null,
+    }
+  )
+
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   const {
@@ -93,11 +107,11 @@ const Person = ({ blok }: PersonComponent) => {
 
   return (
     <article
-      id={blok.uuid}
+      id={blok._uid}
       className={cardClasses()}
-      {...storyblokEditable(blok)}
+      {...storyblokEditable(blok as any)}
     >
-      {person.image && (
+      {person.image?.filename && (
         <div
           className={headerClasses({ hasPlayer: !!person.video })}
           onClick={onOpen}
@@ -115,15 +129,17 @@ const Person = ({ blok }: PersonComponent) => {
               wrapper: thumbClasses(),
             }}
             src={person.image.filename}
-            alt={person.image.alt}
+            alt={person.image.alt || person.title || ''}
             width={'100%'}
             isZoomed={true}
           />
         </div>
       )}
+
       <div className={bodyClasses()}>
         {person.title && <h4 className={titleClasses()}>{person.title}</h4>}
-        {person.role && (
+
+        {person.role && roles[person.role] && (
           <h6 className={roleClasses()}>
             <i
               className={iconClasses({
@@ -133,6 +149,7 @@ const Person = ({ blok }: PersonComponent) => {
             <span>{roles[person.role].text}</span>
           </h6>
         )}
+
         {person.description &&
           compiler(person.description, {
             wrapper: ({ children }) => (
@@ -141,14 +158,16 @@ const Person = ({ blok }: PersonComponent) => {
             forceWrapper: true,
             overrides: Typography({ size: 'small' }),
           })}
-        {!!person.links && (
+
+        {!!person.links?.length && (
           <div className="flex items-center justify-center">
-            {person.links.map((link, index) => (
-              <StoryblokComponent blok={link} key={index} />
+            {person.links.map((link) => (
+              <StoryblokComponent blok={link} key={link._uid} />
             ))}
           </div>
         )}
       </div>
+
       {!!person.video && isOpen && (
         <Modal
           isOpen={isOpen}
