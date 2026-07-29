@@ -1,10 +1,10 @@
-import { ProcessProps } from '@props/types'
+import type { Process as ProcessBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { Fragment } from 'react'
 import { tv } from 'tailwind-variants'
 
-interface ProcessComponent {
-  blok: ProcessProps
+interface ProcessComponentProps {
+  blok: ProcessBlok
 }
 
 const processClasses = tv({
@@ -23,22 +23,37 @@ const arrowClasses = tv({
   base: 'rotate-90 md:rotate-0 iconoir-arrow-right text-2xl lg:px-4 md:self-center',
 })
 
-export default function Process({ blok }: ProcessComponent) {
+export default function Process({ blok }: ProcessComponentProps) {
+  // Fallback di sicurezza in caso l'array dei blocchi sia vuoto o undefined
+  const steps = blok.steps || []
+
   return (
-    <div className='col-span-12' {...storyblokEditable(blok)}>
-      {blok.title && <h4 className='font-bold text-2xl'>{blok.title}</h4>}
+    <div className="col-span-12" {...storyblokEditable(blok as any)}>
+      {/* Type Narrowing: ci assicuriamo che title sia effettivamente una stringa stampabile */}
+      {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
+        <h4 className="font-bold text-2xl">{blok.title}</h4>
+      ) : null}
+
       <div className={processClasses()}>
-        {blok.steps.map((step, index) => (
-          <Fragment key={step._uid}>
-            {!!index && <i className={arrowClasses()} />}
-            <div className={stepClasses()} {...storyblokEditable(step)}>
-              <h6 className={indexClasses()}>{index + 1}</h6>
-              {step.contents.map((content) => (
-                <StoryblokComponent blok={content} key={content._uid} />
-              ))}
-            </div>
-          </Fragment>
-        ))}
+        {steps.map((step: any, index: number) => {
+          // Fallback protettivo anche per i contenuti annidati
+          const contents = step.contents || []
+
+          return (
+            <Fragment key={step._uid || index}>
+              {/* Sostituito !!index con un costrutto ternario pulito che ritorna null */}
+              {index > 0 ? <i className={arrowClasses()} /> : null}
+
+              <div className={stepClasses()} {...storyblokEditable(step as any)}>
+                <h6 className={indexClasses()}>{index + 1}</h6>
+
+                {contents.map((content: any) => (
+                  <StoryblokComponent blok={content} key={content._uid} />
+                ))}
+              </div>
+            </Fragment>
+          )
+        })}
       </div>
     </div>
   )

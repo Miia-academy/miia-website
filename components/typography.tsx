@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Image } from '@heroui/react'
 import Link from 'next/link'
 import { tv } from 'tailwind-variants'
@@ -10,9 +11,10 @@ interface TypographyComponents {
 
 export const Typography = ({ theme, size, error }: TypographyComponents) => {
   const { title, subtitle, text, list, link } = classes()
+
   return {
     h1: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <h1
           className={title({
             class:
@@ -25,7 +27,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
       ),
     },
     h2: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <h2
           className={title({
             class:
@@ -38,7 +40,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
       ),
     },
     h3: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <h3
           className={title({
             class:
@@ -51,7 +53,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
       ),
     },
     h4: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <h4
           className={subtitle({
             class:
@@ -64,7 +66,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
       ),
     },
     h5: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <h5
           className={subtitle({
             class:
@@ -77,7 +79,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
       ),
     },
     h6: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <h6
           className={subtitle({
             class:
@@ -90,35 +92,36 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
       ),
     },
     code: {
-      component: ({ children }: { children: string }) => (
+      // Per le icone, un children di tipo stringa è accettabile, ma meglio usare ReactNode e un fallback
+      component: ({ children }: { children?: ReactNode }) => (
         <i
-          className={`iconoir-${children} text-icon align-middle inline-block`}
+          className={`iconoir-${typeof children === 'string' ? children : 'code'} text-icon align-middle inline-block`}
         />
       ),
     },
     strong: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <strong className={text({ class: 'font-semibold', theme: theme })}>
           {children}
         </strong>
       ),
     },
     a: {
-      component: ({ href, children }: { href: string; children: string }) => (
-        <Link className={link({ theme: theme })} href={href || ''}>
+      component: ({ href, children }: { href?: string; children?: ReactNode }) => (
+        <Link className={link({ theme: theme })} href={href || '#'}>
           {children}
         </Link>
       ),
     },
     p: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <p className={text({ error: error, theme: theme, size: size })}>
           {children}
         </p>
       ),
     },
     ul: {
-      component: ({ children }: { children: string }) => (
+      component: ({ children }: { children?: ReactNode }) => (
         <ul className={list({ theme: theme })}>{children}</ul>
       ),
     },
@@ -131,11 +134,17 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         alt,
         title,
       }: {
-        src: string
-        alt: string
-        title: string
+        src?: string
+        alt?: string
+        title?: string
       }) => (
-        <Image removeWrapper src={src} alt={alt} title={title} width="100%" />
+        <Image
+          removeWrapper
+          src={src || ''}
+          alt={alt || ''}
+          title={title}
+          width="100%"
+        />
       ),
     },
   }
@@ -146,7 +155,7 @@ const classes = tv({
     title: 'font-serif break-words',
     subtitle: 'font-sans',
     text: 'font-sans',
-    list: 'list-disc list-outside',
+    list: 'list-disc list-outside ml-4 md:ml-6', // Aggiunto un leggero margine sinistro per le liste
     link: 'text-md opacity-90 hover:opacity-100 hover:underline',
   },
   variants: {
@@ -155,28 +164,28 @@ const classes = tv({
         title: 'text-primary',
         subtitle: 'text-primary',
         text: 'text-primary',
-        list: 'text-primary',
+        list: 'text-primary marker:text-primary',
         link: 'text-primary',
       },
       secondary: {
         title: 'text-secondary',
         subtitle: 'text-secondary',
         text: 'text-secondary',
-        list: 'text-secondary',
+        list: 'text-secondary marker:text-secondary',
         link: 'text-secondary',
       },
       light: {
         title: 'text-white',
         subtitle: 'text-neutral-100',
         text: 'text-neutral-300',
-        list: 'text-neutral-300',
+        list: 'text-neutral-300 marker:text-neutral-300',
         link: 'text-neutral-100',
       },
       dark: {
         title: 'text-neutral-950',
         subtitle: 'text-neutral-900',
         text: 'text-neutral-700',
-        list: 'text-neutral-700',
+        list: 'text-neutral-700 marker:text-neutral-700',
         link: 'text-neutral-900',
       },
     },

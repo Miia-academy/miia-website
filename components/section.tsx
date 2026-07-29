@@ -1,9 +1,12 @@
-import type { SectionProps } from '@props/types'
+import type { Section as SectionBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
 
-interface SectionComponent {
-  blok: SectionProps
+// Tipizzazioni strette per Tailwind Variants
+type AlignVariant = 'start' | 'center' | 'end' | 'stretch' | undefined
+
+interface SectionComponentProps {
+  blok: SectionBlok
   parent?: 'page' | 'carousel'
   singleSection?: boolean
 }
@@ -12,37 +15,44 @@ export default function Section({
   blok,
   parent,
   singleSection,
-}: SectionComponent) {
+}: SectionComponentProps) {
   const Tag = parent !== 'carousel' ? 'section' : 'div'
 
-  const background = blok.contents.find(
-    (content) => content.component === 'background'
+  // Fallback di protezione per evitare crash a runtime
+  const rawContents = blok.contents || []
+
+  const background = rawContents.find(
+    (content: any) => content.component === 'background'
   )
-  const contents = blok.contents.filter(
-    (content) => content.component !== 'background'
+  const contents = rawContents.filter(
+    (content: any) => content.component !== 'background'
   )
+
+  // Type narrowing per prevenire errori sul metodo replaceAll
+  const sectionId =
+    typeof blok.id === 'string' ? blok.id.replaceAll(' ', '-') : undefined
 
   return (
     <Tag
-      id={blok.id && blok.id.replaceAll(' ', '-')}
+      id={sectionId}
       className={tagClasses({
         themeDark: blok.dark,
         isSlide: parent === 'carousel',
         hasBackground: !!background,
         singleSection: singleSection,
       })}
-      {...storyblokEditable(blok)}
+      {...storyblokEditable(blok as any)}
     >
       <div
         className={containerClasses({
           hasBackground: !!background,
-          align: blok.align?.[0],
-          smAlign: blok.align?.[1],
+          align: (blok.align?.[0] as AlignVariant) || undefined,
+          smAlign: (blok.align?.[1] as AlignVariant) || undefined,
         })}
       >
-        {contents.map((content, index) => (
+        {contents.map((content: any) => (
           <StoryblokComponent
-            key={index}
+            key={content._uid}
             blok={content}
             theme={blok.dark ? 'dark' : 'light'}
             parent={blok.component}
@@ -60,7 +70,7 @@ export default function Section({
 }
 
 const gradientClasses = tv({
-  base: 'absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-r  md:to-60% -z-10',
+  base: 'absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-r md:to-60% -z-10',
   variants: {
     themeDark: {
       true: 'from-dark mix-blend-multiply',
