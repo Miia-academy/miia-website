@@ -5,10 +5,10 @@
 "scripts": {
     "proxy": "local-ssl-proxy --source 9080 --target 8080 --cert localhost.pem --key localhost-key.pem",
     "dev": "next dev -p 8080",
-    "build": "npm run cms:types && next build",
+    "build": "next build",
     "start": "next start -p 9090",
     "lint": "next lint",
-    "cms": "storyblok pull-components --space 311109 --typescript",
+    "cms": "storyblok types generate --space 311109",
     "crm": "tsx ./crm/index.ts"
   },
   "dependencies": {

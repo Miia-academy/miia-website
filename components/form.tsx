@@ -18,7 +18,6 @@ import {
   Link,
   Alert,
 } from '@heroui/react'
-import { opendays, Opendays } from '@pages/[...slug]'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { fieldValidation } from '@modules/validations'
 import { getCapitalize } from '@modules/formats'
@@ -73,6 +72,7 @@ function buildEvent(data: FormData, tracking?: string) {
         properties[name] = value.toString()
       } else if (Array.isArray(value)) {
         if (name === 'area') {
+          // TODO check how to pass cached data
           const opendayList = opendays[value[0] as keyof Opendays]
           const event = opendayList?.find((ev) => new Date(ev.date) >= today)
           if (event?.date) {
