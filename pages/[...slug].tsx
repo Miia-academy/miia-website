@@ -1,86 +1,95 @@
-import type { LocationProps, EventProps } from "@props/types";
-import { storyblokApi } from "@modules/storyblokApi";
-import type { BlokProps } from "@props/types";
+import type { Location as LocationBlok, Event as EventBlok } from '@types'
+import { storyblokApi } from '@modules/storyblokApi'
+import { useMemo } from 'react'
 import {
   ISbStoryData,
   useStoryblokState,
   StoryblokComponent,
-} from "@storyblok/react";
+} from '@storyblok/react'
+import { CachedDataProps, getCachedData } from '@modules/cache'
 
-const excluding_slugs = ["home", "splash", "blog/"];
+const excluding_slugs = ['home', 'splash', 'blog/']
 
 const relations = [
-  "page.header",
-  "page.footer",
-  "aside.courses",
-  "aside.enroll",
-  "aside.contact",
-  "course.location",
-  "form.alias",
-  "article.alias",
-  "article.author",
-  "person.alias",
-  "course.alias",
-  "event.alias",
-  "event.form",
-  "location.alias",
-  "alias.form",
-  "map.locations",
-  "background.author",
-];
+  'page.header',
+  'page.footer',
+  'aside.courses',
+  'aside.enroll',
+  'aside.contact',
+  'course.location',
+  'form.alias',
+  'article.alias',
+  'article.author',
+  'person.alias',
+  'course.alias',
+  'event.alias',
+  'event.form',
+  'location.alias',
+  'alias.form',
+  'map.locations',
+  'background.author',
+]
 
-type PageStory = {
-  story: ISbStoryData & {
-    id: string;
-    content: BlokProps;
-  };
-  locations: Array<{
-    content: LocationProps;
-  }>;
-  events: Array<{
-    content: EventProps;
-    name: string;
-  }>;
-};
-
-export interface Opendays {
-  fashion: Array<EventProps>;
-  interior: Array<EventProps>;
+export interface EventItem {
+  content: EventBlok
+  name: string
 }
 
-export const opendays: Opendays = {
-  fashion: [],
-  interior: [],
-};
+export interface LocationItem {
+  content: LocationBlok
+  uuid: string
+}
 
-export default function PageStory({ story, locations, events }: PageStory) {
+interface PageStoryProps {
+  story: ISbStoryData
+  cached: CachedDataProps
+}
+
+export interface Opendays {
+  fashion: EventBlok[]
+  interior: EventBlok[]
+}
+
+export default function PageStory({ story, cached }: PageStoryProps) {
+  // TODO needs to adjust cached data
+  // 1. Gestione dello stato in tempo reale per Storyblok Visual Editor
   const page = useStoryblokState(story, {
     resolveRelations: relations,
     preventClicks: true,
-  });
-  if (!page) return null;
+  })
 
-  events.forEach((event) => {
-    if (event.name.startsWith("openday-interni")) {
-      opendays.interior.push(event.content);
-    } else if (event.name.startsWith("openday-moda")) {
-      opendays.fashion.push(event.content);
-    }
-  });
+  // 2. Calcolo dei dati Opendays puro con useMemo (Previene Side-Effects e Memory Leaks in React 19)
+  const opendays = useMemo<Opendays>(() => {
+    const result: Opendays = { fashion: [], interior: [] }
+
+    events.forEach((event) => {
+      if (event.name?.startsWith('openday-interni')) {
+        result.interior.push(event.content)
+      } else if (event.name?.startsWith('openday-moda')) {
+        result.fashion.push(event.content)
+      }
+    })
+
+    return result
+  }, [events])
+
+  if (!page || !page.content) return null
 
   return (
     <StoryblokComponent
       locations={locations}
       events={events}
+      opendays={opendays}
       blok={page.content}
     />
-  );
+  )
 }
 
-export async function getStaticProps({ params, preview }: any) {
-  let slug = `/${params.slug.join("/")}`;
+export async function getStaticProps({ params }: any) {
+  const slugArray = params?.slug ? (Array.isArray(params.slug) ? params.slug : [params.slug]) : []
+  const slug = `/${slugArray.join('/')}`
 
-  const variables = { slug, relations: relations.join(",") };
+  const variables = { slug, relations: relations.join(',') }
   const query = `
     query ($slug: ID!, $relations: String) {
       ContentNode(
@@ -93,44 +102,38 @@ export async function getStaticProps({ params, preview }: any) {
         first_published_at
         tag_list
       }
-      EventItems(
-        sort_by:"content.date:cres",
-        per_page:100
-      ) {
-        items {
-          content {
-            date
-          }
-        name
-        }
-      }
-      LocationItems {
-        items {
-          content {
-            address
-            direction
-            gps
-            title
-          }
-          uuid
-        }
+    }
+  `
+  const cachedData = await getCachedData()
+
+  try {
+    const data = await storyblokApi({ query, variables })
+
+
+    // Se la storia non esiste, restituisci 404 pulito
+    if (!data?.ContentNode) {
+      return {
+        notFound: true,
       }
     }
-  `;
-  const data = await storyblokApi({ query, variables });
 
-  return {
-    props: {
-      story: data?.ContentNode || null,
-      locations: data?.LocationItems.items || null,
-      events: data?.EventItems.items || null,
-    },
-    revalidate: 3600,
-  };
+    return {
+      props: {
+        story: data.ContentNode,
+        data: cachedData,
+      },
+      revalidate: 3600,
+    }
+  } catch (error) {
+    console.error('Error fetching Storyblok data:', error)
+    return {
+      notFound: true,
+    }
+  }
 }
 
 export async function getStaticPaths() {
-  const variables = { excluding_slugs: excluding_slugs.join(",") };
+  const variables = { excluding_slugs: excluding_slugs.join(',') }
   const query = `
     query ($excluding_slugs: String) {
       ContentNodes(
@@ -146,14 +149,25 @@ export async function getStaticPaths() {
         }
       }
     }
-  `;
-  const slugs = await storyblokApi({ query, variables });
-  const paths: Array<string> = slugs.ContentNodes.items.map(
-    ({ full_slug }: { full_slug: string }) => `/${full_slug}`
-  );
+  `
 
-  return {
-    paths: paths,
-    fallback: "blocking",
-  };
+  try {
+    const slugs = await storyblokApi({ query, variables })
+    const items = slugs?.ContentNodes?.items || []
+
+    const paths = items.map(
+      ({ full_slug }: { full_slug: string }) => `/${full_slug}`
+    )
+
+    return {
+      paths,
+      fallback: 'blocking',
+    }
+  } catch (error) {
+    console.error('Error fetching static paths:', error)
+    return {
+      paths: [],
+      fallback: 'blocking',
+    }
+  }
 }
