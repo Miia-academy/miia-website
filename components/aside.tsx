@@ -139,7 +139,7 @@ export default function Aside({ blok }: AsideComponentProps) {
   return (
     <section
       id={blok.id}
-      className={sectionClasses({ theme: blok.theme })}
+      className={sectionClasses({ theme: blok.theme || undefined })}
       {...storyblokEditable(blok as any)}
     >
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-3 p-6">

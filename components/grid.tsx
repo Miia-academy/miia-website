@@ -186,13 +186,13 @@ export default function Grid({ blok }: GridComponentProps) {
         {hasMore && (
           <div className="mt-12 flex justify-center">
             <Button
-              color="primary"
-              variant="flat"
+              color={isDarkSection ? "default" : "primary"}
+              variant="ghost"
               size="lg"
               onPress={handleLoadMore}
               className="px-8 font-medium"
             >
-              Carica altri ({filteredAndSortedItems.length - visibleCount})
+              Carica altri {filteredAndSortedItems.length - visibleCount}
             </Button>
           </div>
         )}

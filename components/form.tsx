@@ -1,11 +1,5 @@
 import type { Form as FormBlok, Field as FieldBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
-import type {
-  BrevoProps,
-  FieldData,
-  FormData,
-  OptionProps,
-} from '@props/types'
 import {
   Button,
   Drawer,
@@ -30,6 +24,27 @@ import { isStoryResolved } from '@modules/relations'
 import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
 
+
+export interface FieldData {
+  id: string
+  value: any // Rimosso il '?' - Ora è obbligatorio per compiacere fieldValidation
+  required: boolean // Rimosso il '?' - Ora è obbligatorio
+  error?: string | null
+}
+
+export type FormData = Record<string, FieldData>
+
+export interface BrevoProps {
+  id?: string | number
+  email?: string
+  attributes: Record<string, any>
+}
+
+export interface OptionProps {
+  name: string | { title: string; days?: string[]; hours?: string[] } | any
+  value: string
+}
+
 const dateFormat = {
   year: 'numeric' as const,
   month: '2-digit' as const,
@@ -49,7 +64,7 @@ type FormStates = 'close' | 'open' | 'search' | 'send' | 'error' | 'done'
 function validateFields(data: FormData) {
   const updated = { ...data }
   Object.entries(updated).forEach(([name, field]) => {
-    updated[name] = { ...field, error: fieldValidation(field) }
+    updated[name] = { ...field, error: fieldValidation(field as any) }
   })
   return updated
 }
@@ -80,7 +95,7 @@ function buildEvent(
         if (name === 'area' && value.length > 0) {
           const selectedArea = String(value[0]).toLowerCase()
 
-          // Risoluzione del TODO: Cerchiamo il prossimo evento correlato all'area tra gli eventi in cache
+          // Cerchiamo il prossimo evento correlato all'area tra gli eventi in cache
           const matchingEvent = globalEvents
             .filter((ev) => {
               if (!ev.date) return false
@@ -172,7 +187,7 @@ function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
 
   let mergedFields = Array.from(fieldsMap.values())
 
-  // Handle enroll field (Esattamente come volevi tu: mantieni solo se specificati!)
+  // Handle enroll field
   const enrollIndex = mergedFields.findIndex((field) => field.input === 'enroll')
   if (enrollIndex >= 0) {
     if (courses?.length) {
@@ -233,10 +248,9 @@ export default function Form({
   openday,
   variant,
 }: FormComponentProps) {
-  // Prendiamo gli eventi in cache dal DataContext per calcolare l'openday se necessario
   const { events: globalEvents } = useDataContext()
 
-  // Merge alias to root form (Mantiene il tuo comportamiento su enroll)
+  // Merge alias to root form
   const form = useMemo(() => mergeForm(blok, courses), [blok, courses])
 
   // Init Data
@@ -268,7 +282,7 @@ export default function Form({
   )
 
   const handleChange = useCallback((field: FieldData) => {
-    field.error = fieldValidation(field)
+    field.error = fieldValidation(field as any)
     if (field.id === 'nome' || field.id === 'cognome') {
       field.value = getCapitalize(field.value)
     }
@@ -325,7 +339,6 @@ export default function Form({
       if (!agreement) return
 
       setState('send')
-      // Passiamo anche i globalEvents a buildEvent
       const event = buildEvent(newData, globalEvents, form.tracking)
       const contact = buildContact(newData, user, form.list)
 

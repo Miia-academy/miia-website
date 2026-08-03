@@ -12,9 +12,10 @@ interface PersonComponentProps {
   blok: PersonBlok
 }
 
-// Estraiamo il tipo esatto 'role' dalle definizioni della CLI Storyblok
-type PersonRole = NonNullable<PersonBlok['role']>
+// 1. Escludiamo esplicitamente la stringa vuota dal tipo 'role' generato dalla CLI Storyblok
+type PersonRole = Exclude<NonNullable<PersonBlok['role']>, ''>
 
+// 2. Mappa dei ruoli Type-Safe senza la chiave ""
 const roles: Record<PersonRole, { icon: string; text: string }> = {
   interior: { icon: 'graduation-cap', text: 'studente' },
   style: { icon: 'design-nib', text: 'estetica' },
@@ -55,15 +56,14 @@ function isEmpty(value: unknown): boolean {
 }
 
 const Person = ({ blok }: PersonComponentProps) => {
-  // 1. Type Narrowing pulito: Risolviamo l'alias usando la Type Guard isStoryResolved
+  // Type Narrowing dell'alias
   const aliasContent = isStoryResolved<PersonBlok>(blok.alias)
     ? blok.alias.content
     : null
 
-  // 2. Mappatura dei dati con riduzione fortemente tipizzata
+  // Mappatura dei dati sanificando valori vuoti ed eliminando stringhe vuote ""
   const person = dataKeys.reduce<ResolvedPerson>(
     (acc, key) => {
-      // Se la proprietà è presente nell'array `hide`, la forziamo a null
       if (blok.hide?.includes(key as any)) {
         acc[key] = null as any
         return acc
@@ -72,14 +72,19 @@ const Person = ({ blok }: PersonComponentProps) => {
       const ownValue = blok[key]
       const aliasValue = aliasContent?.[key]
 
-      // Valutazione prioritaria: prima proprio valore, poi valore alias
       const resolvedValue = !isEmpty(ownValue)
         ? ownValue
         : !isEmpty(aliasValue)
           ? aliasValue
           : null
 
-      acc[key] = resolvedValue as any
+      // Se la chiave è 'role' e la stringa è vuota, forziamo a null
+      if (key === 'role' && resolvedValue === '') {
+        acc.role = null
+      } else {
+        acc[key] = resolvedValue as any
+      }
+
       return acc
     },
     {
@@ -172,7 +177,7 @@ const Person = ({ blok }: PersonComponentProps) => {
         <Modal
           isOpen={isOpen}
           onClose={onClose}
-          className="max-w-none mx-auto w-auto overflow-hidden max-h-[80vh]"
+          className="mx-auto max-h-[80vh] w-auto max-w-none overflow-hidden"
           classNames={{
             wrapper: 'items-center',
             closeButton:
@@ -182,7 +187,7 @@ const Person = ({ blok }: PersonComponentProps) => {
           <ModalContent>
             <YouTubeEmbed
               videoid={person.video}
-              params="?rel=0&modestbranding=1&autohide=1&showinfo=0&showinfo=0&controls=0"
+              params="?rel=0&modestbranding=1&autohide=1&showinfo=0&controls=0"
               width={280}
               height={500}
               style="contain:none;height:inherit;width:inherit;"
