@@ -205,14 +205,14 @@ const wrapperClasses = tv({
   base: 'w-full py-12 md:py-16 lg:py-24 transition-colors',
   variants: {
     themeDark: {
-      true: 'dark bg-neutral-950 text-white',
+      true: 'dark text-foreground bg-background',
       false: 'light bg-background text-foreground',
     },
   },
 })
 
 const containerClasses = tv({
-  base: 'max-w-[1280px] mx-auto px-6 sm:px-8 md:px-10 lg:px-12',
+  base: 'max-w-[1280px] mx-auto px-6 md:px-10',
 })
 
 const headerClasses = tv({

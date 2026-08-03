@@ -1390,10 +1390,10 @@
   },
   {
     "name": "grid",
-    "display_name": "Griglia",
+    "display_name": null,
     "description": "",
     "created_at": "2026-03-10T21:24:16.816Z",
-    "updated_at": "2026-08-03T11:38:00.390Z",
+    "updated_at": "2026-08-03T11:45:05.082Z",
     "id": 153551899924324,
     "schema": {
       "resource": {
@@ -1471,7 +1471,8 @@
         "display_name": "Colonne",
         "min_value": 1,
         "max_value": 4,
-        "id": "K1WdnQTUQSu7DENgIDmTxA"
+        "id": "K1WdnQTUQSu7DENgIDmTxA",
+        "default_value": "3"
       },
       "limit": {
         "type": "number",
@@ -1480,7 +1481,8 @@
         "id": "4AjHNaoZRSSCJHQONmYjEQ",
         "min_value": 6,
         "max_value": 30,
-        "steps": 3
+        "steps": 3,
+        "default_value": "12"
       },
       "dark": {
         "type": "boolean",
@@ -1497,7 +1499,7 @@
     "is_nestable": true,
     "all_presets": [],
     "preset_id": null,
-    "real_name": "Griglia",
+    "real_name": "grid",
     "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
     "color": null,
     "icon": null,
@@ -2347,13 +2349,22 @@
     "display_name": "Progetto",
     "description": "",
     "created_at": "2026-07-31T15:31:23.394Z",
-    "updated_at": "2026-08-03T11:38:11.013Z",
+    "updated_at": "2026-08-03T13:12:46.902Z",
     "id": 204072072787651,
     "schema": {
       "body": {
         "type": "bloks",
         "pos": 0,
-        "id": "r31k9RmOTHaHge6FzHqlew"
+        "id": "r31k9RmOTHaHge6FzHqlew",
+        "display_name": "Contenuti",
+        "restrict_type": "groups",
+        "restrict_components": true,
+        "component_group_whitelist": [
+          "7748dd1c-0924-4e46-aa88-603da82dbb43"
+        ],
+        "component_group_denylist": [],
+        "component_tag_whitelist": [],
+        "component_tag_denylist": []
       },
       "cover": {
         "type": "asset",
