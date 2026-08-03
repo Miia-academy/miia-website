@@ -1,68 +1,88 @@
+import type { GetStaticPropsContext } from 'next'
 import {
+  getStoryblokApi,
   StoryblokComponent,
   useStoryblokState,
-  ISbStoryData,
+  type ISbStoryData,
 } from '@storyblok/react'
-
-import { storyblokApi } from '@modules/storyblokApi'
+import { getCachedData, type GlobalData } from '@modules/cache'
+import { DataProvider } from '@modules/context'
+import { relations } from '@config/relations'
 import { StoryProps } from '@props/types'
 
-type Home = {
+type HomeProps = {
   story: ISbStoryData & {
     id: string
     content: StoryProps
-  }
+  } | null
+  data: GlobalData
+  draft: boolean
 }
 
-const relations = [
-  'page.header',
-  'page.footer',
-  'form.alias',
-  'aside.courses',
-  'aside.enroll',
-  'aside.contact',
-  'article.alias',
-  'article.author',
-  'person.alias',
-  'course.alias',
-  'event.alias',
-  'event.form',
-  'location.alias',
-  'map.locations',
-  'picture.author',
-  'alias.form',
-]
-
-export default function Home({ story }: Home) {
+export default function Home({ story, data, draft }: HomeProps) {
+  // Abilita il real-time visual editor di Storyblok
   const page = useStoryblokState(story, {
-    resolveRelations: relations,
+    resolveRelations: relations.join(','),
     preventClicks: true,
   })
-  if (!page?.content) return null
-  return <StoryblokComponent blok={page.content} />
+
+  if (!page || !page.content) return null
+
+  return (
+    <DataProvider data={data}>
+      <StoryblokComponent blok={page.content} />
+    </DataProvider>
+  )
 }
 
-export async function getStaticProps() {
-  const slug = 'home'
+export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
+  // 1. Gestione del Draft Mode: in locale o con il draftMode di Next.js attivo usiamo "draft"
+  const isDraft = process.env.NODE_ENV === 'development' || !!draftMode
+  const version = isDraft ? 'draft' : 'published'
 
-  const variables = { slug, relations: relations.join(',') }
-  const query = `
-    query ($slug: ID!, $relations: String) {
-      ContentNode(
-        id: $slug,
-        resolve_relations: $relations
-      ) {
-        id
-        content
-      }
+  const storyblokApi = getStoryblokApi()
+  let storyResult = null
+
+  // 2. Fetching della pagina root ("home") tramite API REST
+  try {
+    const home = await storyblokApi.getStory('home', {
+      version,
+      resolve_relations: relations.join(','),
+    })
+    storyResult = home.data ? home.data.story : null
+  } catch (error) {
+    storyResult = null
+  }
+
+  // 3. Fallback: se "home" non esiste o fallisce, prova a cercare "splash"
+  if (!storyResult) {
+    try {
+      const splash = await storyblokApi.getStory('splash', {
+        version,
+        resolve_relations: relations.join(','),
+      })
+      storyResult = splash.data ? splash.data.story : null
+    } catch (error) {
+      console.error('Nessuna pagina root trovata (né home né splash).')
+      storyResult = null
     }
-`
-  const data = await storyblokApi({ query, variables })
+  }
+
+  // 4. Fetching dei dati globali passando la versione al sistema di caching centralizzato
+  const globalData = await getCachedData(version)
+
+  // 5. La "Silver Bullet": sanitizzazione JSON per rimuovere gli 'undefined'.
+  // Questo impedisce a Next.js (getStaticProps) di lanciare errori di serializzazione JSON.
+  const safeStory = JSON.parse(JSON.stringify(storyResult))
+  const safeGlobalData = JSON.parse(JSON.stringify(globalData))
 
   return {
     props: {
-      story: data?.ContentNode || null,
+      story: safeStory,
+      data: safeGlobalData,
+      draft: isDraft,
     },
-    revalidate: 3600,
+    // Revalidazione: istantanea se in draft, ogni ora in produzione
+    revalidate: isDraft ? 1 : 3600,
   }
 }

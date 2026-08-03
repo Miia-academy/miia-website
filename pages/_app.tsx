@@ -61,10 +61,13 @@ const components = {
   location: Location,
 }
 
+// Inizializzazione pulita per il nuovo stack REST + Draft Mode
 storyblokInit({
-  bridge: process.env.NEXT_PUBLIC_IS_PREVIEW === 'true' ? true : false,
   accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW,
   use: [apiPlugin],
+  apiOptions: {
+    region: 'eu', // Aggiunto: specifica 'eu' o 'us' in base a dove è hostato il tuo spazio Storyblok
+  },
   components,
 })
 

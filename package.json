@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start -p 9090",
     "lint": "next lint",
-    "cms": "storyblok types generate --space 311109",
+    "cms": "storyblok components pull --space 311109 && storyblok types generate --space 311109",
     "crm": "tsx ./crm/index.ts"
   },
   "dependencies": {
