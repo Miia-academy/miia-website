@@ -1,159 +1,111 @@
-import type { LocationProps, EventProps } from "@props/types";
-import { storyblokApi } from "@modules/storyblokApi";
-import type { BlokProps } from "@props/types";
+import type { GetStaticPropsContext } from 'next'
 import {
-  ISbStoryData,
-  useStoryblokState,
+  getStoryblokApi,
   StoryblokComponent,
-} from "@storyblok/react";
+  useStoryblokState,
+  type ISbStoryData,
+} from '@storyblok/react'
+import { getCachedData, type GlobalData } from '@modules/cache'
+import { DataProvider } from '@modules/context'
+import { relations } from '@config/relations'
+import { optimizePayload } from '@modules/sanitize'
 
-const excluding_slugs = ["home", "splash", "blog/"];
+// Slug da escludere dalla generazione statica automatica
+const excluding_slugs = ['home', 'splash']
 
-const relations = [
-  "page.header",
-  "page.footer",
-  "aside.courses",
-  "aside.enroll",
-  "aside.contact",
-  "course.location",
-  "form.alias",
-  "article.alias",
-  "article.author",
-  "person.alias",
-  "course.alias",
-  "event.alias",
-  "event.form",
-  "location.alias",
-  "alias.form",
-  "map.locations",
-  "background.author",
-];
-
-type PageStory = {
-  story: ISbStoryData & {
-    id: string;
-    content: BlokProps;
-  };
-  locations: Array<{
-    content: LocationProps;
-  }>;
-  events: Array<{
-    content: EventProps;
-    name: string;
-  }>;
-};
-
-export interface Opendays {
-  fashion: Array<EventProps>;
-  interior: Array<EventProps>;
+interface PageStoryProps {
+  story: ISbStoryData | null
+  data: GlobalData
+  draft: boolean
 }
 
-export const opendays: Opendays = {
-  fashion: [],
-  interior: [],
-};
-
-export default function PageStory({ story, locations, events }: PageStory) {
+export default function PageStory({ story, data, draft }: PageStoryProps) {
   const page = useStoryblokState(story, {
-    resolveRelations: relations,
+    resolveRelations: relations.join(','),
     preventClicks: true,
-  });
-  if (!page) return null;
+  })
 
-  events.forEach((event) => {
-    if (event.name.startsWith("openday-interni")) {
-      opendays.interior.push(event.content);
-    } else if (event.name.startsWith("openday-moda")) {
-      opendays.fashion.push(event.content);
-    }
-  });
+  if (!page || !page.content) return null
 
   return (
-    <StoryblokComponent
-      locations={locations}
-      events={events}
-      blok={page.content}
-    />
-  );
+    <DataProvider data={data}>
+      <StoryblokComponent blok={page.content} fullSlug={page.full_slug} />
+    </DataProvider>
+  )
 }
 
-export async function getStaticProps({ params, preview }: any) {
-  let slug = `/${params.slug.join("/")}`;
+export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContext) => {
+  const isDraft = process.env.NODE_ENV === 'development' || !!draftMode
+  const version = isDraft ? 'draft' : 'published'
 
-  const variables = { slug, relations: relations.join(",") };
-  const query = `
-    query ($slug: ID!, $relations: String) {
-      ContentNode(
-        id: $slug,
-        resolve_relations: $relations
-      ) {
-        id
-        slug
-        content
-        first_published_at
-        tag_list
-      }
-      EventItems(
-        sort_by:"content.date:cres",
-        per_page:100
-      ) {
-        items {
-          content {
-            date
-          }
-        name
-        }
-      }
-      LocationItems {
-        items {
-          content {
-            address
-            direction
-            gps
-            title
-          }
-          uuid
-        }
-      }
-    }
-  `;
-  const data = await storyblokApi({ query, variables });
+  const slugArray = params?.slug ? (Array.isArray(params.slug) ? params.slug : [params.slug]) : []
+  const slug = slugArray.join('/') || 'home'
+
+  const storyblokApi = getStoryblokApi()
+  let storyResult = null
+
+  try {
+    const response = await storyblokApi.getStory(slug, {
+      version,
+      resolve_relations: relations.join(','),
+    })
+    storyResult = response.data ? response.data.story : null
+  } catch (error) {
+    console.error(`Page ${slug} non trovata su Storyblok`)
+    return { notFound: true }
+  }
+
+  const globalData = await getCachedData(version)
+
+  // 🚀 La nuova "Silver Bullet" ottimizzata
+  // Se in draft, stringifichiamo per pulire gli undefined e preservare i tag _editable.
+  // In produzione, applichiamo lo stripper per alleggerire il payload e rimuovere i warning di Next.js.
+  const safeStory = isDraft
+    ? JSON.parse(JSON.stringify(storyResult))
+    : optimizePayload(storyResult)
+
+  const safeGlobalData = optimizePayload(globalData)
 
   return {
     props: {
-      story: data?.ContentNode || null,
-      locations: data?.LocationItems.items || null,
-      events: data?.EventItems.items || null,
+      story: safeStory,
+      data: safeGlobalData,
+      draft: isDraft,
     },
-    revalidate: 3600,
-  };
+    revalidate: isDraft ? 1 : 3600,
+  }
 }
 
-export async function getStaticPaths() {
-  const variables = { excluding_slugs: excluding_slugs.join(",") };
-  const query = `
-    query ($excluding_slugs: String) {
-      ContentNodes(
-        excluding_slugs: $excluding_slugs,
-        filter_query: {
-          component: {
-            in: "page,enroll"
-          }
-        }
-      ) {
-        items {
-          full_slug
-        }
-      }
-    }
-  `;
-  const slugs = await storyblokApi({ query, variables });
-  const paths: Array<string> = slugs.ContentNodes.items.map(
-    ({ full_slug }: { full_slug: string }) => `/${full_slug}`
-  );
+export const getStaticPaths = async () => {
+  const storyblokApi = getStoryblokApi()
 
-  return {
-    paths: paths,
-    fallback: "blocking",
-  };
+  try {
+    const { data } = await storyblokApi.getStories({
+      version: 'published',
+      per_page: 100,
+      filter_query: {
+        component: {
+          in: 'page,enroll,project,article',
+        },
+      },
+    })
+
+    const paths = data.stories
+      .filter((story: ISbStoryData) => !excluding_slugs.includes(story.full_slug))
+      .map((story: ISbStoryData) => {
+        const slug = story.full_slug.split('/')
+        return { params: { slug } }
+      })
+
+    return {
+      paths,
+      fallback: 'blocking',
+    }
+  } catch (error) {
+    console.error('Errore durante il fetching degli static paths:', error)
+    return {
+      paths: [],
+      fallback: 'blocking',
+    }
+  }
 }

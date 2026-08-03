@@ -1,0 +1,2941 @@
+[
+  {
+    "name": "action",
+    "display_name": "Collegamento",
+    "description": null,
+    "created_at": "2025-01-27T11:05:49.443Z",
+    "updated_at": "2026-07-28T14:17:21.612Z",
+    "id": 6861318,
+    "schema": {
+      "label": {
+        "type": "markdown",
+        "display_name": "Etichetta",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "inlinecode"
+        ],
+        "required": true,
+        "id": "QHMe8DJgSCGx_GWW1sB2aA"
+      },
+      "link": {
+        "type": "multilink",
+        "display_name": "Destinazione",
+        "restrict_content_types": true,
+        "component_whitelist": [
+          "page",
+          "article"
+        ],
+        "show_anchor": true,
+        "asset_link_type": true,
+        "id": "aFevYic1RsyORWeH94W98g"
+      },
+      "external": {
+        "type": "boolean",
+        "display_name": "Apri nuova finestra",
+        "inline_label": true,
+        "id": "bbBzBqibQ6OCxzdefJR57w"
+      },
+      "button": {
+        "type": "boolean",
+        "display_name": "Mostra come bottone",
+        "inline_label": true,
+        "id": "h9H80q0HQE-ADFxkqcdvKg"
+      },
+      "color": {
+        "type": "option",
+        "display_name": "Colore",
+        "options": [
+          {
+            "value": "primary",
+            "name": "Primario"
+          },
+          {
+            "value": "secondary",
+            "name": "Secondario"
+          }
+        ],
+        "id": "YUImz60uRbO0Wwa-hw0OvA",
+        "exclude_empty_option": true
+      },
+      "id": {
+        "type": "text",
+        "display_name": "Tracciamento",
+        "id": "X7z-FggsT6Gt6F7SKKwAxA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.label}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Collegamento",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "alias",
+    "display_name": "Risorsa",
+    "description": null,
+    "created_at": "2025-01-29T13:00:09.013Z",
+    "updated_at": "2026-07-28T14:17:33.663Z",
+    "id": 6876489,
+    "schema": {
+      "title": {
+        "type": "text",
+        "display_name": "Titolo",
+        "id": "h9cUaFErQRm8pLXhQx-7-g"
+      },
+      "image": {
+        "type": "asset",
+        "display_name": "Immagine",
+        "filetypes": [
+          "images"
+        ],
+        "id": "NKeZ9F0eSB-yQMn8LBUvBQ"
+      },
+      "resource": {
+        "type": "option",
+        "display_name": "Tipo",
+        "options": [
+          {
+            "value": "next-event",
+            "name": "Prossimo evento"
+          },
+          {
+            "value": "last-article",
+            "name": "Ultimo articolo"
+          }
+        ],
+        "required": true,
+        "id": "d5UZkX1uT7idbt6Pty0cdw",
+        "exclude_empty_option": true
+      },
+      "filter": {
+        "type": "text",
+        "display_name": "Filtra per nome",
+        "description": "Il nome della risorsa contiene il filtro",
+        "id": "pKEvT4_TSAiHHvcLZLIHGQ"
+      },
+      "submit": {
+        "type": "bloks",
+        "display_name": "Iscrizione",
+        "restrict_components": true,
+        "component_whitelist": [
+          "form"
+        ],
+        "maximum": 1,
+        "id": "-o0qT1AzQFCSws0JngTWvA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Risorsa",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "article",
+    "display_name": "Articolo",
+    "description": null,
+    "created_at": "2025-01-27T11:08:42.697Z",
+    "updated_at": "2025-08-19T22:23:11.362Z",
+    "id": 6861336,
+    "schema": {
+      "alias": {
+        "type": "option",
+        "display_name": "Collega",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "article"
+        ],
+        "id": "f7ehq8REQC2REy70QEa3xg",
+        "pos": 0
+      },
+      "new": {
+        "type": "section",
+        "display_name": "Nuovo",
+        "keys": [
+          "title",
+          "description",
+          "image",
+          "author",
+          "body"
+        ],
+        "id": "S4D_A2tvQbWgqKm2Pb_0og",
+        "pos": 1
+      },
+      "title": {
+        "type": "textarea",
+        "display_name": "Titolo",
+        "max_length": 80,
+        "id": "BpTI4pN-T1CR5ZyGmzw20Q",
+        "pos": 2
+      },
+      "description": {
+        "type": "textarea",
+        "display_name": "Riassunto",
+        "max_length": 300,
+        "id": "hqCFuPh9TNe13y2h3PrpiA",
+        "pos": 3
+      },
+      "image": {
+        "type": "asset",
+        "display_name": "Immagine",
+        "description": "Dimensione consigliata 1200x627px",
+        "filetypes": [
+          "images"
+        ],
+        "id": "NulV6O1NSv6k4ZE-c-wOxA",
+        "pos": 4
+      },
+      "author": {
+        "type": "option",
+        "display_name": "Autore",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "person"
+        ],
+        "id": "d8g3oiEvT5-W5I52PJQoVA",
+        "pos": 5
+      },
+      "body": {
+        "type": "bloks",
+        "display_name": "Contenuti articolo",
+        "restrict_components": true,
+        "component_whitelist": [
+          "section",
+          "carousel",
+          "aside"
+        ],
+        "id": "OzfbsRcAT_OsG0PGukkFzg",
+        "pos": 6
+      },
+      "hidden": {
+        "type": "boolean",
+        "pos": 7,
+        "display_name": "Nascondi in lista",
+        "inline_label": true,
+        "id": "QsiAT0HhScC34ZXdo6Cc-w"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [
+      {
+        "id": 2556705,
+        "name": "Articolo con galleria",
+        "component_id": 6861336,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      },
+      {
+        "id": 78707210962944,
+        "name": "Articolo - corso interni avanzato",
+        "component_id": 6861336,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      }
+    ],
+    "preset_id": null,
+    "real_name": "Articolo",
+    "component_group_uuid": "3aee7005-d4d5-4e14-99e1-d9744a656d63",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "aside",
+    "display_name": "Fianco",
+    "description": null,
+    "created_at": "2025-02-05T22:41:25.668Z",
+    "updated_at": "2026-07-27T15:09:44.527Z",
+    "id": 6917049,
+    "schema": {
+      "id": {
+        "type": "text",
+        "display_name": "Ancora",
+        "id": "w_ZByRRDTmO1PPSVZLfpFA"
+      },
+      "enrollment": {
+        "type": "section",
+        "display_name": "Iscrizione",
+        "keys": [
+          "amount",
+          "steps",
+          "courses",
+          "forms",
+          "discount",
+          "due_date"
+        ],
+        "id": "iv5uxTa2QQadv8by35-0Cw"
+      },
+      "amount": {
+        "type": "number",
+        "display_name": "Prezzo",
+        "id": "EOeEOynbTDO6AhGAp9ITYg"
+      },
+      "steps": {
+        "type": "number",
+        "display_name": "Rate",
+        "id": "UJY4F6IYS2aUQ5tRbTCpTg"
+      },
+      "discount": {
+        "type": "number",
+        "display_name": "Sconto (%)",
+        "id": "9rycdX6CR4iEdmkideyvng",
+        "max_value": -1,
+        "min_value": -100
+      },
+      "due_date": {
+        "type": "datetime",
+        "display_name": "Scadenza sconto",
+        "id": "EtvOtYhhTfKZ55UlQm1SJg",
+        "disable_time": true
+      },
+      "courses": {
+        "type": "options",
+        "display_name": "Corsi",
+        "source": "internal_stories",
+        "restrict_content_types": true,
+        "filter_content_type": [
+          "course"
+        ],
+        "required": false,
+        "id": "ovKC-ExRRvmK-24B2Zw5MQ"
+      },
+      "forms": {
+        "type": "bloks",
+        "display_name": "Moduli",
+        "restrict_components": true,
+        "component_whitelist": [
+          "form"
+        ],
+        "maximum": 3,
+        "required": true,
+        "id": "Llzdg2SzTLuaqcehxr-SCA"
+      },
+      "contents": {
+        "type": "bloks",
+        "display_name": "Contenuti",
+        "restrict_components": true,
+        "component_whitelist": [
+          "process",
+          "text",
+          "action",
+          "wrapper",
+          "alias"
+        ],
+        "required": true,
+        "id": "Tjr0N6JeR6er59NysvNQ_g"
+      },
+      "theme": {
+        "type": "option",
+        "display_name": "Tema",
+        "options": [
+          {
+            "value": "dark",
+            "name": "Scuro"
+          }
+        ],
+        "id": "6eslvhu-Tg6hDHFILahN2g",
+        "exclude_empty_option": true
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.display}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Fianco",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "background",
+    "display_name": "Sfondo",
+    "description": null,
+    "created_at": "2025-02-17T09:43:06.213Z",
+    "updated_at": "2026-03-11T12:01:21.456Z",
+    "id": 6964593,
+    "schema": {
+      "image": {
+        "type": "asset",
+        "display_name": "Immagine",
+        "filetypes": [
+          "images"
+        ],
+        "id": "OUWyCasBR2acQ1hRkbGQJg"
+      },
+      "video": {
+        "type": "text",
+        "display_name": "Video",
+        "description": "Id del video su youtube",
+        "inline_label": true,
+        "id": "selp9JOXSmGjfKSDkrccBQ"
+      },
+      "position": {
+        "type": "options",
+        "display_name": "Posizione",
+        "description": "Posizionamento dell'immagine rispetto ai margini.\nla prima selezione per mobile, la seconda per desktop.",
+        "tooltip": true,
+        "options": [
+          {
+            "value": "right",
+            "name": "Destra"
+          },
+          {
+            "value": "center",
+            "name": "Centro"
+          },
+          {
+            "value": "left",
+            "name": "Sinistra"
+          }
+        ],
+        "max_options": 2,
+        "id": "c6cT0rktSdOOwPOviTwNsA",
+        "exclude_empty_option": true
+      },
+      "author": {
+        "type": "option",
+        "display_name": "Autore",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "person"
+        ],
+        "id": "KaAGnDvqShKMHJgJw1vAJQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.image.alt}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Sfondo",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "carousel",
+    "display_name": "Carosello",
+    "description": null,
+    "created_at": "2025-01-27T13:18:21.672Z",
+    "updated_at": "2026-08-03T10:45:37.732Z",
+    "id": 6862106,
+    "schema": {
+      "interface": {
+        "type": "boolean",
+        "pos": 6,
+        "default_value": true,
+        "id": "fHNOdUZqTgCi2trrX-TRGw"
+      },
+      "id": {
+        "type": "text",
+        "display_name": "Ancora",
+        "id": "WyBnUzzaQ8S7Zb9dlWAUFQ"
+      },
+      "slides": {
+        "type": "bloks",
+        "display_name": "Elementi",
+        "restrict_components": true,
+        "component_whitelist": [
+          "section",
+          "wrapper",
+          "person",
+          "image"
+        ],
+        "required": true,
+        "id": "aoGGV1wERRCPet4-dIFMpA"
+      },
+      "weight": {
+        "type": "option",
+        "display_name": "Densità",
+        "options": [
+          {
+            "value": "none",
+            "name": "Uno per volta"
+          },
+          {
+            "value": "low",
+            "name": "Pochi per volta"
+          },
+          {
+            "value": "high",
+            "name": "Molti per "
+          }
+        ],
+        "id": "zXjihJApRzy-2oQqs9a3Ng"
+      },
+      "view": {
+        "type": "number",
+        "display_name": "Mostra",
+        "max_value": 3,
+        "min_value": 0,
+        "default_value": 0,
+        "description": "Numero minimo di elementi da mostrare per volta.\nZero mostra un solo elemento per volta",
+        "tooltip": true,
+        "id": "YgzojmSATYiPsopP7uDbzQ"
+      },
+      "delay": {
+        "type": "number",
+        "display_name": "Scorrimento",
+        "max_value": 5,
+        "min_value": 0,
+        "default_value": 0,
+        "description": "Velocità di scorrimento automatica",
+        "tooltip": true,
+        "id": "faQXTtpHQmCLWK-53PB8RA"
+      },
+      "order": {
+        "type": "number",
+        "display_name": "Riordino mobile",
+        "max_value": 6,
+        "min_value": 0,
+        "id": "9nB6vw5pSoaYAYYhPt-bVg"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Carosello",
+    "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "course",
+    "display_name": "Corso",
+    "description": null,
+    "created_at": "2025-01-27T11:08:20.782Z",
+    "updated_at": "2026-07-28T14:18:47.166Z",
+    "id": 6861333,
+    "schema": {
+      "alias": {
+        "type": "option",
+        "display_name": "Collega",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "course"
+        ],
+        "id": "tDJ7v26mQYedkZddFLEilw"
+      },
+      "new": {
+        "type": "section",
+        "display_name": "Nuovo",
+        "keys": [
+          "id",
+          "title",
+          "location",
+          "days",
+          "hours",
+          "starts",
+          "ends",
+          "seats",
+          "page"
+        ],
+        "id": "csXn9aVkRNWX3hn1QjEcuA"
+      },
+      "id": {
+        "type": "text",
+        "display_name": "Id del corso",
+        "required": false,
+        "description": "[numero]-[sede]-[area]-[frequenza]\nEsempio: 01-treviso-interni-serale",
+        "inline_label": true,
+        "id": "1wv6qs2ITvG1gKyGXlONcw"
+      },
+      "title": {
+        "type": "text",
+        "display_name": "Titolo",
+        "id": "vNyRiTMYTo-fSbEkWmmoVg"
+      },
+      "location": {
+        "type": "option",
+        "display_name": "Sede",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "location"
+        ],
+        "id": "4P-KvKZKS--19kmZhGdO_Q"
+      },
+      "days": {
+        "type": "options",
+        "display_name": "Giorni di lezione",
+        "options": [
+          {
+            "value": "Lunedì",
+            "name": "Lunedì"
+          },
+          {
+            "value": "Martedi",
+            "name": "Martedi"
+          },
+          {
+            "value": "Mercoledì",
+            "name": "Mercoledì"
+          },
+          {
+            "value": "Giovedì",
+            "name": "Giovedì"
+          },
+          {
+            "value": "Venerdì",
+            "name": "Venerdì"
+          },
+          {
+            "value": "Sabato",
+            "name": "Sabato"
+          }
+        ],
+        "id": "DWKFfvGIQn-iv_s7m8OHBQ",
+        "exclude_empty_option": true
+      },
+      "hours": {
+        "type": "options",
+        "display_name": "Orario delle lezioni",
+        "options": [
+          {
+            "value": "9:00/12:00",
+            "name": "9:00/12:00"
+          },
+          {
+            "value": "13:00/16:00",
+            "name": "13:00/16:00"
+          },
+          {
+            "value": "20:00/23:00",
+            "name": "20:00/23:00"
+          }
+        ],
+        "id": "EOtYBuU6Tw-jktgtMAs2oA",
+        "exclude_empty_option": true
+      },
+      "starts": {
+        "type": "datetime",
+        "display_name": "Data inizio",
+        "disable_time": true,
+        "id": "brwaYBKHRJ2SyNBXYsz7PQ"
+      },
+      "ends": {
+        "type": "datetime",
+        "display_name": "Data fine",
+        "disable_time": true,
+        "id": "6MZwUTYARvuj90BYcB78kg"
+      },
+      "seats": {
+        "type": "number",
+        "display_name": "Posti",
+        "description": "Numero massimo di posti",
+        "default_value": "12",
+        "id": "17oMPs-yTeCNWg-hZyubnA"
+      },
+      "page": {
+        "type": "multilink",
+        "display_name": "Pagina",
+        "restrict_content_types": true,
+        "component_whitelist": [
+          "page"
+        ],
+        "id": "ClFZ8bOuQZ2JJ8kibU_GPA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Corso",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "event",
+    "display_name": "Evento",
+    "description": null,
+    "created_at": "2025-01-27T11:08:34.043Z",
+    "updated_at": "2026-07-28T14:19:27.949Z",
+    "id": 6861335,
+    "schema": {
+      "alias": {
+        "type": "option",
+        "display_name": "Collega",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "event"
+        ],
+        "id": "Q-BIZch0T3OfhIQqEf-Hlw"
+      },
+      "new": {
+        "type": "section",
+        "display_name": "Nuovo",
+        "keys": [
+          "title",
+          "description",
+          "openday",
+          "location",
+          "date",
+          "page"
+        ],
+        "id": "kd36rvUzRuCzG4odpa3_oQ"
+      },
+      "title": {
+        "type": "text",
+        "display_name": "Titolo",
+        "id": "moigXVDhTvynbAmR_kfvKQ"
+      },
+      "description": {
+        "type": "markdown",
+        "display_name": "Descrizione",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "bold",
+          "paragraph",
+          "list",
+          "olist",
+          "hrule",
+          "link",
+          "inlinecode"
+        ],
+        "default_value": "",
+        "id": "sTHBLoUwRxmQ0XjPxyxQJQ"
+      },
+      "openday": {
+        "type": "option",
+        "display_name": "Openday",
+        "options": [
+          {
+            "value": "interni - primo livello",
+            "name": "Corso interni primo livello"
+          },
+          {
+            "value": "interni - secondo livello",
+            "name": "Corso interni secondo livello"
+          },
+          {
+            "value": "moda - primo livello",
+            "name": "Corso moda primo livello"
+          },
+          {
+            "value": "moda - secondo livello",
+            "name": "Corso moda secondo livello"
+          }
+        ],
+        "id": "1trlGswaSw2TS2GrKIri1w",
+        "exclude_empty_option": true
+      },
+      "location": {
+        "type": "option",
+        "display_name": "Sede",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "location"
+        ],
+        "id": "G91DDFyEQjSAK1EHTV-x4A"
+      },
+      "date": {
+        "type": "datetime",
+        "display_name": "Data",
+        "id": "ojfcgrNaRpel0ANJCwgwog"
+      },
+      "page": {
+        "type": "multilink",
+        "display_name": "Pagina",
+        "restrict_content_types": true,
+        "component_whitelist": [
+          "page"
+        ],
+        "id": "k5Xi4WJYSLO88LQAYUZhuA"
+      },
+      "form": {
+        "type": "option",
+        "display_name": "Modulo",
+        "source": "internal_stories",
+        "restrict_content_types": true,
+        "filter_content_type": [
+          "form"
+        ],
+        "id": "u4vDboS_Tdane3bcSqUPcA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Evento",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "field",
+    "display_name": "Campo",
+    "description": null,
+    "created_at": "2025-01-27T11:07:18.634Z",
+    "updated_at": "2026-07-28T14:19:03.596Z",
+    "id": 6861327,
+    "schema": {
+      "id": {
+        "type": "text",
+        "display_name": "Id",
+        "required": true,
+        "id": "pOGTy_uMSC-wu7oAF-1OXQ"
+      },
+      "input": {
+        "type": "option",
+        "display_name": "Tipo",
+        "options": [
+          {
+            "value": "text",
+            "name": "Testo"
+          },
+          {
+            "value": "number",
+            "name": "Numero"
+          },
+          {
+            "value": "email",
+            "name": "Email"
+          },
+          {
+            "value": "tel",
+            "name": "Telefono"
+          },
+          {
+            "value": "date",
+            "name": "Data"
+          },
+          {
+            "value": "checkbox",
+            "name": "Casella"
+          },
+          {
+            "value": "area",
+            "name": "Messaggio"
+          },
+          {
+            "value": "select",
+            "name": "Selezione"
+          },
+          {
+            "value": "multiple",
+            "name": "Selezione multipla"
+          },
+          {
+            "value": "enroll",
+            "name": "Iscrizione"
+          }
+        ],
+        "description": "Il campo tipo: \"Iscrizione\" può essere usato solo nelle pagine corso",
+        "default_value": "text",
+        "required": true,
+        "id": "l1nFb1ruS-WWLAXReF82jA",
+        "exclude_empty_option": true
+      },
+      "hidden": {
+        "type": "boolean",
+        "display_name": "Nascosto",
+        "default_value": false,
+        "inline_label": true,
+        "id": "UbeKpvFbTrqx_TiD8D-9jw"
+      },
+      "label": {
+        "type": "text",
+        "display_name": "Etichetta",
+        "required": true,
+        "max_length": 60,
+        "id": "jSpd3UzbRYSwVvf5umMR6A"
+      },
+      "placeholder": {
+        "type": "text",
+        "display_name": "Segnaposto",
+        "description": "Indicare il valore per il tipo \"Nascosto\"",
+        "max_length": 140,
+        "id": "6z7-C7IhTSmMZun7zavJoA"
+      },
+      "required": {
+        "type": "boolean",
+        "display_name": "Obbligatorio",
+        "default_value": false,
+        "inline_label": true,
+        "id": "Hy9CsPcrRoeCIGMFayDzsQ"
+      },
+      "options": {
+        "type": "textarea",
+        "display_name": "Opzioni",
+        "description": "Solo per il tipo \"Selezione\".\n\nUsare la sintassi chiave:valore e andare a capo per ogni opzione.",
+        "id": "GHeA6nszQaK6Yqu248belA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [
+      {
+        "id": 98842739269976,
+        "name": "Campo area \"interior\" nascosto",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      },
+      {
+        "id": 98842893705561,
+        "name": "Campo programma \"primo\" nascosto",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      },
+      {
+        "id": 98843302343002,
+        "name": "Campo programma \"secondo\" nascosto",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      },
+      {
+        "id": 89034335530610,
+        "name": "Cognome",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": "Obbligatorio"
+      },
+      {
+        "id": 89034200940145,
+        "name": "Email",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": "Obbligatorio"
+      },
+      {
+        "id": 89034069802608,
+        "name": "Frequenza",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": "Obbligatorio"
+      },
+      {
+        "id": 2504921,
+        "name": "Nome",
+        "component_id": 6861327,
+        "image": null,
+        "icon": null,
+        "color": null,
+        "description": "Obbligatorio"
+      },
+      {
+        "id": 89034754485875,
+        "name": "Sede",
+        "component_id": 6861327,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": "Obbligatorio"
+      }
+    ],
+    "preset_id": null,
+    "real_name": "Campo",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": "#dfe3e8",
+    "icon": "",
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "form",
+    "display_name": "Modulo",
+    "description": null,
+    "created_at": "2025-01-27T11:07:24.177Z",
+    "updated_at": "2026-08-03T10:45:35.238Z",
+    "id": 6861328,
+    "schema": {
+      "terms": {
+        "type": "text",
+        "pos": 8,
+        "display_name": "Collegamento termini e condizioni",
+        "tooltip": true,
+        "id": "_a1T5Eu3TI2XJiQk_xbYkw"
+      },
+      "alias": {
+        "type": "option",
+        "display_name": "Collega",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "form"
+        ],
+        "id": "odQxtBFVSLWNo1QW5Tj2-Q"
+      },
+      "list": {
+        "type": "options",
+        "display_name": "Liste",
+        "options": [
+          {
+            "value": 31,
+            "name": "Moda",
+            "_uid": "571fa11c-3595-46c1-b488-ff77c54302af"
+          },
+          {
+            "value": 32,
+            "name": "interni",
+            "_uid": "b4eaab9c-4b3a-4a00-9915-5dae6ab2afd3"
+          },
+          {
+            "value": 25,
+            "name": "Studenti",
+            "_uid": "13cd7530-b8a9-4d36-aa42-b999fc127892"
+          },
+          {
+            "value": 26,
+            "name": "1 livello",
+            "_uid": "b23131e8-7fe8-42b0-a6ef-8ed7ba11633a"
+          },
+          {
+            "value": 35,
+            "name": "2 livello",
+            "_uid": "a359bfdb-2819-4a5c-bc9b-48fc0dd6a96f"
+          },
+          {
+            "value": 16,
+            "name": "Openday",
+            "_uid": "eb72baea-4e49-4d6d-aa45-13168f524694"
+          },
+          {
+            "value": 15,
+            "name": "Informazioni",
+            "_uid": "1f153f7c-017e-40df-b3f5-4f8d9dd364f0"
+          },
+          {
+            "value": 17,
+            "name": "Iscrizione",
+            "_uid": "0682dd0f-33b0-4615-8200-67e0655ba01a"
+          },
+          {
+            "value": 28,
+            "name": "Clienti",
+            "_uid": "6bf4f1f9-bffc-41a2-ad1e-8e72ae918493"
+          },
+          {
+            "value": 19,
+            "name": "Progetti",
+            "_uid": "259f1e8f-4e23-432e-a0c2-fc5a6c2f91a2"
+          },
+          {
+            "value": 30,
+            "name": "Aziende",
+            "_uid": "8912a277-039b-46b8-a1b3-2c81e22106c3"
+          },
+          {
+            "value": 33,
+            "name": "Assunzioni",
+            "_uid": "54342abb-3267-48ab-b3fc-0e4b81fcfeff"
+          },
+          {
+            "value": 24,
+            "name": "Collaborazioni",
+            "_uid": "0b93007b-d2ff-414b-ba65-8eb85c94f230"
+          },
+          {
+            "value": 29,
+            "name": "Docenti",
+            "_uid": "6d39150f-b35c-479a-a1bb-94628464da8a"
+          },
+          {
+            "value": "23",
+            "name": "Colloquio",
+            "_uid": "a770918a-a8e8-4723-a85b-76a088e27d72"
+          }
+        ],
+        "description": "Selezionare le liste in cui includere i nuovi contatti",
+        "inline_label": true,
+        "id": "XT80gJyvTTCEZr8swNS3QQ"
+      },
+      "tracking": {
+        "type": "option",
+        "display_name": "Tracciamento",
+        "options": [
+          {
+            "value": "enroll",
+            "name": "Iscrizione",
+            "_uid": "84237469-1fad-4414-af46-193b2e1d9e89"
+          },
+          {
+            "value": "open_day",
+            "name": "Openday",
+            "_uid": "7d73ce74-deae-4bd8-b750-1b710b7d1253"
+          },
+          {
+            "_uid": "df980540-4fe7-4859-a762-9232af1a48ce",
+            "value": "download",
+            "name": "Scarica"
+          },
+          {
+            "_uid": "30ef00ba-d891-4dd4-bd04-9b4d4016e9e7",
+            "value": "project",
+            "name": "Progetto"
+          },
+          {
+            "_uid": "16fa16c6-16d7-4fff-91f8-9b5388276cfa",
+            "value": "recruit",
+            "name": "Assunzione"
+          },
+          {
+            "_uid": "cce28a1d-8b34-4d02-9d7c-38108141b5c0",
+            "value": "partnership",
+            "name": "Collaborazione"
+          }
+        ],
+        "id": "ivBdhEM9SE-2VpGQJmH8jg",
+        "use_uuid": true
+      },
+      "new": {
+        "type": "section",
+        "display_name": "Nuovo",
+        "keys": [
+          "title",
+          "label",
+          "fields",
+          "message"
+        ],
+        "id": "EMUhS6yeQl-wKtXkAkUutA"
+      },
+      "title": {
+        "type": "text",
+        "display_name": "Titolo",
+        "id": "rNgV9i8mTy2r_tMtBKrhEw"
+      },
+      "label": {
+        "type": "text",
+        "display_name": "Azione",
+        "id": "lkvGV2qkR7CiqySpTHgc-Q"
+      },
+      "fields": {
+        "type": "bloks",
+        "display_name": "Passaggi",
+        "restrict_components": true,
+        "component_whitelist": [
+          "field"
+        ],
+        "id": "Bl2giJFiQ7ChEsU06JT60g"
+      },
+      "message": {
+        "type": "markdown",
+        "display_name": "Messaggio di successo",
+        "description": "Il messaggio di successo viene mostrato al termine del modulo.\n\nNel testo potrai inserire {{nome del campo}} tra quelli inseriti.\n\nElenco dei campi: \nname, surname,fullname, birthday, gender, email, phone, country, \nregion, district, city, address, message, policy.",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "h3",
+          "h4",
+          "h5",
+          "h6",
+          "bold",
+          "italic",
+          "paragraph",
+          "list",
+          "hrule",
+          "link",
+          "image",
+          "inlinecode"
+        ],
+        "id": "pyQ7hI3vS7GFF0qDrp5Gnw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "{{it.list}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Modulo",
+    "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": "#dfe3e8",
+    "icon": "",
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "gallery",
+    "display_name": "Galleria",
+    "description": null,
+    "created_at": "2025-02-17T20:59:44.854Z",
+    "updated_at": "2026-07-28T14:17:06.425Z",
+    "id": 6967428,
+    "schema": {
+      "fullScreen": {
+        "type": "boolean",
+        "display_name": "Mostra tutto schemo",
+        "inline_label": true,
+        "default_value": false,
+        "id": "GbTaAXd8T0iQdAPyZRF6VQ",
+        "pos": 0
+      },
+      "interface": {
+        "type": "boolean",
+        "pos": 1,
+        "default_value": true,
+        "id": "dwQ8jT0pTZO9SPyHUXgZeQ"
+      },
+      "delay": {
+        "type": "number",
+        "pos": 2,
+        "display_name": "Velocità scorrimento automatico",
+        "min_value": 0,
+        "max_value": 5,
+        "id": "DYzz7_mwTreUya9pd7g83w"
+      },
+      "images": {
+        "type": "multiasset",
+        "display_name": "Immagini",
+        "filetypes": [
+          "images"
+        ],
+        "required": true,
+        "id": "Pj22DLRRSJOcXQWJSqJavA",
+        "pos": 3
+      },
+      "size": {
+        "type": "option",
+        "display_name": "Grandezza",
+        "options": [
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/8",
+            "name": "Un ottavo"
+          }
+        ],
+        "default_value": [
+          "1/2"
+        ],
+        "description": "Grandezza delle anteprime",
+        "tooltip": true,
+        "id": "sAeZr-7qROed7oZvjyIZ1Q",
+        "pos": 4,
+        "exclude_empty_option": true
+      },
+      "aspect": {
+        "type": "option",
+        "display_name": "Aspetto",
+        "options": [
+          {
+            "value": "1/1",
+            "name": "Quadrata"
+          },
+          {
+            "value": "3/4",
+            "name": "Verticale"
+          },
+          {
+            "value": "4/3",
+            "name": "Orizzontale"
+          }
+        ],
+        "id": "d1bhxvqzT3GuOsWOvE2qgw",
+        "pos": 5,
+        "exclude_empty_option": true
+      },
+      "width": {
+        "type": "options",
+        "display_name": "Larghezza",
+        "options": [
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/3",
+            "name": "Un terzo"
+          },
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "2/3",
+            "name": "Due terzi"
+          },
+          {
+            "value": "3/4",
+            "name": "Tre quarti"
+          },
+          {
+            "value": "1/1",
+            "name": "Intera"
+          }
+        ],
+        "default_value": [
+          "1/2"
+        ],
+        "description": "Larghezza rispetto alla sezione. Usare più opzioni per schermi sempre più grandi.",
+        "tooltip": true,
+        "max_options": 4,
+        "id": "pfAoULAlTs2sRQz7X0iS_A",
+        "pos": 6,
+        "exclude_empty_option": true
+      },
+      "tab-f210fe3e-1f82-4656-8c48-7feb798022d3": {
+        "display_name": "Impostazioni",
+        "keys": [
+          "delay",
+          "interface",
+          "fullScreen"
+        ],
+        "pos": 7,
+        "type": "tab",
+        "id": "8hD-Ph-CRlaMSH_reYAi0w"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.images.alt}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Galleria",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "grid",
+    "display_name": null,
+    "description": "",
+    "created_at": "2026-03-10T21:24:16.816Z",
+    "updated_at": "2026-08-03T11:45:05.082Z",
+    "id": 153551899924324,
+    "schema": {
+      "resource": {
+        "type": "option",
+        "pos": 0,
+        "use_uuid": true,
+        "display_name": "Tipo",
+        "options": [
+          {
+            "_uid": "6336c695-eaad-4149-9bac-7063b14031a4",
+            "name": "Articoli",
+            "value": "articles"
+          },
+          {
+            "_uid": "2c129371-d892-4a05-bed0-c67a41b5013f",
+            "value": "persons",
+            "name": "Persone"
+          },
+          {
+            "_uid": "bf1883c8-5a74-4474-a01b-7d9411182253",
+            "value": "jobs",
+            "name": "Lavoro"
+          },
+          {
+            "_uid": "52c0135c-a785-4553-827d-207881705cd2",
+            "value": "courses",
+            "name": "Corsi"
+          },
+          {
+            "_uid": "48ced79b-4c75-4ec9-9ce1-322bb45c620e",
+            "value": "events",
+            "name": "Eventi"
+          },
+          {
+            "_uid": "6b6101b1-21a1-476e-9cab-8b48d8afb81a",
+            "value": "projects",
+            "name": "Progetti"
+          }
+        ],
+        "id": "YQYj9466QWOoamphQZzBHg",
+        "exclude_empty_option": true
+      },
+      "title": {
+        "type": "markdown",
+        "pos": 1,
+        "id": "-v3JoZEERmC_wU6myNM1Yg"
+      },
+      "subtitle": {
+        "type": "markdown",
+        "pos": 2,
+        "id": "C9G8GI7bRsutdZeI4JsIqg"
+      },
+      "filter": {
+        "type": "text",
+        "pos": 3,
+        "id": "aCwvC_lVQ5WuEh0AFLbzOA"
+      },
+      "columns": {
+        "type": "number",
+        "pos": 4,
+        "use_uuid": true,
+        "exclude_empty_option": true,
+        "options": [
+          {
+            "_uid": "e8cc0bae-2bdd-41aa-88ed-6ead9919b728",
+            "name": "Due",
+            "value": "2"
+          },
+          {
+            "_uid": "81d77283-8a79-45a1-982a-e8eebae2242a",
+            "value": "",
+            "name": "Tre"
+          }
+        ],
+        "display_name": "Colonne",
+        "min_value": 1,
+        "max_value": 4,
+        "id": "K1WdnQTUQSu7DENgIDmTxA",
+        "default_value": "3"
+      },
+      "limit": {
+        "type": "number",
+        "pos": 5,
+        "use_uuid": true,
+        "id": "4AjHNaoZRSSCJHQONmYjEQ",
+        "min_value": 6,
+        "max_value": 30,
+        "steps": 3,
+        "default_value": "12"
+      },
+      "dark": {
+        "type": "boolean",
+        "display_name": "Tema scuro",
+        "default_value": false,
+        "inline_label": true,
+        "id": "4t_bsrGTR-qb3OzsK9Thyw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "grid",
+    "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "image",
+    "display_name": "Immagine",
+    "description": null,
+    "created_at": "2025-02-17T11:27:26.703Z",
+    "updated_at": "2026-07-28T14:20:26.363Z",
+    "id": 6965146,
+    "schema": {
+      "image": {
+        "type": "asset",
+        "display_name": "Immagine",
+        "filetypes": [
+          "images"
+        ],
+        "required": true,
+        "id": "x-XRsZdHTFuoJlvB_I-PnQ"
+      },
+      "width": {
+        "type": "options",
+        "display_name": "Larghezza",
+        "options": [
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/3",
+            "name": "Un terzo"
+          },
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "2/3",
+            "name": "Due terzi"
+          },
+          {
+            "value": "3/4",
+            "name": "Tre quarti"
+          },
+          {
+            "value": "1/1",
+            "name": "Intera"
+          }
+        ],
+        "default_value": [
+          "1/2"
+        ],
+        "description": "Larghezza rispetto alla sezione. Usare più opzioni per schermi sempre più grandi.",
+        "tooltip": true,
+        "max_options": 4,
+        "id": "PfInhzP0T1OmSM-XyQkDeg",
+        "exclude_empty_option": true
+      },
+      "size": {
+        "type": "option",
+        "display_name": "Dimensione",
+        "options": [
+          {
+            "value": "sm",
+            "name": "Piccola"
+          },
+          {
+            "value": "md",
+            "name": "Media"
+          },
+          {
+            "value": "lg",
+            "name": "Grande"
+          }
+        ],
+        "description": "Dimensione fissa immagine",
+        "tooltip": true,
+        "id": "tBm7NEXqSg-BylQw8c4BYg",
+        "exclude_empty_option": true
+      },
+      "aspect": {
+        "type": "option",
+        "display_name": "Aspetto",
+        "options": [
+          {
+            "value": "1/1",
+            "name": "Quadrata"
+          },
+          {
+            "value": "3/4",
+            "name": "Verticale"
+          },
+          {
+            "value": "4/9",
+            "name": "Verticale stretta"
+          },
+          {
+            "value": "4/3",
+            "name": "Orizzontale"
+          },
+          {
+            "value": "9/4",
+            "name": "Orizzontale larga"
+          }
+        ],
+        "description": "Proporzioni immagine",
+        "tooltip": true,
+        "id": "nZ3FVwffScOT1vBTAQ1ndg",
+        "exclude_empty_option": true
+      },
+      "order": {
+        "type": "number",
+        "display_name": "Riordino mobile",
+        "max_value": 10,
+        "min_value": 0,
+        "id": "nhLNfF12QNW2XRbD8BV5xA"
+      },
+      "fullScreen": {
+        "type": "boolean",
+        "display_name": "Mostra tutto schemo",
+        "inline_label": true,
+        "default_value": false,
+        "id": "77BS21bkRjWWkScWRPOzLg"
+      },
+      "author": {
+        "type": "option",
+        "display_name": "Autore",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "person"
+        ],
+        "id": "Bu6Jdbv_SKizhVgt8rgd9g"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.image.alt}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Immagine",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "job",
+    "display_name": "Lavoro",
+    "description": "",
+    "created_at": "2026-03-10T20:45:03.298Z",
+    "updated_at": "2026-03-10T21:01:12.926Z",
+    "id": 153542259922771,
+    "schema": {
+      "company": {
+        "type": "text",
+        "pos": 0,
+        "display_name": "Azienda",
+        "required": true,
+        "id": "mV7qZyuXREOyrRoX6wLHiw"
+      },
+      "business": {
+        "type": "text",
+        "pos": 1,
+        "display_name": "Descrizione azienda",
+        "id": "Lp090lzCTG2tEe9_xKPZoA"
+      },
+      "logo": {
+        "type": "asset",
+        "pos": 2,
+        "id": "9uiJSw4fQXqLmWTuV8tRYg",
+        "filetypes": [
+          "images"
+        ],
+        "asset_folder_id": 688306
+      },
+      "area": {
+        "type": "option",
+        "pos": 3,
+        "use_uuid": true,
+        "id": "nXZAz3oPQLm3jDji1lqXRg",
+        "options": [
+          {
+            "_uid": "d308c464-5e0c-4594-9d54-b77635541ccd",
+            "name": "Interior design",
+            "value": "interior"
+          },
+          {
+            "_uid": "baa46972-1794-448e-9fba-f2280ace0b85",
+            "value": "fashion",
+            "name": "Fashion design"
+          }
+        ]
+      },
+      "title": {
+        "type": "text",
+        "pos": 4,
+        "id": "64wErNk_Qc-s3psl6R_rXw",
+        "display_name": "Titolo",
+        "rich_markdown": true,
+        "customize_toolbar": true,
+        "toolbar": [
+          "list",
+          "h2"
+        ]
+      },
+      "description": {
+        "type": "markdown",
+        "pos": 5,
+        "id": "e-k6Jl4kTJ-0QGbr7S6uYA",
+        "customize_toolbar": true,
+        "toolbar": [
+          "bold",
+          "italic",
+          "list"
+        ]
+      },
+      "location": {
+        "type": "text",
+        "pos": 6,
+        "id": "NnNLOyeRQVemYZ-3CDkqAw",
+        "display_name": "Luogo di lavoro"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Lavoro",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "list",
+    "display_name": "Fisarmonica",
+    "description": null,
+    "created_at": "2025-01-27T11:07:48.189Z",
+    "updated_at": "2026-07-28T14:27:49.380Z",
+    "id": 6861330,
+    "schema": {
+      "items": {
+        "type": "bloks",
+        "display_name": "Testi",
+        "restrict_components": true,
+        "component_whitelist": [
+          "text"
+        ],
+        "required": true,
+        "id": "Vwle8j1FTfaWtY0DyXHHNQ"
+      },
+      "size": {
+        "type": "option",
+        "display_name": "Largezza",
+        "options": [
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/3",
+            "name": "Un terzo"
+          },
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "2/3",
+            "name": "Due terzi"
+          },
+          {
+            "value": "3/4",
+            "name": "Tre quarti"
+          }
+        ],
+        "default_value": "1/2",
+        "id": "z-_ChIX5SIC38haQUKjnbg",
+        "exclude_empty_option": true
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{@each(it.title)}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Fisarmonica",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "location",
+    "display_name": "Località",
+    "description": null,
+    "created_at": "2025-01-27T11:08:14.244Z",
+    "updated_at": "2025-04-10T09:55:39.192Z",
+    "id": 6861332,
+    "schema": {
+      "alias": {
+        "type": "option",
+        "display_name": "Collega",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "location"
+        ],
+        "id": "gb-rHgDNQBK-mafhD5y-oQ"
+      },
+      "new": {
+        "type": "section",
+        "display_name": "Nuovo",
+        "keys": [
+          "title",
+          "address",
+          "gps",
+          "direction"
+        ],
+        "id": "16hxb-24TAO16nH6aZ8aWg"
+      },
+      "title": {
+        "type": "text",
+        "display_name": "Nome",
+        "id": "oxx24VvLQ6WmQoiJFtUpvw"
+      },
+      "address": {
+        "type": "textarea",
+        "display_name": "Indirizzo",
+        "description": "Via, Civico - cap\nCittà Provincia",
+        "id": "2M84KqmmRouNqlbPv9XeEg"
+      },
+      "gps": {
+        "type": "text",
+        "display_name": "Coordinate",
+        "description": "Latitudine/Longitudine",
+        "id": "a_DVkdH8TyG0Uslurh1xkw"
+      },
+      "direction": {
+        "type": "text",
+        "display_name": "Indicazioni",
+        "id": "DwTJk2PjQ062GEzANO-D7g"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Località",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "map",
+    "display_name": "Mappa",
+    "description": null,
+    "created_at": "2025-01-27T11:08:02.718Z",
+    "updated_at": "2025-01-27T11:08:02.718Z",
+    "id": 6861331,
+    "schema": {
+      "locations": {
+        "type": "options",
+        "display_name": "Località",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "location"
+        ],
+        "required": true,
+        "id": "KsLUyYQzRLCEvitXh7nxIg"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Mappa",
+    "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "menu",
+    "display_name": "Menu",
+    "description": null,
+    "created_at": "2025-02-24T20:30:47.983Z",
+    "updated_at": "2025-05-09T12:26:21.625Z",
+    "id": 7001404,
+    "schema": {
+      "title": {
+        "type": "text",
+        "display_name": "Titolo",
+        "required": false,
+        "id": "5ld5DSVqS5mi265aDfDHuQ"
+      },
+      "links": {
+        "type": "bloks",
+        "display_name": "Collegamenti",
+        "restrict_components": true,
+        "component_whitelist": [
+          "action"
+        ],
+        "required": true,
+        "id": "xp23lKUqQeejFndsHPz2JA"
+      },
+      "inline": {
+        "type": "boolean",
+        "display_name": "Disponi in linea",
+        "default_value": false,
+        "inline_label": true,
+        "id": "sG7fZhmNTUKu05KIoErZwQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.title}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Menu",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "nav",
+    "display_name": "Navigatore",
+    "description": null,
+    "created_at": "2025-01-27T11:07:34.830Z",
+    "updated_at": "2025-02-27T09:03:41.851Z",
+    "id": 6861329,
+    "schema": {
+      "contents": {
+        "type": "bloks",
+        "display_name": "Collegamenti",
+        "restrict_components": true,
+        "component_whitelist": [
+          "action",
+          "list",
+          "menu"
+        ],
+        "required": false,
+        "id": "oD2N5r4USda13ddk9v6w7Q"
+      },
+      "message": {
+        "type": "markdown",
+        "display_name": "Messaggio",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "bold",
+          "paragraph",
+          "link",
+          "inlinecode",
+          "italic"
+        ],
+        "id": "79GTg43tSHW6RP7T7TLlSw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Navigatore",
+    "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "page",
+    "display_name": "Pagina",
+    "description": null,
+    "created_at": "2024-10-29T08:43:33.652Z",
+    "updated_at": "2026-08-03T10:20:32.226Z",
+    "id": 6486303,
+    "schema": {
+      "preview": {
+        "type": "section",
+        "display_name": "Anteprima metadati",
+        "keys": [
+          "title",
+          "description",
+          "image"
+        ],
+        "id": "7Hro3SybSkGBsuu-v8u8oA"
+      },
+      "title": {
+        "type": "textarea",
+        "display_name": "Titolo",
+        "max_length": 80,
+        "id": "3EN9tPZkROOuR9aiN4TNjQ"
+      },
+      "description": {
+        "type": "textarea",
+        "display_name": "Riassunto",
+        "max_length": 300,
+        "id": "b9kgNgG6QwW1n66Ap8QI6Q"
+      },
+      "image": {
+        "type": "asset",
+        "display_name": "Immagine",
+        "description": "Dimensione consigliata 1200x627px",
+        "filetypes": [
+          "images"
+        ],
+        "id": "_JqS80rxQcupWGrdpBqCXw"
+      },
+      "menu": {
+        "type": "section",
+        "display_name": "Menu pagina",
+        "keys": [
+          "header",
+          "footer"
+        ],
+        "id": "_1Okp8srSR-tjX_FJRoPPA"
+      },
+      "header": {
+        "type": "option",
+        "display_name": "Menu superiore",
+        "description": "Seleziona uno delle intestazioni o creane una nuova",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "nav"
+        ],
+        "id": "gonGqm1gT9inBmEGjn5fdw"
+      },
+      "footer": {
+        "type": "option",
+        "display_name": "Menu inferiore",
+        "description": "Seleziona uno dei pie di pagina o creane uno nuovo",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "nav"
+        ],
+        "id": "3e28lxqyTEu8aWVQMq3L7g"
+      },
+      "body": {
+        "type": "bloks",
+        "display_name": "Contenuti pagina",
+        "restrict_components": true,
+        "component_whitelist": [
+          "section",
+          "carousel",
+          "map",
+          "aside",
+          "grid"
+        ],
+        "id": "fCbv-ULoQnaWysQ8xZqvpQ",
+        "component_denylist": []
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": false,
+    "all_presets": [
+      {
+        "id": 2541528,
+        "name": "Pagina progetto",
+        "component_id": 6486303,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      },
+      {
+        "id": 2539232,
+        "name": "Pagina vuota",
+        "component_id": 6486303,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      },
+      {
+        "id": 201166915827796,
+        "name": "Progetto nuovo layout",
+        "component_id": 6486303,
+        "image": "",
+        "icon": "",
+        "color": "",
+        "description": ""
+      }
+    ],
+    "preset_id": null,
+    "real_name": "Pagina",
+    "component_group_uuid": "3aee7005-d4d5-4e14-99e1-d9744a656d63",
+    "color": "#dfe3e8",
+    "icon": "",
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "person",
+    "display_name": "Persona",
+    "description": null,
+    "created_at": "2025-01-27T11:08:28.886Z",
+    "updated_at": "2026-08-03T11:38:43.158Z",
+    "id": 6861334,
+    "schema": {
+      "alias": {
+        "type": "option",
+        "display_name": "Collega",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "person"
+        ],
+        "id": "VCT8gEpZRI2obi0N8x31_w"
+      },
+      "hide": {
+        "type": "options",
+        "display_name": "Nascondi",
+        "options": [
+          {
+            "value": "video",
+            "name": "Video",
+            "_uid": "d14ef8dd-c2ec-4688-9846-63622e5cbbc5"
+          },
+          {
+            "value": "description",
+            "name": "Descrizione",
+            "_uid": "f2acdab8-0ec1-4e2f-ae67-d9be033e56be"
+          },
+          {
+            "value": "role",
+            "name": "Ruolo",
+            "_uid": "a6ef4988-c0f8-4a83-8c58-71e737f92321"
+          },
+          {
+            "value": "links",
+            "name": "Collegamenti",
+            "_uid": "5ade1aa6-91d7-4988-a8b3-fff4533f08d0"
+          },
+          {
+            "_uid": "03a16ef5-49a8-4aa6-964f-e40c5e3976a3",
+            "value": "image",
+            "name": "Immagine"
+          },
+          {
+            "_uid": "de33fe67-d964-4459-8eca-523eaefb657b",
+            "value": "title",
+            "name": "Titolo"
+          }
+        ],
+        "id": "xUn4LOywSr2ugpsrKwB_xg",
+        "exclude_empty_option": true
+      },
+      "new": {
+        "type": "section",
+        "display_name": "Nuovo",
+        "keys": [
+          "image",
+          "video",
+          "title",
+          "role",
+          "description",
+          "links"
+        ],
+        "id": "eGYuIKgCQ9am8UZ6z8v-tw"
+      },
+      "image": {
+        "type": "asset",
+        "display_name": "Immagine",
+        "description": "Dimensione consigliata 500x500",
+        "filetypes": [
+          "images"
+        ],
+        "id": "4lyXpFSRQSyI0EGhvW2WUw",
+        "allow_external_url": true
+      },
+      "video": {
+        "type": "text",
+        "display_name": "Video",
+        "description": "id del video di youtube",
+        "tooltip": true,
+        "id": "jUeUsY3rSPaYf0OmvXw-ZQ"
+      },
+      "title": {
+        "type": "text",
+        "display_name": "Nome Cognome",
+        "id": "ngCk602kS4yhSeTFrxt0ug"
+      },
+      "role": {
+        "type": "option",
+        "display_name": "Ruolo",
+        "options": [
+          {
+            "value": "interior",
+            "name": "Studente interni"
+          },
+          {
+            "value": "style",
+            "name": "Docente stile"
+          },
+          {
+            "value": "design",
+            "name": "Docente progettazione"
+          },
+          {
+            "value": "cad",
+            "name": "Docente software"
+          },
+          {
+            "value": "3d",
+            "name": "Docente modellazione"
+          },
+          {
+            "value": "building",
+            "name": "Docente cantieristica"
+          },
+          {
+            "value": "lighting",
+            "name": "Docente illuminotecnica"
+          }
+        ],
+        "id": "4GcVps-fR8eoF2EDIKNq1g",
+        "exclude_empty_option": true
+      },
+      "description": {
+        "type": "markdown",
+        "display_name": "Descrizione",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "bold",
+          "italic",
+          "paragraph",
+          "quote",
+          "inlinecode"
+        ],
+        "max_length": 240,
+        "id": "Q0aaK3R4QMWDIirxAbTV8w"
+      },
+      "links": {
+        "type": "bloks",
+        "display_name": "Collegamenti",
+        "restrict_components": true,
+        "component_whitelist": [
+          "action"
+        ],
+        "maximum": 3,
+        "id": "6_u0kkhERQ6orrFYpexhTQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Persona",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "process",
+    "display_name": "Procedura",
+    "description": null,
+    "created_at": "2025-02-24T20:30:53.097Z",
+    "updated_at": "2025-02-24T20:30:53.097Z",
+    "id": 7001405,
+    "schema": {
+      "steps": {
+        "type": "bloks",
+        "display_name": "Passaggi",
+        "restrict_components": true,
+        "component_whitelist": [
+          "wrapper"
+        ],
+        "required": true,
+        "id": "cZt-AnISTNyfN0q9rBlhng"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.title}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Procedura",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "project",
+    "display_name": "Progetto",
+    "description": "",
+    "created_at": "2026-07-31T15:31:23.394Z",
+    "updated_at": "2026-08-03T13:12:46.902Z",
+    "id": 204072072787651,
+    "schema": {
+      "body": {
+        "type": "bloks",
+        "pos": 0,
+        "id": "r31k9RmOTHaHge6FzHqlew",
+        "display_name": "Contenuti",
+        "restrict_type": "groups",
+        "restrict_components": true,
+        "component_group_whitelist": [
+          "7748dd1c-0924-4e46-aa88-603da82dbb43"
+        ],
+        "component_group_denylist": [],
+        "component_tag_whitelist": [],
+        "component_tag_denylist": []
+      },
+      "cover": {
+        "type": "asset",
+        "pos": 1,
+        "id": "IzFNTVz4RCyC66rmjA0JeA",
+        "required": true
+      },
+      "title": {
+        "type": "markdown",
+        "pos": 2,
+        "id": "d9L-Q24RQLK1xHC2QXdSXA",
+        "rich_markdown": true,
+        "customize_toolbar": true,
+        "toolbar": [
+          "bold",
+          "italic",
+          "h1",
+          "h2",
+          "h3",
+          "toggle-richtext",
+          "link",
+          "hrule",
+          "quote",
+          "h4",
+          "h5",
+          "h6"
+        ],
+        "required": true
+      },
+      "subtitle": {
+        "type": "markdown",
+        "pos": 3,
+        "id": "zP6Tx4rZTtKfEkfMKEno0g",
+        "required": true
+      },
+      "tab-46b603ba-69ec-40ea-9165-abb021e0ad4a": {
+        "display_name": "Anteprima",
+        "keys": [
+          "cover",
+          "title",
+          "subtitle"
+        ],
+        "pos": 4,
+        "type": "tab",
+        "id": "RrYDumnsQOqRZauwIeCtSg"
+      },
+      "tab-4643bf87-3c5b-46c3-bc6a-be5bf212ea99": {
+        "display_name": "Pagina",
+        "keys": [
+          "body"
+        ],
+        "pos": 5,
+        "type": "tab",
+        "id": "RkO_hzxbRsO8ar5b8hLqmQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Progetto",
+    "component_group_uuid": "3aee7005-d4d5-4e14-99e1-d9744a656d63",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "section",
+    "display_name": "Sezione",
+    "description": null,
+    "created_at": "2025-01-27T11:07:02.008Z",
+    "updated_at": "2025-04-01T13:51:00.078Z",
+    "id": 6861325,
+    "schema": {
+      "id": {
+        "type": "text",
+        "display_name": "Ancora",
+        "id": "aKbg4NnKSku3fwr1tKwHpA"
+      },
+      "contents": {
+        "type": "bloks",
+        "display_name": "Contenuti",
+        "restrict_components": true,
+        "component_whitelist": [
+          "alias",
+          "background",
+          "image",
+          "gallery",
+          "video",
+          "list",
+          "process",
+          "text",
+          "action",
+          "wrapper",
+          "carousel",
+          "location",
+          "person",
+          "event",
+          "course",
+          "article",
+          "form"
+        ],
+        "required": true,
+        "id": "T0b9knXvRrOX_tlt70URog"
+      },
+      "align": {
+        "type": "options",
+        "display_name": "Allinea",
+        "options": [
+          {
+            "name": "Sopra",
+            "value": "start"
+          },
+          {
+            "name": "Centro",
+            "value": "center"
+          },
+          {
+            "name": "Sotto",
+            "value": "end"
+          },
+          {
+            "name": "Riempi",
+            "value": "stretch"
+          }
+        ],
+        "max_options": 2,
+        "id": "5-AkufX0Qvyg1uZIQgf4sw"
+      },
+      "dark": {
+        "type": "boolean",
+        "display_name": "Tema scuro",
+        "default_value": false,
+        "inline_label": true,
+        "id": "4t_bsrGTR-qb3OzsK9Thyw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.id}}",
+    "is_nestable": true,
+    "all_presets": [
+      {
+        "id": 2523272,
+        "name": "Copertina pagina",
+        "component_id": 6861325,
+        "image": "",
+        "icon": "",
+        "color": "#f4cc48",
+        "description": ""
+      },
+      {
+        "id": 2631642,
+        "name": "Mappa",
+        "component_id": 6861325,
+        "image": "",
+        "icon": "",
+        "color": "#4656ae",
+        "description": ""
+      },
+      {
+        "id": 2523321,
+        "name": "Sezione introduzioni",
+        "component_id": 6861325,
+        "image": "",
+        "icon": "",
+        "color": "#f5a928",
+        "description": ""
+      },
+      {
+        "id": 2523322,
+        "name": "Sezione procedura",
+        "component_id": 6861325,
+        "image": "",
+        "icon": "",
+        "color": "#ef6252",
+        "description": ""
+      }
+    ],
+    "preset_id": null,
+    "real_name": "Sezione",
+    "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "text",
+    "display_name": "Testo",
+    "description": null,
+    "created_at": "2025-01-27T11:06:37.308Z",
+    "updated_at": "2026-07-23T09:24:22.658Z",
+    "id": 6861321,
+    "schema": {
+      "title": {
+        "type": "markdown",
+        "display_name": "Titolo",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "h6",
+          "link",
+          "inlinecode",
+          "italic",
+          "bold",
+          "hrule"
+        ],
+        "id": "fSZ74JhFR-6WCpVkUR5COA"
+      },
+      "description": {
+        "type": "markdown",
+        "display_name": "Descrizione",
+        "customize_toolbar": true,
+        "rich_markdown": true,
+        "toolbar": [
+          "bold",
+          "paragraph",
+          "list",
+          "olist",
+          "hrule",
+          "link",
+          "inlinecode",
+          "h5",
+          "h6",
+          "italic"
+        ],
+        "id": "CRM1g_EuRRepQxCiaWhYfQ"
+      },
+      "justify": {
+        "type": "option",
+        "display_name": "Giustifica",
+        "options": [
+          {
+            "value": "right",
+            "name": "Destra"
+          },
+          {
+            "value": "center",
+            "name": "Centro"
+          },
+          {
+            "value": "left",
+            "name": "Sinistra"
+          }
+        ],
+        "id": "Fw1EXh0FQ3-DHzR44Og-nw"
+      },
+      "width": {
+        "type": "options",
+        "display_name": "Larghezza",
+        "options": [
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/3",
+            "name": "Un terzo"
+          },
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "2/3",
+            "name": "Due terzi"
+          },
+          {
+            "value": "3/4",
+            "name": "Tre quarti"
+          },
+          {
+            "value": "1/1",
+            "name": "Intera"
+          }
+        ],
+        "default_value": [
+          "1/2"
+        ],
+        "description": "Larghezza rispetto alla sezione. Usare più opzioni per schermi sempre più grandi.",
+        "tooltip": true,
+        "max_options": 4,
+        "id": "urbehQR4QByQinaJ5mszeQ"
+      },
+      "theme": {
+        "type": "option",
+        "display_name": "Tema",
+        "options": [
+          {
+            "value": "primary",
+            "name": "Primario",
+            "_uid": "0c364997-1975-476c-961e-317570e556a1"
+          },
+          {
+            "value": "secondary",
+            "name": "Secondario",
+            "_uid": "e60b1058-d83b-40b9-b9a2-f55b9a917da1"
+          },
+          {
+            "_uid": "c71fd51a-b1a8-46b9-a68c-be6b89bfd35e",
+            "value": "dark",
+            "name": "Scuro"
+          },
+          {
+            "_uid": "383ddcbc-6843-4764-982f-dd6453b8cd15",
+            "value": "light",
+            "name": "Chiaro"
+          }
+        ],
+        "id": "DrPUqN_NQYy7wt2r2d63tA"
+      },
+      "order": {
+        "type": "number",
+        "display_name": "Riordino mobile",
+        "max_value": 10,
+        "min_value": 0,
+        "id": "eDh6Ha3ZQw6ZwueLQJLmhw"
+      },
+      "hide": {
+        "type": "option",
+        "display_name": "Nascondi mobile",
+        "options": [
+          {
+            "value": "title",
+            "name": "Titolo"
+          },
+          {
+            "value": "description",
+            "name": "Descrizione"
+          },
+          {
+            "value": "all",
+            "name": "Tutto"
+          }
+        ],
+        "id": "-3UkgKjuTbC-tdUvIhaVnw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.title}}",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Testo",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "video",
+    "display_name": "Video",
+    "description": null,
+    "created_at": "2025-03-17T11:32:00.352Z",
+    "updated_at": "2025-03-17T13:36:17.546Z",
+    "id": 7094435,
+    "schema": {
+      "source": {
+        "type": "text",
+        "display_name": "Collegamento",
+        "required": true,
+        "id": "QiUzzKG1TKCD9BsJ9N8hqA"
+      },
+      "width": {
+        "type": "options",
+        "display_name": "Larghezza",
+        "options": [
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/3",
+            "name": "Un terzo"
+          },
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "2/3",
+            "name": "Due terzi"
+          },
+          {
+            "value": "3/4",
+            "name": "Tre quarti"
+          },
+          {
+            "value": "1/1",
+            "name": "Intera"
+          }
+        ],
+        "default_value": [
+          "1/2"
+        ],
+        "description": "Larghezza rispetto alla sezione. Usare più opzioni per schermi sempre più grandi.",
+        "tooltip": true,
+        "max_options": 4,
+        "id": "bTIlHfc9QZajV8BUTXdFtQ"
+      },
+      "order": {
+        "type": "number",
+        "display_name": "Riordino mobile",
+        "max_value": 6,
+        "min_value": 0,
+        "id": "oz09bHFoTie_Vqxm8jREDQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "",
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Video",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "wrapper",
+    "display_name": "Contenitore",
+    "description": null,
+    "created_at": "2025-01-27T11:07:08.162Z",
+    "updated_at": "2025-06-12T09:12:14.173Z",
+    "id": 6861326,
+    "schema": {
+      "contents": {
+        "type": "bloks",
+        "display_name": "Contenuti",
+        "restrict_components": true,
+        "component_whitelist": [
+          "image",
+          "video",
+          "gallery",
+          "background",
+          "text",
+          "action",
+          "list",
+          "menu",
+          "map",
+          "course",
+          "person",
+          "event",
+          "form",
+          "carousel",
+          "location",
+          "wrapper"
+        ],
+        "required": true,
+        "id": "vQNbY6UwRd6V9e8TNxMlBA"
+      },
+      "row": {
+        "type": "boolean",
+        "display_name": "Orizontale",
+        "inline_label": true,
+        "id": "bffUj7_2QReFKtYP7gxTmA"
+      },
+      "width": {
+        "type": "options",
+        "display_name": "Larghezza",
+        "options": [
+          {
+            "value": "1/4",
+            "name": "Un quarto"
+          },
+          {
+            "value": "1/3",
+            "name": "Un terzo"
+          },
+          {
+            "value": "1/2",
+            "name": "Metà"
+          },
+          {
+            "value": "2/3",
+            "name": "Due terzi"
+          },
+          {
+            "value": "3/4",
+            "name": "Tre quarti"
+          },
+          {
+            "value": "1/1",
+            "name": "Intera"
+          }
+        ],
+        "default_value": [
+          "1/2"
+        ],
+        "description": "Larghezza rispetto alla sezione. Usare più opzioni per schermi sempre più grandi.",
+        "tooltip": true,
+        "max_options": 4,
+        "id": "Ag5RkhOVTwKgzr_BOXGo3Q"
+      },
+      "justify": {
+        "type": "option",
+        "display_name": "Giustifica",
+        "options": [
+          {
+            "value": "right",
+            "name": "Destra"
+          },
+          {
+            "value": "center",
+            "name": "Centro"
+          },
+          {
+            "value": "left",
+            "name": "Sinistra"
+          }
+        ],
+        "id": "-Egw0-SjSUqTUe01tibIQw"
+      },
+      "order": {
+        "type": "number",
+        "display_name": "Riordino mobile",
+        "max_value": 6,
+        "min_value": 0,
+        "id": "tdEu3vuQSuyEFgT9HhLFpg"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": "{{it.width}}",
+    "is_nestable": true,
+    "all_presets": [
+      {
+        "id": 2567077,
+        "name": "Card progetto",
+        "component_id": 6861326,
+        "image": "//a.storyblok.com/f/311109/x/d4ce5ff58b/screenshot-2025-04-22-alle-17-36-04.png",
+        "icon": "",
+        "color": "",
+        "description": ""
+      }
+    ],
+    "preset_id": null,
+    "real_name": "Contenitore",
+    "component_group_uuid": "d24f4b21-656d-4c5d-8751-1cbff89f6a73",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  }
+]

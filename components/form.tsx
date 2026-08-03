@@ -1,11 +1,5 @@
-import type {
-  BrevoProps,
-  FieldData,
-  FieldProps,
-  FormData,
-  FormProps,
-  OptionProps,
-} from "@props/types";
+import type { Form as FormBlok, Field as FieldBlok } from '@types'
+import type { ISbStoryData } from '@storyblok/react'
 import {
   Button,
   Drawer,
@@ -17,147 +11,235 @@ import {
   Checkbox,
   Link,
   Alert,
-} from "@heroui/react";
-import { opendays, Opendays } from "@pages/[...slug]";
-import { StoryblokComponent } from "@storyblok/react";
-import { fieldValidation } from "@modules/validations";
-import { getCapitalize } from "@modules/formats";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { compiler } from "markdown-to-jsx";
-import { Typography } from "./typography";
-import { tv } from "tailwind-variants";
-import { sendGTMEvent } from "@next/third-parties/google";
+} from '@heroui/react'
+import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
+import { fieldValidation } from '@modules/validations'
+import { getCapitalize } from '@modules/formats'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { compiler } from 'markdown-to-jsx'
+import { Typography } from './typography'
+import { tv } from 'tailwind-variants'
+import { sendGTMEvent } from '@next/third-parties/google'
+import { isStoryResolved } from '@modules/relations'
+import { useDataContext } from '@modules/context'
+import type { ProcessedEvent } from '@modules/cache'
 
-const dateFormat = {
-  year: "numeric" as const,
-  month: "2-digit" as const,
-  day: "2-digit" as const,
-};
 
-interface FormComponent {
-  blok: FormProps;
-  courses?: Array<OptionProps>;
-  openday?: FieldData;
-  variant?: "solid" | "ghost";
+export interface FieldData {
+  id: string
+  value: any // Rimosso il '?' - Ora è obbligatorio per compiacere fieldValidation
+  required: boolean // Rimosso il '?' - Ora è obbligatorio
+  error?: string | null
 }
 
-type FormStates = "close" | "open" | "search" | "send" | "error" | "done";
+export type FormData = Record<string, FieldData>
+
+export interface BrevoProps {
+  id?: string | number
+  email?: string
+  attributes: Record<string, any>
+}
+
+export interface OptionProps {
+  name: string | { title: string; days?: string[]; hours?: string[] } | any
+  value: string
+}
+
+const dateFormat = {
+  year: 'numeric' as const,
+  month: '2-digit' as const,
+  day: '2-digit' as const,
+}
+
+interface FormComponentProps {
+  blok: FormBlok
+  courses?: Array<OptionProps>
+  openday?: FieldData
+  variant?: 'solid' | 'ghost'
+}
+
+type FormStates = 'close' | 'open' | 'search' | 'send' | 'error' | 'done'
 
 // Helper: Validate all fields immutably
 function validateFields(data: FormData) {
-  const updated = { ...data };
+  const updated = { ...data }
   Object.entries(updated).forEach(([name, field]) => {
-    updated[name] = { ...field, error: fieldValidation(field) };
-  });
-  return updated;
+    updated[name] = { ...field, error: fieldValidation(field as any) }
+  })
+  return updated
 }
 
 // Helper: Build event object
-function buildEvent(data: FormData, tracking: string) {
+function buildEvent(
+  data: FormData,
+  globalEvents: ProcessedEvent[],
+  tracking?: string
+) {
   const eventFilterData = [
-    "email",
-    "nome",
-    "cognome",
-    "sms",
-    "newsletter",
-    "validation",
-  ];
-  const properties: { [key: string]: Date | string } = {};
-  const today = new Date();
+    'email',
+    'nome',
+    'cognome',
+    'sms',
+    'newsletter',
+    'validation',
+  ]
+  const properties: { [key: string]: Date | string } = {}
+  const today = new Date()
+
   Object.entries(data)
     .filter(([name]) => !eventFilterData.includes(name))
-    .map(([name, { value }]) => {
-      let dateValue = new Date(value);
-      if (typeof value === "number") {
-        value = value;
+    .forEach(([name, { value }]) => {
+      if (typeof value === 'number') {
+        properties[name] = value.toString()
       } else if (Array.isArray(value)) {
-        if (name === "area") {
-          const opendayList = opendays[value[0] as keyof Opendays];
-          const event = opendayList?.find(
-            (event) => new Date(event.date) >= today
-          );
-          if (event?.date) {
-            properties["openday_data"] = new Date(
-              event.date
-            ).toLocaleDateString("IT-it", dateFormat);
+        if (name === 'area' && value.length > 0) {
+          const selectedArea = String(value[0]).toLowerCase()
+
+          // Cerchiamo il prossimo evento correlato all'area tra gli eventi in cache
+          const matchingEvent = globalEvents
+            .filter((ev) => {
+              if (!ev.date) return false
+              return ev.name?.toLowerCase().includes(selectedArea)
+            })
+            .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
+            .find((ev) => new Date(ev.date!) >= today)
+
+          if (matchingEvent?.date) {
+            properties['openday_data'] = new Date(
+              matchingEvent.date
+            ).toLocaleDateString('it-IT', dateFormat)
           }
         }
-        value = value.join(", ");
-      } else if (dateValue instanceof Date && !isNaN(dateValue.valueOf())) {
-        value = dateValue;
-        properties[name + "_data"] = dateValue.toLocaleDateString(
-          "IT-it",
-          dateFormat
-        );
+        properties[name] = value.join(', ')
+      } else if (typeof value === 'string' && value.trim() !== '') {
+        const dateValue = new Date(value)
+        if (!isNaN(dateValue.valueOf())) {
+          properties[name] = dateValue
+          properties[name + '_data'] = dateValue.toLocaleDateString(
+            'it-IT',
+            dateFormat
+          )
+        } else {
+          properties[name] = value
+        }
+      } else if (typeof value === 'boolean') {
+        properties[name] = value ? 'Si' : 'No'
       }
-      return (properties[name] = value);
-    });
+    })
 
   return {
-    identifiers: { email_id: data.email.value },
-    event_name: `submit_${tracking}`,
+    identifiers: { email_id: data.email?.value },
+    event_name: `submit_${tracking || 'form'}`,
     event_properties: properties,
-  };
+  }
 }
 
 // Helper: Build contact object
-function buildContact(data: FormData, user: BrevoProps | null, list: any) {
-  const contactFilterData = ["email"];
+function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
+  const contactFilterData = ['email']
   return {
     id: user?.id,
-    email: data.email.value,
-    listIds: list,
+    email: data.email?.value,
+    listIds: list || [],
     attributes: Object.fromEntries(
       Object.entries(data)
         .filter(([name]) => !contactFilterData.includes(name))
         .map(([name, { value }]) => {
-          const NAME = name.toUpperCase();
-          if (!!user && typeof user.attributes[NAME] !== "undefined") {
-            let attribube = user.attributes[NAME];
-            if (Array.isArray(attribube)) {
-              value = [...new Set([...attribube, ...value])];
+          const NAME = name.toUpperCase()
+          let parsedValue = value
+
+          if (user && typeof user.attributes[NAME] !== 'undefined') {
+            const attribute = user.attributes[NAME]
+            if (Array.isArray(attribute) && Array.isArray(parsedValue)) {
+              parsedValue = [...new Set([...attribute, ...parsedValue])]
             }
           }
-          if (name === "sms") value = "+39" + value;
-          return [NAME, value];
+          if (name === 'sms' && parsedValue) parsedValue = '+39' + parsedValue
+          return [NAME, parsedValue]
         })
     ),
-  };
+  }
 }
 
-function mergeForm(blok: FormProps, courses?: Array<OptionProps>): FormProps {
-  const alias = blok.alias?.content;
-  if (!alias) return blok;
+// Helper: Merge Form and deduplicate fields correctly
+function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
+  const alias = isStoryResolved<FormBlok>(blok.alias)
+    ? (blok.alias as ISbStoryData<FormBlok>).content
+    : null
 
-  // Merge lists and fields without mutation
-  const mergedList = Array.from(new Set([...blok.list, ...alias.list]));
-  let mergedFields = Array.from(new Set([...alias.fields, ...blok.fields]));
+  if (!alias) return blok
+
+  // Merge lists (array primitivi: string | number)
+  const mergedList = Array.from(
+    new Set([...(blok.list || []), ...(alias.list || [])])
+  )
+
+  // Merge fields (Array di oggetti: deduplicazione per ID univoco)
+  const allFields = [...(alias.fields || []), ...(blok.fields || [])]
+  const fieldsMap = new Map<string, FieldBlok>()
+
+  allFields.forEach((field) => {
+    const key = field.id || field._uid
+    if (key && !fieldsMap.has(key)) {
+      fieldsMap.set(key, field)
+    }
+  })
+
+  let mergedFields = Array.from(fieldsMap.values())
 
   // Handle enroll field
-  const enrollIndex = mergedFields.findIndex(
-    (field: FieldProps) => field.input === "enroll"
-  );
+  const enrollIndex = mergedFields.findIndex((field) => field.input === 'enroll')
   if (enrollIndex >= 0) {
     if (courses?.length) {
       mergedFields = mergedFields.map((field, idx) =>
-        idx === enrollIndex ? { ...field, options: courses } : field
-      );
+        idx === enrollIndex ? { ...field, options: courses as any } : field
+      )
     } else {
-      mergedFields = mergedFields.filter((_, idx) => idx !== enrollIndex);
+      mergedFields = mergedFields.filter((_, idx) => idx !== enrollIndex)
     }
   }
 
   return {
     ...blok,
     ...alias,
-    list: mergedList,
+    list: mergedList as any,
     fields: mergedFields,
     title: alias.title || blok.title,
     label: alias.label || blok.label,
-    message: [alias.message, blok.message].filter(Boolean).join("\n"),
+    message: [alias.message, blok.message].filter(Boolean).join('\n'),
     tracking: alias.tracking || blok.tracking,
     terms: alias.terms || blok.terms,
-  };
+  }
+}
+
+const getData = (fields: Array<FieldBlok> = []) => {
+  const data: FormData = {}
+  fields.forEach(({ id, input, placeholder = '', required, hidden: isHidden }) => {
+    if (!id) return
+    let value: any
+    if (isHidden) {
+      value =
+        input === 'select' || input === 'multiple' || input === 'enroll'
+          ? placeholder.split(',').map((v) => v.trim()).filter(Boolean)
+          : placeholder
+    } else {
+      switch (input) {
+        case 'checkbox':
+          value = !!placeholder
+          break
+        case 'enroll':
+        case 'select':
+        case 'multiple':
+          value = []
+          break
+        default:
+          value = ''
+          break
+      }
+    }
+    data[id] = { id, value, required: !!required, error: null }
+  })
+  return data
 }
 
 export default function Form({
@@ -165,263 +247,285 @@ export default function Form({
   courses,
   openday,
   variant,
-}: FormComponent) {
+}: FormComponentProps) {
+  const { events: globalEvents } = useDataContext()
+
   // Merge alias to root form
-  const form = useMemo(
-    () => mergeForm(blok, courses),
-    [blok, blok.alias, courses]
-  );
+  const form = useMemo(() => mergeForm(blok, courses), [blok, courses])
+
+  // Init Data
+  const [data, setData] = useState(() => getData(form.fields))
+  const [user, setUser] = useState<BrevoProps | null>(null)
+  const [agreement, setAgreement] = useState(!form.terms)
+  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<FormStates>('close')
+  const [message, setMessage] = useState<{ title: string; body: string } | null>(
+    null
+  )
+
+  useEffect(() => {
+    setData((prev) => {
+      const updatedData = getData(form.fields)
+      return { ...updatedData, ...prev }
+    })
+  }, [form.fields])
 
   useEffect(() => {
     if (openday) {
-      setData({ ...data, openday });
+      setData((prev) => ({ ...prev, openday }))
     }
-  }, [openday]);
+  }, [openday])
 
-  // Init Data
-  const [data, setData] = useState(() => getData(form.fields));
-  const [user, setUser] = useState<BrevoProps | null>(null);
-  const [agreement, setAgreement] = useState(!form.terms);
-  const [error, setError] = useState<string | null>(null);
-  const [state, setState] = useState<FormStates>("close");
-  const [message, setMessage] = useState<{
-    title: string;
-    body: string;
-  } | null>(null);
-
-  // Only render visible fields
   const visibleFields = useMemo(
-    () => form.fields.filter((f) => !f.hidden),
+    () => (form.fields || []).filter((f) => !f.hidden),
     [form.fields]
-  );
+  )
 
-  const handleChange = (field: FieldData) => {
-    field.error = fieldValidation(field);
-    if (field.id === "nome" || field.id === "cognome") {
-      field.value = getCapitalize(field.value);
+  const handleChange = useCallback((field: FieldData) => {
+    field.error = fieldValidation(field as any)
+    if (field.id === 'nome' || field.id === 'cognome') {
+      field.value = getCapitalize(field.value)
     }
-    setData({ ...data, [field.id]: field });
-  };
+    setData((prev) => ({ ...prev, [field.id]: field }))
+  }, [])
 
   const handleUser = async (field: FieldData) => {
-    if (!field.error) {
-      setState("search");
-      const response = await fetch("/api/send-brevo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact: { email: field.value } }),
-      });
+    if (!field.error && field.value) {
+      setState('search')
+      try {
+        const response = await fetch('/api/send-brevo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contact: { email: field.value } }),
+        })
 
-      const responseUser = response.ok ? await response.json() : null;
-      await setUser(responseUser);
+        const responseUser = response.ok ? await response.json() : null
+        setUser(responseUser)
 
-      // Create a new data object immutably
-      const newData = { ...data };
-      newData.email = {
-        ...newData.email,
-        value: responseUser?.email || field.value,
-        error: field.error,
-      };
-      newData.nome = {
-        ...newData.nome,
-        value: responseUser?.attributes?.NOME || "",
-      };
-      newData.cognome = {
-        ...newData.cognome,
-        value: responseUser?.attributes?.COGNOME || "",
-      };
-      newData.sms = {
-        ...newData.sms,
-        value: responseUser?.attributes?.SMS
-          ? responseUser.attributes.SMS.toString().substring(2)
-          : "",
-      };
-
-      await setData(newData);
-      setState("open");
+        setData((prev) => ({
+          ...prev,
+          email: {
+            ...prev.email,
+            value: responseUser?.email || field.value,
+            error: field.error,
+          },
+          nome: { ...prev.nome, value: responseUser?.attributes?.NOME || '' },
+          cognome: {
+            ...prev.cognome,
+            value: responseUser?.attributes?.COGNOME || '',
+          },
+          sms: {
+            ...prev.sms,
+            value: responseUser?.attributes?.SMS
+              ? responseUser.attributes.SMS.toString().substring(2)
+              : '',
+          },
+        }))
+      } catch (e) {
+        console.error('Errore recupero contatto Brevo:', e)
+      } finally {
+        setState('open')
+      }
     }
-  };
+  }
 
   const handleSubmit = async () => {
-    const newData = validateFields(data);
-    const hasError = Object.values(newData).some((f) => !!f.error);
-    if (!hasError) {
-      setState(!agreement ? "error" : "open");
-      setError(!agreement ? errors.agreement : null);
-      if (!agreement) return;
+    const newData = validateFields(data)
+    const hasError = Object.values(newData).some((f) => !!f.error)
 
-      setState("send");
-      debugger;
-      const event = buildEvent(newData, form.tracking);
-      console.log(event);
-      const contact = buildContact(newData, user, form.list);
-      const response = await fetch("/api/send-brevo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact, event }),
-      });
-      if (response.ok) {
-        setMessage({
-          title: parseText(titles[user ? "user" : "new"], data),
-          body: parseText(form.message, data),
-        });
-        setState("done");
-        return sendGTMEvent({ event: `submit_${form.tracking}_form` });
-      } else {
-        setState("error");
-        return setError(errors.default);
+    if (!hasError) {
+      setState(!agreement ? 'error' : 'open')
+      setError(!agreement ? errors.agreement : null)
+      if (!agreement) return
+
+      setState('send')
+      const event = buildEvent(newData, globalEvents, form.tracking)
+      const contact = buildContact(newData, user, form.list)
+
+      try {
+        const response = await fetch('/api/send-brevo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contact, event }),
+        })
+
+        if (response.ok) {
+          setMessage({
+            title: parseText(titles[user ? 'user' : 'new'], newData),
+            body: parseText(form.message || '', newData),
+          })
+          setState('done')
+          sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
+        } else {
+          setState('error')
+          setError(errors.default)
+        }
+      } catch (e) {
+        setState('error')
+        setError(errors.default)
       }
     } else {
-      setState("error");
-      setData(newData);
+      setState('error')
+      setData(newData)
     }
-  };
+  }
 
-  const handleClear = () => {
-    setUser(null);
-    const newData = getData(form.fields);
-    if (openday) {
-      newData.openday = openday;
+  const handleClear = useCallback(() => {
+    setUser(null)
+    const newData = getData(form.fields)
+    if (openday) newData.openday = openday
+    setData(newData)
+  }, [form.fields, openday])
+
+  const handleReset = useCallback(() => {
+    handleClear()
+    setMessage(null)
+    setError(null)
+    setAgreement(!form.terms)
+    setState('close')
+  }, [form.terms, handleClear])
+
+  const parseText = useCallback((text: string, currentData: FormData) => {
+    const keys = text.match(/{{(.*?)}}/g)
+    if (keys && keys.length) {
+      keys.forEach((string) => {
+        const key = string.replace('{{', '').replace('}}', '')
+        if (!currentData[key]?.value) return
+        let value = currentData[key].value
+        if (
+          typeof value === 'string' &&
+          !Number.isNaN(new Date(value).valueOf())
+        ) {
+          value = new Date(value).toLocaleDateString('it-IT')
+        }
+        text = text.replace(string, value)
+      })
     }
-    setData(newData);
-  };
+    return text
+  }, [])
 
-  const handleReset = () => {
-    handleClear();
-    setMessage(null);
-    setError(null);
-    setAgreement(!form.terms);
-    setState("close");
-  };
-
-  // Utilities
-  const parseText = useCallback(
-    (text: string, data: FormData) => {
-      const keys = text.match(/{{(.*?)}}/g);
-      if (keys && !!keys.length) {
-        keys.forEach((string) => {
-          const key = string.replace("{{", "").replace("}}", "");
-          if (!data[key]?.value) return text;
-          let value = data[key].value;
-          if (!Number.isNaN(new Date(value).valueOf())) {
-            value = new Date(value).toLocaleDateString("it-IT");
-          }
-          text = text.replace(string, value);
-        });
-      }
-      return text;
-    },
-    [data]
-  );
-
-  const { button, close, spinner, label, clear } = classes();
-
-  const hiddenUserFields = ["nome", "cognome", "sms", "email"];
+  const { button, close, spinner, label, clear } = classes()
+  const hiddenUserFields = ['nome', 'cognome', 'sms', 'email']
 
   return (
     <>
       <Button
         size="md"
         color="primary"
-        variant={variant || "solid"}
+        variant={variant || 'solid'}
         className={button()}
-        onPress={() => setState("open")}
+        onPress={() => setState('open')}
+        {...storyblokEditable(blok as any)}
       >
-        {form.label || "Compila il modulo"}
+        {form.label || 'Compila il modulo'}
       </Button>
+
       <Drawer
         size="lg"
-        isOpen={state !== "close"}
+        isOpen={state !== 'close'}
         onOpenChange={handleReset}
         classNames={{ closeButton: close() }}
       >
         <DrawerContent>
-          <DrawerHeader>{form.title || "Titolo del modulo"}</DrawerHeader>
+          <DrawerHeader>{form.title || 'Titolo del modulo'}</DrawerHeader>
+
           <DrawerBody className="relative">
-            {(state === "search" || state === "send") && (
+            {(state === 'search' || state === 'send') && (
               <div className={spinner()}>
                 <Spinner
                   label={
-                    state === "search" ? "Ricerca contatto" : "Invio modulo"
+                    state === 'search' ? 'Ricerca contatto' : 'Invio modulo'
                   }
                   classNames={{ label: label() }}
                 />
               </div>
             )}
-            {state !== "done" && user && (
+
+            {state !== 'done' && user && (
               <div className="mb-4">
-                <h4 className="font-semibold text-xl capitalize">
-                  Bentornato {user.attributes.NOME?.toString()}{" "}
+                <h4 className="text-xl font-semibold capitalize">
+                  Bentornato {user.attributes.NOME?.toString()}{' '}
                   {user.attributes.COGNOME?.toString()}!
                 </h4>
                 <p>
                   Abbiamo recuperato i tuoi dati, se vuoi cambiarli consulta
                   l'email di benvenuto.
                 </p>
-                <span className={clear()} onClick={() => handleClear()}>
+                <span className={clear()} onClick={handleClear}>
                   Non sono io
                 </span>
               </div>
             )}
-            {state === "done" && message?.title &&
+
+            {state === 'done' &&
+              message?.title &&
               compiler(message.title, {
                 wrapper: null,
                 overrides: Typography({}),
               })}
-            {state !== "done" &&
-              visibleFields.map((field, index) => {
-                if (user && hiddenUserFields.includes(field.id)) return null;
+
+            {state !== 'done' &&
+              visibleFields.map((field) => {
+                if (!field.id || (user && hiddenUserFields.includes(field.id)))
+                  return null
                 return (
                   <StoryblokComponent
                     blok={field}
                     data={data[field.id]}
                     onChange={handleChange}
                     onBlur={handleUser}
-                    key={index}
+                    key={field._uid || field.id}
                   />
-                );
+                )
               })}
-            {state !== "done" && form.terms && (
-              <p className="mt-2">
+
+            {state !== 'done' && form.terms && (
+              <div className="mt-2 flex items-start gap-2 text-sm">
                 <Checkbox
                   isRequired={true}
+                  isSelected={agreement}
                   onValueChange={(value) => {
-                    setAgreement(value);
-                    setError(!value ? errors.agreement : null);
-                    setState(!value ? "error" : "open");
+                    setAgreement(value)
+                    setError(!value ? errors.agreement : null)
+                    setState(!value ? 'error' : 'open')
                   }}
-                >
-                  <p className="text-sm">Dichiaro di aver letto</p>
-                </Checkbox>
-                <Link
-                  href={form.terms}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-1 underline underline-offset-1 text-sm"
-                >
-                  l' informativa Privacy
-                </Link>
-                .
-              </p>
+                />
+                <div>
+                  <span>Dichiaro di aver letto </span>
+                  <Link
+                    href={form.terms}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm underline underline-offset-1"
+                  >
+                    l'informativa Privacy
+                  </Link>
+                  .
+                </div>
+              </div>
             )}
-            {state === "done" && message?.body &&
+
+            {state === 'done' &&
+              message?.body &&
               compiler(message.body, {
                 wrapper: null,
                 overrides: Typography({}),
               })}
-            {state === "error" && !!error && (
-              <div className="w-full flex items-center">
+
+            {state === 'error' && !!error && (
+              <div className="flex w-full items-center">
                 <Alert color="danger" hideIcon variant="faded" title={error} />
               </div>
             )}
           </DrawerBody>
+
           <DrawerFooter className="justify-start">
-            {state !== "done" && (
+            {state !== 'done' ? (
               <>
                 <Button
                   color="primary"
                   onPress={handleSubmit}
-                  isDisabled={state === "error"}
+                  isDisabled={state === 'error'}
                 >
                   Invia
                 </Button>
@@ -429,8 +533,7 @@ export default function Form({
                   Annulla
                 </Button>
               </>
-            )}
-            {state === "done" && (
+            ) : (
               <Button color="primary" onPress={handleReset}>
                 Chiudi
               </Button>
@@ -439,68 +542,28 @@ export default function Form({
         </DrawerContent>
       </Drawer>
     </>
-  );
+  )
 }
 
-const getData = (fields: Array<FieldProps>) => {
-  const data: FormData = {};
-  fields.forEach(
-    ({ id, input, placeholder = "", required, hidden: isHidden }) => {
-      let value;
-      if (isHidden) {
-        // Always use placeholder for hidden fields
-        value =
-          input === "select" || input === "multiple" || input === "enroll"
-            ? placeholder
-              .split(",")
-              .map((v) => v.trim())
-              .filter(Boolean)
-            : placeholder;
-      } else {
-        switch (input) {
-          case "checkbox":
-            value = !!placeholder;
-            break;
-          case "enroll":
-          case "select":
-          case "multiple":
-            value = [];
-            break;
-          default:
-            value = "";
-            break;
-        }
-      }
-      data[id] = {
-        id,
-        value,
-        required,
-        error: null,
-      };
-    }
-  );
-  return data;
-};
-
 const titles = {
-  new: "###Benvenuto {{nome}}!",
-  user: "###Bentornato {{nome}}!\nAbbiamo recuperato i tuoi dati.",
-  done: "###Grazie {{nome}}!",
-};
+  new: '###Benvenuto {{nome}}!',
+  user: '###Bentornato {{nome}}!\nAbbiamo recuperato i tuoi dati.',
+  done: '###Grazie {{nome}}!',
+}
 
 const errors = {
-  default: "Si è verificato un errore, riprova più tardi",
-  agreement: "Devi accettare l’informativa privacy per procedere",
-};
+  default: 'Si è verificato un errore, riprova più tardi',
+  agreement: 'Devi accettare l’informativa privacy per procedere',
+}
 
 const classes = tv({
   slots: {
     button:
-      "font-medium text-medium col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3",
-    close: "text-xl hover:bg-transparent active:bg-transparent",
+      'font-medium text-medium col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3',
+    close: 'text-xl hover:bg-transparent active:bg-transparent',
     spinner:
-      "absolute inset-0 flex items-center justify-center z-20 bg-opacity-30 bg-background backdrop-blur-sm",
-    label: "text-neutral-500",
-    clear: "font-medium underline text-sm cursor-pointer text-primary",
+      'absolute inset-0 flex items-center justify-center z-20 bg-opacity-30 bg-background backdrop-blur-sm',
+    label: 'text-neutral-500',
+    clear: 'font-medium underline text-sm cursor-pointer text-primary',
   },
-});
+})

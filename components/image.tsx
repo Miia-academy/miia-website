@@ -1,4 +1,4 @@
-import type { ImageProps } from '@props/types'
+import type { Image as ImageBlok } from '@types'
 import {
   Image as HeroImage,
   Modal,
@@ -9,64 +9,68 @@ import { tv } from 'tailwind-variants'
 import { default as NextImage } from 'next/image'
 import { storyblokEditable } from '@storyblok/react'
 
-interface ImageComponent {
-  blok: ImageProps
+// Definizioni type-safe per Tailwind Variants
+type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1'
+type OrderVariant = '1' | '2' | '3' | '4' | '5' | '6'
+type SizeVariant = 'sm' | 'md' | 'lg'
+type AspectVariant = '9/4' | '4/3' | '1/1' | '3/4' | '4/9'
+
+interface ImageComponentProps {
+  blok: ImageBlok
   parent?: string
 }
 
-export default function Image({ blok, parent }: ImageComponent) {
+export default function Image({ blok, parent }: ImageComponentProps) {
   if (!blok.image?.filename) return null
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
-  const size = blok.image.filename
-    .match(/\/(\d+)x(\d+)\//)
-    ?.filter((s, i) => !!i)
-    ?.map((s) => Number(s))
+  // Parsing sicuro delle dimensioni dall'URL di Storyblok
+  const sizeMatch = blok.image.filename.match(/\/(\d+)x(\d+)\//)
+  const size = sizeMatch ? sizeMatch.slice(1).map(Number) : null
+  const ratio = size && size.length === 2 ? size[0] / size[1] : undefined
 
-  const ratio = !!size && size[0] / size[1]
-
-  let width = undefined
-  let height = undefined
+  let width: number | undefined = undefined
+  let height: number | undefined = undefined
   let axis = 'width'
 
-  if (!!ratio) {
+  if (ratio) {
     width = ratio > 1 ? 1280 : 768 * ratio
     height = ratio < 1 ? 768 : 1280 / ratio
     axis = ratio > 1 ? 'width' : 'height'
   }
 
   const isFullWith = blok.width?.[0] === '1/1'
-
-  const order: any = !!blok.order ? blok.order.toString() : 'none'
+  const orderAttr = blok.order ? (blok.order.toString() as OrderVariant) : undefined
 
   return (
     <>
       <HeroImage
-        {...storyblokEditable(blok)}
+        {...storyblokEditable(blok as any)}
         src={blok.image.filename}
-        alt={blok.image.alt}
+        alt={blok.image.alt || ''}
         onClick={onOpen}
-        width={'100%'}
+        width="100%"
         removeWrapper={!!blok.size}
-        sizes={`(max-${axis}:512px)::512px,(max-${axis}:768px)::768px,(max-${axis}:1024px):1024px,(max-${axis}:1280px):1280px,1280px`}
+        sizes={`(max-${axis}:512px):512px,(max-${axis}:768px):768px,(max-${axis}:1024px):1024px,(max-${axis}:1280px):1280px,1280px`}
         classNames={{
           wrapper: wrapperClasses({
-            order: order,
+            order: orderAttr,
             wrapperChild: parent === 'wrapper',
-            sm: blok.width?.[0],
-            md: blok.width?.[1],
-            lg: blok.width?.[2],
-            xl: blok.width?.[3],
+            sm: (blok.width?.[0] as WidthVariant) || undefined,
+            md: (blok.width?.[1] as WidthVariant) || undefined,
+            lg: (blok.width?.[2] as WidthVariant) || undefined,
+            xl: (blok.width?.[3] as WidthVariant) || undefined,
           }),
           img: imageClasses({
-            order: order,
+            order: orderAttr,
             normalized: !!blok.size || isFullWith,
-            size: blok.size,
-            aspect: blok.aspect,
+            size: (blok.size as SizeVariant) || undefined,
+            aspect: (blok.aspect as AspectVariant) || undefined,
           }),
         }}
       />
+
       {blok.fullScreen && (
         <Modal
           isOpen={isOpen}
@@ -81,7 +85,7 @@ export default function Image({ blok, parent }: ImageComponent) {
           <ModalContent className="p-0">
             <NextImage
               src={blok.image.filename}
-              alt={blok.image.alt}
+              alt={blok.image.alt || ''}
               width={width}
               height={height}
               sizes={`(max-${axis}:512px):256px,(max-${axis}:768px):512px,(max-${axis}:1024px):768px,(max-${axis}:1280px):1024px,1280px`}

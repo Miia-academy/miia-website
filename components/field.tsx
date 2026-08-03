@@ -1,4 +1,4 @@
-import type { FieldProps, OptionProps, DataProps } from '@props/types'
+import type { Field as FieldBlok } from '@types'
 import {
   Input,
   Select,
@@ -9,22 +9,42 @@ import {
   Slider,
 } from '@heroui/react'
 import { useState } from 'react'
+import { storyblokEditable } from '@storyblok/react'
 
-interface FieldComponent {
-  blok: FieldProps
+export interface DataProps {
+  value?: any
+  error?: string | null
+}
+
+export interface OptionProps {
+  name: string | { title: string; days?: string[]; hours?: string[] } | any
+  value: string
+}
+
+interface FieldComponentProps {
+  blok: FieldBlok
   data: DataProps
-  onChange: (e: any) => object
-  onBlur: (e: any) => object
+  onChange: (data: DataProps) => void
+  onBlur: (data: DataProps) => void
 }
 
-export default function Field(props: FieldComponent) {
+export default function Field(props: FieldComponentProps) {
   if (!props.blok.input) return null
-  const Fields = fields[props.blok.input]
-  if (!props?.data) return null
-  return <Fields {...props} />
+  const FieldRenderer = fields[props.blok.input]
+  if (!FieldRenderer || !props.data) return null
+
+  return (
+    <div {...storyblokEditable(props.blok as any)}>
+      <FieldRenderer {...props} />
+    </div>
+  )
 }
 
-const TextField = ({ blok, data, onChange, onBlur }: FieldComponent) => (
+/* -------------------------------------------------------------------------- */
+/*                                SUB-COMPONENTS                              */
+/* -------------------------------------------------------------------------- */
+
+const TextField = ({ blok, data, onChange, onBlur }: FieldComponentProps) => (
   <Input
     id={blok.id}
     label={blok.label}
@@ -33,7 +53,7 @@ const TextField = ({ blok, data, onChange, onBlur }: FieldComponent) => (
     isRequired={blok.required}
     errorMessage={data.error}
     isInvalid={!!data.error}
-    value={data.value}
+    value={data.value || ''}
     className={
       blok.hidden ? 'hidden' : blok.id === 'email' ? 'relative z-30' : ''
     }
@@ -50,12 +70,12 @@ const TextField = ({ blok, data, onChange, onBlur }: FieldComponent) => (
   />
 )
 
-const AreaField = ({ blok, data, onChange }: FieldComponent) => (
+const AreaField = ({ blok, data, onChange }: FieldComponentProps) => (
   <Textarea
     label={blok.label}
     placeholder={blok.placeholder}
     isRequired={blok.required}
-    value={data.value}
+    value={data.value || ''}
     errorMessage={data.error}
     isInvalid={!!data.error}
     hidden={blok.hidden}
@@ -64,18 +84,14 @@ const AreaField = ({ blok, data, onChange }: FieldComponent) => (
   />
 )
 
-const getSliderOptions = (fieldOptions: string | Array<OptionProps>) =>
-  fieldOptions && typeof fieldOptions === 'string'
-    ? Object.fromEntries(
-        fieldOptions.split('\n').map((option: string) => option.split(':'))
-      )
-    : null
-
-const NumberField = ({ blok, data, onChange }: FieldComponent) => {
+const NumberField = ({ blok, data, onChange }: FieldComponentProps) => {
   const options = getSliderOptions(blok.options)
-  const [number, setNumber] = useState(
-    !Number.isNaN(blok.placeholder) ? Number(blok.placeholder) : 0
-  )
+  const initialValue =
+    blok.placeholder && !isNaN(Number(blok.placeholder))
+      ? Number(blok.placeholder)
+      : 0
+
+  const [number, setNumber] = useState<number>(initialValue)
 
   return (
     <div>
@@ -87,46 +103,47 @@ const NumberField = ({ blok, data, onChange }: FieldComponent) => {
         color="foreground"
         defaultValue={number}
         label={blok.label}
-        maxValue={Number(options?.max) || 100}
-        minValue={Number(options?.min) || 0}
+        maxValue={options?.max ?? 100}
+        minValue={options?.min ?? 0}
         size="sm"
         renderValue={() => (
           <div className="font-medium">
-            {number} {options.unit}
+            {number} {options?.unit || ''}
           </div>
         )}
-        step={Number(options?.step) || 1}
-        onChange={(value) =>
-          Array.isArray(value) ? value[0] : setNumber(value)
-        }
-        onChangeEnd={(value) =>
+        step={options?.step ?? 1}
+        onChange={(value) => {
+          const val = Array.isArray(value) ? value[0] : value
+          setNumber(val)
+        }}
+        onChangeEnd={(value) => {
+          const val = Array.isArray(value) ? value[0] : value
           onChange({
             ...data,
-            value: Array.isArray(value) ? value[0] : value,
+            value: val,
           })
-        }
+        }}
       />
       {data.error && <p className="text-danger text-xs">{data.error}</p>}
     </div>
   )
 }
 
-const CheckboxField = ({ blok, data, onChange }: FieldComponent) => (
+const CheckboxField = ({ blok, data, onChange }: FieldComponentProps) => (
   <Checkbox
     id={blok.id}
     isRequired={blok.required}
     color={!!data.error ? 'danger' : undefined}
     onValueChange={(value) => onChange({ ...data, value })}
     className={blok.id === 'validation' || blok.hidden ? 'hidden' : ''}
-    isSelected={data.value}
+    isSelected={!!data.value}
     hidden={blok.hidden}
   >
     <p
-      className={`text-sm ${!!data.error ? 'text-danger' : ''} ${
-        blok.required
-          ? "after:content-['*'] after:text-danger after:ms-0.5"
-          : ''
-      }`}
+      className={`text-sm ${!!data.error ? 'text-danger' : ''} ${blok.required
+        ? "after:content-['*'] after:text-danger after:ms-0.5"
+        : ''
+        }`}
     >
       {blok.label}
     </p>
@@ -136,7 +153,7 @@ const CheckboxField = ({ blok, data, onChange }: FieldComponent) => (
   </Checkbox>
 )
 
-const DateField = ({ blok, data, onChange }: FieldComponent) => (
+const DateField = ({ blok, data, onChange }: FieldComponentProps) => (
   <DatePicker
     id={blok.id}
     label={blok.label}
@@ -151,28 +168,11 @@ const DateField = ({ blok, data, onChange }: FieldComponent) => (
   />
 )
 
-const SelectField = ({ blok, data, onChange }: FieldComponent) => {
+const SelectField = ({ blok, data, onChange }: FieldComponentProps) => {
   const options = getOptions(blok.options)
 
-  const handleChange = (value: any) => {
-    onChange({ ...data, value: Array.from(value) })
-  }
-
-  const CustomItem = ({ name }: any) => {
-    if (typeof name === 'string') {
-      return <span>{name}</span>
-    } else {
-      return (
-        <div className="flex flex-col">
-          <h6 className="text-small font-medium">{name.title}</h6>
-          <p className="text-tiny">
-            <span>{'Frequenza ' + name.days.join(' e ')}</span>
-            <span> - </span>
-            <span>{name.hours.join(' e ')}</span>
-          </p>
-        </div>
-      )
-    }
+  const handleChange = (keys: any) => {
+    onChange({ ...data, value: Array.from(keys) })
   }
 
   return (
@@ -185,22 +185,28 @@ const SelectField = ({ blok, data, onChange }: FieldComponent) => {
       errorMessage={data.error}
       isInvalid={!!data.error}
       hidden={blok.hidden}
-      selectedKeys={Array.isArray(data.value) ? data.value : [data.value]}
+      selectedKeys={
+        Array.isArray(data.value)
+          ? data.value
+          : data.value
+            ? [data.value]
+            : []
+      }
       items={options}
       className={blok.hidden ? 'hidden' : ''}
       classNames={{
-        trigger: blok.input === 'enroll' ? 'h-20' : null,
+        trigger: blok.input === 'enroll' ? 'h-20' : undefined,
         value: 'space-x-1',
         label:
           blok.input === 'enroll'
             ? 'group-data-[filled=true]:-translate-y-[calc(50%_+_theme(fontSize.small)/2)]'
-            : null,
+            : undefined,
       }}
       selectionMode={blok.input === 'multiple' ? 'multiple' : 'single'}
       onSelectionChange={handleChange}
       renderValue={(items) =>
         items.map((item) => (
-          <CustomItem key={item.key} name={item.data?.name} />
+          <CustomSelectItem key={item.key} name={item.data?.name} />
         ))
       }
     >
@@ -212,14 +218,65 @@ const SelectField = ({ blok, data, onChange }: FieldComponent) => {
             typeof option.name === 'string' ? option.name : option.name.title
           }
         >
-          <CustomItem name={option.name} />
+          <CustomSelectItem name={option.name} />
         </SelectItem>
       )}
     </Select>
   )
 }
 
-const fields = {
+/* -------------------------------------------------------------------------- */
+/*                                   HELPERS                                  */
+/* -------------------------------------------------------------------------- */
+
+const CustomSelectItem = ({ name }: { name: any }) => {
+  if (!name) return null
+  if (typeof name === 'string') {
+    return <span>{name}</span>
+  }
+  return (
+    <div className="flex flex-col">
+      <h6 className="text-small font-medium">{name.title}</h6>
+      <p className="text-tiny">
+        {name.days && <span>{'Frequenza ' + name.days.join(' e ')}</span>}
+        {name.hours && <span>{' - ' + name.hours.join(' e ')}</span>}
+      </p>
+    </div>
+  )
+}
+
+const getSliderOptions = (fieldOptions?: string | Array<OptionProps>) => {
+  if (!fieldOptions || typeof fieldOptions !== 'string') return null
+
+  const parsed = Object.fromEntries(
+    fieldOptions.split('\n').map((option: string) => option.split(':'))
+  )
+
+  return {
+    min: parsed.min ? Number(parsed.min) : undefined,
+    max: parsed.max ? Number(parsed.max) : undefined,
+    step: parsed.step ? Number(parsed.step) : undefined,
+    unit: parsed.unit || '',
+  }
+}
+
+const getOptions = (fieldOptions?: string | Array<OptionProps>) => {
+  if (!fieldOptions) return []
+  if (typeof fieldOptions !== 'string') return fieldOptions
+
+  const options: Array<{ name: string; value: string }> = []
+
+  fieldOptions.split('\n').forEach((option) => {
+    const [name, value] = option.split(':')
+    if (name && value) {
+      options.push({ name: name.trim(), value: value.trim() })
+    }
+  })
+
+  return options
+}
+
+const fields: Record<string, React.FC<FieldComponentProps>> = {
   text: TextField,
   number: NumberField,
   email: TextField,
@@ -232,18 +289,4 @@ const fields = {
   enroll: SelectField,
   openday: () => null,
   hidden: () => null,
-}
-
-const getOptions = (fieldOptions: string | Array<OptionProps>) => {
-  if (typeof fieldOptions !== 'string') return fieldOptions
-  const options: Array<{ name: string; value: string }> = []
-
-  fieldOptions.split('\n').forEach((option) => {
-    const [name, value] = option.split(':')
-    if (name && value) {
-      options.push({ name, value })
-    }
-  })
-
-  return options
 }

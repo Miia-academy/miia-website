@@ -23,7 +23,6 @@ import List from '@components/list'
 import Carousel from '@components/carousel'
 import Aside from '@components/aside'
 import Person from '@components/person'
-import Event from '@components/event'
 import Course from '@components/course'
 import Location from '@components/location'
 import Video from '@components/video'
@@ -33,6 +32,8 @@ import Background from '@components/background'
 import Gallery from '@components/gallery'
 import Menu from '@components/menu'
 import Process from '@components/process'
+import Grid from '@components/grid'
+import Project from '@components/project'
 
 const components = {
   page: Page,
@@ -56,15 +57,19 @@ const components = {
   text: Text,
   action: Action,
   person: Person,
-  event: Event,
   course: Course,
   location: Location,
+  grid: Grid,
+  project: Project
 }
 
+// Inizializzazione pulita per il nuovo stack REST + Draft Mode
 storyblokInit({
-  bridge: process.env.NEXT_PUBLIC_IS_PREVIEW === 'true' ? true : false,
   accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW,
   use: [apiPlugin],
+  apiOptions: {
+    region: 'eu', // Aggiunto: specifica 'eu' o 'us' in base a dove è hostato il tuo spazio Storyblok
+  },
   components,
 })
 

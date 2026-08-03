@@ -1,68 +1,92 @@
+import type { GetStaticPropsContext } from 'next'
 import {
+  getStoryblokApi,
   StoryblokComponent,
   useStoryblokState,
-  ISbStoryData,
+  type ISbStoryData,
 } from '@storyblok/react'
+import type { Page as PageBlok } from '@types'
+import { getCachedData, type GlobalData } from '@modules/cache'
+import { DataProvider } from '@modules/context'
+import { relations } from '@config/relations'
+import { optimizePayload } from '@modules/sanitize'
 
-import { storyblokApi } from '@modules/storyblokApi'
-import { StoryProps } from '@props/types'
-
-type Home = {
-  story: ISbStoryData & {
-    id: string
-    content: StoryProps
-  }
+type HomeProps = {
+  // Passiamo PageBlok come Generic, tipizzando automaticamente story.content
+  story: ISbStoryData<PageBlok> | null
+  data: GlobalData
+  draft: boolean
 }
 
-const relations = [
-  'page.header',
-  'page.footer',
-  'form.alias',
-  'aside.courses',
-  'aside.enroll',
-  'aside.contact',
-  'article.alias',
-  'article.author',
-  'person.alias',
-  'course.alias',
-  'event.alias',
-  'event.form',
-  'location.alias',
-  'map.locations',
-  'picture.author',
-  'alias.form',
-]
-
-export default function Home({ story }: Home) {
+export default function Home({ story, data, draft }: HomeProps) {
+  // Abilita il real-time visual editor di Storyblok
   const page = useStoryblokState(story, {
-    resolveRelations: relations,
+    resolveRelations: relations.join(','),
     preventClicks: true,
   })
-  if (!page?.content) return null
-  return <StoryblokComponent blok={page.content} />
+
+  if (!page || !page.content) return null
+
+  return (
+    <DataProvider data={data}>
+      <StoryblokComponent blok={page.content} />
+    </DataProvider>
+  )
 }
 
-export async function getStaticProps() {
-  const slug = 'home'
+export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
+  // 1. Gestione del Draft Mode: in locale o con il draftMode di Next.js attivo usiamo "draft"
+  const isDraft = process.env.NODE_ENV === 'development' || !!draftMode
+  const version = isDraft ? 'draft' : 'published'
 
-  const variables = { slug, relations: relations.join(',') }
-  const query = `
-    query ($slug: ID!, $relations: String) {
-      ContentNode(
-        id: $slug,
-        resolve_relations: $relations
-      ) {
-        id
-        content
-      }
+  const storyblokApi = getStoryblokApi()
+  let storyResult = null
+
+  // 2. Fetching della pagina root ("home") tramite API REST
+  try {
+    const home = await storyblokApi.getStory('home', {
+      version,
+      resolve_relations: relations.join(','),
+    })
+    storyResult = home.data ? home.data.story : null
+  } catch (error) {
+    storyResult = null
+  }
+
+  // 3. Fallback: se "home" non esiste o fallisce, prova a cercare "splash"
+  if (!storyResult) {
+    try {
+      const splash = await storyblokApi.getStory('splash', {
+        version,
+        resolve_relations: relations.join(','),
+      })
+      storyResult = splash.data ? splash.data.story : null
+    } catch (error) {
+      console.error('Nessuna pagina root trovata (né home né splash).')
+      storyResult = null
     }
-`
-  const data = await storyblokApi({ query, variables })
+  }
+
+  // 4. Fetching dei dati globali passando la versione al sistema di caching centralizzato
+  const globalData = await getCachedData(version)
+
+  // 5. La nuova "Silver Bullet" ottimizzata
+  // Preserviamo gli 'undefined' parser se in draft (per mantenere attivi i tag _editable dell'editor),
+  // altrimenti sfoltiamo radicalmente il JSON per far sparire il warning "large-page-data".
+  const safeStory = isDraft
+    ? JSON.parse(JSON.stringify(storyResult))
+    : optimizePayload(storyResult)
+
+  // I dati globali non interagiscono con il Visual Editor, quindi li puliamo sempre
+  const safeGlobalData = optimizePayload(globalData)
 
   return {
     props: {
-      story: data?.ContentNode || null,
+      story: safeStory,
+      data: safeGlobalData,
+      draft: isDraft,
     },
-    revalidate: 3600,
+    // Revalidazione: istantanea se in draft, ogni ora in produzione
+    revalidate: isDraft ? 1 : 3600,
   }
 }

@@ -1,237 +1,224 @@
-import type { AliasProps, EventProps, StoryProps } from '@props/types'
 import { useEffect, useState } from 'react'
-import { storyblokApi } from '@modules/storyblokApi'
+import type { Alias as AliasBlok, Form as FormBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
-import { Image, Link as HeroLink } from '@heroui/react'
-import { default as NextLink } from 'next/link'
+import { Image } from '@heroui/react'
+import NextLink from 'next/link'
 import { tv } from 'tailwind-variants'
+import { useDataContext } from '@modules/context'
+import type { ProcessedArticle, ProcessedEvent } from '@modules/cache'
 
-interface AliasComponent {
-  blok: AliasProps
+interface AliasComponentProps {
+  blok: AliasBlok
   parent?: string
 }
 
-type AliasData = (StoryProps & { content: any }) | null
+export default function Alias({ blok }: AliasComponentProps) {
+  const { articles, events } = useDataContext()
 
-export default function Alias({ blok, parent }: AliasComponent) {
   const isArticle = blok.resource === 'last-article'
   const isEvent = blok.resource === 'next-event'
-  const [alias, setAlias] = useState<AliasData>(null)
-  const [isLoading, setLoading] = useState(true)
+
+  const [selectedEvent, setSelectedEvent] = useState<ProcessedEvent | null>(null)
+  const [selectedArticle, setSelectedArticle] = useState<ProcessedArticle | null>(null)
+  const [isClientReady, setIsClientReady] = useState(false)
 
   useEffect(() => {
-    const getAlias = async () => {
-      const variables = { isArticle, isEvent }
-      const query = `
-        query ($isArticle: Boolean!, $isEvent: Boolean!){      
-          ArticleItems( 
-            sort_by:"published_at:desc", 
-            resolve_relations: "article.author",
-            per_page: 1, 
-            filter_query: {hidden: {not_in: true}})
-          @include(if: $isArticle) {
-            items {
-              name
-              full_slug
-              published_at
-              tag_list
-              content {
-                title
-                image {
-                  alt
-                  filename
-                  copyright
-                  title
-                }
-                description
-              }
-            }
-          }
-          EventItems(sort_by: "position:asc", resolve_relations: "event.location")
-          @include(if: $isEvent) {
-            items {
-              name
-              full_slug
-              content {
-                title
-                description
-                openday
-                date
-                location {
-                  content
-                }
-                page {
-                  cachedUrl
-                  url
-                }
-              }
-            }
-          }
-        }
-      `
-      const data = await storyblokApi({ query, variables })
-      let item = null
+    if (isEvent) {
+      const now = new Date()
 
-      if (data?.ArticleItems) {
-        item = data?.ArticleItems.items[0]
-      } else if (data?.EventItems) {
-        const today = new Date()
-        type storyEvent = StoryProps & { content: EventProps }
+      const upcomingEvent = events
+        .filter((ev) => {
+          if (!ev.date) return false
+          return blok.filter ? ev.name?.includes(blok.filter) : true
+        })
+        .sort((a, b) => {
+          const dateA = new Date(a.date || 0).getTime()
+          const dateB = new Date(b.date || 0).getTime()
+          return dateA - dateB
+        })
+        .find((ev) => new Date(ev.date || 0) >= now)
 
-        const events = data.EventItems.items
-          .filter((item: storyEvent) =>
-            !!item.content.date && !!blok.filter
-              ? item.name.includes(blok.filter)
-              : true
-          )
-          .sort((a: storyEvent, b: storyEvent) => {
-            let A = new Date(a.content.date)
-            let B = new Date(b.content.date)
-            return A < B ? -1 : A > B ? 1 : 0
-          })
-
-        item = events.find(
-          (item: storyEvent) => new Date(item.content.date) >= today
-        )
-
-        item.content.date = new Date(item.content.date)
-      }
-      setAlias(item)
-      setLoading(false)
+      setSelectedEvent(upcomingEvent || null)
     }
-    getAlias().catch((error) => console.log(error))
-  }, [])
 
-  if (isLoading) return <p>Loading...</p>
-  if (!alias) return null
+    if (isArticle) {
+      setSelectedArticle(articles[0] || null)
+    }
 
-  if (isEvent) {
+    setIsClientReady(true)
+  }, [events, articles, isEvent, isArticle, blok.filter])
+
+  if (!isClientReady) return null
+
+  if (isEvent && selectedEvent && selectedEvent.date) {
+    const eventDate = new Date(selectedEvent.date)
+
     const openday = {
       id: 'openday',
-      value: new Date(alias.content.date).toISOString(),
+      value: eventDate.toISOString(),
       required: true,
       error: null,
     }
+
     const dateClasses = tv({
-      base: 'flex flex-col h-full w-full p-4',
+      base: 'flex flex-col justify-end h-full w-full p-4 text-white relative z-10',
       variants: {
         hasImage: {
-          true: 'min-h-64 sm:min-h-0 bg-gradient-to-br from-background to-transparent to-75 bg-blend-multiply',
+          true: 'bg-gradient-to-t from-black/80 via-black/40 to-transparent',
+          false: 'bg-neutral-800',
         },
       },
     })
+
+    // 1. Estrazione del link diretta dalla proprietà dell'evento
+    const rawPage = selectedEvent.page as any
+    const pageUrl =
+      rawPage?.cached_url ||
+      rawPage?.cachedUrl ||
+      rawPage?.url ||
+      (typeof rawPage === 'string' ? rawPage : null)
+
+    const cleanUrl = pageUrl && pageUrl !== '#' ? (pageUrl.startsWith('/') ? pageUrl : `/${pageUrl}`) : null
+    const submitForms = (blok.submit as FormBlok[]) || []
+
     return (
       <div
-        {...storyblokEditable(blok)}
-        className="flex flex-col gap-2 sm:gap-4 sm:flex-row col-span-12 items-start sm:items-center"
+        {...storyblokEditable(blok as any)}
+        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:items-center sm:gap-8"
       >
+        {/* Box Data con Immagine */}
         <div
-          className="flex-1 sm:max-w-64 bg-cover bg-center rounded-md overflow-hidden self-stretch flex"
+          className="relative flex aspect-[4/3] min-h-48 w-full min-w-56 flex-none overflow-hidden rounded-xl bg-cover bg-center sm:w-64"
           style={{
-            backgroundImage: !!blok.image?.filename
+            backgroundImage: blok.image?.filename
               ? `url(${blok.image.filename})`
-              : '',
+              : 'none',
           }}
         >
           <div className={dateClasses({ hasImage: !!blok.image?.filename })}>
-            <p className="text-3xl font-semibold sm:block">
-              <span className="sm:w-full sm:block">
-                {alias.content.date.toLocaleDateString('it-IT', {
+            <p className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              <span className="block">
+                {eventDate.toLocaleDateString('it-IT', {
                   day: '2-digit',
                   month: 'long',
                 })}
               </span>
-              <span className="sm:w-full ml-1 sm:block sm:text-lg sm:font-medium">
-                {alias.content.date.toLocaleDateString('it-IT', {
+              <span className="block text-lg font-medium opacity-90 sm:text-xl">
+                {eventDate.toLocaleDateString('it-IT', {
                   year: 'numeric',
                 })}
               </span>
             </p>
           </div>
         </div>
-        <div className="flex-1 space-y-4 block py-4">
-          {alias.content.title &&
-          (!alias.content.page.cachedUrl || !!blok.submit?.length) ? (
-            <h3 className="font-sans text-lg md:text-2xl xl:text-3xl font-bold leading-snug md:leading-snug xl:leading-snug">
-              {alias.content.title}
+
+        {/* Dettagli Evento */}
+        <div className="flex flex-1 flex-col justify-center space-y-4 py-2">
+          {selectedEvent.title && (!cleanUrl || submitForms.length > 0) ? (
+            <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
+              {selectedEvent.title}
             </h3>
           ) : (
             <NextLink
-              href={alias.content.page.cachedUrl}
-              color="foreground"
-              className="font-semibold text-sm hover:opacity-100 opacity-85 inline-flex"
+              href={cleanUrl || '#'}
+              className="inline-block transition-opacity hover:opacity-85"
             >
-              <h3 className="font-sans text-lg md:text-2xl xl:text-3xl font-bold leading-snug md:leading-snug xl:leading-snug">
-                {alias.content.title}
+              <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
+                {selectedEvent.title}
               </h3>
             </NextLink>
           )}
 
-          {alias.content.description &&
-            compiler(alias.content.description, {
+          {selectedEvent.description &&
+            compiler(selectedEvent.description, {
               wrapper: 'div',
               forceWrapper: true,
-              overrides: Typography({}),
+              overrides: Typography({ theme: 'dark' }),
             })}
-          {alias.content.page.cachedUrl && !blok.submit?.length && (
-            <NextLink
-              href={alias.content.page.cachedUrl}
-              className="font-medium text-sm py-2 hover:opacity-100 opacity-85 inline-flex border-2 border-foreground px-3 rounded-xl"
-            >
-              Vai alla pagina
-            </NextLink>
+
+          {/* 2. Ripristino del Bottone "Vai alla pagina" */}
+          {cleanUrl && submitForms.length === 0 && (
+            <div className="pt-2">
+              <NextLink
+                href={cleanUrl}
+                className="inline-flex rounded-xl border-2 border-foreground px-4 py-2 text-sm font-medium transition-all hover:bg-foreground hover:text-background"
+              >
+                Vai alla pagina
+              </NextLink>
+            </div>
           )}
-          {!!blok.submit?.length &&
-            blok?.submit.map((form, index) => (
-              <StoryblokComponent blok={form} openday={openday} key={index} />
-            ))}
+
+          {submitForms.length > 0 && (
+            <div className="flex flex-wrap gap-3 pt-2">
+              {submitForms.map((form) => (
+                <StoryblokComponent
+                  blok={form}
+                  openday={openday}
+                  key={form._uid}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
   }
 
-  if (isArticle) {
+  if (isArticle && selectedArticle) {
+    const articleSlug = selectedArticle.fullSlug ? `/${selectedArticle.fullSlug}` : '#'
+
     return (
-      <article className="col-span-12 md:col-span-10 flex flex-col md:flex-row gap-6 items-stretch ">
-        <NextLink
-          href={alias?.full_slug}
-          className="flex-none w-full md:max-w-1/2"
+      <article
+        {...storyblokEditable(blok as any)}
+        className="col-span-12 grid grid-cols-12 gap-6 items-center w-full"
+      >
+        {selectedArticle.image?.filename && (
+          <div className="col-span-12 md:col-span-5 lg:col-span-5">
+            <NextLink href={articleSlug} className="block w-full overflow-hidden rounded-xl">
+              <Image
+                classNames={{
+                  wrapper: 'w-full aspect-[16/10] overflow-hidden rounded-xl',
+                  img: 'w-full h-full object-cover',
+                }}
+                src={selectedArticle.image.filename}
+                alt={selectedArticle.image.alt || selectedArticle.title || ''}
+                radius="lg"
+              />
+            </NextLink>
+          </div>
+        )}
+
+        <div
+          className={`col-span-12 ${selectedArticle.image?.filename ? 'md:col-span-7 lg:col-span-7' : 'md:col-span-12'
+            } space-y-4`}
         >
-          <Image
-            src={alias.content.image?.filename}
-            alt={alias.content.image?.alt}
-            radius="sm"
-            isZoomed={true}
-          />
-        </NextLink>
-        <div className="flex-1 space-y-6">
           <NextLink
-            href={alias?.full_slug}
-            className="hover:opacity-80 hover:transition-all transition-all space-y-3"
+            href={articleSlug}
+            className="inline-block space-y-3 transition-opacity hover:opacity-85"
           >
-            <h4 className="font-serif font-bold text-4xl">
-              {alias.content.title}
+            <h4 className="font-serif text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
+              {selectedArticle.title}
             </h4>
-            <p className="text-sm line-clamp-3 sm:line-clamp-none">
-              {alias.content.description}
-            </p>
           </NextLink>
-          <NextLink
-            href={alias?.full_slug}
-            className="font-medium text-sm py-2 hover:opacity-100 opacity-85 inline-flex border-2 border-foreground px-3 rounded-xl"
-          >
-            Leggi articolo
-          </NextLink>
+
+          <p className="text-sm sm:text-base text-neutral-300 line-clamp-3 md:line-clamp-none font-sans leading-relaxed">
+            {selectedArticle.description}
+          </p>
+
+          <div className="pt-2">
+            <NextLink
+              href={articleSlug}
+              className="inline-flex rounded-xl border-2 border-foreground px-4 py-2 text-sm font-medium transition-all hover:bg-foreground hover:text-background"
+            >
+              Leggi articolo
+            </NextLink>
+          </div>
         </div>
       </article>
     )
   }
 
-  return (
-    <div className="col-span-12">
-      <h3>{alias.content.title}</h3>
-    </div>
-  )
+  return null
 }

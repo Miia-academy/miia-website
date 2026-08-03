@@ -1,4 +1,4 @@
-import { GalleryProps, type ImageData } from '@props/types'
+import type { Gallery as GalleryBlok } from '@types'
 import { Fragment, useState } from 'react'
 import {
   Image as HeroImage,
@@ -8,21 +8,24 @@ import {
 } from '@heroui/react'
 import { tv } from 'tailwind-variants'
 import { default as NextImage } from 'next/image'
-import { Swiper, SwiperSlide, SwiperProps } from 'swiper/react'
+import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
-import { getImageSizes, type ImageSize } from '@modules/formats'
+import { getImageSizes } from '@modules/formats'
 import { storyblokEditable } from '@storyblok/react'
 
-interface GalleryComponent {
-  blok: GalleryProps
+interface GalleryComponentProps {
+  blok: GalleryBlok
 }
 
+// Definizioni type-safe per evitare conflitti con tailwind-variants
+type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1'
+type SizeVariant = '1/8' | '1/4' | '1/2'
 
+export default function Gallery({ blok }: GalleryComponentProps) {
+  const rawImages = blok.images || []
+  if (!rawImages.length) return null
 
-export default function Gallery({ blok }: GalleryComponent) {
-  if (!blok.images.length) return null
   const { containerClasses, wrapperClasses, closeClasses } = modalClasses()
-
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [current, setCurrent] = useState(0)
 
@@ -31,12 +34,14 @@ export default function Gallery({ blok }: GalleryComponent) {
     onOpen()
   }
 
-  const modules = []
-  const autoplay = blok.delay > 0 ? { delay: 6500 - 1000 * blok.delay } : false
-  autoplay && modules.push(Autoplay)
-  blok.interface && modules.push(Navigation)
+  // 1. Parsing safe dei valori CLI (string -> number)
+  const delayNum = blok.delay ? parseFloat(blok.delay as string) : 0
+  const autoplay = delayNum > 0 ? { delay: 6500 - 1000 * delayNum } : false
 
-  // const sizes = [256, 512, 768, 1024, 1280, 1440]
+  const modules = []
+  if (autoplay) modules.push(Autoplay)
+  if (blok.interface) modules.push(Navigation)
+
   const sizes = [256, 512, 768, 1024, 1280]
 
   const getSizes = (axis: 'width' | 'height') =>
@@ -48,34 +53,31 @@ export default function Gallery({ blok }: GalleryComponent) {
       )
       .join(',')
 
-  const images = blok.images.map((image) => getImageSizes(image))
+  // Estrazione misure tramite la tua utility
+  const images = rawImages.map((image) => getImageSizes(image))
 
-  const slides = images.map(
-    (slide: ImageData & { size: ImageSize } & { id: string }) => {
-      const { wrapperClasses, imageClasses } = slideClasses()
-      return (
-        <SwiperSlide key={slide.id} className={wrapperClasses()}>
-          <NextImage
-            src={slide.filename}
-            alt={slide.alt}
-            width={
-              slide.size.ratio > 1 ? sizes[4] : sizes[2] * slide.size.ratio
-            }
-            height={
-              slide.size.ratio <= 1 ? sizes[2] : sizes[4] / slide.size.ratio
-            }
-            sizes={getSizes(slide.size.axis)}
-            className={imageClasses({ class: 'h-auto' })}
-          />
-        </SwiperSlide>
-      )
-    }
-  )
+  // 2. Creazione della lista Slides centralizzata (Dry)
+  const slides = images.map((slide: ReturnType<typeof getImageSizes>) => {
+    const { wrapperClasses: swiperWrapper, imageClasses } = slideClasses()
+    return (
+      <SwiperSlide key={slide.id} className={swiperWrapper()}>
+        <NextImage
+          src={slide.filename}
+          alt={slide.alt || ''}
+          width={
+            slide.size.ratio > 1 ? sizes[4] : sizes[2] * slide.size.ratio
+          }
+          height={
+            slide.size.ratio <= 1 ? sizes[2] : sizes[4] / slide.size.ratio
+          }
+          sizes={getSizes(slide.size.axis)}
+          className={imageClasses({ class: 'h-auto' })}
+        />
+      </SwiperSlide>
+    )
+  })
 
-  const sliderSettings: SwiperProps = {
-
-  }
-
+  // Rendering Layouts
   const SlideShow = (
     <Swiper
       loop={true}
@@ -83,44 +85,26 @@ export default function Gallery({ blok }: GalleryComponent) {
       slidesPerView={1}
       spaceBetween={24}
       modules={modules}
-      navigation={blok.interface}
+      navigation={!!blok.interface}
       className="min-h-inherit rounded-xl"
       wrapperClass="min-h-inherit"
     >
-      {images.map((slide: ImageData & { size: ImageSize } & { id: string }) => {
-        const { wrapperClasses, imageClasses } = slideClasses()
-        return (
-          <SwiperSlide key={slide.id} className={wrapperClasses()}>
-            <NextImage
-              src={slide.filename}
-              alt={slide.alt}
-              width={
-                slide.size.ratio > 1 ? sizes[4] : sizes[2] * slide.size.ratio
-              }
-              height={
-                slide.size.ratio <= 1 ? sizes[2] : sizes[4] / slide.size.ratio
-              }
-              sizes={getSizes(slide.size.axis)}
-              className={imageClasses({ class: 'h-auto' })}
-            />
-          </SwiperSlide>
-        )
-      })}
+      {slides}
     </Swiper>
   )
 
   const FullScreen = (
     <Fragment>
-      {images.map((image, index) => (
+      {images.map((image: ReturnType<typeof getImageSizes>, index: number) => (
         <div
-          key={index}
-          className={thumbClasses({ size: blok.size })}
+          key={image.id || index}
+          className={thumbClasses({ size: blok.size as SizeVariant })}
           onClick={() => handleOpen(index)}
         >
           <HeroImage
             src={image.filename}
-            alt={image.alt}
-            width={'100%'}
+            alt={image.alt || ''}
+            width="100%"
             shadow="md"
             classNames={{
               wrapper: 'm-1',
@@ -129,6 +113,7 @@ export default function Gallery({ blok }: GalleryComponent) {
           />
         </div>
       ))}
+
       <Modal
         isOpen={isOpen}
         onClose={onClose}
@@ -158,18 +143,18 @@ export default function Gallery({ blok }: GalleryComponent) {
           </div>
         </ModalContent>
       </Modal>
-    </Fragment >
+    </Fragment>
   )
 
   return (
     <div
-      {...storyblokEditable(blok)}
+      {...storyblokEditable(blok as any)}
       className={galleryClasses({
         isFullScreen: blok.fullScreen,
-        smWidth: blok.width?.[0],
-        mdWidth: blok.width?.[1],
-        lgWidth: blok.width?.[2],
-        xlWidth: blok.width?.[3],
+        smWidth: (blok.width?.[0] as WidthVariant) || undefined,
+        mdWidth: (blok.width?.[1] as WidthVariant) || undefined,
+        lgWidth: (blok.width?.[2] as WidthVariant) || undefined,
+        xlWidth: (blok.width?.[3] as WidthVariant) || undefined,
       })}
     >
       {blok.fullScreen ? FullScreen : SlideShow}
@@ -246,5 +231,3 @@ const slideClasses = tv({
     imageClasses: 'max-h-full max-w-full rounded-xl mx-auto',
   },
 })
-
-// sizes={`(max-${slide.size.axis}:512px):256px,(max-${slide.size.axis}:768px):512px,(max-${slide.size.axis}:1024px):768px,(max-${slide.size.axis}:1280px):1024px,1440px`}
