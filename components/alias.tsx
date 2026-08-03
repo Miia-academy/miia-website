@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react'
-import type {
-  Alias as AliasBlok,
-  Article as ArticleBlok,
-  Event as EventBlok,
-  Form as FormBlok,
-} from '@types'
+import type { Alias as AliasBlok, Form as FormBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
@@ -20,7 +15,6 @@ interface AliasComponentProps {
 }
 
 export default function Alias({ blok }: AliasComponentProps) {
-  // 1. Dati globali estratti istantaneamente dal Context (Zero chiamate di rete)
   const { articles, events } = useDataContext()
 
   const isArticle = blok.resource === 'last-article'
@@ -31,7 +25,6 @@ export default function Alias({ blok }: AliasComponentProps) {
   const [isClientReady, setIsClientReady] = useState(false)
 
   useEffect(() => {
-    // 2. Calcolo puramente client-side per evitare mismatch di timezone / cache stale ISR
     if (isEvent) {
       const now = new Date()
 
@@ -51,7 +44,6 @@ export default function Alias({ blok }: AliasComponentProps) {
     }
 
     if (isArticle) {
-      // Prende l'articolo più recente (gli articoli sono già ordinati per data in cache)
       setSelectedArticle(articles[0] || null)
     }
 
@@ -71,42 +63,49 @@ export default function Alias({ blok }: AliasComponentProps) {
     }
 
     const dateClasses = tv({
-      base: 'flex flex-col h-full w-full p-4',
+      base: 'flex flex-col justify-end h-full w-full p-4 text-white relative z-10',
       variants: {
         hasImage: {
-          true: 'min-h-64 sm:min-h-0 bg-gradient-to-br from-background to-transparent to-75 bg-blend-multiply',
+          true: 'bg-gradient-to-t from-black/80 via-black/40 to-transparent',
+          false: 'bg-neutral-800',
         },
       },
     })
 
+    // 1. Estrazione del link diretta dalla proprietà dell'evento
+    const rawPage = selectedEvent.page as any
     const pageUrl =
-      (selectedEvent.page as any)?.cachedUrl ||
-      (selectedEvent.page as any)?.url ||
-      '#'
+      rawPage?.cached_url ||
+      rawPage?.cachedUrl ||
+      rawPage?.url ||
+      (typeof rawPage === 'string' ? rawPage : null)
+
+    const cleanUrl = pageUrl && pageUrl !== '#' ? (pageUrl.startsWith('/') ? pageUrl : `/${pageUrl}`) : null
     const submitForms = (blok.submit as FormBlok[]) || []
 
     return (
       <div
         {...storyblokEditable(blok as any)}
-        className="col-span-12 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4"
+        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:items-center sm:gap-8"
       >
+        {/* Box Data con Immagine */}
         <div
-          className="flex flex-1 self-stretch overflow-hidden rounded-md bg-cover bg-center sm:max-w-64"
+          className="relative flex aspect-[4/3] min-h-48 w-full min-w-56 flex-none overflow-hidden rounded-xl bg-cover bg-center sm:w-64"
           style={{
             backgroundImage: blok.image?.filename
               ? `url(${blok.image.filename})`
-              : '',
+              : 'none',
           }}
         >
           <div className={dateClasses({ hasImage: !!blok.image?.filename })}>
-            <p className="text-3xl font-semibold sm:block">
-              <span className="sm:block sm:w-full">
+            <p className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              <span className="block">
                 {eventDate.toLocaleDateString('it-IT', {
                   day: '2-digit',
                   month: 'long',
                 })}
               </span>
-              <span className="ml-1 sm:block sm:w-full sm:text-lg sm:font-medium">
+              <span className="block text-lg font-medium opacity-90 sm:text-xl">
                 {eventDate.toLocaleDateString('it-IT', {
                   year: 'numeric',
                 })}
@@ -115,17 +114,18 @@ export default function Alias({ blok }: AliasComponentProps) {
           </div>
         </div>
 
-        <div className="block flex-1 space-y-4 py-4">
-          {selectedEvent.title && (!pageUrl || submitForms.length > 0) ? (
-            <h3 className="font-sans text-lg font-bold leading-snug md:text-2xl xl:text-3xl">
+        {/* Dettagli Evento */}
+        <div className="flex flex-1 flex-col justify-center space-y-4 py-2">
+          {selectedEvent.title && (!cleanUrl || submitForms.length > 0) ? (
+            <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
               {selectedEvent.title}
             </h3>
           ) : (
             <NextLink
-              href={pageUrl}
-              className="inline-flex font-semibold text-sm opacity-85 hover:opacity-100"
+              href={cleanUrl || '#'}
+              className="inline-block transition-opacity hover:opacity-85"
             >
-              <h3 className="font-sans text-lg font-bold leading-snug md:text-2xl xl:text-3xl">
+              <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
                 {selectedEvent.title}
               </h3>
             </NextLink>
@@ -135,26 +135,32 @@ export default function Alias({ blok }: AliasComponentProps) {
             compiler(selectedEvent.description, {
               wrapper: 'div',
               forceWrapper: true,
-              overrides: Typography({}),
+              overrides: Typography({ theme: 'dark' }),
             })}
 
-          {pageUrl && pageUrl !== '#' && submitForms.length === 0 && (
-            <NextLink
-              href={pageUrl}
-              className="inline-flex rounded-xl border-2 border-foreground px-3 py-2 text-sm font-medium opacity-85 hover:opacity-100"
-            >
-              Vai alla pagina
-            </NextLink>
+          {/* 2. Ripristino del Bottone "Vai alla pagina" */}
+          {cleanUrl && submitForms.length === 0 && (
+            <div className="pt-2">
+              <NextLink
+                href={cleanUrl}
+                className="inline-flex rounded-xl border-2 border-foreground px-4 py-2 text-sm font-medium transition-all hover:bg-foreground hover:text-background"
+              >
+                Vai alla pagina
+              </NextLink>
+            </div>
           )}
 
-          {submitForms.length > 0 &&
-            submitForms.map((form) => (
-              <StoryblokComponent
-                blok={form}
-                openday={openday}
-                key={form._uid}
-              />
-            ))}
+          {submitForms.length > 0 && (
+            <div className="flex flex-wrap gap-3 pt-2">
+              {submitForms.map((form) => (
+                <StoryblokComponent
+                  blok={form}
+                  openday={openday}
+                  key={form._uid}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -166,41 +172,49 @@ export default function Alias({ blok }: AliasComponentProps) {
     return (
       <article
         {...storyblokEditable(blok as any)}
-        className="col-span-12 flex flex-col items-stretch gap-6 md:col-span-10 md:flex-row"
+        className="col-span-12 grid grid-cols-12 gap-6 items-center w-full"
       >
         {selectedArticle.image?.filename && (
-          <NextLink
-            href={articleSlug}
-            className="w-full flex-none md:max-w-1/2"
-          >
-            <Image
-              src={selectedArticle.image.filename}
-              alt={selectedArticle.image.alt || selectedArticle.title || ''}
-              radius="sm"
-              isZoomed={true}
-            />
-          </NextLink>
+          <div className="col-span-12 md:col-span-5 lg:col-span-5">
+            <NextLink href={articleSlug} className="block w-full overflow-hidden rounded-xl">
+              <Image
+                classNames={{
+                  wrapper: 'w-full aspect-[16/10] overflow-hidden rounded-xl',
+                  img: 'w-full h-full object-cover',
+                }}
+                src={selectedArticle.image.filename}
+                alt={selectedArticle.image.alt || selectedArticle.title || ''}
+                radius="lg"
+              />
+            </NextLink>
+          </div>
         )}
 
-        <div className="flex-1 space-y-6">
+        <div
+          className={`col-span-12 ${selectedArticle.image?.filename ? 'md:col-span-7 lg:col-span-7' : 'md:col-span-12'
+            } space-y-4`}
+        >
           <NextLink
             href={articleSlug}
-            className="block space-y-3 transition-all hover:opacity-80"
+            className="inline-block space-y-3 transition-opacity hover:opacity-85"
           >
-            <h4 className="font-serif text-4xl font-bold">
+            <h4 className="font-serif text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
               {selectedArticle.title}
             </h4>
-            <p className="text-sm line-clamp-3 sm:line-clamp-none">
-              {selectedArticle.description}
-            </p>
           </NextLink>
 
-          <NextLink
-            href={articleSlug}
-            className="inline-flex rounded-xl border-2 border-foreground px-3 py-2 text-sm font-medium opacity-85 hover:opacity-100"
-          >
-            Leggi articolo
-          </NextLink>
+          <p className="text-sm sm:text-base text-neutral-300 line-clamp-3 md:line-clamp-none font-sans leading-relaxed">
+            {selectedArticle.description}
+          </p>
+
+          <div className="pt-2">
+            <NextLink
+              href={articleSlug}
+              className="inline-flex rounded-xl border-2 border-foreground px-4 py-2 text-sm font-medium transition-all hover:bg-foreground hover:text-background"
+            >
+              Leggi articolo
+            </NextLink>
+          </div>
         </div>
       </article>
     )

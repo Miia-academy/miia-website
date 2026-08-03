@@ -1,5 +1,4 @@
 import type { Field as FieldBlok } from '@types'
-import type { DataProps, OptionProps } from '@props/types'
 import {
   Input,
   Select,
@@ -11,6 +10,16 @@ import {
 } from '@heroui/react'
 import { useState } from 'react'
 import { storyblokEditable } from '@storyblok/react'
+
+export interface DataProps {
+  value?: any
+  error?: string | null
+}
+
+export interface OptionProps {
+  name: string | { title: string; days?: string[]; hours?: string[] } | any
+  value: string
+}
 
 interface FieldComponentProps {
   blok: FieldBlok
@@ -77,9 +86,10 @@ const AreaField = ({ blok, data, onChange }: FieldComponentProps) => (
 
 const NumberField = ({ blok, data, onChange }: FieldComponentProps) => {
   const options = getSliderOptions(blok.options)
-  const initialValue = blok.placeholder && !isNaN(Number(blok.placeholder))
-    ? Number(blok.placeholder)
-    : 0
+  const initialValue =
+    blok.placeholder && !isNaN(Number(blok.placeholder))
+      ? Number(blok.placeholder)
+      : 0
 
   const [number, setNumber] = useState<number>(initialValue)
 

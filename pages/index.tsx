@@ -5,16 +5,15 @@ import {
   useStoryblokState,
   type ISbStoryData,
 } from '@storyblok/react'
+import type { Page as PageBlok } from '@types'
 import { getCachedData, type GlobalData } from '@modules/cache'
 import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
-import { StoryProps } from '@props/types'
+import { optimizePayload } from '@modules/sanitize'
 
 type HomeProps = {
-  story: ISbStoryData & {
-    id: string
-    content: StoryProps
-  } | null
+  // Passiamo PageBlok come Generic, tipizzando automaticamente story.content
+  story: ISbStoryData<PageBlok> | null
   data: GlobalData
   draft: boolean
 }
@@ -71,10 +70,15 @@ export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
   // 4. Fetching dei dati globali passando la versione al sistema di caching centralizzato
   const globalData = await getCachedData(version)
 
-  // 5. La "Silver Bullet": sanitizzazione JSON per rimuovere gli 'undefined'.
-  // Questo impedisce a Next.js (getStaticProps) di lanciare errori di serializzazione JSON.
-  const safeStory = JSON.parse(JSON.stringify(storyResult))
-  const safeGlobalData = JSON.parse(JSON.stringify(globalData))
+  // 5. La nuova "Silver Bullet" ottimizzata
+  // Preserviamo gli 'undefined' parser se in draft (per mantenere attivi i tag _editable dell'editor),
+  // altrimenti sfoltiamo radicalmente il JSON per far sparire il warning "large-page-data".
+  const safeStory = isDraft
+    ? JSON.parse(JSON.stringify(storyResult))
+    : optimizePayload(storyResult)
+
+  // I dati globali non interagiscono con il Visual Editor, quindi li puliamo sempre
+  const safeGlobalData = optimizePayload(globalData)
 
   return {
     props: {

@@ -23,7 +23,6 @@ import List from '@components/list'
 import Carousel from '@components/carousel'
 import Aside from '@components/aside'
 import Person from '@components/person'
-import Event from '@components/event'
 import Course from '@components/course'
 import Location from '@components/location'
 import Video from '@components/video'
@@ -58,7 +57,6 @@ const components = {
   text: Text,
   action: Action,
   person: Person,
-  event: Event,
   course: Course,
   location: Location,
   grid: Grid,

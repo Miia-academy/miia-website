@@ -8,9 +8,10 @@ import {
 import { getCachedData, type GlobalData } from '@modules/cache'
 import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
+import { optimizePayload } from '@modules/sanitize'
 
 // Slug da escludere dalla generazione statica automatica
-const excluding_slugs = ['home', 'splash', 'blog/']
+const excluding_slugs = ['home', 'splash']
 
 interface PageStoryProps {
   story: ISbStoryData | null
@@ -56,9 +57,14 @@ export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContex
 
   const globalData = await getCachedData(version)
 
-  // Sanitizzazione JSON per rimuovere undefined ed evitare crash in Next.js
-  const safeStory = JSON.parse(JSON.stringify(storyResult))
-  const safeGlobalData = JSON.parse(JSON.stringify(globalData))
+  // 🚀 La nuova "Silver Bullet" ottimizzata
+  // Se in draft, stringifichiamo per pulire gli undefined e preservare i tag _editable.
+  // In produzione, applichiamo lo stripper per alleggerire il payload e rimuovere i warning di Next.js.
+  const safeStory = isDraft
+    ? JSON.parse(JSON.stringify(storyResult))
+    : optimizePayload(storyResult)
+
+  const safeGlobalData = optimizePayload(globalData)
 
   return {
     props: {
@@ -79,7 +85,7 @@ export const getStaticPaths = async () => {
       per_page: 100,
       filter_query: {
         component: {
-          in: 'page,enroll,project',
+          in: 'page,enroll,project,article',
         },
       },
     })
