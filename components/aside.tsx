@@ -4,6 +4,7 @@ import { Accordion, AccordionItem } from "@heroui/react";
 import { tv } from "tailwind-variants";
 import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
+import { useDataContext } from "@modules/context";
 
 interface ListItemProps {
   label: string;
@@ -79,26 +80,29 @@ const Price = ({
 
 interface AsideComponentProps {
   blok: AsideBlok;
-  locations?: Array<any>;
 }
 
-export default function Aside({ blok, locations = [] }: AsideComponentProps) {
-  // 1. Parsing dei valori numerici della CLI
+export default function Aside({ blok }: AsideComponentProps) {
+  // 🎯 1. Estraiamo le location dal Context globale (senza passare props dall'alto!)
+  const { locations } = useDataContext();
+
+  // 2. Parsing dei valori numerici
   const amount = blok.amount ? parseFloat(blok.amount) : 100;
   const steps = blok.steps ? parseInt(blok.steps, 10) : null;
   const discountPercent = blok.discount ? parseFloat(blok.discount) : undefined;
 
-  // 2. Controllo logico Sconto
+  // 3. Controllo logico Sconto
   const showDiscount = Boolean(
     blok.due_date && new Date() < new Date(blok.due_date)
   );
 
-  // 3. Elaborazione opzioni form e mappatura corsi
+  // 4. Elaborazione opzioni form e mappatura corsi
   const formOptions: Array<{ name: string; value: string }> = [];
 
   const rawCourses = Array.isArray(blok.courses) ? blok.courses : [];
   const courses = rawCourses.map((courseItem: any) => {
-    const content = courseItem.content || {};
+    // Gestisce sia il caso in cui courseItem sia la story risolta da Storyblok, sia il caso in cui sia l'oggetto diretto
+    const content = courseItem.content || courseItem || {};
 
     if (content.title) {
       formOptions.push({
@@ -107,8 +111,9 @@ export default function Aside({ blok, locations = [] }: AsideComponentProps) {
       });
     }
 
+    // Troviamo la location dall'array in memoria preso dal Context
     const matchedLocation = locations.find(
-      (loc) => loc.uuid === content.location
+      (loc) => loc.uuid === content.location || loc.uuid === (content.location as any)?.uuid
     );
 
     return {
@@ -123,11 +128,11 @@ export default function Aside({ blok, locations = [] }: AsideComponentProps) {
     };
   });
 
-  // 4. Estrattori array contents e forms
+  // 5. Estrattori array contents e forms
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
   const forms = Array.isArray(blok.forms) ? blok.forms : [];
 
-  // 5. Observer Intersezione
+  // 6. Observer Intersezione (Sticky Banner)
   const { isIntersecting, ref } = useIntersectionObserver({ threshold: 0 });
   const isStickyBanner = !isIntersecting;
 
@@ -167,7 +172,7 @@ export default function Aside({ blok, locations = [] }: AsideComponentProps) {
 
               {/* Accordion Corsi */}
               {courses.length > 0 && (
-                <div className={isStickyBanner ? "hidden" : ""}>
+                <div className={isStickyBanner ? "hidden" : "w-full"}>
                   <Accordion
                     selectionMode="multiple"
                     defaultExpandedKeys={courses.length === 1 ? ["0"] : []}
@@ -222,7 +227,7 @@ export default function Aside({ blok, locations = [] }: AsideComponentProps) {
                     key={form._uid}
                     blok={form}
                     variant={index === 0 ? "solid" : "ghost"}
-                    courses={formOptions}
+                    courses={formOptions} // 👈 Passiamo le opzioni form formattate al componente Form
                   />
                 );
               })}
@@ -234,6 +239,7 @@ export default function Aside({ blok, locations = [] }: AsideComponentProps) {
   );
 }
 
+// Styles con tailwind-variants...
 const priceClasses = tv({
   slots: {
     container: "relative flex flex-1 flex-col w-full",

@@ -27,6 +27,8 @@ import { Typography } from './typography'
 import { tv } from 'tailwind-variants'
 import { sendGTMEvent } from '@next/third-parties/google'
 import { isStoryResolved } from '@modules/relations'
+import { useDataContext } from '@modules/context'
+import type { ProcessedEvent } from '@modules/cache'
 
 const dateFormat = {
   year: 'numeric' as const,
@@ -53,7 +55,11 @@ function validateFields(data: FormData) {
 }
 
 // Helper: Build event object
-function buildEvent(data: FormData, tracking?: string) {
+function buildEvent(
+  data: FormData,
+  globalEvents: ProcessedEvent[],
+  tracking?: string
+) {
   const eventFilterData = [
     'email',
     'nome',
@@ -71,15 +77,22 @@ function buildEvent(data: FormData, tracking?: string) {
       if (typeof value === 'number') {
         properties[name] = value.toString()
       } else if (Array.isArray(value)) {
-        if (name === 'area') {
-          // TODO check how to pass cached data
-          const opendayList = opendays[value[0] as keyof Opendays]
-          const event = opendayList?.find((ev) => new Date(ev.date) >= today)
-          if (event?.date) {
-            properties['openday_data'] = new Date(event.date).toLocaleDateString(
-              'it-IT',
-              dateFormat
-            )
+        if (name === 'area' && value.length > 0) {
+          const selectedArea = String(value[0]).toLowerCase()
+
+          // Risoluzione del TODO: Cerchiamo il prossimo evento correlato all'area tra gli eventi in cache
+          const matchingEvent = globalEvents
+            .filter((ev) => {
+              if (!ev.date) return false
+              return ev.name?.toLowerCase().includes(selectedArea)
+            })
+            .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
+            .find((ev) => new Date(ev.date!) >= today)
+
+          if (matchingEvent?.date) {
+            properties['openday_data'] = new Date(
+              matchingEvent.date
+            ).toLocaleDateString('it-IT', dateFormat)
           }
         }
         properties[name] = value.join(', ')
@@ -137,12 +150,14 @@ function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
 function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
   const alias = isStoryResolved<FormBlok>(blok.alias)
     ? (blok.alias as ISbStoryData<FormBlok>).content
-    : null;
+    : null
 
   if (!alias) return blok
 
   // Merge lists (array primitivi: string | number)
-  const mergedList = Array.from(new Set([...(blok.list || []), ...(alias.list || [])]))
+  const mergedList = Array.from(
+    new Set([...(blok.list || []), ...(alias.list || [])])
+  )
 
   // Merge fields (Array di oggetti: deduplicazione per ID univoco)
   const allFields = [...(alias.fields || []), ...(blok.fields || [])]
@@ -157,7 +172,7 @@ function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
 
   let mergedFields = Array.from(fieldsMap.values())
 
-  // Handle enroll field
+  // Handle enroll field (Esattamente come volevi tu: mantieni solo se specificati!)
   const enrollIndex = mergedFields.findIndex((field) => field.input === 'enroll')
   if (enrollIndex >= 0) {
     if (courses?.length) {
@@ -218,7 +233,10 @@ export default function Form({
   openday,
   variant,
 }: FormComponentProps) {
-  // Merge alias to root form
+  // Prendiamo gli eventi in cache dal DataContext per calcolare l'openday se necessario
+  const { events: globalEvents } = useDataContext()
+
+  // Merge alias to root form (Mantiene il tuo comportamiento su enroll)
   const form = useMemo(() => mergeForm(blok, courses), [blok, courses])
 
   // Init Data
@@ -227,9 +245,10 @@ export default function Form({
   const [agreement, setAgreement] = useState(!form.terms)
   const [error, setError] = useState<string | null>(null)
   const [state, setState] = useState<FormStates>('close')
-  const [message, setMessage] = useState<{ title: string; body: string } | null>(null)
+  const [message, setMessage] = useState<{ title: string; body: string } | null>(
+    null
+  )
 
-  // Sincronizza i dati locali se i campi cambiano dall'Editor Visuale di Storyblok
   useEffect(() => {
     setData((prev) => {
       const updatedData = getData(form.fields)
@@ -277,7 +296,10 @@ export default function Form({
             error: field.error,
           },
           nome: { ...prev.nome, value: responseUser?.attributes?.NOME || '' },
-          cognome: { ...prev.cognome, value: responseUser?.attributes?.COGNOME || '' },
+          cognome: {
+            ...prev.cognome,
+            value: responseUser?.attributes?.COGNOME || '',
+          },
           sms: {
             ...prev.sms,
             value: responseUser?.attributes?.SMS
@@ -303,7 +325,8 @@ export default function Form({
       if (!agreement) return
 
       setState('send')
-      const event = buildEvent(newData, form.tracking)
+      // Passiamo anche i globalEvents a buildEvent
+      const event = buildEvent(newData, globalEvents, form.tracking)
       const contact = buildContact(newData, user, form.list)
 
       try {
@@ -356,7 +379,10 @@ export default function Form({
         const key = string.replace('{{', '').replace('}}', '')
         if (!currentData[key]?.value) return
         let value = currentData[key].value
-        if (typeof value === 'string' && !Number.isNaN(new Date(value).valueOf())) {
+        if (
+          typeof value === 'string' &&
+          !Number.isNaN(new Date(value).valueOf())
+        ) {
           value = new Date(value).toLocaleDateString('it-IT')
         }
         text = text.replace(string, value)
@@ -394,7 +420,9 @@ export default function Form({
             {(state === 'search' || state === 'send') && (
               <div className={spinner()}>
                 <Spinner
-                  label={state === 'search' ? 'Ricerca contatto' : 'Invio modulo'}
+                  label={
+                    state === 'search' ? 'Ricerca contatto' : 'Invio modulo'
+                  }
                   classNames={{ label: label() }}
                 />
               </div>
@@ -402,7 +430,7 @@ export default function Form({
 
             {state !== 'done' && user && (
               <div className="mb-4">
-                <h4 className="font-semibold text-xl capitalize">
+                <h4 className="text-xl font-semibold capitalize">
                   Bentornato {user.attributes.NOME?.toString()}{' '}
                   {user.attributes.COGNOME?.toString()}!
                 </h4>
@@ -425,7 +453,8 @@ export default function Form({
 
             {state !== 'done' &&
               visibleFields.map((field) => {
-                if (!field.id || (user && hiddenUserFields.includes(field.id))) return null
+                if (!field.id || (user && hiddenUserFields.includes(field.id)))
+                  return null
                 return (
                   <StoryblokComponent
                     blok={field}
@@ -438,7 +467,7 @@ export default function Form({
               })}
 
             {state !== 'done' && form.terms && (
-              <div className="mt-2 text-sm flex items-start gap-2">
+              <div className="mt-2 flex items-start gap-2 text-sm">
                 <Checkbox
                   isRequired={true}
                   isSelected={agreement}
@@ -454,7 +483,7 @@ export default function Form({
                     href={form.terms}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline underline-offset-1 text-sm inline-block"
+                    className="inline-block text-sm underline underline-offset-1"
                   >
                     l'informativa Privacy
                   </Link>
@@ -471,7 +500,7 @@ export default function Form({
               })}
 
             {state === 'error' && !!error && (
-              <div className="w-full flex items-center">
+              <div className="flex w-full items-center">
                 <Alert color="danger" hideIcon variant="faded" title={error} />
               </div>
             )}
@@ -480,7 +509,11 @@ export default function Form({
           <DrawerFooter className="justify-start">
             {state !== 'done' ? (
               <>
-                <Button color="primary" onPress={handleSubmit} isDisabled={state === 'error'}>
+                <Button
+                  color="primary"
+                  onPress={handleSubmit}
+                  isDisabled={state === 'error'}
+                >
                   Invia
                 </Button>
                 <Button color="default" onPress={handleReset}>

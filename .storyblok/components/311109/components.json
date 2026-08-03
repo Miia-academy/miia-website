@@ -462,7 +462,7 @@
     "display_name": "Carosello",
     "description": null,
     "created_at": "2025-01-27T13:18:21.672Z",
-    "updated_at": "2026-07-22T16:00:03.933Z",
+    "updated_at": "2026-08-03T10:45:37.732Z",
     "id": 6862106,
     "schema": {
       "interface": {
@@ -1024,7 +1024,7 @@
     "display_name": "Modulo",
     "description": null,
     "created_at": "2025-01-27T11:07:24.177Z",
-    "updated_at": "2025-10-21T12:00:28.606Z",
+    "updated_at": "2026-08-03T10:45:35.238Z",
     "id": 6861328,
     "schema": {
       "terms": {
@@ -1390,13 +1390,13 @@
   },
   {
     "name": "grid",
-    "display_name": null,
+    "display_name": "Griglia",
     "description": "",
     "created_at": "2026-03-10T21:24:16.816Z",
-    "updated_at": "2026-07-28T14:20:02.974Z",
+    "updated_at": "2026-08-03T11:38:00.390Z",
     "id": 153551899924324,
     "schema": {
-      "type": {
+      "resource": {
         "type": "option",
         "pos": 0,
         "use_uuid": true,
@@ -1415,7 +1415,7 @@
           {
             "_uid": "bf1883c8-5a74-4474-a01b-7d9411182253",
             "value": "jobs",
-            "name": "Lavori"
+            "name": "Lavoro"
           },
           {
             "_uid": "52c0135c-a785-4553-827d-207881705cd2",
@@ -1426,10 +1426,68 @@
             "_uid": "48ced79b-4c75-4ec9-9ce1-322bb45c620e",
             "value": "events",
             "name": "Eventi"
+          },
+          {
+            "_uid": "6b6101b1-21a1-476e-9cab-8b48d8afb81a",
+            "value": "projects",
+            "name": "Progetti"
           }
         ],
         "id": "YQYj9466QWOoamphQZzBHg",
         "exclude_empty_option": true
+      },
+      "title": {
+        "type": "markdown",
+        "pos": 1,
+        "id": "-v3JoZEERmC_wU6myNM1Yg"
+      },
+      "subtitle": {
+        "type": "markdown",
+        "pos": 2,
+        "id": "C9G8GI7bRsutdZeI4JsIqg"
+      },
+      "filter": {
+        "type": "text",
+        "pos": 3,
+        "id": "aCwvC_lVQ5WuEh0AFLbzOA"
+      },
+      "columns": {
+        "type": "number",
+        "pos": 4,
+        "use_uuid": true,
+        "exclude_empty_option": true,
+        "options": [
+          {
+            "_uid": "e8cc0bae-2bdd-41aa-88ed-6ead9919b728",
+            "name": "Due",
+            "value": "2"
+          },
+          {
+            "_uid": "81d77283-8a79-45a1-982a-e8eebae2242a",
+            "value": "",
+            "name": "Tre"
+          }
+        ],
+        "display_name": "Colonne",
+        "min_value": 1,
+        "max_value": 4,
+        "id": "K1WdnQTUQSu7DENgIDmTxA"
+      },
+      "limit": {
+        "type": "number",
+        "pos": 5,
+        "use_uuid": true,
+        "id": "4AjHNaoZRSSCJHQONmYjEQ",
+        "min_value": 6,
+        "max_value": 30,
+        "steps": 3
+      },
+      "dark": {
+        "type": "boolean",
+        "display_name": "Tema scuro",
+        "default_value": false,
+        "inline_label": true,
+        "id": "4t_bsrGTR-qb3OzsK9Thyw"
       }
     },
     "image": null,
@@ -1439,7 +1497,7 @@
     "is_nestable": true,
     "all_presets": [],
     "preset_id": null,
-    "real_name": "grid",
+    "real_name": "Griglia",
     "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
     "color": null,
     "icon": null,
@@ -1959,7 +2017,7 @@
     "display_name": "Pagina",
     "description": null,
     "created_at": "2024-10-29T08:43:33.652Z",
-    "updated_at": "2026-07-31T15:38:28.946Z",
+    "updated_at": "2026-08-03T10:20:32.226Z",
     "id": 6486303,
     "schema": {
       "preview": {
@@ -2030,9 +2088,11 @@
           "section",
           "carousel",
           "map",
-          "aside"
+          "aside",
+          "grid"
         ],
-        "id": "fCbv-ULoQnaWysQ8xZqvpQ"
+        "id": "fCbv-ULoQnaWysQ8xZqvpQ",
+        "component_denylist": []
       }
     },
     "image": null,
@@ -2084,7 +2144,7 @@
     "display_name": "Persona",
     "description": null,
     "created_at": "2025-01-27T11:08:28.886Z",
-    "updated_at": "2026-07-23T08:06:19.598Z",
+    "updated_at": "2026-08-03T11:38:43.158Z",
     "id": 6861334,
     "schema": {
       "alias": {
@@ -2102,19 +2162,33 @@
         "options": [
           {
             "value": "video",
-            "name": "Video"
+            "name": "Video",
+            "_uid": "d14ef8dd-c2ec-4688-9846-63622e5cbbc5"
           },
           {
             "value": "description",
-            "name": "Descrizione"
+            "name": "Descrizione",
+            "_uid": "f2acdab8-0ec1-4e2f-ae67-d9be033e56be"
           },
           {
             "value": "role",
-            "name": "Ruolo"
+            "name": "Ruolo",
+            "_uid": "a6ef4988-c0f8-4a83-8c58-71e737f92321"
           },
           {
             "value": "links",
-            "name": "Collegamenti"
+            "name": "Collegamenti",
+            "_uid": "5ade1aa6-91d7-4988-a8b3-fff4533f08d0"
+          },
+          {
+            "_uid": "03a16ef5-49a8-4aa6-964f-e40c5e3976a3",
+            "value": "image",
+            "name": "Immagine"
+          },
+          {
+            "_uid": "de33fe67-d964-4459-8eca-523eaefb657b",
+            "value": "title",
+            "name": "Titolo"
           }
         ],
         "id": "xUn4LOywSr2ugpsrKwB_xg",
@@ -2270,10 +2344,10 @@
   },
   {
     "name": "project",
-    "display_name": null,
+    "display_name": "Progetto",
     "description": "",
     "created_at": "2026-07-31T15:31:23.394Z",
-    "updated_at": "2026-07-31T15:43:43.785Z",
+    "updated_at": "2026-08-03T11:38:11.013Z",
     "id": 204072072787651,
     "schema": {
       "body": {
@@ -2284,17 +2358,36 @@
       "cover": {
         "type": "asset",
         "pos": 1,
-        "id": "IzFNTVz4RCyC66rmjA0JeA"
+        "id": "IzFNTVz4RCyC66rmjA0JeA",
+        "required": true
       },
       "title": {
         "type": "markdown",
         "pos": 2,
-        "id": "d9L-Q24RQLK1xHC2QXdSXA"
+        "id": "d9L-Q24RQLK1xHC2QXdSXA",
+        "rich_markdown": true,
+        "customize_toolbar": true,
+        "toolbar": [
+          "bold",
+          "italic",
+          "h1",
+          "h2",
+          "h3",
+          "toggle-richtext",
+          "link",
+          "hrule",
+          "quote",
+          "h4",
+          "h5",
+          "h6"
+        ],
+        "required": true
       },
       "subtitle": {
         "type": "markdown",
         "pos": 3,
-        "id": "zP6Tx4rZTtKfEkfMKEno0g"
+        "id": "zP6Tx4rZTtKfEkfMKEno0g",
+        "required": true
       },
       "tab-46b603ba-69ec-40ea-9165-abb021e0ad4a": {
         "display_name": "Anteprima",
@@ -2324,7 +2417,7 @@
     "is_nestable": false,
     "all_presets": [],
     "preset_id": null,
-    "real_name": "project",
+    "real_name": "Progetto",
     "component_group_uuid": "3aee7005-d4d5-4e14-99e1-d9744a656d63",
     "color": null,
     "icon": null,

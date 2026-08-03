@@ -157,7 +157,13 @@ export interface Gallery {
 }
 
 export interface Grid {
-  type?: "" | "articles" | "persons" | "jobs" | "courses" | "events";
+  resource?: "" | "articles" | "persons" | "jobs" | "courses" | "events" | "projects";
+  title?: string;
+  subtitle?: string;
+  filter?: string;
+  columns?: string;
+  limit?: string;
+  dark?: boolean;
   component: "grid";
   _uid: string;
   [k: string]: unknown;
@@ -241,7 +247,7 @@ export interface Page {
   menu?: unknown;
   header?: ISbStoryData<Nav> | string;
   footer?: ISbStoryData<Nav> | string;
-  body?: (Section | Carousel | Map | Aside)[];
+  body?: (Section | Carousel | Map | Aside | Grid)[];
   component: "page";
   _uid: string;
   [k: string]: unknown;
@@ -249,7 +255,7 @@ export interface Page {
 
 export interface Person {
   alias?: ISbStoryData<Person> | string;
-  hide?: ("" | "video" | "description" | "role" | "links")[];
+  hide?: ("" | "video" | "description" | "role" | "links" | "image" | "title")[];
   new?: unknown;
   image?: StoryblokAsset;
   video?: string;
@@ -299,9 +305,9 @@ export interface Project {
     | Video
     | Wrapper
   )[];
-  cover?: StoryblokAsset;
-  title?: string;
-  subtitle?: string;
+  cover: StoryblokAsset;
+  title: string;
+  subtitle: string;
   component: "project";
   _uid: string;
   [k: string]: unknown;

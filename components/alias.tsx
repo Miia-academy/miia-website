@@ -5,145 +5,63 @@ import type {
   Event as EventBlok,
   Form as FormBlok,
 } from '@types'
-import type { ISbStoryData } from '@storyblok/react'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
 import { Image } from '@heroui/react'
 import NextLink from 'next/link'
 import { tv } from 'tailwind-variants'
-import { storyblokApi } from '@modules/storyblokApi'
+import { useDataContext } from '@modules/context'
+import type { ProcessedArticle, ProcessedEvent } from '@modules/cache'
 
 interface AliasComponentProps {
   blok: AliasBlok
   parent?: string
 }
 
-// Struttura tipizzata per la storia dell'Evento risolto via GraphQL
-type EventStory = ISbStoryData<EventBlok> & {
-  parsedDate?: Date
-}
-
-// Struttura tipizzata per la storia dell'Articolo risolto via GraphQL
-type ArticleStory = ISbStoryData<ArticleBlok>
-
-// Tipo Unione per lo stato dell'Alias
-type AliasData = ArticleStory | EventStory | null
-
 export default function Alias({ blok }: AliasComponentProps) {
+  // 1. Dati globali estratti istantaneamente dal Context (Zero chiamate di rete)
+  const { articles, events } = useDataContext()
+
   const isArticle = blok.resource === 'last-article'
   const isEvent = blok.resource === 'next-event'
 
-  const [alias, setAlias] = useState<AliasData>(null)
-  const [isLoading, setLoading] = useState(true)
+  const [selectedEvent, setSelectedEvent] = useState<ProcessedEvent | null>(null)
+  const [selectedArticle, setSelectedArticle] = useState<ProcessedArticle | null>(null)
+  const [isClientReady, setIsClientReady] = useState(false)
 
   useEffect(() => {
-    let isMounted = true
+    // 2. Calcolo puramente client-side per evitare mismatch di timezone / cache stale ISR
+    if (isEvent) {
+      const now = new Date()
 
-    const getAlias = async () => {
-      const variables = { isArticle, isEvent }
-      const query = `
-        query ($isArticle: Boolean!, $isEvent: Boolean!){      
-          ArticleItems( 
-            sort_by:"published_at:desc", 
-            resolve_relations: "article.author",
-            per_page: 1, 
-            filter_query: {hidden: {not_in: true}})
-          @include(if: $isArticle) {
-            items {
-              name
-              full_slug
-              published_at
-              tag_list
-              content {
-                title
-                image {
-                  alt
-                  filename
-                  copyright
-                  title
-                }
-                description
-              }
-            }
-          }
-          EventItems(sort_by: "position:asc", resolve_relations: "event.location")
-          @include(if: $isEvent) {
-            items {
-              name
-              full_slug
-              content {
-                title
-                description
-                openday
-                date
-                location {
-                  content
-                }
-                page {
-                  cachedUrl
-                  url
-                }
-              }
-            }
-          }
-        }
-      `
+      const upcomingEvent = events
+        .filter((ev) => {
+          if (!ev.date) return false
+          return blok.filter ? ev.name?.includes(blok.filter) : true
+        })
+        .sort((a, b) => {
+          const dateA = new Date(a.date || 0).getTime()
+          const dateB = new Date(b.date || 0).getTime()
+          return dateA - dateB
+        })
+        .find((ev) => new Date(ev.date || 0) >= now)
 
-      try {
-        const data = await storyblokApi({ query, variables })
-        if (!isMounted) return
-
-        if (data?.ArticleItems?.items?.length) {
-          setAlias(data.ArticleItems.items[0] as ArticleStory)
-        } else if (data?.EventItems?.items?.length) {
-          const today = new Date()
-
-          const events: EventStory[] = data.EventItems.items
-            .filter((item: EventStory) => {
-              if (!item.content?.date) return false
-              return blok.filter ? item.name?.includes(blok.filter) : true
-            })
-            .sort((a: EventStory, b: EventStory) => {
-              const dateA = new Date(a.content.date || 0).getTime()
-              const dateB = new Date(b.content.date || 0).getTime()
-              return dateA - dateB
-            })
-
-          const nextEvent = events.find(
-            (item) => new Date(item.content.date || 0) >= today
-          )
-
-          if (nextEvent && nextEvent.content.date) {
-            setAlias({
-              ...nextEvent,
-              parsedDate: new Date(nextEvent.content.date),
-            })
-          } else {
-            setAlias(null)
-          }
-        }
-      } catch (error) {
-        console.error('Errore durante il recupero dell\'alias:', error)
-      } finally {
-        if (isMounted) setLoading(false)
-      }
+      setSelectedEvent(upcomingEvent || null)
     }
 
-    getAlias()
-
-    return () => {
-      isMounted = false
+    if (isArticle) {
+      // Prende l'articolo più recente (gli articoli sono già ordinati per data in cache)
+      setSelectedArticle(articles[0] || null)
     }
-  }, [isArticle, isEvent, blok.filter])
 
-  if (isLoading) return <p className="col-span-12 py-4">Caricamento in corso...</p>
-  if (!alias) return null
+    setIsClientReady(true)
+  }, [events, articles, isEvent, isArticle, blok.filter])
 
-  // --- RENDERING PER GLI EVENTI ---
-  if (isEvent) {
-    const eventContent = alias.content as EventBlok
-    const eventDate = (alias as EventStory).parsedDate || new Date()
+  if (!isClientReady) return null
+
+  if (isEvent && selectedEvent && selectedEvent.date) {
+    const eventDate = new Date(selectedEvent.date)
 
     const openday = {
       id: 'openday',
@@ -161,16 +79,19 @@ export default function Alias({ blok }: AliasComponentProps) {
       },
     })
 
-    const pageUrl = eventContent.page?.cached_url || eventContent.page?.url || '#'
+    const pageUrl =
+      (selectedEvent.page as any)?.cachedUrl ||
+      (selectedEvent.page as any)?.url ||
+      '#'
     const submitForms = (blok.submit as FormBlok[]) || []
 
     return (
       <div
         {...storyblokEditable(blok as any)}
-        className="flex flex-col gap-2 sm:gap-4 sm:flex-row col-span-12 items-start sm:items-center"
+        className="col-span-12 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4"
       >
         <div
-          className="flex-1 sm:max-w-64 bg-cover bg-center rounded-md overflow-hidden self-stretch flex"
+          className="flex flex-1 self-stretch overflow-hidden rounded-md bg-cover bg-center sm:max-w-64"
           style={{
             backgroundImage: blok.image?.filename
               ? `url(${blok.image.filename})`
@@ -179,13 +100,13 @@ export default function Alias({ blok }: AliasComponentProps) {
         >
           <div className={dateClasses({ hasImage: !!blok.image?.filename })}>
             <p className="text-3xl font-semibold sm:block">
-              <span className="sm:w-full sm:block">
+              <span className="sm:block sm:w-full">
                 {eventDate.toLocaleDateString('it-IT', {
                   day: '2-digit',
                   month: 'long',
                 })}
               </span>
-              <span className="sm:w-full ml-1 sm:block sm:text-lg sm:font-medium">
+              <span className="ml-1 sm:block sm:w-full sm:text-lg sm:font-medium">
                 {eventDate.toLocaleDateString('it-IT', {
                   year: 'numeric',
                 })}
@@ -194,24 +115,24 @@ export default function Alias({ blok }: AliasComponentProps) {
           </div>
         </div>
 
-        <div className="flex-1 space-y-4 block py-4">
-          {eventContent.title && (!pageUrl || submitForms.length > 0) ? (
-            <h3 className="font-sans text-lg md:text-2xl xl:text-3xl font-bold leading-snug">
-              {eventContent.title}
+        <div className="block flex-1 space-y-4 py-4">
+          {selectedEvent.title && (!pageUrl || submitForms.length > 0) ? (
+            <h3 className="font-sans text-lg font-bold leading-snug md:text-2xl xl:text-3xl">
+              {selectedEvent.title}
             </h3>
           ) : (
             <NextLink
               href={pageUrl}
-              className="font-semibold text-sm hover:opacity-100 opacity-85 inline-flex"
+              className="inline-flex font-semibold text-sm opacity-85 hover:opacity-100"
             >
-              <h3 className="font-sans text-lg md:text-2xl xl:text-3xl font-bold leading-snug">
-                {eventContent.title}
+              <h3 className="font-sans text-lg font-bold leading-snug md:text-2xl xl:text-3xl">
+                {selectedEvent.title}
               </h3>
             </NextLink>
           )}
 
-          {eventContent.description &&
-            compiler(eventContent.description, {
+          {selectedEvent.description &&
+            compiler(selectedEvent.description, {
               wrapper: 'div',
               forceWrapper: true,
               overrides: Typography({}),
@@ -220,7 +141,7 @@ export default function Alias({ blok }: AliasComponentProps) {
           {pageUrl && pageUrl !== '#' && submitForms.length === 0 && (
             <NextLink
               href={pageUrl}
-              className="font-medium text-sm py-2 hover:opacity-100 opacity-85 inline-flex border-2 border-foreground px-3 rounded-xl"
+              className="inline-flex rounded-xl border-2 border-foreground px-3 py-2 text-sm font-medium opacity-85 hover:opacity-100"
             >
               Vai alla pagina
             </NextLink>
@@ -228,31 +149,33 @@ export default function Alias({ blok }: AliasComponentProps) {
 
           {submitForms.length > 0 &&
             submitForms.map((form) => (
-              <StoryblokComponent blok={form} openday={openday} key={form._uid} />
+              <StoryblokComponent
+                blok={form}
+                openday={openday}
+                key={form._uid}
+              />
             ))}
         </div>
       </div>
     )
   }
 
-  // --- RENDERING PER GLI ARTICOLI ---
-  if (isArticle) {
-    const articleContent = alias.content as ArticleBlok
-    const articleSlug = alias.full_slug ? `/${alias.full_slug}` : '#'
+  if (isArticle && selectedArticle) {
+    const articleSlug = selectedArticle.fullSlug ? `/${selectedArticle.fullSlug}` : '#'
 
     return (
       <article
         {...storyblokEditable(blok as any)}
-        className="col-span-12 md:col-span-10 flex flex-col md:flex-row gap-6 items-stretch"
+        className="col-span-12 flex flex-col items-stretch gap-6 md:col-span-10 md:flex-row"
       >
-        {articleContent.image?.filename && (
+        {selectedArticle.image?.filename && (
           <NextLink
             href={articleSlug}
-            className="flex-none w-full md:max-w-1/2"
+            className="w-full flex-none md:max-w-1/2"
           >
             <Image
-              src={articleContent.image.filename}
-              alt={articleContent.image.alt || articleContent.title || ''}
+              src={selectedArticle.image.filename}
+              alt={selectedArticle.image.alt || selectedArticle.title || ''}
               radius="sm"
               isZoomed={true}
             />
@@ -262,19 +185,19 @@ export default function Alias({ blok }: AliasComponentProps) {
         <div className="flex-1 space-y-6">
           <NextLink
             href={articleSlug}
-            className="hover:opacity-80 transition-all space-y-3 block"
+            className="block space-y-3 transition-all hover:opacity-80"
           >
-            <h4 className="font-serif font-bold text-4xl">
-              {articleContent.title}
+            <h4 className="font-serif text-4xl font-bold">
+              {selectedArticle.title}
             </h4>
             <p className="text-sm line-clamp-3 sm:line-clamp-none">
-              {articleContent.description}
+              {selectedArticle.description}
             </p>
           </NextLink>
 
           <NextLink
             href={articleSlug}
-            className="font-medium text-sm py-2 hover:opacity-100 opacity-85 inline-flex border-2 border-foreground px-3 rounded-xl"
+            className="inline-flex rounded-xl border-2 border-foreground px-3 py-2 text-sm font-medium opacity-85 hover:opacity-100"
           >
             Leggi articolo
           </NextLink>
@@ -283,9 +206,5 @@ export default function Alias({ blok }: AliasComponentProps) {
     )
   }
 
-  return (
-    <div {...storyblokEditable(blok as any)} className="col-span-12">
-      <h3>{(alias.content as any)?.title}</h3>
-    </div>
-  )
+  return null
 }
