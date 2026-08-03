@@ -276,35 +276,7 @@ export interface Process {
 }
 
 export interface Project {
-  body?: (
-    | Action
-    | Alias
-    | Article
-    | Aside
-    | Background
-    | Carousel
-    | Course
-    | Event
-    | Field
-    | Form
-    | Gallery
-    | Grid
-    | Image
-    | Job
-    | List
-    | Location
-    | Map
-    | Menu
-    | Nav
-    | Page
-    | Person
-    | Process
-    | Project
-    | Section
-    | Text
-    | Video
-    | Wrapper
-  )[];
+  body?: (Carousel | Form | Grid | Map | Nav | Section)[];
   cover: StoryblokAsset;
   title: string;
   subtitle: string;

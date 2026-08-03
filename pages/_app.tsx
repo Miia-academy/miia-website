@@ -34,6 +34,7 @@ import Gallery from '@components/gallery'
 import Menu from '@components/menu'
 import Process from '@components/process'
 import Grid from '@components/grid'
+import Project from '@components/project'
 
 const components = {
   page: Page,
@@ -61,6 +62,7 @@ const components = {
   course: Course,
   location: Location,
   grid: Grid,
+  project: Project
 }
 
 // Inizializzazione pulita per il nuovo stack REST + Draft Mode
