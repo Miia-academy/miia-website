@@ -7,7 +7,7 @@ export interface Action {
   link?: Exclude<StoryblokMultilink, {linktype?: "email"}>;
   external?: boolean;
   button?: boolean;
-  color?: "primary" | "secondary";
+  color?: "" | "primary" | "secondary";
   id?: string;
   component: "action";
   _uid: string;
@@ -49,7 +49,7 @@ export interface Aside {
   courses?: (ISbStoryData<Course> | string)[];
   forms: Form[];
   contents: (Process | Text | Action | Wrapper | Alias)[];
-  theme?: "dark";
+  theme?: "" | "dark";
   component: "aside";
   _uid: string;
   [k: string]: unknown;
@@ -58,7 +58,7 @@ export interface Aside {
 export interface Background {
   image?: StoryblokAsset;
   video?: string;
-  position?: ("right" | "center" | "left")[];
+  position?: ("" | "right" | "center" | "left")[];
   author?: ISbStoryData<Person> | string;
   component: "background";
   _uid: string;
@@ -84,8 +84,8 @@ export interface Course {
   id?: string;
   title?: string;
   location?: ISbStoryData<Location> | string;
-  days?: ("Lunedì" | "Martedi" | "Mercoledì" | "Giovedì" | "Venerdì" | "Sabato")[];
-  hours?: ("9:00/12:00" | "13:00/16:00" | "20:00/23:00")[];
+  days?: ("" | "Lunedì" | "Martedi" | "Mercoledì" | "Giovedì" | "Venerdì" | "Sabato")[];
+  hours?: ("" | "9:00/12:00" | "13:00/16:00" | "20:00/23:00")[];
   starts?: string;
   ends?: string;
   seats?: string;
@@ -100,7 +100,12 @@ export interface Event {
   new?: unknown;
   title?: string;
   description?: string;
-  openday?: "interni - primo livello" | "interni - secondo livello" | "moda - primo livello" | "moda - secondo livello";
+  openday?:
+    | ""
+    | "interni - primo livello"
+    | "interni - secondo livello"
+    | "moda - primo livello"
+    | "moda - secondo livello";
   location?: ISbStoryData<Location> | string;
   date?: string;
   page?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
@@ -143,16 +148,16 @@ export interface Gallery {
   interface?: boolean;
   delay?: string;
   images: StoryblokMultiasset;
-  size?: "1/2" | "1/4" | "1/8";
-  aspect?: "1/1" | "3/4" | "4/3";
-  width?: ("1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
+  size?: "" | "1/2" | "1/4" | "1/8";
+  aspect?: "" | "1/1" | "3/4" | "4/3";
+  width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
   component: "gallery";
   _uid: string;
   [k: string]: unknown;
 }
 
 export interface Grid {
-  type?: "articles" | "persons" | "jobs" | "courses" | "events";
+  type?: "" | "articles" | "persons" | "jobs" | "courses" | "events";
   component: "grid";
   _uid: string;
   [k: string]: unknown;
@@ -160,9 +165,9 @@ export interface Grid {
 
 export interface Image {
   image: StoryblokAsset;
-  width?: ("1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
-  size?: "sm" | "md" | "lg";
-  aspect?: "1/1" | "3/4" | "4/9" | "4/3" | "9/4";
+  width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
+  size?: "" | "sm" | "md" | "lg";
+  aspect?: "" | "1/1" | "3/4" | "4/9" | "4/3" | "9/4";
   order?: string;
   fullScreen?: boolean;
   author?: ISbStoryData<Person> | string;
@@ -186,7 +191,7 @@ export interface Job {
 
 export interface List {
   items: Text[];
-  size?: "1/4" | "1/3" | "1/2" | "2/3" | "3/4";
+  size?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4";
   component: "list";
   _uid: string;
   [k: string]: unknown;
@@ -244,12 +249,12 @@ export interface Page {
 
 export interface Person {
   alias?: ISbStoryData<Person> | string;
-  hide?: ("video" | "description" | "role" | "links")[];
+  hide?: ("" | "video" | "description" | "role" | "links")[];
   new?: unknown;
   image?: StoryblokAsset;
   video?: string;
   title?: string;
-  role?: "interior" | "style" | "design" | "cad" | "3d" | "building" | "lighting";
+  role?: "" | "interior" | "style" | "design" | "cad" | "3d" | "building" | "lighting";
   description?: string;
   links?: Action[];
   component: "person";
@@ -260,6 +265,44 @@ export interface Person {
 export interface Process {
   steps: Wrapper[];
   component: "process";
+  _uid: string;
+  [k: string]: unknown;
+}
+
+export interface Project {
+  body?: (
+    | Action
+    | Alias
+    | Article
+    | Aside
+    | Background
+    | Carousel
+    | Course
+    | Event
+    | Field
+    | Form
+    | Gallery
+    | Grid
+    | Image
+    | Job
+    | List
+    | Location
+    | Map
+    | Menu
+    | Nav
+    | Page
+    | Person
+    | Process
+    | Project
+    | Section
+    | Text
+    | Video
+    | Wrapper
+  )[];
+  cover?: StoryblokAsset;
+  title?: string;
+  subtitle?: string;
+  component: "project";
   _uid: string;
   [k: string]: unknown;
 }
@@ -342,4 +385,4 @@ export interface Wrapper {
   [k: string]: unknown;
 }
 
-export type ContentType = Article | Course | Event | Form | Job | Location | Nav | Page | Person;
+export type ContentType = Article | Course | Event | Form | Job | Location | Nav | Page | Person | Project;
