@@ -69,6 +69,8 @@ export default function Home({ story, data, draft }: HomeProps) {
   // Controllo opzionale se anche la Homepage deve supportare l'autenticazione tramite Storyblok
   const requiresAuth = (page.content as any)?.auth === true
   const isLocked = requiresAuth && mounted && !isAuthenticated && !draft
+  // TODO Eventualmente testare:
+  // const isStoryblokIframe = typeof window !== 'undefined' && window.location.search.includes('_storyblok')
 
   useEffect(() => {
     if (isLocked) {
