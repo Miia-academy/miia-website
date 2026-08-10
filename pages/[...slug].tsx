@@ -12,6 +12,7 @@ import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
 import { optimizePayload } from '@modules/sanitize'
 import { Card, CardBody, Input, Button } from '@heroui/react'
+import { getStoryblokVersion } from '@config/version'
 
 const excluding_slugs = ['home', 'splash']
 
@@ -181,8 +182,9 @@ export default function PageStory({ story, data, draft }: PageStoryProps) {
 }
 
 export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContext) => {
-  const isDraft = process.env.NODE_ENV === 'development' || !!draftMode
-  const version = isDraft ? 'draft' : 'published'
+  // Rileva 'draft' o 'published' in base all'ambiente Vercel/Locale
+  const version = getStoryblokVersion()
+  const isDraft = version === 'draft' || !!draftMode
 
   const slugArray = params?.slug ? (Array.isArray(params.slug) ? params.slug : [params.slug]) : []
   const slug = slugArray.join('/') || 'home'
@@ -190,17 +192,16 @@ export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContex
   const storyblokApi = getStoryblokApi()
   let storyResult = null
 
+  // Fetching con la versione corretta!
   try {
     const response = await storyblokApi.getStory(slug, {
-      version,
+      version, // 👈 Passa 'draft' se sei su develop/preview!
       resolve_relations: relations.join(','),
     })
     storyResult = response.data ? response.data.story : null
   } catch (error) {
-    console.error(`Page ${slug} non trovata su Storyblok`)
     return { notFound: true }
   }
-
   const globalData = await getCachedData(version)
 
   const safeStory = isDraft
@@ -221,10 +222,11 @@ export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContex
 
 export const getStaticPaths = async () => {
   const storyblokApi = getStoryblokApi()
+  const version = getStoryblokVersion() // 👈 'draft' per develop, 'published' per main
 
   try {
     const { data } = await storyblokApi.getStories({
-      version: 'published',
+      version, // 👈 Cerca tutte le storie (anche draft se in preview)
       per_page: 100,
       filter_query: {
         component: {
@@ -242,7 +244,7 @@ export const getStaticPaths = async () => {
 
     return {
       paths,
-      fallback: 'blocking',
+      fallback: 'blocking', // 👈 Mantieni 'blocking' così se viene creata una nuova story draft dopo la build, Next.js la genererà on-demand al primo hit!
     }
   } catch (error) {
     console.error('Errore durante il fetching degli static paths:', error)

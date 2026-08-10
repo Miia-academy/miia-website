@@ -12,6 +12,7 @@ import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
 import { optimizePayload } from '@modules/sanitize'
 import { Card, CardBody, Input, Button } from '@heroui/react'
+import { getStoryblokVersion } from '@config/version'
 
 type HomeProps = {
   story: ISbStoryData<PageBlok> | null
@@ -177,15 +178,17 @@ export default function Home({ story, data, draft }: HomeProps) {
 }
 
 export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
-  const isDraft = process.env.NODE_ENV === 'development' || !!draftMode
-  const version = isDraft ? 'draft' : 'published'
+  // Rileva 'draft' o 'published' in base all'ambiente Vercel/Locale
+  const version = getStoryblokVersion()
+  const isDraft = version === 'draft' || !!draftMode
 
   const storyblokApi = getStoryblokApi()
   let storyResult = null
 
+  // 1. Fetching della pagina root ("home") tramite API REST
   try {
     const home = await storyblokApi.getStory('home', {
-      version,
+      version, // 👈 Passa 'draft' per Preview/Develop e 'published' per Production
       resolve_relations: relations.join(','),
     })
     storyResult = home.data ? home.data.story : null
@@ -193,6 +196,7 @@ export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
     storyResult = null
   }
 
+  // 2. Fallback: se "home" non esiste o fallisce, prova a cercare "splash"
   if (!storyResult) {
     try {
       const splash = await storyblokApi.getStory('splash', {
@@ -206,8 +210,10 @@ export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
     }
   }
 
+  // 3. Fetching dei dati globali passando la versione corretta
   const globalData = await getCachedData(version)
 
+  // 4. Ottimizzazione Payload
   const safeStory = isDraft
     ? JSON.parse(JSON.stringify(storyResult))
     : optimizePayload(storyResult)
@@ -220,6 +226,7 @@ export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
       data: safeGlobalData,
       draft: isDraft,
     },
+    // Revalidazione istantanea se in draft, ogni ora in produzione
     revalidate: isDraft ? 1 : 3600,
   }
 }
