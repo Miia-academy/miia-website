@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { storyblokEditable } from '@storyblok/react'
 import { useDataContext } from '@modules/context'
 import { Button } from '@heroui/react'
@@ -17,13 +17,65 @@ interface GridComponentProps {
   blok: GridBlokType & { dark?: boolean }
 }
 
+// Helper per leggere cookie lato client
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+  return null
+}
+
 export default function Grid({ blok }: GridComponentProps) {
-  const { articles, jobs, courses, events, persons, projects } = useDataContext()
+  // Safe Fallback di destructuring per prevenire il crash se il DataProvider non è ancora montato
+  const contextData = useDataContext()
+  const articles = contextData?.articles || []
+  const jobs = contextData?.jobs || []
+  const courses = contextData?.courses || []
+  const events = contextData?.events || []
+  const persons = contextData?.persons || []
+  const projects = contextData?.projects || []
 
   const pageSize = blok.limit ? parseInt(blok.limit as string, 10) : 6
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
+  // Stato per tracciare le inserzioni eliminate ed escluderle dal rendering
+  const [deletedJobIds, setDeletedJobIds] = useState<string[]>([])
+  const [isOwner, setIsOwner] = useState<boolean>(false)
+
   const isDarkSection = !!blok.dark
+
+  // Verifichiamo se l'utente è loggato (tramite il cookie miia_user)
+  useEffect(() => {
+    const rawUserCookie = getCookie('miia_user')
+    if (rawUserCookie) {
+      setIsOwner(true)
+    }
+  }, [])
+
+  // Gestione dell'eliminazione di un'inserzione
+  const handleDeleteJob = async (storyIdOrUuid: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questa inserzione di lavoro?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/jobs?storyId=${storyIdOrUuid}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        // Aggiungiamo l'ID all'elenco dei rimossi per nasconderlo subito dalla UI
+        setDeletedJobIds((prev) => [...prev, storyIdOrUuid])
+      } else {
+        const errorData = await res.json()
+        alert(errorData.message || 'Errore durante l\'eliminazione dell\'inserzione.')
+      }
+    } catch (error) {
+      console.error('[Grid Delete Job Error]', error)
+      alert('Errore di connessione. Riprova più tardi.')
+    }
+  }
 
   const filteredAndSortedItems = useMemo(() => {
     let rawItems: any[] = []
@@ -41,8 +93,10 @@ export default function Grid({ blok }: GridComponentProps) {
         }
         rawItems.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         break
+
       case 'jobs':
-        rawItems = [...jobs]
+        // Filtriamo le inserzioni eliminate in questa sessione
+        rawItems = jobs.filter((job) => !deletedJobIds.includes(job.uuid))
         if (filterKey) {
           rawItems = rawItems.filter(
             (job) =>
@@ -51,12 +105,14 @@ export default function Grid({ blok }: GridComponentProps) {
           )
         }
         break
+
       case 'courses':
         rawItems = [...courses]
         if (filterKey) {
           rawItems = rawItems.filter((course) => course.area?.toLowerCase() === filterKey)
         }
         break
+
       case 'events':
         rawItems = [...events]
         if (filterKey) {
@@ -64,6 +120,7 @@ export default function Grid({ blok }: GridComponentProps) {
         }
         rawItems.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
         break
+
       case 'persons':
         rawItems = [...persons]
         if (filterKey) {
@@ -75,6 +132,7 @@ export default function Grid({ blok }: GridComponentProps) {
         }
         rawItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
         break
+
       case 'projects':
         rawItems = [...projects]
         if (filterKey) {
@@ -84,11 +142,12 @@ export default function Grid({ blok }: GridComponentProps) {
         }
         rawItems.sort((a, b) => new Date(b.firstPublishedAt || 0).getTime() - new Date(a.firstPublishedAt || 0).getTime())
         break
+
       default:
         rawItems = articles
     }
     return rawItems
-  }, [blok.resource, blok.filter, articles, jobs, courses, events, persons, projects])
+  }, [blok.resource, blok.filter, articles, jobs, courses, events, persons, projects, deletedJobIds])
 
   const parsedTitle = useMemo(() => {
     if (!blok.title) return ''
@@ -167,9 +226,16 @@ export default function Grid({ blok }: GridComponentProps) {
               <ArticleCard key={article.uuid} article={article} isDark={isDarkSection} />
             ))}
 
+          {/* RENDERING JOBS CON SUPPORTO PER ESEGUIRE ONDELETE */}
           {blok.resource === 'jobs' &&
             visibleItems.map((job) => (
-              <JobCard key={job.uuid} job={job} isDark={isDarkSection} />
+              <JobCard
+                key={job.uuid || job.fullSlug}
+                job={job}
+                isDark={isDarkSection}
+                isOwner={isOwner}
+                onDelete={handleDeleteJob}
+              />
             ))}
 
           {blok.resource === 'persons' &&
@@ -186,7 +252,7 @@ export default function Grid({ blok }: GridComponentProps) {
         {hasMore && (
           <div className="mt-12 flex justify-center">
             <Button
-              color={isDarkSection ? "default" : "primary"}
+              color={isDarkSection ? 'default' : 'primary'}
               variant="ghost"
               size="lg"
               onPress={handleLoadMore}

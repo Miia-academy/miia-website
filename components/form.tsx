@@ -24,11 +24,10 @@ import { isStoryResolved } from '@modules/relations'
 import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
 
-
 export interface FieldData {
   id: string
-  value: any // Rimosso il '?' - Ora è obbligatorio per compiacere fieldValidation
-  required: boolean // Rimosso il '?' - Ora è obbligatorio
+  value: any
+  required: boolean
   error?: string | null
 }
 
@@ -51,8 +50,14 @@ const dateFormat = {
   day: '2-digit' as const,
 }
 
+// Estensione del tipo generato da Storyblok per supportare la prop dinamica endpoint / action
+type ExtendedFormBlok = FormBlok & {
+  action?: string
+  endpoint?: string
+}
+
 interface FormComponentProps {
-  blok: FormBlok
+  blok: ExtendedFormBlok
   courses?: Array<OptionProps>
   openday?: FieldData
   variant?: 'solid' | 'ghost'
@@ -60,7 +65,6 @@ interface FormComponentProps {
 
 type FormStates = 'close' | 'open' | 'search' | 'send' | 'error' | 'done'
 
-// Helper: Validate all fields immutably
 function validateFields(data: FormData) {
   const updated = { ...data }
   Object.entries(updated).forEach(([name, field]) => {
@@ -69,7 +73,6 @@ function validateFields(data: FormData) {
   return updated
 }
 
-// Helper: Build event object
 function buildEvent(
   data: FormData,
   globalEvents: ProcessedEvent[],
@@ -95,7 +98,6 @@ function buildEvent(
         if (name === 'area' && value.length > 0) {
           const selectedArea = String(value[0]).toLowerCase()
 
-          // Cerchiamo il prossimo evento correlato all'area tra gli eventi in cache
           const matchingEvent = globalEvents
             .filter((ev) => {
               if (!ev.date) return false
@@ -134,7 +136,6 @@ function buildEvent(
   }
 }
 
-// Helper: Build contact object
 function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
   const contactFilterData = ['email']
   return {
@@ -161,20 +162,17 @@ function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
   }
 }
 
-// Helper: Merge Form and deduplicate fields correctly
-function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
-  const alias = isStoryResolved<FormBlok>(blok.alias)
-    ? (blok.alias as ISbStoryData<FormBlok>).content
+function mergeForm(blok: ExtendedFormBlok, courses?: Array<OptionProps>): ExtendedFormBlok {
+  const alias = isStoryResolved<ExtendedFormBlok>(blok.alias)
+    ? (blok.alias as ISbStoryData<ExtendedFormBlok>).content
     : null
 
   if (!alias) return blok
 
-  // Merge lists (array primitivi: string | number)
   const mergedList = Array.from(
     new Set([...(blok.list || []), ...(alias.list || [])])
   )
 
-  // Merge fields (Array di oggetti: deduplicazione per ID univoco)
   const allFields = [...(alias.fields || []), ...(blok.fields || [])]
   const fieldsMap = new Map<string, FieldBlok>()
 
@@ -187,7 +185,6 @@ function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
 
   let mergedFields = Array.from(fieldsMap.values())
 
-  // Handle enroll field
   const enrollIndex = mergedFields.findIndex((field) => field.input === 'enroll')
   if (enrollIndex >= 0) {
     if (courses?.length) {
@@ -209,6 +206,8 @@ function mergeForm(blok: FormBlok, courses?: Array<OptionProps>): FormBlok {
     message: [alias.message, blok.message].filter(Boolean).join('\n'),
     tracking: alias.tracking || blok.tracking,
     terms: alias.terms || blok.terms,
+    action: alias.action || blok.action,
+    endpoint: alias.endpoint || blok.endpoint,
   }
 }
 
@@ -250,10 +249,8 @@ export default function Form({
 }: FormComponentProps) {
   const { events: globalEvents } = useDataContext()
 
-  // Merge alias to root form
   const form = useMemo(() => mergeForm(blok, courses), [blok, courses])
 
-  // Init Data
   const [data, setData] = useState(() => getData(form.fields))
   const [user, setUser] = useState<BrevoProps | null>(null)
   const [agreement, setAgreement] = useState(!form.terms)
@@ -329,6 +326,23 @@ export default function Form({
     }
   }
 
+  /**
+   * Determinazione dinamica e agnostica dell'endpoint di destinazione
+   */
+  const targetEndpoint = useMemo(() => {
+    // 1. Se impostato da Storyblok tramite il campo 'endpoint' o 'action'
+    if (form.endpoint && form.endpoint.trim() !== '') return form.endpoint
+    if (form.action && form.action.trim() !== '') return form.action
+
+    // 2. Mappatura legacy di sicurezza basata sullo scope/tracking
+    if (form.tracking === 'recruit' || form.tracking === 'partnership') {
+      return '/api/jobs'
+    }
+
+    // 3. Fallback predefinito per la lead generation standard su Brevo
+    return '/api/send-brevo'
+  }, [form.endpoint, form.action, form.tracking])
+
   const handleSubmit = async () => {
     const newData = validateFields(data)
     const hasError = Object.values(newData).some((f) => !!f.error)
@@ -339,15 +353,44 @@ export default function Form({
       if (!agreement) return
 
       setState('send')
+
       const event = buildEvent(newData, globalEvents, form.tracking)
       const contact = buildContact(newData, user, form.list)
 
+      // Estrazione dinamica di tutte le coppie id: value
+      const rawFieldValues = Object.fromEntries(
+        Object.entries(newData).map(([key, field]) => [key, field.value])
+      )
+
+      // Payload universale da inviare alle API
+      const payload = {
+        contact,
+        event,
+        fields: rawFieldValues,
+        company: rawFieldValues.azienda || rawFieldValues.company || user?.attributes?.AZIENDA || '',
+        title: rawFieldValues.titolo || rawFieldValues.title || '',
+        description: rawFieldValues.messaggio || rawFieldValues.description || '',
+        location: rawFieldValues.citta || rawFieldValues.location || '',
+        area: Array.isArray(rawFieldValues.area) ? rawFieldValues.area[0] : rawFieldValues.area || '',
+        email: newData.email?.value,
+      }
+
       try {
-        const response = await fetch('/api/send-brevo', {
+        // Chiamata all'endpoint selezionato da Storyblok
+        const response = await fetch(targetEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contact, event }),
+          body: JSON.stringify(payload),
         })
+
+        // Se l'endpoint non è send-brevo, registriamo il contatto in modo asincrono anche sul CRM
+        if (targetEndpoint !== '/api/send-brevo') {
+          fetch('/api/send-brevo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact, event }),
+          }).catch((e) => console.error('[Async Brevo Sync Error]', e))
+        }
 
         if (response.ok) {
           setMessage({
@@ -357,10 +400,12 @@ export default function Form({
           setState('done')
           sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
         } else {
+          const errRes = await response.json().catch(() => null)
           setState('error')
-          setError(errors.default)
+          setError(errRes?.message || errors.default)
         }
       } catch (e) {
+        console.error('[Form Submit Error]', e)
         setState('error')
         setError(errors.default)
       }
@@ -546,7 +591,7 @@ export default function Form({
 }
 
 const titles = {
-  new: '###Benvenuto {{nome}}!',
+  new: '###Bentornato {{nome}}!',
   user: '###Bentornato {{nome}}!\nAbbiamo recuperato i tuoi dati.',
   done: '###Grazie {{nome}}!',
 }

@@ -60,7 +60,8 @@ const components = {
   course: Course,
   location: Location,
   grid: Grid,
-  project: Project
+  project: Project,
+  business: () => null,
 }
 
 // Inizializzazione pulita per il nuovo stack REST + Draft Mode
