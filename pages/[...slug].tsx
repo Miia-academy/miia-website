@@ -71,6 +71,8 @@ export default function PageStory({ story, data, draft }: PageStoryProps) {
   // Verifica se la pagina richiede autenticazione tramite il flag di Storyblok
   const requiresAuth = (page.content as any)?.auth === true
   const isLocked = requiresAuth && mounted && !isAuthenticated && !draft
+  // TODO Eventualmente testare: 
+  // const isStoryblokIframe = typeof window !== 'undefined' && window.location.search.includes('_storyblok')
 
   // Effetto di dissolvenza/blur per la comparsa del Paywall
   useEffect(() => {
