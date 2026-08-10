@@ -2,7 +2,7 @@
   "name": "new-miia-website",
   "version": "0.1.0",
   "private": true,
-"scripts": {
+  "scripts": {
     "proxy": "local-ssl-proxy --source 9080 --target 8080 --cert localhost.pem --key localhost-key.pem",
     "dev": "next dev -p 8080",
     "build": "next build",
@@ -12,12 +12,14 @@
     "crm": "tsx ./crm/index.ts"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.21.0",
     "@heroui/react": "^2.7.10",
     "@next/third-parties": "^15.1.7",
     "@storyblok/react": "^4.2.1",
     "@types/mapbox-gl": "^3.4.1",
     "fast-csv": "^4.3.1",
     "framer-motion": "^11.18.2",
+    "jsonwebtoken": "^9.0.3",
     "mapbox-gl": "^2.15.0",
     "markdown-to-jsx": "^7.7.1",
     "next": "^15.1.9",
@@ -32,6 +34,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@mep-agency/next-iubenda": "^1.0.0-alpha5",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
