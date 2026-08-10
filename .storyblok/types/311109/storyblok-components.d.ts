@@ -65,6 +65,17 @@ export interface Background {
   [k: string]: unknown;
 }
 
+export interface Business {
+  title: string;
+  logo?: StoryblokAsset;
+  contact_person?: string;
+  email?: string;
+  area?: "" | "interior" | "fashion";
+  component: "business";
+  _uid: string;
+  [k: string]: unknown;
+}
+
 export interface Carousel {
   interface?: boolean;
   id?: string;
@@ -129,8 +140,8 @@ export interface Field {
 }
 
 export interface Form {
-  terms?: string;
   alias?: ISbStoryData<Form> | string;
+  action?: "" | "/api/jobs" | "/api/company";
   list?: ("" | 31 | 32 | 25 | 26 | 35 | 16 | 15 | 17 | 28 | 19 | 30 | 33 | 24 | 29 | "23")[];
   tracking?: "" | "enroll" | "open_day" | "download" | "project" | "recruit" | "partnership";
   new?: unknown;
@@ -138,6 +149,7 @@ export interface Form {
   label?: string;
   fields?: Field[];
   message?: string;
+  terms?: string;
   component: "form";
   _uid: string;
   [k: string]: unknown;
@@ -240,6 +252,7 @@ export interface Nav {
 }
 
 export interface Page {
+  auth?: boolean;
   preview?: unknown;
   title?: string;
   description?: string;
@@ -363,4 +376,4 @@ export interface Wrapper {
   [k: string]: unknown;
 }
 
-export type ContentType = Article | Course | Event | Form | Job | Location | Nav | Page | Person | Project;
+export type ContentType = Article | Business | Course | Event | Form | Job | Location | Nav | Page | Person | Project;

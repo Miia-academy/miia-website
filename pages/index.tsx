@@ -11,8 +11,8 @@ import { getCachedData, type GlobalData } from '@modules/cache'
 import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
 import { optimizePayload } from '@modules/sanitize'
-import { Card, CardBody, Input, Button } from '@heroui/react'
 import { getStoryblokVersion } from '@config/version'
+import AuthGate from '@components/gate'
 
 type HomeProps = {
   story: ISbStoryData<PageBlok> | null
@@ -39,15 +39,9 @@ export default function Home({ story, data, draft }: HomeProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [userEmail, setUserEmail] = useState<string>('')
   const [mounted, setMounted] = useState<boolean>(false)
-
-  // Stati per il form di Login / Paywall
-  const [email, setEmail] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(false)
-  const [sent, setSent] = useState<boolean>(false)
-  const [errorMsg, setErrorMsg] = useState<string>('')
   const [showPaywall, setShowPaywall] = useState<boolean>(false)
 
-  // Check login istantaneo lato client tramite cookie 'miia_user' (Zero latenza)
+  // Check login istantaneo lato client tramite cookie 'miia_user'
   useEffect(() => {
     setMounted(true)
     const rawUserCookie = getCookie('miia_user')
@@ -67,57 +61,27 @@ export default function Home({ story, data, draft }: HomeProps) {
 
   if (!page || !page.content) return null
 
-  // Controllo opzionale se anche la Homepage deve supportare l'autenticazione tramite Storyblok
+  // Controllo se anche la Homepage deve supportare l'autenticazione tramite Storyblok
   const requiresAuth = (page.content as any)?.auth === true
-  const isLocked = requiresAuth && mounted && !isAuthenticated && !draft
-  // TODO Eventualmente testare:
-  // const isStoryblokIframe = typeof window !== 'undefined' && window.location.search.includes('_storyblok')
+  const isLocked = requiresAuth && mounted && !isAuthenticated // TODO remove comment //&& !draft
 
+  // Effetto di dissolvenza/blur per la comparsa del Paywall
   useEffect(() => {
     if (isLocked) {
-      const timer = setTimeout(() => setShowPaywall(true), 1000)
+      const timer = setTimeout(() => setShowPaywall(true), 400)
       return () => clearTimeout(timer)
     } else {
       setShowPaywall(false)
     }
   }, [isLocked])
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setErrorMsg('')
-
-    try {
-      const res = await fetch('/api/auth/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          redirectUrl: '/',
-        }),
-      })
-
-      if (res.ok) {
-        setSent(true)
-      } else {
-        const result = await res.json()
-        setErrorMsg(result.message || 'Errore durante la verifica.')
-      }
-    } catch (err) {
-      console.error('[Home Auth Error]', err)
-      setErrorMsg('Errore di connessione al server.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <DataProvider data={data}>
       <div className="relative min-h-screen overflow-hidden">
-        {/* Layout della Homepage: applica il blur se bloccata */}
+        {/* Layout della Homepage: applica il blur e disabilita gli eventi mouse se bloccata */}
         <div
-          className={`transition-[filter] duration-1000 ease-in-out ${showPaywall
-            ? 'blur-lg select-none pointer-events-none aria-hidden'
+          className={`transition-[filter,opacity] duration-700 ease-in-out ${showPaywall
+            ? 'blur-xl select-none pointer-events-none aria-hidden opacity-40'
             : ''
             }`}
           aria-hidden={showPaywall}
@@ -125,51 +89,15 @@ export default function Home({ story, data, draft }: HomeProps) {
           <StoryblokComponent blok={page.content} />
         </div>
 
-        {/* Paywall Overlay */}
+        {/* Paywall Overlay con AuthGate integrato */}
         {isLocked && (
           <div
-            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 transition-opacity duration-1000 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-opacity duration-700 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
           >
-            <Card className="w-full max-w-[340px] sm:max-w-[400px] p-4 sm:p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800">
-              <CardBody className="gap-5 text-center px-0 sm:px-2">
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Accedi per visualizzare i contenuti della pagina
-                </h2>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                  I contenuti della pagina sono riservati agli studenti della scuola.
-                  Inserisci la tua email usata durante l'iscrizione per ricevere il Magic Link di accesso.
-                </p>
-
-                {sent ? (
-                  <div className="p-4 bg-success-50 text-success-700 rounded-medium text-sm font-medium">
-                    📩 Magic Link inviato! Controlla la tua casella di posta.
-                  </div>
-                ) : (
-                  <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-2">
-                    <Input
-                      type="email"
-                      label="Indirizzo email"
-                      placeholder="studente@example.it"
-                      value={email}
-                      onValueChange={setEmail}
-                      isRequired
-                      variant="bordered"
-                      isInvalid={!!errorMsg}
-                      errorMessage={errorMsg}
-                    />
-                    <Button
-                      type="submit"
-                      color="primary"
-                      isLoading={loading}
-                      className="font-medium h-12 text-md mt-1"
-                    >
-                      Invia Magic Link
-                    </Button>
-                  </form>
-                )}
-              </CardBody>
-            </Card>
+            <div className="w-full max-w-lg">
+              <AuthGate onSuccess={() => setIsAuthenticated(true)} />
+            </div>
           </div>
         )}
       </div>
@@ -188,7 +116,7 @@ export const getStaticProps = async ({ draftMode }: GetStaticPropsContext) => {
   // 1. Fetching della pagina root ("home") tramite API REST
   try {
     const home = await storyblokApi.getStory('home', {
-      version, // 👈 Passa 'draft' per Preview/Develop e 'published' per Production
+      version, // Passa 'draft' per Preview/Develop e 'published' per Production
       resolve_relations: relations.join(','),
     })
     storyResult = home.data ? home.data.story : null

@@ -8,9 +8,11 @@ import { tv } from 'tailwind-variants'
 interface JobCardProps {
   job: ProcessedJob
   isDark?: boolean
+  isOwner?: boolean
+  onDelete?: (uuidOrId: string) => void
 }
 
-export default function JobCard({ job, isDark }: JobCardProps) {
+export default function JobCard({ job, isDark, isOwner, onDelete }: JobCardProps) {
   // Predisposizione per la pagina di dettaglio completa (es. /lavoro/frontend-developer)
   const jobSlug = job.fullSlug ? `/${job.fullSlug}` : '#'
 
@@ -42,6 +44,14 @@ export default function JobCard({ job, isDark }: JobCardProps) {
     },
   }
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (onDelete && job.uuid) {
+      onDelete(job.uuid)
+    }
+  }
+
   return (
     <Card
       as={NextLink}
@@ -52,7 +62,7 @@ export default function JobCard({ job, isDark }: JobCardProps) {
     >
       <CardBody className="flex flex-1 flex-col justify-between p-6 space-y-4">
         <div className="space-y-3 text-left">
-          {/* Badge Area Lavorativa (es. "Design", "Sviluppo") */}
+          {/* Badge Area Lavorativa (es. "Interior", "Fashion") */}
           {job.area && (
             <span className="inline-block rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
               {job.area}
@@ -87,9 +97,22 @@ export default function JobCard({ job, isDark }: JobCardProps) {
           ))}
         </div>
 
-        <span className="text-xs font-semibold text-primary group-hover:underline">
-          Candidati →
-        </span>
+        <div className="flex items-center gap-2">
+          {isOwner && onDelete && (
+            <Button
+              size="sm"
+              color="danger"
+              variant="light"
+              onPress={handleDelete as any}
+              className="text-xs font-semibold"
+            >
+              Elimina
+            </Button>
+          )}
+          <span className="text-xs font-semibold text-primary group-hover:underline">
+            Candidati →
+          </span>
+        </div>
       </CardFooter>
     </Card>
   )

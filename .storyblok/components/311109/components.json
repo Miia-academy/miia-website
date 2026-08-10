@@ -458,6 +458,76 @@
     "metadata": {}
   },
   {
+    "name": "business",
+    "display_name": "Azienda",
+    "description": "Profilo azienda partner",
+    "created_at": "2026-08-10T14:37:52.827Z",
+    "updated_at": "2026-08-10T15:21:49.977Z",
+    "id": 207597866306623,
+    "schema": {
+      "title": {
+        "type": "text",
+        "display_name": "Ragione Sociale / Nome Azienda",
+        "required": true,
+        "pos": 0,
+        "id": "ZafqPWFPQlij0OkqO1AM7g"
+      },
+      "logo": {
+        "type": "asset",
+        "display_name": "Logo Aziendale",
+        "filetypes": [
+          "images"
+        ],
+        "pos": 1,
+        "id": "vjjAPYqTTZWV6_7BNcG3Ug"
+      },
+      "contact_person": {
+        "type": "text",
+        "display_name": "Nome Azienda / Referente",
+        "pos": 2,
+        "id": "yh2rlhvRTuC5NHIIMsZgzw"
+      },
+      "email": {
+        "type": "text",
+        "display_name": "Email Aziendale",
+        "pos": 3,
+        "id": "cieQl4shR4uZC7XXQGXRlQ"
+      },
+      "area": {
+        "type": "option",
+        "display_name": "Area",
+        "use_uuid": true,
+        "options": [
+          {
+            "name": "Interior design",
+            "value": "interior"
+          },
+          {
+            "name": "Fashion design",
+            "value": "fashion"
+          }
+        ],
+        "pos": 4,
+        "id": "dr0hWIg7Rker8DKi8cEVew"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Azienda",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
     "name": "carousel",
     "display_name": "Carosello",
     "description": null,
@@ -835,7 +905,7 @@
     "display_name": "Campo",
     "description": null,
     "created_at": "2025-01-27T11:07:18.634Z",
-    "updated_at": "2026-07-28T14:19:03.596Z",
+    "updated_at": "2026-08-10T14:46:27.500Z",
     "id": 6861327,
     "schema": {
       "id": {
@@ -1024,16 +1094,9 @@
     "display_name": "Modulo",
     "description": null,
     "created_at": "2025-01-27T11:07:24.177Z",
-    "updated_at": "2026-08-03T10:45:35.238Z",
+    "updated_at": "2026-08-10T10:56:35.375Z",
     "id": 6861328,
     "schema": {
-      "terms": {
-        "type": "text",
-        "pos": 8,
-        "display_name": "Collegamento termini e condizioni",
-        "tooltip": true,
-        "id": "_a1T5Eu3TI2XJiQk_xbYkw"
-      },
       "alias": {
         "type": "option",
         "display_name": "Collega",
@@ -1041,7 +1104,31 @@
         "filter_content_type": [
           "form"
         ],
-        "id": "odQxtBFVSLWNo1QW5Tj2-Q"
+        "id": "odQxtBFVSLWNo1QW5Tj2-Q",
+        "pos": 0
+      },
+      "action": {
+        "type": "option",
+        "pos": 1,
+        "use_uuid": true,
+        "options": [
+          {
+            "_uid": "ef89b3fc-7bf1-4667-bdee-7e892b222529",
+            "name": "Contatto studente",
+            "value": ""
+          },
+          {
+            "_uid": "f036817c-a39b-48ec-8612-b3f242f42c12",
+            "value": "/api/jobs",
+            "name": "Aggiungi inserzione"
+          },
+          {
+            "_uid": "8d83bda9-8cf9-49f1-bfce-3b3b16e24a14",
+            "value": "/api/company",
+            "name": "Iscrizione azienda"
+          }
+        ],
+        "id": "KmF83XX0RoSixKGbAC0D8A"
       },
       "list": {
         "type": "options",
@@ -1125,7 +1212,8 @@
         ],
         "description": "Selezionare le liste in cui includere i nuovi contatti",
         "inline_label": true,
-        "id": "XT80gJyvTTCEZr8swNS3QQ"
+        "id": "XT80gJyvTTCEZr8swNS3QQ",
+        "pos": 2
       },
       "tracking": {
         "type": "option",
@@ -1163,7 +1251,8 @@
           }
         ],
         "id": "ivBdhEM9SE-2VpGQJmH8jg",
-        "use_uuid": true
+        "use_uuid": true,
+        "pos": 3
       },
       "new": {
         "type": "section",
@@ -1174,17 +1263,20 @@
           "fields",
           "message"
         ],
-        "id": "EMUhS6yeQl-wKtXkAkUutA"
+        "id": "EMUhS6yeQl-wKtXkAkUutA",
+        "pos": 4
       },
       "title": {
         "type": "text",
         "display_name": "Titolo",
-        "id": "rNgV9i8mTy2r_tMtBKrhEw"
+        "id": "rNgV9i8mTy2r_tMtBKrhEw",
+        "pos": 5
       },
       "label": {
         "type": "text",
         "display_name": "Azione",
-        "id": "lkvGV2qkR7CiqySpTHgc-Q"
+        "id": "lkvGV2qkR7CiqySpTHgc-Q",
+        "pos": 6
       },
       "fields": {
         "type": "bloks",
@@ -1193,7 +1285,8 @@
         "component_whitelist": [
           "field"
         ],
-        "id": "Bl2giJFiQ7ChEsU06JT60g"
+        "id": "Bl2giJFiQ7ChEsU06JT60g",
+        "pos": 7
       },
       "message": {
         "type": "markdown",
@@ -1215,7 +1308,15 @@
           "image",
           "inlinecode"
         ],
-        "id": "pyQ7hI3vS7GFF0qDrp5Gnw"
+        "id": "pyQ7hI3vS7GFF0qDrp5Gnw",
+        "pos": 8
+      },
+      "terms": {
+        "type": "text",
+        "pos": 9,
+        "display_name": "Collegamento termini e condizioni",
+        "tooltip": true,
+        "id": "_a1T5Eu3TI2XJiQk_xbYkw"
       }
     },
     "image": null,
@@ -1393,7 +1494,7 @@
     "display_name": null,
     "description": "",
     "created_at": "2026-03-10T21:24:16.816Z",
-    "updated_at": "2026-08-03T11:45:05.082Z",
+    "updated_at": "2026-08-10T14:46:27.845Z",
     "id": 153551899924324,
     "schema": {
       "resource": {
@@ -1439,12 +1540,14 @@
       "title": {
         "type": "markdown",
         "pos": 1,
-        "id": "-v3JoZEERmC_wU6myNM1Yg"
+        "id": "-v3JoZEERmC_wU6myNM1Yg",
+        "rich_markdown": true
       },
       "subtitle": {
         "type": "markdown",
         "pos": 2,
-        "id": "C9G8GI7bRsutdZeI4JsIqg"
+        "id": "C9G8GI7bRsutdZeI4JsIqg",
+        "rich_markdown": true
       },
       "filter": {
         "type": "text",
@@ -2019,9 +2122,17 @@
     "display_name": "Pagina",
     "description": null,
     "created_at": "2024-10-29T08:43:33.652Z",
-    "updated_at": "2026-08-03T10:20:32.226Z",
+    "updated_at": "2026-08-10T14:46:32.537Z",
     "id": 6486303,
     "schema": {
+      "auth": {
+        "type": "boolean",
+        "pos": 8,
+        "inline_label": true,
+        "description": "La pagina privata richiede di essere autenticata con email.",
+        "display_name": "La pagina è privata",
+        "id": "-4GKeIjmTzKbX-kfPScj2Q"
+      },
       "preview": {
         "type": "section",
         "display_name": "Anteprima metadati",
@@ -2566,7 +2677,7 @@
     "display_name": "Testo",
     "description": null,
     "created_at": "2025-01-27T11:06:37.308Z",
-    "updated_at": "2026-07-23T09:24:22.658Z",
+    "updated_at": "2026-08-03T13:44:01.997Z",
     "id": 6861321,
     "schema": {
       "title": {
@@ -2604,7 +2715,8 @@
           "inlinecode",
           "h5",
           "h6",
-          "italic"
+          "italic",
+          "toggle-richtext"
         ],
         "id": "CRM1g_EuRRepQxCiaWhYfQ"
       },
