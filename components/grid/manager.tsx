@@ -15,6 +15,8 @@ export interface GridManagerProps {
   isDarkSection: boolean
   userData: {
     email?: string
+    name?: string
+    surname?: string
     company?: string
     contact_person?: string
     storyblok_id?: string

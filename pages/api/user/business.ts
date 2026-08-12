@@ -1,7 +1,7 @@
-// pages/api/business.ts
+// pages/api/user/business.ts (oppure pages/api/business.ts)
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
-import { updateStory, uploadAssetToStoryblok, getStoryById } from '@modules/storyblok' // Assicurati di avere getStoryById o fetch equivalente
+import { updateStory, uploadAssetToStoryblok, getStoryById } from '@modules/storyblok'
 import { upsertContact } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
 import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
@@ -56,6 +56,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         logoUrl = await uploadAssetToStoryblok(buffer, logoFileName, logoMimeType || 'image/png')
       }
 
+      // 🛠️ FIX PUNTO 1: Formattazione del campo Multilink per Storyblok
+      const cleanWebsite = typeof website === 'string' ? website.trim() : ''
+      const formattedWebsite = cleanWebsite
+        ? {
+          url: cleanWebsite.startsWith('http') ? cleanWebsite : `https://${cleanWebsite}`,
+          linktype: 'url',
+        }
+        : { url: '', linktype: 'url' }
+
       // Preparazione payload di aggiornamento con fallback difensivo
       const businessContent: Record<string, any> = {
         component: 'business',
@@ -64,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         contact_person: contact_person || authData.contact_person || '',
         email: (email || currentEmail).trim().toLowerCase(),
         address: address || '',
-        website: website || '',
+        website: formattedWebsite, // 👈 Oggetto Multilink valido per Storyblok
         description: description || '',
         area: area || '',
       }
@@ -94,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         email: businessContent.email,
         attributes: {
           NOME: businessContent.contact_person || businessContent.title,
-          AZIENDA: businessContent.title, // 👈 Usa AZIENDA invece di RAGIONE_SOCIALE
+          AZIENDA: businessContent.title,
           STORYBLOK_ID: storyblok_id,
           STORYBLOK_UUID: storyblok_uuid,
         },

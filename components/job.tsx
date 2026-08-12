@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { storyblokEditable, type ISbStoryData } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
-import { Image as HeroImage, Button, Chip, Modal, ModalContent, useDisclosure, Link } from '@heroui/react'
+import { Image as HeroImage, Button, Modal, ModalContent, useDisclosure, Link } from '@heroui/react'
 import NextLink from 'next/link'
 import { Typography } from './typography'
+import { useRouter } from 'next/navigation'
+
 import AuthGate from '@components/gate'
 
 function getCookie(name: string): string | null {
@@ -43,6 +45,7 @@ interface JobProps {
 }
 
 export default function Job({ blok, fullSlug }: JobProps) {
+  const router = useRouter()
   const bodyTypography = Typography({})
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -75,6 +78,10 @@ export default function Job({ blok, fullSlug }: JobProps) {
   const contactEmail = companyContent?.email || blok.company_email || 'info@miia.it'
   const skills: string[] = Array.isArray(blok.skills) ? blok.skills : []
 
+  const handleBack = () => {
+    router.back()
+  }
+
   const handleApply = async () => {
     if (!isAuthenticated) {
       onOpen()
@@ -92,10 +99,10 @@ export default function Job({ blok, fullSlug }: JobProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jobTitle: blok.title,
-          companyName: companyName,
-          companyEmail: contactEmail,
-          jobUrl: currentJobUrl, // 👈 Link dell'inserzione inviato all'API
+          job_title: blok.title,         // 👈 Corretto in snake_case
+          company_name: companyName,     // 👈 Corretto in snake_case
+          company_email: contactEmail,   // 👈 Corretto in snake_case
+          job_url: currentJobUrl,        // 👈 Corretto in snake_case
         }),
       })
 
@@ -156,6 +163,15 @@ export default function Job({ blok, fullSlug }: JobProps) {
                 {blok.title}
               </h1>
             )}
+            {blok.location && (
+              <div className="mb-4">
+                <span className="text-sm font-medium flex items-center gap-1.5 text-neutral-300 mt-1">
+                  <i className="iconoir-map-pin text-2xl" />
+                  {blok.location}
+                </span>
+              </div>
+            )}
+
           </div>
         </div>
       </section>
@@ -164,33 +180,11 @@ export default function Job({ blok, fullSlug }: JobProps) {
         <div className="grid grid-cols-1 gap-x-12 gap-y-3 lg:grid-cols-12">
 
           {/* Main Column */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 space-y-6 mb-6">
             <div className="pb-8 space-y-4">
               <h2 className="text-2xl font-bold text-neutral-900 mb-4">
                 Dettagli della posizione
               </h2>
-              {blok.location && (
-                <div className="mb-4">
-                  <span className="text-sm font-medium flex items-center gap-1.5 text-neutral-600 mt-1">
-                    <i className="iconoir-map-pin text-2xl" />
-                    {blok.location}
-                  </span>
-                </div>
-              )}
-              {skills.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  {skills.map((skill) => (
-                    <Chip
-                      key={skill}
-                      size="sm"
-                      variant="flat"
-                      className="bg-neutral-100 text-neutral-700 font-medium capitalize px-3"
-                    >
-                      {skill.replace('_', ' ')}
-                    </Chip>
-                  ))}
-                </div>
-              )}
               {typeof blok.description === 'string' && blok.description.trim() !== '' ? (
                 <div className="text-base sm:text-lg text-neutral-700 prose prose-neutral max-w-none leading-relaxed">
                   {compiler(blok.description, {
@@ -203,6 +197,18 @@ export default function Job({ blok, fullSlug }: JobProps) {
                 </div>
               )}
             </div>
+            {skills.length > 0 && (
+              <div className="space-y-4">
+                <h4 className='font-semibold text-lg mb-4'>Competenze</h4>
+                <ul className='space-y-2'>
+                  {skills.map((skill) => (
+                    <li className=" text-neutral-800 font-medium capitalize" key={skill}>
+                      {skill.replace('_', ' ')}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Sidebar Laterale */}
@@ -236,7 +242,7 @@ export default function Job({ blok, fullSlug }: JobProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       color="primary"
-                      className='font-smibold'
+                      className='font-semibold'
                     >
                       Visita il sito web
                       <i className="iconoir-arrow-right" />
@@ -248,19 +254,19 @@ export default function Job({ blok, fullSlug }: JobProps) {
               {/* Call to Action della Candidatura */}
               <div className="pt-6 border-t border-neutral-100">
                 <h3 className="font-bold text-lg text-neutral-900 mb-3">
-                  Come candidarsi
+                  Candidatura
                 </h3>
 
                 {!hasApplied ? (
                   <>
                     <p className="text-sm text-neutral-600 leading-relaxed mb-6">
-                      Invia il tuo CV aggiornato e il Portfolio lavori direttamente al referente aziendale per procedere con la selezione.
+                      Inviando la candidatura, <span className='font-medium'>invieremo al referente il tuo curriculum</span>,<Link color="primary" className='text-sm font-medium cursor-pointer hover:opacity-50' onPress={handleBack}>assicurati di averlo aggiornato</Link>
                     </p>
 
                     <Button
                       onPress={handleApply}
                       isLoading={isApplying}
-                      className="w-full bg-[#009245] text-white font-medium h-12 rounded-xl text-base shadow-md shadow-[#009245]/20 hover:opacity-90 transition-opacity"
+                      color="primary"
                     >
                       {isAuthenticated ? 'Invia Candidatura' : 'Accedi per candidarti'}
                     </Button>
@@ -286,10 +292,10 @@ export default function Job({ blok, fullSlug }: JobProps) {
           </aside>
 
         </div>
-      </div >
+      </div>
 
       {/* Modale Login / Registrazione se l'utente tenta di candidarsi senza sessione */}
-      < Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur" >
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
         <ModalContent>
           {() => (
             <div className="p-4">
@@ -302,7 +308,7 @@ export default function Job({ blok, fullSlug }: JobProps) {
             </div>
           )}
         </ModalContent>
-      </Modal >
-    </article >
+      </Modal>
+    </article>
   )
 }
