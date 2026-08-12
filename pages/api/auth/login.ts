@@ -1,7 +1,6 @@
-// pages/api/auth/login.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getContact, trackEvent, BrevoError } from '@modules/brevo'
-import { generateMagicLink } from '@modules/auth'
+import { generateMagicLink, type AuthPayload } from '@modules/auth'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -19,18 +18,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     "L'email inserita non risulta tra quelle registrate, controlla di aver inserito la mail corretta o contatta info@miia.it."
 
   try {
+    // 1. Verifichiamo che il contatto esista su Brevo
     const contact = await getContact({ identifier: cleanEmail })
 
     if (!Array.isArray(contact.listIds) || contact.listIds.length === 0) {
       return res.status(403).json({ message: errorMessage })
     }
 
-    const magicLink = generateMagicLink(req, cleanEmail, redirectUrl)
-
-    await trackEvent({
-      eventName: 'submit_login',
+    // 2. Token leggero: il tipo_utente e i dettagli verranno risolti da verify.ts tramite Brevo
+    const tokenPayload: AuthPayload = {
       email: cleanEmail,
-      properties: { magic_link: magicLink },
+    }
+
+    // 3. Generazione del Magic Link
+    const magicLink = generateMagicLink(req, tokenPayload, redirectUrl)
+
+    // 4. Invio dell'evento 'user_login' a Brevo per la spedizione dell'email
+    await trackEvent({
+      eventName: 'user_login',
+      email: cleanEmail,
+      properties: {
+        magic_link: magicLink,
+      },
     })
 
     return res.status(200).json({ message: 'Magic link inviato con successo!' })

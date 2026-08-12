@@ -15,4 +15,5 @@ export const relations: string[] = [
   'map.locations',
   'picture.author',
   'alias.form',
+  'job.company'
 ] as const

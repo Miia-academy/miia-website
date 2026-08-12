@@ -66,11 +66,14 @@ export interface Background {
 }
 
 export interface Business {
-  title: string;
   logo?: StoryblokAsset;
+  title: string;
+  area?: "" | "interior" | "fashion";
+  description?: string;
   contact_person?: string;
   email?: string;
-  area?: "" | "interior" | "fashion";
+  address?: string;
+  website?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   component: "business";
   _uid: string;
   [k: string]: unknown;
@@ -195,13 +198,12 @@ export interface Image {
 }
 
 export interface Job {
-  company: string;
-  business?: string;
-  logo?: StoryblokAsset;
-  area?: "" | "interior" | "fashion";
   title?: string;
-  description?: string;
+  company?: ISbStoryData<Business> | string;
   location?: string;
+  skills?: (number | string)[];
+  area?: "" | "interior" | "fashion";
+  description?: string;
   component: "job";
   _uid: string;
   [k: string]: unknown;
@@ -326,6 +328,19 @@ export interface Section {
   [k: string]: unknown;
 }
 
+export interface Student {
+  image?: StoryblokAsset;
+  name?: string;
+  description?: string;
+  badges?: ("" | "design")[];
+  interview?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  website?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  social?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  component: "student";
+  _uid: string;
+  [k: string]: unknown;
+}
+
 export interface Text {
   title?: string;
   description?: string;
@@ -376,4 +391,16 @@ export interface Wrapper {
   [k: string]: unknown;
 }
 
-export type ContentType = Article | Business | Course | Event | Form | Job | Location | Nav | Page | Person | Project;
+export type ContentType =
+  | Article
+  | Business
+  | Course
+  | Event
+  | Form
+  | Job
+  | Location
+  | Nav
+  | Page
+  | Person
+  | Project
+  | Student;

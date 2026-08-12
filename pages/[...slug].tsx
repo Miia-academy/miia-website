@@ -176,7 +176,7 @@ export const getStaticPaths = async () => {
       per_page: 100,
       filter_query: {
         component: {
-          in: 'page,enroll,project,article',
+          in: 'page,enroll,project,article,job',
         },
       },
     })

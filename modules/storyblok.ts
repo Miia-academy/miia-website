@@ -1,21 +1,19 @@
+// modules/storyblok.ts
 import StoryblokClient from 'storyblok-js-client'
 
-// Variabili d'ambiente principali per lo Spazio Storyblok
 const SPACE_ID = process.env.STORYBLOK_SPACE_ID
 const MANAGEMENT_TOKEN = process.env.STORYBLOK_MANAGEMENT
 
-// ID predefiniti delle cartelle
 const LOGOS_FOLDER_ID = process.env.STORYBLOK_LOGOS_FOLDER_ID || 688306
 const BUSINESS_FOLDER_ID = process.env.STORYBLOK_BUSINESS_FOLDER_ID || 680213142
 const JOBS_FOLDER_ID = process.env.STORYBLOK_JOBS_FOLDER_ID || 207534502691477
 
 if (!SPACE_ID || !MANAGEMENT_TOKEN) {
   console.warn(
-    '[Storyblok Module Warning] STORYBLOK_SPACE_ID o STORYBLOK_MANAGEMENT non sono configurati nelle variabili d environment.'
+    '[Storyblok Module Warning] STORYBLOK_SPACE_ID o STORYBLOK_MANAGEMENT non sono configurati nelle env.'
   )
 }
 
-// Inizializzazione del client Management API
 const storyblok = new StoryblokClient({
   oauthToken: MANAGEMENT_TOKEN,
 })
@@ -52,7 +50,38 @@ export interface CreateJobStoryParams {
 }
 
 /**
- * 1. Funzione generica per la creazione di una story su Storyblok
+ * 1. Recupera una storia da Storyblok (supporta sia ID numerico che UUID)
+ */
+export async function getStoryById(storyId: string | number) {
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
+  if (!storyId || storyId === 'undefined' || storyId === 'null') {
+    throw new Error(`[Storyblok Error] storyId non valido ("${storyId}") passato a getStoryById.`)
+  }
+
+  try {
+    // Se riceve un UUID (con i trattini), recupera la storia cercando per UUID
+    if (typeof storyId === 'string' && storyId.includes('-')) {
+      const searchResponse: any = await (storyblok as any).get(`spaces/${SPACE_ID}/stories`, {
+        by_uuids: storyId,
+      })
+      const foundStory = searchResponse?.data?.stories?.[0] || searchResponse?.stories?.[0]
+      if (!foundStory) {
+        throw new Error(`Impossibile trovare la storia con UUID: ${storyId}`)
+      }
+      return foundStory
+    }
+
+    // Altrimenti esegue la GET diretta con l'ID numerico
+    const response: any = await (storyblok as any).get(`spaces/${SPACE_ID}/stories/${storyId}`)
+    return response?.data?.story || response?.story || response
+  } catch (error: any) {
+    console.error('[Storyblok Get Error]:', error?.response?.data || error?.message || error)
+    throw new Error(`Impossibile recuperare la storia ${storyId} da Storyblok.`)
+  }
+}
+
+/**
+ * 2. Creazione generica Story
  */
 export async function createStory({
   name,
@@ -62,11 +91,9 @@ export async function createStory({
   content = {},
   publish = false,
 }: CreateStoryOptions) {
-  if (!SPACE_ID) {
-    throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato nelle env.')
-  }
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
 
-  const storyPayload: any = {
+  const storyPayload: Record<string, any> = {
     name,
     slug,
     content: {
@@ -100,12 +127,7 @@ export async function createStory({
     const response: any = await (storyblok as any).post(endpoint, payload)
     return response?.data?.story || response?.story || response
   } catch (error: any) {
-    if (error?.response) {
-      console.error(
-        '[Storyblok Management API Error]:',
-        JSON.stringify(error.response.data || error.response, null, 2)
-      )
-    }
+    console.error('[Storyblok Management API Error]:', error?.response?.data || error)
     throw new Error(
       error?.response?.data?.message ||
       error?.message ||
@@ -115,7 +137,7 @@ export async function createStory({
 }
 
 /**
- * 2. Helper per la creazione specifica della story Azienda (salvata nella cartella business)
+ * 3. Helper Creazione Azienda (In stato Draft)
  */
 export async function createCompanyStory({
   companyName,
@@ -136,6 +158,7 @@ export async function createCompanyStory({
 
   const content: Record<string, any> = {
     title: companyName,
+    nome: companyName,
     contact_person: contactName,
     email: contactEmail,
     area: rawSettore === 'moda' ? 'fashion' : 'interior',
@@ -154,12 +177,12 @@ export async function createCompanyStory({
     component: 'business',
     folderId: folderId || BUSINESS_FOLDER_ID,
     content,
-    publish: false,
+    publish: false, // In stato Draft
   })
 }
 
 /**
- * 3. Helper per la creazione specifica della story Job (salvata nella cartella jobs)
+ * 4. Helper Creazione Job (In stato Draft)
  */
 export async function createJobStory({
   companyName,
@@ -208,17 +231,15 @@ export async function createJobStory({
     component: 'job',
     folderId: folderId || JOBS_FOLDER_ID,
     content,
-    publish: false,
+    publish: false, // In stato Draft
   })
 }
 
 /**
- * 4. Eliminazione di una Story tramite il suo ID numerico o UUID
+ * 5. Eliminazione Story
  */
 export async function deleteStory(storyId: string | number) {
-  if (!SPACE_ID) {
-    throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato nelle env.')
-  }
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
 
   try {
     const endpoint = `spaces/${SPACE_ID}/stories/${storyId}`
@@ -231,7 +252,7 @@ export async function deleteStory(storyId: string | number) {
 }
 
 /**
- * 5. Carica un file immagine nell'Asset Manager di Storyblok dentro la cartella loghi (ID 688306)
+ * 6. Upload Asset loghi su S3 Storyblok
  */
 export async function uploadAssetToStoryblok(
   fileBuffer: Buffer,
@@ -242,11 +263,8 @@ export async function uploadAssetToStoryblok(
   if (!SPACE_ID) throw new Error('STORYBLOK_SPACE_ID non impostato')
 
   const targetFolderId = folderId || LOGOS_FOLDER_ID
-
-  // Sanitizzazione del nome del file per evitare signature mismatch su Amazon S3
   const cleanFileName = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
 
-  // Passaggio A: Richiesta credenziali di upload firmate
   const uploadPayload: Record<string, any> = { filename: cleanFileName }
   if (targetFolderId) {
     const parsedFolder = Number(targetFolderId)
@@ -263,18 +281,12 @@ export async function uploadAssetToStoryblok(
   const responseData = uploadResponse?.data || uploadResponse
   const { public_url, pretty_url, post_url, post_address, fields } = responseData || {}
 
-  // Estrazione flessibile: gestisce sia post_url che post_address
   const targetPostUrl = post_url || post_address
 
   if (!targetPostUrl || typeof targetPostUrl !== 'string') {
-    throw new Error(
-      `Impossibile ottenere l'URL di destinazione (post_url / post_address) da Storyblok: ${JSON.stringify(
-        responseData
-      )}`
-    )
+    throw new Error(`Impossibile ottenere l'URL di destinazione da Storyblok.`)
   }
 
-  // Passaggio B: Upload multipart/form-data su Amazon S3
   const formData = new FormData()
   if (fields) {
     Object.keys(fields).forEach((key) => {
@@ -291,8 +303,54 @@ export async function uploadAssetToStoryblok(
   })
 
   if (!s3Upload.ok) {
-    throw new Error(`Errore durante il caricamento dell'asset su Storyblok S3 (${s3Upload.statusText})`)
+    throw new Error(`Errore durante il caricamento dell'asset (${s3Upload.statusText})`)
   }
 
   return public_url || (pretty_url ? `https:${pretty_url}` : '')
+}
+
+/**
+ * 7. Update Story
+ */
+export async function updateStory(storyId: string | number, contentPayload: Record<string, any>) {
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
+  if (!storyId || storyId === 'undefined' || storyId === 'null') {
+    throw new Error(`[Storyblok Error] storyId non valido ("${storyId}") passato a updateStory.`)
+  }
+
+  let realNumericId = storyId
+
+  try {
+    if (typeof storyId === 'string' && storyId.includes('-')) {
+      const searchResponse: any = await (storyblok as any).get(`spaces/${SPACE_ID}/stories`, {
+        by_uuids: storyId,
+      })
+
+      const foundStory = searchResponse?.data?.stories?.[0] || searchResponse?.stories?.[0]
+      if (!foundStory) {
+        throw new Error(`Impossibile trovare la storia con UUID: ${storyId}`)
+      }
+
+      realNumericId = foundStory.id
+    }
+
+    const endpoint = `spaces/${SPACE_ID}/stories/${realNumericId}`
+    const payload = {
+      story: {
+        content: contentPayload,
+      },
+      publish: 0, // Mantiene la storia in stato Draft
+    }
+
+    const response: any = await (storyblok as any).put(endpoint, payload)
+    return response?.data?.story || response?.story || response
+
+  } catch (error: any) {
+    console.error('[Storyblok Update Error]:', error?.response?.data || error?.message || error)
+    throw new Error(
+      error?.response?.data?.message ||
+      error?.message ||
+      `Errore durante l'aggiornamento della Story ${storyId} su Storyblok.`
+    )
+  }
 }
