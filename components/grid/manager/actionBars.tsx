@@ -17,13 +17,13 @@ export const ActionBar = ({ userData, onOpenProfile, onOpenJob, onLogout }: Acti
       </p>
     </div>
     <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-      <Button onPress={onOpenProfile} variant="flat" className="bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white font-medium px-5 h-10 rounded-xl">
+      <Button onPress={onOpenProfile} className='font-medium' variant="bordered" color="primary">
         Aggiorna Profilo
       </Button>
-      <Button onPress={onOpenJob} className="bg-[#009245] text-white font-medium px-5 h-10 rounded-xl">
-        + Nuova Inserzione
+      <Button onPress={onOpenJob} className='font-medium' color="primary">
+        Nuova Inserzione
       </Button>
-      <Button onPress={onLogout} variant="light" color="danger" className="font-medium px-4 h-10 rounded-xl">
+      <Button onPress={onLogout} className='font-medium' variant="light">
         Esci
       </Button>
     </div>
@@ -43,10 +43,10 @@ export const StudentActionBar = ({
       <p className="text-xs text-neutral-500">Gestisci le tue preferenze per ricevere le notifiche più adatte a te.</p>
     </div>
     <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-      <Button onPress={onOpenProfile} className="bg-blue-600 text-white font-medium px-5 h-10 rounded-xl">
-        Aggiorna Preferenze
+      <Button onPress={onOpenProfile} className='font-medium' color='primary' variant='bordered' radius='lg'>
+        Aggiorna Profilo
       </Button>
-      <Button onPress={onLogout} variant="light" color="danger" className="font-medium px-4 h-10 rounded-xl">
+      <Button onPress={onLogout} className='font-medium' variant="light" radius='lg'>
         Esci
       </Button>
     </div>

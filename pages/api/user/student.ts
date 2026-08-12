@@ -8,7 +8,7 @@ import type { AuthPayload } from '@modules/auth'
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb', // Manteniamo il limite per consentire l'upload del PDF
+      sizeLimit: '10mb',
     },
   },
 }
@@ -27,9 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ message: 'Non autorizzato: effettua prima il login' })
   }
 
-  let authData: AuthPayload
+  let authData: AuthPayload & { iat?: number; exp?: number }
   try {
-    authData = jwt.verify(token, JWT_SECRET) as AuthPayload
+    authData = jwt.verify(token, JWT_SECRET) as any
   } catch {
     return res.status(401).json({ message: 'Sessione scaduta o non valida' })
   }
@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     cvBase64,
     cvFileName,
     cvMimeType,
-    attributes // Gli attributi che ci arrivano dal frontend (OCCUPAZIONE, COMUNE, ecc.)
+    attributes // Gli attributi dal frontend (NOME, COGNOME, SMS, OCCUPAZIONE, COMUNE, PROVINCIA, RICERCA, COMPETENZE)
   } = req.body
 
   if (!email) {
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    let cvDownloadUrl = authData.cv_url || '' // Mantiene il vecchio se non ne carica uno nuovo
+    let cvDownloadUrl = authData.cv_url || (authData as any).cv || ''
 
     // 2. Upload del CV su GCS Privato (se fornito un nuovo file)
     if (cvBase64 && cvFileName) {
@@ -68,13 +68,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 3. Sync CRM Brevo
-    // Uniamo i dati storici (Nome/Cognome) con le nuove preferenze e il link al CV
     const brevoAttributes: Record<string, any> = {
-      NOME: name || '',
-      COGNOME: surname || '',
+      NOME: attributes?.NOME || name || '',
+      COGNOME: attributes?.COGNOME || surname || '',
+      SMS: attributes?.SMS || '',
       TIPO_UTENTE: 'Studente',
       CV_URL: cvDownloadUrl,
-      ...(attributes || {}) // Destruttura OCCUPAZIONE, COMUNE, PROVINCIA, RICERCA, COMPETENZE
+      ...(attributes || {})
     }
 
     await upsertContact({
@@ -82,10 +82,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       attributes: brevoAttributes,
     })
 
-    // 4. Refresh del Cookie aggiungendo l'URL del CV alla sessione
-    const updatedSessionPayload = {
-      ...authData,
+    // 4. Pulizia metadati JWT ed Estrazione delle competenze come array per la sessione
+    const { iat, exp, ...cleanAuthData } = authData
+
+    const competenzeArray = typeof attributes?.COMPETENZE === 'string'
+      ? attributes.COMPETENZE.split(', ').map((s: string) => s.trim()).filter(Boolean)
+      : (Array.isArray(attributes?.COMPETENZE) ? attributes.COMPETENZE : [])
+
+    // 💡 SALVIAMO TUTTI I DATI NEL PAYLOAD DEL COOKIE!
+    const updatedSessionPayload: Record<string, any> = {
+      ...cleanAuthData,
+      name: brevoAttributes.NOME,
+      surname: brevoAttributes.COGNOME,
+      sms: brevoAttributes.SMS,
+      occupazione: attributes?.OCCUPAZIONE || '',
+      comune: attributes?.COMUNE || '',
+      provincia: attributes?.PROVINCIA || '',
+      ricerca: typeof attributes?.RICERCA === 'boolean' ? attributes.RICERCA : false,
+      competenze: competenzeArray,
       cv_url: cvDownloadUrl,
+      cv: cvDownloadUrl,
     }
 
     const updatedSessionToken = jwt.sign(updatedSessionPayload, JWT_SECRET, {
@@ -102,6 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({
       message: 'Preferenze e Curriculum aggiornati con successo!',
+      user: updatedSessionPayload,
     })
   } catch (error: any) {
     console.error('[API Student Update Error]', error)

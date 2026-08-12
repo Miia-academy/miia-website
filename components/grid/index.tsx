@@ -132,17 +132,26 @@ export default function Grid({ blok }: GridComponentProps) {
 
       case 'jobs':
         const combinedJobs = [...createdJobs, ...initialJobs]
-        rawItems = combinedJobs.filter((job) => !deletedJobIds.includes(job.uuid || job.id))
+        rawItems = combinedJobs.filter((job) => {
+          const jobId = String(job.uuid || job.id || '')
+          return !deletedJobIds.includes(jobId)
+        })
 
+        // Filtro di ownership per le aziende
         if (isOwner && (userData?.storyblok_id || userData?.storyblok_uuid)) {
-          rawItems = rawItems.filter(
-            (job) =>
-              job.company === userData?.storyblok_id ||
-              job.content?.company === userData?.storyblok_id ||
-              job.company === userData?.storyblok_uuid ||
-              job.content?.company === userData?.storyblok_uuid ||
-              job.content?.business === userData?.storyblok_uuid
-          )
+          const ownerId = String(userData?.storyblok_id || '').trim()
+          const ownerUuid = String(userData?.storyblok_uuid || '').trim()
+
+          rawItems = rawItems.filter((job) => {
+            const jobCompanyId = String(job.company?.id || job.company?.uuid || job.company || '').trim()
+            const jobContentCompany = String(job.content?.company?.id || job.content?.company?.uuid || job.content?.company || '').trim()
+            const jobContentBusiness = String(job.content?.business?.id || job.content?.business?.uuid || job.content?.business || '').trim()
+
+            const matchesId = ownerId && (jobCompanyId === ownerId || jobContentCompany === ownerId || jobContentBusiness === ownerId)
+            const matchesUuid = ownerUuid && (jobCompanyId === ownerUuid || jobContentCompany === ownerUuid || jobContentBusiness === ownerUuid)
+
+            return matchesId || matchesUuid
+          })
         }
 
         if (filterKey) {

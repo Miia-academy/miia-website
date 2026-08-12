@@ -1,3 +1,4 @@
+// components/grid/manager/modals/updateBusinessModal.tsx
 import React, { useState, useEffect } from 'react'
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, Select, SelectItem, Checkbox, Button } from '@heroui/react'
 import { fileToBase64 } from '../utils'
@@ -104,14 +105,39 @@ export const UpdateBusinessModal = ({ isOpen, onOpenChange, onClose, userData, s
 
               <Textarea label="Breve Descrizione / Chi siamo" minRows={3} variant="flat" value={form.description} onValueChange={(val) => setForm({ ...form, description: val })} />
 
-              <div className="flex flex-col gap-1 w-full pt-2">
-                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Sostituisci Logo Aziendale (Opzionale)</label>
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/webp, image/svg+xml"
-                  onChange={(e) => { if (e.target.files && e.target.files[0]) setLogoFile(e.target.files[0]) }}
-                  className="text-xs text-neutral-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-medium file:bg-neutral-100 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300 hover:file:bg-neutral-200 cursor-pointer"
-                />
+              {/* UPLOAD LOGO CON TASTO RIMUOVI */}
+              <div className="flex flex-col gap-2 w-full pt-2">
+                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  Sostituisci Logo Aziendale (Opzionale)
+                </label>
+
+                {logoFile ? (
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[220px]">
+                      🖼️ {logoFile.name}
+                    </span>
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="light"
+                      onPress={() => setLogoFile(null)}
+                      className="text-xs h-7 px-2 font-semibold"
+                    >
+                      Rimuovi
+                    </Button>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setLogoFile(e.target.files[0])
+                      }
+                    }}
+                    className="text-xs text-neutral-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-medium file:bg-neutral-100 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300 hover:file:bg-neutral-200 cursor-pointer"
+                  />
+                )}
               </div>
 
               <div className="pt-2">
