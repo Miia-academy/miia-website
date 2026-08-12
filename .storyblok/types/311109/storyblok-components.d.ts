@@ -65,6 +65,20 @@ export interface Background {
   [k: string]: unknown;
 }
 
+export interface Business {
+  logo?: StoryblokAsset;
+  title: string;
+  area?: "" | "interior" | "fashion";
+  description?: string;
+  contact_person?: string;
+  email?: string;
+  address?: string;
+  website?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  component: "business";
+  _uid: string;
+  [k: string]: unknown;
+}
+
 export interface Carousel {
   interface?: boolean;
   id?: string;
@@ -129,8 +143,8 @@ export interface Field {
 }
 
 export interface Form {
-  terms?: string;
   alias?: ISbStoryData<Form> | string;
+  action?: "" | "/api/jobs" | "/api/company";
   list?: ("" | 31 | 32 | 25 | 26 | 35 | 16 | 15 | 17 | 28 | 19 | 30 | 33 | 24 | 29 | "23")[];
   tracking?: "" | "enroll" | "open_day" | "download" | "project" | "recruit" | "partnership";
   new?: unknown;
@@ -138,6 +152,7 @@ export interface Form {
   label?: string;
   fields?: Field[];
   message?: string;
+  terms?: string;
   component: "form";
   _uid: string;
   [k: string]: unknown;
@@ -183,13 +198,12 @@ export interface Image {
 }
 
 export interface Job {
-  company: string;
-  business?: string;
-  logo?: StoryblokAsset;
-  area?: "" | "interior" | "fashion";
   title?: string;
-  description?: string;
+  company?: ISbStoryData<Business> | string;
   location?: string;
+  skills?: (number | string)[];
+  area?: "" | "interior" | "fashion";
+  description?: string;
   component: "job";
   _uid: string;
   [k: string]: unknown;
@@ -240,6 +254,7 @@ export interface Nav {
 }
 
 export interface Page {
+  auth?: boolean;
   preview?: unknown;
   title?: string;
   description?: string;
@@ -313,6 +328,19 @@ export interface Section {
   [k: string]: unknown;
 }
 
+export interface Student {
+  image?: StoryblokAsset;
+  name?: string;
+  description?: string;
+  badges?: ("" | "design")[];
+  interview?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  website?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  social?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  component: "student";
+  _uid: string;
+  [k: string]: unknown;
+}
+
 export interface Text {
   title?: string;
   description?: string;
@@ -363,4 +391,16 @@ export interface Wrapper {
   [k: string]: unknown;
 }
 
-export type ContentType = Article | Course | Event | Form | Job | Location | Nav | Page | Person | Project;
+export type ContentType =
+  | Article
+  | Business
+  | Course
+  | Event
+  | Form
+  | Job
+  | Location
+  | Nav
+  | Page
+  | Person
+  | Project
+  | Student;

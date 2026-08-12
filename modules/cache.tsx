@@ -1,6 +1,7 @@
 // @modules/cache.ts
 import { getStoryblokApi } from '@storyblok/react'
 import type { Course, Event, Location, Article, Job, Person, Project } from '@types'
+import { relations } from '@config/relations'
 
 export type ProcessedCourse = Course & {
   uuid: string
@@ -40,6 +41,11 @@ export type ProcessedProject = Project & {
   tagList: string[]
 }
 
+export type Competenza = {
+  name: string
+  value: string
+}
+
 export type GlobalData = {
   courses: ProcessedCourse[]
   events: ProcessedEvent[]
@@ -48,28 +54,37 @@ export type GlobalData = {
   jobs: ProcessedJob[]
   persons: ProcessedPerson[]
   projects: ProcessedProject[]
+  competenze: Competenza[]
 }
 
 let cachedData: GlobalData | null = null
 
 export async function getCachedData(version: 'draft' | 'published' = 'published'): Promise<GlobalData> {
   const storyblokApi = getStoryblokApi()
+  const resolveRelations = relations.join(',')
 
   try {
-    // Eseguiamo le chiamate REST in parallelo per le nostre collezioni
+    // Eseguiamo le chiamate REST in parallelo per le nostre collezioni e per la data source[cite: 3]
     const [
-      coursesRes, eventsRes, locationsRes, articlesRes, jobsRes, personsRes, projectsRes
+      coursesRes,
+      eventsRes,
+      locationsRes,
+      articlesRes,
+      jobsRes,
+      personsRes,
+      projectsRes,
+      competenzeRes
     ] = await Promise.all([
-      storyblokApi.getStories({ version, content_type: 'course', per_page: 100 }),
-      storyblokApi.getStories({ version, content_type: 'event', per_page: 100, sort_by: 'content.date:asc' }),
-      storyblokApi.getStories({ version, content_type: 'location', per_page: 100 }),
-      storyblokApi.getStories({ version, content_type: 'article', per_page: 100, sort_by: 'first_published_at:desc' }),
-      storyblokApi.getStories({ version, content_type: 'job', per_page: 100 }),
-      storyblokApi.getStories({ version, content_type: 'person', per_page: 100, sort_by: 'content.title:asc' }),
-      storyblokApi.getStories({ version, content_type: 'project', per_page: 100, sort_by: 'first_published_at:desc' })
+      storyblokApi.getStories({ version, content_type: 'course', per_page: 100, resolve_relations: resolveRelations }),
+      storyblokApi.getStories({ version, content_type: 'event', per_page: 100, sort_by: 'content.date:asc', resolve_relations: resolveRelations }),
+      storyblokApi.getStories({ version, content_type: 'location', per_page: 100, resolve_relations: resolveRelations }),
+      storyblokApi.getStories({ version, content_type: 'article', per_page: 100, sort_by: 'first_published_at:desc', resolve_relations: resolveRelations }),
+      storyblokApi.getStories({ version, content_type: 'job', per_page: 100, resolve_relations: resolveRelations }),
+      storyblokApi.getStories({ version, content_type: 'person', per_page: 100, sort_by: 'content.title:asc', resolve_relations: resolveRelations }),
+      storyblokApi.getStories({ version, content_type: 'project', per_page: 100, sort_by: 'first_published_at:desc', resolve_relations: resolveRelations }),
+      storyblokApi.get('cdn/datasource_entries', { datasource: 'competenze' })
     ])
 
-    // Normalizziamo le risposte REST applicando il cast (as Tipo) direttamente su s.content
     const courses: ProcessedCourse[] = coursesRes.data.stories.map((s: any) => ({
       ...(s.content as Course),
       uuid: s.uuid,
@@ -121,9 +136,14 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       tagList: s.tag_list || [],
     }))
 
-    return { courses, events, locations, articles, jobs, persons, projects }
+    const competenze: Competenza[] = competenzeRes.data.datasource_entries.map((e: any) => ({
+      name: e.name,
+      value: e.value,
+    }))
+
+    return { courses, events, locations, articles, jobs, persons, projects, competenze }
   } catch (error) {
     console.error('❌ Errore durante il fetching REST in getCachedData:', error)
-    return { courses: [], events: [], locations: [], articles: [], jobs: [], persons: [], projects: [] }
+    return { courses: [], events: [], locations: [], articles: [], jobs: [], persons: [], projects: [], competenze: [] }
   }
 }

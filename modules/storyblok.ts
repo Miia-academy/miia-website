@@ -1,205 +1,356 @@
-/**
- * Storyblok Service Layer
- * Path: @modules/storyblok.ts
- */
-
+// modules/storyblok.ts
 import StoryblokClient from 'storyblok-js-client'
 
-// --- TYPINGS ---
+const SPACE_ID = process.env.STORYBLOK_SPACE_ID
+const MANAGEMENT_TOKEN = process.env.STORYBLOK_MANAGEMENT
 
-export interface GetStoryOptions {
-  idOrUuid: string | number
-  byUuid?: boolean
-  resolveRelations?: string[]
+const LOGOS_FOLDER_ID = process.env.STORYBLOK_LOGOS_FOLDER_ID || 688306
+const BUSINESS_FOLDER_ID = process.env.STORYBLOK_BUSINESS_FOLDER_ID || 680213142
+const JOBS_FOLDER_ID = process.env.STORYBLOK_JOBS_FOLDER_ID || 207534502691477
+
+if (!SPACE_ID || !MANAGEMENT_TOKEN) {
+  console.warn(
+    '[Storyblok Module Warning] STORYBLOK_SPACE_ID o STORYBLOK_MANAGEMENT non sono configurati nelle env.'
+  )
 }
 
-export interface GetDatasourceEntryOptions {
-  datasourceSlugOrId: string | number
-  dimensionValueKey: string
-}
+const storyblok = new StoryblokClient({
+  oauthToken: MANAGEMENT_TOKEN,
+})
 
-export interface CreateStoryPayload {
+export interface CreateStoryOptions {
   name: string
   slug: string
   component: string
-  content?: Record<string, any>
   folderId?: string | number
+  content?: Record<string, any>
   publish?: boolean
 }
 
-export interface UploadAssetPayload {
-  fileBuffer: Buffer
-  fileName: string
-  contentType: string
+export interface CreateCompanyStoryParams {
+  companyName: string
+  contactName: string
+  contactEmail: string
+  settore: string
+  logoUrl?: string
   folderId?: string | number
 }
 
-// --- CLIENT INITIALIZATION ---
-
-const getContentClient = () => {
-  const token = process.env.NEXT_PUBLIC_STORYBLOK_TOKEN || process.env.STORYBLOK_TOKEN
-  if (!token) throw new Error('[CMS] STORYBLOK_TOKEN non presente nelle env')
-
-  return new StoryblokClient({
-    accessToken: token,
-  })
-}
-
-const getManagementClient = () => {
-  const oauthToken = process.env.STORYBLOK_MANAGEMENT
-  if (!oauthToken) throw new Error('[CMS] STORYBLOK_MANAGEMENT non presente nelle env')
-
-  return new StoryblokClient({
-    oauthToken: oauthToken,
-  })
-}
-
-const SPACE_ID = process.env.STORYBLOK_SPACE_ID || process.env.NEXT_PUBLIC_STORYBLOK_SPACE_ID
-
-// --- FUNZIONI API ---
-
-/**
- * 1. Cerca una Story dato ID o UUID
- */
-export async function getStory({ idOrUuid, byUuid = false, resolveRelations }: GetStoryOptions) {
-  const storyblok = getContentClient()
-
-  const params: Record<string, any> = {}
-  if (byUuid) params.find_by = 'uuid'
-  if (resolveRelations?.length) params.resolve_relations = resolveRelations.join(',')
-
-  const response = await storyblok.get(`cdn/stories/${idOrUuid}`, params as any)
-  return (response as any).data?.story
+export interface CreateJobStoryParams {
+  companyName: string
+  title: string
+  description?: string
+  location?: string
+  area?: string
+  business?: string
+  logoUrl?: string
+  companyEmail?: string
+  companyId?: string
+  folderId?: string | number
 }
 
 /**
- * 2. Cerca un elemento in un Datasource
+ * 1. Recupera una storia da Storyblok (supporta sia ID numerico che UUID)
  */
-export async function getDatasourceEntry({ datasourceSlugOrId, dimensionValueKey }: GetDatasourceEntryOptions) {
-  const storyblok = getContentClient()
-
-  const params: Record<string, any> = {
-    datasource: String(datasourceSlugOrId),
-    dimension_value: dimensionValueKey,
+export async function getStoryById(storyId: string | number) {
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
+  if (!storyId || storyId === 'undefined' || storyId === 'null') {
+    throw new Error(`[Storyblok Error] storyId non valido ("${storyId}") passato a getStoryById.`)
   }
 
-  const response = await storyblok.get('cdn/datasource_entries', params as any)
-  const entries = (response as any).data?.datasource_entries || []
-  return entries.length > 0 ? entries[0] : null
+  try {
+    // Se riceve un UUID (con i trattini), recupera la storia cercando per UUID
+    if (typeof storyId === 'string' && storyId.includes('-')) {
+      const searchResponse: any = await (storyblok as any).get(`spaces/${SPACE_ID}/stories`, {
+        by_uuids: storyId,
+      })
+      const foundStory = searchResponse?.data?.stories?.[0] || searchResponse?.stories?.[0]
+      if (!foundStory) {
+        throw new Error(`Impossibile trovare la storia con UUID: ${storyId}`)
+      }
+      return foundStory
+    }
+
+    // Altrimenti esegue la GET diretta con l'ID numerico
+    const response: any = await (storyblok as any).get(`spaces/${SPACE_ID}/stories/${storyId}`)
+    return response?.data?.story || response?.story || response
+  } catch (error: any) {
+    console.error('[Storyblok Get Error]:', error?.response?.data || error?.message || error)
+    throw new Error(`Impossibile recuperare la storia ${storyId} da Storyblok.`)
+  }
 }
 
 /**
- * 3. Crea una nuova Story
+ * 2. Creazione generica Story
  */
-export async function createStory({ name, slug, component, content = {}, folderId, publish = false }: CreateStoryPayload) {
-  if (!SPACE_ID) throw new Error('[CMS] STORYBLOK_SPACE_ID mancante nelle env')
-  const storyblok = getManagementClient()
+export async function createStory({
+  name,
+  slug,
+  component,
+  folderId,
+  content = {},
+  publish = false,
+}: CreateStoryOptions) {
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
 
-  const storyPayload = {
+  const storyPayload: Record<string, any> = {
     name,
     slug,
-    parent_id: folderId ? String(folderId) : undefined, // FIX: storyblok vuole sempre string
     content: {
       component,
       ...content,
     },
   }
 
-  const response = await storyblok.post(`spaces/${SPACE_ID}/stories`, {
-    story: storyPayload,
-    publish: publish ? 1 : 0,
-  } as any)
+  const targetFolderId =
+    folderId ||
+    (component === 'business'
+      ? BUSINESS_FOLDER_ID
+      : component === 'job'
+        ? JOBS_FOLDER_ID
+        : undefined)
 
-  return (response as any).data?.story
+  if (targetFolderId) {
+    const parsedFolderId = Number(targetFolderId)
+    if (!isNaN(parsedFolderId) && parsedFolderId > 0) {
+      storyPayload.parent_id = parsedFolderId
+    }
+  }
+
+  try {
+    const endpoint = `spaces/${SPACE_ID}/stories`
+    const payload = {
+      story: storyPayload,
+      publish: publish ? 1 : 0,
+    }
+
+    const response: any = await (storyblok as any).post(endpoint, payload)
+    return response?.data?.story || response?.story || response
+  } catch (error: any) {
+    console.error('[Storyblok Management API Error]:', error?.response?.data || error)
+    throw new Error(
+      error?.response?.data?.message ||
+      error?.message ||
+      'Errore durante la creazione della Story su Storyblok.'
+    )
+  }
 }
 
 /**
- * 4. Carica un nuovo Asset (S3 Multi-part Upload)
+ * 3. Helper Creazione Azienda (In stato Draft)
  */
-export async function uploadAsset({ fileBuffer, fileName, contentType, folderId }: UploadAssetPayload) {
-  if (!SPACE_ID) throw new Error('[CMS] STORYBLOK_SPACE_ID mancante nelle env')
-  const storyblok = getManagementClient()
+export async function createCompanyStory({
+  companyName,
+  contactName,
+  contactEmail,
+  settore,
+  logoUrl,
+  folderId,
+}: CreateCompanyStoryParams) {
+  const cleanSlug = companyName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 
-  // STEP A: Chiedi la firma d'upload a Storyblok
-  const signedResponse = await storyblok.post(`spaces/${SPACE_ID}/assets`, {
-    filename: fileName,
-    asset_folder_id: folderId ? Number(folderId) : undefined,
-  } as any)
+  const rawSettore = settore === 'moda' ? 'moda' : 'interni'
+  const storyName = `azienda ${rawSettore} ${companyName}`
 
-  const signedData = (signedResponse as any).data
-  if (!signedData || !signedData.fields) {
-    throw new Error('[CMS] Impossibile ottenere i dati di firma per caricare l\'asset su S3')
+  const content: Record<string, any> = {
+    title: companyName,
+    nome: companyName,
+    contact_person: contactName,
+    email: contactEmail,
+    area: rawSettore === 'moda' ? 'fashion' : 'interior',
+  }
+
+  if (logoUrl && logoUrl.trim() !== '') {
+    content.logo = {
+      filename: logoUrl,
+      fieldtype: 'asset',
+    }
+  }
+
+  return createStory({
+    name: storyName,
+    slug: cleanSlug,
+    component: 'business',
+    folderId: folderId || BUSINESS_FOLDER_ID,
+    content,
+    publish: false, // In stato Draft
+  })
+}
+
+/**
+ * 4. Helper Creazione Job (In stato Draft)
+ */
+export async function createJobStory({
+  companyName,
+  title,
+  description = '',
+  location = '',
+  area = 'interior',
+  business = '',
+  logoUrl,
+  companyEmail = '',
+  companyId,
+  folderId,
+}: CreateJobStoryParams) {
+  const cleanCompany = companyName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+  const cleanTitle = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+  const uniqueSlug = `job-${cleanCompany}-${cleanTitle}-${Date.now()}`
+
+  const content: Record<string, any> = {
+    company: companyId || companyName,
+    title: title.trim(),
+    description: description.trim(),
+    location: location.trim(),
+    area,
+    business,
+    company_email: companyEmail,
+  }
+
+  if (logoUrl && logoUrl.trim() !== '') {
+    content.logo = {
+      filename: logoUrl,
+      fieldtype: 'asset',
+    }
+  }
+
+  return createStory({
+    name: `${companyName} - ${title}`,
+    slug: uniqueSlug,
+    component: 'job',
+    folderId: folderId || JOBS_FOLDER_ID,
+    content,
+    publish: false, // In stato Draft
+  })
+}
+
+/**
+ * 5. Eliminazione Story
+ */
+export async function deleteStory(storyId: string | number) {
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
+
+  try {
+    const endpoint = `spaces/${SPACE_ID}/stories/${storyId}`
+    const response: any = await (storyblok as any).delete(endpoint)
+    return response?.data || response
+  } catch (error: any) {
+    console.error('[Storyblok Delete Error]:', error?.response?.data || error)
+    throw new Error('Impossibile eliminare la story da Storyblok.')
+  }
+}
+
+/**
+ * 6. Upload Asset loghi su S3 Storyblok
+ */
+export async function uploadAssetToStoryblok(
+  fileBuffer: Buffer,
+  filename: string,
+  contentType: string,
+  folderId?: string | number
+): Promise<string> {
+  if (!SPACE_ID) throw new Error('STORYBLOK_SPACE_ID non impostato')
+
+  const targetFolderId = folderId || LOGOS_FOLDER_ID
+  const cleanFileName = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
+
+  const uploadPayload: Record<string, any> = { filename: cleanFileName }
+  if (targetFolderId) {
+    const parsedFolder = Number(targetFolderId)
+    if (!isNaN(parsedFolder) && parsedFolder > 0) {
+      uploadPayload.asset_folder_id = parsedFolder
+    }
+  }
+
+  const uploadResponse: any = await (storyblok as any).post(
+    `spaces/${SPACE_ID}/assets`,
+    uploadPayload
+  )
+
+  const responseData = uploadResponse?.data || uploadResponse
+  const { public_url, pretty_url, post_url, post_address, fields } = responseData || {}
+
+  const targetPostUrl = post_url || post_address
+
+  if (!targetPostUrl || typeof targetPostUrl !== 'string') {
+    throw new Error(`Impossibile ottenere l'URL di destinazione da Storyblok.`)
   }
 
   const formData = new FormData()
+  if (fields) {
+    Object.keys(fields).forEach((key) => {
+      formData.append(key, fields[key])
+    })
+  }
 
-  // Campi AWS S3
-  Object.keys(signedData.fields).forEach((key) => {
-    formData.append(key, signedData.fields[key])
-  })
-
-  // FIX Buffer -> Uint8Array per compatibilità Blob in Node.js/Next.js
   const uint8Array = new Uint8Array(fileBuffer)
-  const blob = new Blob([uint8Array], { type: contentType })
-  formData.append('file', blob, fileName)
+  formData.append('file', new Blob([uint8Array], { type: contentType }), cleanFileName)
 
-  // STEP B: Upload diretto su Amazon S3
-  const s3Upload = await fetch(signedData.post_url, {
+  const s3Upload = await fetch(targetPostUrl, {
     method: 'POST',
     body: formData,
   })
 
   if (!s3Upload.ok) {
-    throw new Error(`[CMS] Errore S3 durante l'upload dell'asset: ${s3Upload.statusText}`)
+    throw new Error(`Errore durante il caricamento dell'asset (${s3Upload.statusText})`)
   }
 
-  return {
-    id: signedData.id as number,
-    url: signedData.pretty_url as string,
-  }
+  return public_url || (pretty_url ? `https:${pretty_url}` : '')
 }
 
 /**
- * 5. Elimina una Story dato l'ID
+ * 7. Update Story
  */
-export async function deleteStory(storyId: number | string) {
-  if (!SPACE_ID) throw new Error('[CMS] STORYBLOK_SPACE_ID mancante nelle env')
-  const storyblok = getManagementClient()
-
-  const response = await storyblok.delete(`spaces/${SPACE_ID}/stories/${storyId}`, {})
-  return (response as any).data
-}
-
-/**
- * 6. Elimina un Asset dato l'ID
- */
-export async function deleteAssetById(assetId: number | string) {
-  if (!SPACE_ID) throw new Error('[CMS] STORYBLOK_SPACE_ID mancante nelle env')
-  const storyblok = getManagementClient()
-
-  const response = await storyblok.delete(`spaces/${SPACE_ID}/assets/${assetId}`, {})
-  return (response as any).data
-}
-
-/**
- * 7. Elimina un Asset dato l'URL
- */
-export async function deleteAssetByUrl(assetUrl: string) {
-  if (!SPACE_ID) throw new Error('[CMS] STORYBLOK_SPACE_ID mancante nelle env')
-  const storyblok = getManagementClient()
-
-  const params: Record<string, any> = { search: assetUrl }
-
-  const assetsList = await storyblok.get(`spaces/${SPACE_ID}/assets`, params as any)
-  const assets = (assetsList as any).data?.assets || []
-
-  const asset = assets.find(
-    (a: any) => assetUrl.includes(a.filename) || a.pretty_url?.includes(assetUrl)
-  )
-
-  if (!asset) {
-    throw new Error(`[CMS] Nessun asset trovato per l'URL: ${assetUrl}`)
+export async function updateStory(storyId: string | number, contentPayload: Record<string, any>) {
+  if (!SPACE_ID) throw new Error('[Storyblok Error] STORYBLOK_SPACE_ID non impostato.')
+  if (!storyId || storyId === 'undefined' || storyId === 'null') {
+    throw new Error(`[Storyblok Error] storyId non valido ("${storyId}") passato a updateStory.`)
   }
 
-  return deleteAssetById(asset.id)
+  let realNumericId = storyId
+
+  try {
+    if (typeof storyId === 'string' && storyId.includes('-')) {
+      const searchResponse: any = await (storyblok as any).get(`spaces/${SPACE_ID}/stories`, {
+        by_uuids: storyId,
+      })
+
+      const foundStory = searchResponse?.data?.stories?.[0] || searchResponse?.stories?.[0]
+      if (!foundStory) {
+        throw new Error(`Impossibile trovare la storia con UUID: ${storyId}`)
+      }
+
+      realNumericId = foundStory.id
+    }
+
+    const endpoint = `spaces/${SPACE_ID}/stories/${realNumericId}`
+    const payload = {
+      story: {
+        content: contentPayload,
+      },
+      publish: 0, // Mantiene la storia in stato Draft
+    }
+
+    const response: any = await (storyblok as any).put(endpoint, payload)
+    return response?.data?.story || response?.story || response
+
+  } catch (error: any) {
+    console.error('[Storyblok Update Error]:', error?.response?.data || error?.message || error)
+    throw new Error(
+      error?.response?.data?.message ||
+      error?.message ||
+      `Errore durante l'aggiornamento della Story ${storyId} su Storyblok.`
+    )
+  }
 }

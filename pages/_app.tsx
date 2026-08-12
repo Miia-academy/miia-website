@@ -34,6 +34,7 @@ import Menu from '@components/menu'
 import Process from '@components/process'
 import Grid from '@components/grid'
 import Project from '@components/project'
+import Job from '@components/job'
 
 const components = {
   page: Page,
@@ -60,7 +61,9 @@ const components = {
   course: Course,
   location: Location,
   grid: Grid,
-  project: Project
+  project: Project,
+  job: Job,
+  business: () => null,
 }
 
 // Inizializzazione pulita per il nuovo stack REST + Draft Mode
