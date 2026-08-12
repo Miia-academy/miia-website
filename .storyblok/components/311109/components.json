@@ -462,36 +462,24 @@
     "display_name": "Azienda",
     "description": "Profilo azienda partner",
     "created_at": "2026-08-10T14:37:52.827Z",
-    "updated_at": "2026-08-10T15:21:49.977Z",
+    "updated_at": "2026-08-11T07:01:53.013Z",
     "id": 207597866306623,
     "schema": {
-      "title": {
-        "type": "text",
-        "display_name": "Ragione Sociale / Nome Azienda",
-        "required": true,
-        "pos": 0,
-        "id": "ZafqPWFPQlij0OkqO1AM7g"
-      },
       "logo": {
         "type": "asset",
         "display_name": "Logo Aziendale",
         "filetypes": [
           "images"
         ],
-        "pos": 1,
+        "pos": 0,
         "id": "vjjAPYqTTZWV6_7BNcG3Ug"
       },
-      "contact_person": {
+      "title": {
         "type": "text",
-        "display_name": "Nome Azienda / Referente",
-        "pos": 2,
-        "id": "yh2rlhvRTuC5NHIIMsZgzw"
-      },
-      "email": {
-        "type": "text",
-        "display_name": "Email Aziendale",
-        "pos": 3,
-        "id": "cieQl4shR4uZC7XXQGXRlQ"
+        "display_name": "Ragione Sociale / Nome Azienda",
+        "required": true,
+        "pos": 1,
+        "id": "ZafqPWFPQlij0OkqO1AM7g"
       },
       "area": {
         "type": "option",
@@ -507,8 +495,38 @@
             "value": "fashion"
           }
         ],
+        "pos": 2,
+        "id": "dr0hWIg7Rker8DKi8cEVew",
+        "exclude_empty_option": true
+      },
+      "description": {
+        "type": "textarea",
+        "pos": 3,
+        "id": "o6j5SIEYQXCU_NqUl6naKA"
+      },
+      "contact_person": {
+        "type": "text",
+        "display_name": "Nome Azienda / Referente",
         "pos": 4,
-        "id": "dr0hWIg7Rker8DKi8cEVew"
+        "id": "yh2rlhvRTuC5NHIIMsZgzw"
+      },
+      "email": {
+        "type": "text",
+        "display_name": "Email Aziendale",
+        "pos": 5,
+        "id": "cieQl4shR4uZC7XXQGXRlQ"
+      },
+      "address": {
+        "type": "text",
+        "pos": 6,
+        "id": "pjFFNbGgSd6X4Y8N48FSgg"
+      },
+      "website": {
+        "type": "multilink",
+        "pos": 7,
+        "restrict_content_types": false,
+        "component_whitelist": [],
+        "id": "XD4fNzGsSuitkxZXehG1gw"
       }
     },
     "image": null,
@@ -1761,36 +1779,49 @@
   {
     "name": "job",
     "display_name": "Lavoro",
-    "description": "",
+    "description": "Inserzione di lavoro pubblicata dalle aziende partner",
     "created_at": "2026-03-10T20:45:03.298Z",
-    "updated_at": "2026-03-10T21:01:12.926Z",
+    "updated_at": "2026-08-12T11:03:04.792Z",
     "id": 153542259922771,
     "schema": {
-      "company": {
+      "title": {
         "type": "text",
         "pos": 0,
-        "display_name": "Azienda",
-        "required": true,
-        "id": "mV7qZyuXREOyrRoX6wLHiw"
+        "id": "64wErNk_Qc-s3psl6R_rXw",
+        "display_name": "Titolo Posizione",
+        "required": false
       },
-      "business": {
-        "type": "text",
+      "company": {
+        "type": "option",
         "pos": 1,
-        "display_name": "Descrizione azienda",
-        "id": "Lp090lzCTG2tEe9_xKPZoA"
-      },
-      "logo": {
-        "type": "asset",
-        "pos": 2,
-        "id": "9uiJSw4fQXqLmWTuV8tRYg",
-        "filetypes": [
-          "images"
+        "display_name": "Azienda Partner",
+        "required": false,
+        "id": "mV7qZyuXREOyrRoX6wLHiw",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "business"
         ],
-        "asset_folder_id": 688306
+        "use_uuid": true
+      },
+      "location": {
+        "type": "text",
+        "pos": 2,
+        "id": "NnNLOyeRQVemYZ-3CDkqAw",
+        "display_name": "Sede / Luogo di lavoro",
+        "description": "Es. Milano (Ibrido), Roma, Full Remote"
+      },
+      "skills": {
+        "type": "options",
+        "pos": 3,
+        "source": "internal",
+        "datasource_slug": "competenze",
+        "exclude_empty_option": true,
+        "id": "EmU-5ZfyR7qXn-A0k2gIBg"
       },
       "area": {
         "type": "option",
-        "pos": 3,
+        "pos": 4,
+        "display_name": "Ambito / Settore",
         "use_uuid": true,
         "id": "nXZAz3oPQLm3jDji1lqXRg",
         "options": [
@@ -1801,39 +1832,22 @@
           },
           {
             "_uid": "baa46972-1794-448e-9fba-f2280ace0b85",
-            "value": "fashion",
-            "name": "Fashion design"
+            "name": "Fashion design",
+            "value": "fashion"
           }
-        ]
-      },
-      "title": {
-        "type": "text",
-        "pos": 4,
-        "id": "64wErNk_Qc-s3psl6R_rXw",
-        "display_name": "Titolo",
-        "rich_markdown": true,
-        "customize_toolbar": true,
-        "toolbar": [
-          "list",
-          "h2"
         ]
       },
       "description": {
         "type": "markdown",
         "pos": 5,
         "id": "e-k6Jl4kTJ-0QGbr7S6uYA",
+        "display_name": "Descrizione Offerta",
         "customize_toolbar": true,
         "toolbar": [
           "bold",
           "italic",
           "list"
         ]
-      },
-      "location": {
-        "type": "text",
-        "pos": 6,
-        "id": "NnNLOyeRQVemYZ-3CDkqAw",
-        "display_name": "Luogo di lavoro"
       }
     },
     "image": null,
@@ -2665,6 +2679,86 @@
     "preset_id": null,
     "real_name": "Sezione",
     "component_group_uuid": "7748dd1c-0924-4e46-aa88-603da82dbb43",
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "student",
+    "display_name": "Studente",
+    "description": "",
+    "created_at": "2026-08-12T08:28:51.394Z",
+    "updated_at": "2026-08-12T08:35:11.325Z",
+    "id": 208214963796104,
+    "schema": {
+      "image": {
+        "type": "asset",
+        "pos": 0,
+        "id": "3NaKuF55TCOIphhsKYqHIQ",
+        "display_name": "Immagine"
+      },
+      "name": {
+        "type": "text",
+        "pos": 1,
+        "id": "LT8psf2HS3GL-cK3R45yvg",
+        "display_name": "Nome cognome"
+      },
+      "description": {
+        "type": "markdown",
+        "pos": 2,
+        "id": "unHFUeqLTUammJZHQ2sFWQ",
+        "display_name": "Descrizione"
+      },
+      "badges": {
+        "type": "options",
+        "pos": 3,
+        "options": [
+          {
+            "_uid": "6f4582a3-f3cb-4b6c-bf5b-1fd2dbe2be16",
+            "name": "Progettazione",
+            "value": "design"
+          },
+          {
+            "_uid": "ed87f8f6-006e-488d-a9b1-b58e7901ecd2",
+            "value": "",
+            "name": "Estetica"
+          }
+        ],
+        "source": "internal",
+        "datasource_slug": "competenze",
+        "id": "0AqbDLmjSEu-S5sGzclLSw",
+        "display_name": "Competenze"
+      },
+      "interview": {
+        "type": "multilink",
+        "pos": 4,
+        "id": "UfejX_-wRveF0ittXpChSA",
+        "display_name": "Intervista"
+      },
+      "website": {
+        "type": "multilink",
+        "pos": 5,
+        "id": "umwg1kZHQyaR4T0iRNSzFQ",
+        "display_name": "Sito internet"
+      },
+      "social": {
+        "type": "multilink",
+        "pos": 6,
+        "id": "VuRE8zaqTv2bLaXrdLT9VQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "Studente",
+    "component_group_uuid": "83d2825e-7c73-4ea3-9827-169d50323f47",
     "color": null,
     "icon": null,
     "internal_tags_list": [],

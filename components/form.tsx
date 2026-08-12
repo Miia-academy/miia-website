@@ -290,7 +290,7 @@ export default function Form({
     if (!field.error && field.value) {
       setState('search')
       try {
-        const response = await fetch('/api/send-brevo', {
+        const response = await fetch('/api/crm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contact: { email: field.value } }),
@@ -340,7 +340,7 @@ export default function Form({
     }
 
     // 3. Fallback predefinito per la lead generation standard su Brevo
-    return '/api/send-brevo'
+    return '/api/crm'
   }, [form.endpoint, form.action, form.tracking])
 
   const handleSubmit = async () => {
@@ -383,9 +383,9 @@ export default function Form({
           body: JSON.stringify(payload),
         })
 
-        // Se l'endpoint non è send-brevo, registriamo il contatto in modo asincrono anche sul CRM
-        if (targetEndpoint !== '/api/send-brevo') {
-          fetch('/api/send-brevo', {
+        // Se l'endpoint non è crm, registriamo il contatto in modo asincrono anche sul CRM
+        if (targetEndpoint !== '/api/crm') {
+          fetch('/api/crm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contact, event }),
