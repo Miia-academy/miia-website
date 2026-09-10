@@ -60,9 +60,9 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
         <div className="relative z-20 mx-auto w-full max-w-[1280px] p-6 pb-16 md:pb-24">
           <div className="max-w-3xl space-y-4">
 
-            {/* Data e Autore */}
+            {/* Data e Autore: blur aderente */}
             {(dateStr || authorName) && (
-              <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-neutral-300">
+              <div className="w-fit inline-flex flex-wrap items-center gap-3 text-sm font-medium text-neutral-300 backdrop-blur-sm rounded-xl px-3 py-1.5 -ml-3">
                 {dateStr && (
                   <span className="inline-flex items-center gap-1.5">
                     <i className="iconoir-calendar text-base" />
@@ -79,16 +79,16 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
               </div>
             )}
 
-            {/* Titolo Principale */}
+            {/* Titolo Principale: blur aderente */}
             {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
-              <h1 className="font-serif break-words text-3xl md:text-6xl xl:text-7xl font-black leading-tight md:leading-tight xl:leading-none">
+              <h1 className="w-fit inline-block font-serif break-words text-3xl md:text-6xl xl:text-7xl font-black leading-tight md:leading-tight xl:leading-none backdrop-blur-sm rounded-2xl px-4 py-2 -ml-4">
                 {blok.title}
               </h1>
             ) : null}
 
-            {/* Descrizione / Introduzione dell'articolo */}
+            {/* Descrizione / Introduzione dell'articolo: blur aderente */}
             {typeof blok.description === 'string' && blok.description.trim() !== '' ? (
-              <div className="pt-2 text-base sm:text-lg text-neutral-200">
+              <div className="w-fit inline-block text-base sm:text-lg text-neutral-200 backdrop-blur-sm rounded-2xl px-4 py-2 -ml-4">
                 {compiler(blok.description, {
                   overrides: heroTypography,
                 })}

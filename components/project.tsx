@@ -64,8 +64,9 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
         {/* Titolo e Sottotitolo compilati con Typography */}
         <div className="relative z-20 mx-auto w-full max-w-[1280px] p-6 pb-16 md:pb-24">
           <div className="max-w-2xl space-y-3">
+
             {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
-              <div>
+              <div className="w-fit inline-block backdrop-blur-sm rounded-2xl px-4 py-2 -ml-4">
                 {compiler(blok.title, {
                   overrides: heroTypography,
                 })}
@@ -73,12 +74,13 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
             ) : null}
 
             {typeof blok.subtitle === 'string' && blok.subtitle.trim() !== '' ? (
-              <div>
+              <div className="w-fit inline-block backdrop-blur-sm rounded-xl px-4 py-2 -ml-4">
                 {compiler(blok.subtitle, {
                   overrides: heroTypography,
                 })}
               </div>
             ) : null}
+
           </div>
         </div>
       </section>
