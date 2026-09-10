@@ -1,24 +1,29 @@
-import type { CarouselProps } from '@props/types'
+import type { Carousel as CarouselBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
 
-interface CarouselComponent {
-  blok: CarouselProps
+interface CarouselComponentProps {
+  blok: CarouselBlok
   parent?: 'page' | 'enroll' | 'section'
 }
 
-export default function Carousel({ blok, parent }: CarouselComponent) {
-  if (!blok.slides.length) return null
+export default function Carousel({ blok, parent }: CarouselComponentProps) {
+  const slidesList = blok.slides || []
+  if (!slidesList.length) return null
 
-  const slides = blok.slides.map((slide, index) => (
+  // Conversione safe dei valori numerici generati come stringa dalla CLI
+  const delayNum = blok.delay ? parseFloat(blok.delay) : 0
+  const viewNum = blok.view ? parseInt(blok.view, 10) : 0
+
+  const slides = slidesList.map((slide) => (
     <SwiperSlide
-      {...storyblokEditable(slide)}
+      {...storyblokEditable(slide as any)}
       className="overflow-visible min-h-inherit"
-      key={index}
+      key={slide._uid}
     >
-      {slide.component === "section" ? (
+      {slide.component === 'section' ? (
         <StoryblokComponent blok={slide} parent={blok.component} />
       ) : (
         <div className="flex flex-wrap w-full justify-center">
@@ -30,36 +35,38 @@ export default function Carousel({ blok, parent }: CarouselComponent) {
 
   const Tag = parent === 'page' ? 'section' : 'div'
 
-  const order: any = !!blok.order ? blok.order.toString() : 'none'
+  // ✅ Prendiamo la stringa così com'è o la convalidiamo con la variante
+  const orderAttr = (blok.order as OrderVariant) || undefined
 
+  // Gestione Moduli Swiper
   const modules = []
-  const autoplay = blok.delay > 0 ? { delay: 6500 - 1000 * blok.delay } : false
-  autoplay && modules.push(Autoplay)
-  blok.interface && modules.push(Navigation)
+  const autoplay = delayNum > 0 ? { delay: 6500 - 1000 * delayNum } : false
 
-  const view = Number(blok.view)
-  const smView = blok.view > 0 ? view : 1
-  const mdView = blok.view > 0 ? view + 1 : 1
-  const lgView = blok.view > 0 ? (view > 1 ? view * 2 : view + 1) : 1
-  const xlView = blok.view > 0 ? (view > 1 ? view * 3 : view + 1) : 1
+  if (autoplay) modules.push(Autoplay)
+  if (blok.interface) modules.push(Navigation)
 
-  console.log(modules.map(m => m.name))
-  console.log(blok.interface)
+  // Calcolo dinamico dei Breakpoints
+  const smView = viewNum > 0 ? viewNum : 1
+  const mdView = viewNum > 0 ? viewNum + 1 : 1
+  const lgView = viewNum > 0 ? (viewNum > 1 ? viewNum * 2 : viewNum + 1) : 1
+  const xlView = viewNum > 0 ? (viewNum > 1 ? viewNum * 3 : viewNum + 1) : 1
+
+  const isFullHeight = slidesList[0]?.component === 'section'
 
   return (
     <Tag
-      id={blok.id && blok.id.replaceAll(' ', '-')}
+      id={blok.id ? blok.id.replaceAll(' ', '-') : undefined}
       className={tagClasses({
-        order: order,
-        isFullHeight: blok.slides[0].component === 'section',
+        order: orderAttr,
+        isFullHeight,
       })}
     >
       <Swiper
-        {...storyblokEditable(blok)}
+        {...storyblokEditable(blok as any)}
         loop={true}
         autoplay={autoplay}
         slidesPerView={1}
-        spaceBetween={blok.view ? 24 : 0}
+        spaceBetween={viewNum ? 24 : 0}
         className={swiperClasses({ pageChild: parent === 'page' })}
         wrapperClass={swiperClasses()}
         breakpoints={{
@@ -69,7 +76,7 @@ export default function Carousel({ blok, parent }: CarouselComponent) {
           1280: { slidesPerView: xlView },
         }}
         modules={modules}
-        navigation={blok.interface}
+        navigation={!!blok.interface}
       >
         {slides}
       </Swiper>
@@ -77,10 +84,14 @@ export default function Carousel({ blok, parent }: CarouselComponent) {
   )
 }
 
+// ✅ Tipo per le chiavi stringa accettate
+type OrderVariant = '0' | '1' | '2' | '3' | '4' | '5' | '6'
+
 const tagClasses = tv({
   base: 'order-last sm:order-none w-full col-span-12',
   variants: {
     order: {
+      '0': '',
       '1': '-order-1',
       '2': '-order-2',
       '3': '-order-3',

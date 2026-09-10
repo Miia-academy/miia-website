@@ -1,36 +1,64 @@
-import type { VideoProps } from '@props/types'
+import type { Video as VideoBlok } from '@types'
 import { YouTubeEmbed } from '@next/third-parties/google'
 import { storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
 
-interface VideoComponent {
-  blok: VideoProps
+// Tipizzazioni strette per Tailwind Variants
+type OrderVariant = '1' | '2' | '3' | '4' | '5' | '6' | undefined
+type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1' | undefined
+
+interface VideoComponentProps {
+  blok: VideoBlok
 }
 
-export default function Video({ blok }: VideoComponent) {
-  if (!blok.source) return null
-  const order: any = !!blok.order ? blok.order.toString() : 'none'
+/**
+ * Utility per estrarre l'ID di YouTube sia se l'utente inserisce l'ID nudo,
+ * sia se incolla un link completo (watch, embed, short link youtu.be).
+ */
+function extractYouTubeId(urlOrId?: string): string | null {
+  if (!urlOrId) return null
+  const trimmed = urlOrId.trim()
+
+  // Se è già un ID pulito (11 caratteri)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+    return trimmed
+  }
+
+  // Se è un URL completo di YouTube
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+  const match = trimmed.match(regExp)
+
+  return match && match[2].length === 11 ? match[2] : null
+}
+
+export default function Video({ blok }: VideoComponentProps) {
+  const videoId = extractYouTubeId(blok.source)
+
+  if (!videoId) return null
+
+  const orderAttr = blok.order ? (blok.order.toString() as OrderVariant) : undefined
+
   return (
     <div
-      {...storyblokEditable(blok)}
+      {...storyblokEditable(blok as any)}
       className={classes({
-        order: order,
-        sm: blok.width?.[0],
-        md: blok.width?.[1],
-        lg: blok.width?.[2],
-        xl: blok.width?.[3],
+        order: orderAttr,
+        sm: blok.width?.[0] as WidthVariant,
+        md: blok.width?.[1] as WidthVariant,
+        lg: blok.width?.[2] as WidthVariant,
+        xl: blok.width?.[3] as WidthVariant,
       })}
     >
       <YouTubeEmbed
-        videoid={blok.source}
-        params='?rel=0&modestbranding=1&autohide=1&showinfo=0&mute=1&showinfo=0&controls=0'
+        videoid={videoId}
+        params="rel=0&modestbranding=1&autohide=1&mute=1&controls=0"
       />
     </div>
   )
 }
 
 const classes = tv({
-  base: 'col-span-12 sm:order-none',
+  base: 'col-span-12 sm:order-none overflow-hidden rounded-xl',
   variants: {
     order: {
       '1': '-order-1',

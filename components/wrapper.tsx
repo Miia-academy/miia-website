@@ -1,52 +1,63 @@
-import type { WrapperProps } from '@props/types'
+import type { Wrapper as WrapperBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
 
+// Tipizzazioni strette per Tailwind Variants
 type OrderVariant = 'none' | '1' | '2' | '3' | '4' | '5' | '6'
+type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1' | undefined
 
-interface WrapperComponent {
-  blok: WrapperProps
+interface WrapperComponentProps {
+  blok: WrapperBlok
   theme?: 'dark' | 'light'
   parent?: string
 }
 
-export default function Wrapper({ blok, theme, parent }: WrapperComponent) {
-  const order: OrderVariant = blok.order
+export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) {
+  // 1. Protection Fallback: gestiamo array undefined dal CMS
+  const rawContents = blok.contents || []
+
+  // 2. Separiamo lo sfondo dagli altri elementi figli
+  const background = rawContents.find(
+    (content: any) => content.component === 'background'
+  )
+  const contents = rawContents.filter(
+    (content: any) => content.component !== 'background'
+  )
+
+  const isCarouselChild = parent === 'carousel'
+  const orderAttr: OrderVariant = blok.order
     ? (blok.order.toString() as OrderVariant)
     : 'none'
 
-  const background = blok.contents.find(
-    (content) => content.component === 'background'
-  )
-  const contents = blok.contents.filter(
-    (content) => content.component !== 'background'
-  )
-
-  const isCarouselChild = parent === "carousel"
+  // 3. Calcolo Type-Safe per il valore di Justify
+  const justifyKey = `${blok.row ? 'justify' : 'items'}-${blok.justify || 'left'}`
 
   return (
     <div
-      {...storyblokEditable(blok)}
+      {...storyblokEditable(blok as any)}
       className={classes({
-        order: order,
-        smWidth: blok.width?.[0],
-        mdWidth: blok.width?.[1],
-        lgWidth: blok.width?.[2],
-        xlWidth: blok.width?.[3],
+        order: orderAttr,
+        smWidth: blok.width?.[0] as WidthVariant,
+        mdWidth: blok.width?.[1] as WidthVariant,
+        lgWidth: blok.width?.[2] as WidthVariant,
+        xlWidth: blok.width?.[3] as WidthVariant,
         row: blok.row,
-        justify: `${blok.row ? 'justify' : 'items'}-${blok.justify}`,
+        justify: justifyKey as any,
         hasBackground: !!background,
         isCarouselChild,
       })}
     >
-      {blok.contents.map((content, index) => (
+      {/* Renderizziamo SOLO i contenuti (escluso il componente background) */}
+      {contents.map((content: any) => (
         <StoryblokComponent
-          key={index}
+          key={content._uid}
           blok={content}
           parent={blok.component}
           theme={theme}
         />
       ))}
+
+      {/* Sfondo posizionato in overlay */}
       {!!background && (
         <>
           <div className={gradientClasses()} />
@@ -68,7 +79,7 @@ const classes = tv({
       true: 'flex-row sm:max-md:col-span-12',
     },
     hasBackground: {
-      true: 'relative aspect-4/3 shadow-inner z-0 rounded-xl p-3 md:p-6 overflow-hidden justify-end [&_article]:flex-none [&_article]:backdrop-blur-sm [&_article]:rounded-3xl [&_article]:gap-1 ',
+      true: 'relative aspect-4/3 shadow-inner z-0 rounded-xl p-3 md:p-6 overflow-hidden justify-end [&_article]:flex-none [&_article]:backdrop-blur-sm [&_article]:rounded-3xl [&_article]:gap-1',
     },
     justify: {
       'items-right': 'sm:items-end',
@@ -120,66 +131,29 @@ const classes = tv({
       '1/1': 'xl:col-span-12',
     },
     isCarouselChild: {
-      true: "w-full"
-    }
+      true: 'w-full',
+    },
   },
   compoundVariants: [
     {
       isCarouselChild: true,
-      smWidth: "1/2",
-      class: "md:w-1/2"
+      smWidth: '1/2',
+      class: 'md:w-1/2',
     },
     {
       isCarouselChild: true,
-      smWidth: "1/3",
-      class: "md:w-1/3"
+      smWidth: '1/3',
+      class: 'md:w-1/3',
     },
     {
       isCarouselChild: true,
-      smWidth: "1/4",
-      class: "md:w-1/2"
+      smWidth: '1/4',
+      class: 'md:w-1/2',
     },
     {
       isCarouselChild: true,
-      smWidth: "2/3",
-      class: "md:w-2/3"
-    }
-  ]
+      smWidth: '2/3',
+      class: 'md:w-2/3',
+    },
+  ],
 })
-
-/* 
-  {
-    <Card
-    {...storyblokEditable(blok)}
-    className={classes({
-      size: blok.size,
-      row: blok.row,
-      boxed: true,
-      order: blok.order.toString(),
-      hasBackground: hasBackground >= 0,
-    })}
-    style={
-      background
-        ? { backgroundImage: `url(${background.asset[0].filename})` }
-        : undefined
-    }
-    >
-    {!background && hasPicture && (
-      <CardHeader className='z-10'>
-        {blok.contents
-          .filter((c) => c.component === 'picture')
-          .map((content, index) => (
-            <StoryblokComponent blok={content} key={index} />
-          ))}
-      </CardHeader>
-    )}
-    <CardBody className='z-10'>
-      {blok.contents
-        .filter((c) => c.component !== 'picture')
-        .map((content, index) => (
-          <StoryblokComponent blok={content} key={index} />
-        ))}
-    </CardBody>
-    </Card> 
-  }
-*/

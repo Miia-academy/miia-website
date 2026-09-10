@@ -1,32 +1,47 @@
-import type { LocationProps, PageProps } from '@props/types'
-import { StoryblokComponent } from '@storyblok/react'
+import type { Page as PageBlok, Location as LocationBlok } from '@types'
+import type { ISbStoryData } from '@storyblok/react'
+import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import Meta from '@components/meta'
 import Nav from '@components/nav'
 
-interface PageComponent {
-  blok: PageProps
-  locations: Array<LocationProps>
+interface PageComponentProps {
+  blok: PageBlok
+  locations?: Array<ISbStoryData<LocationBlok>>
 }
 
-export default function Page({ blok, locations }: PageComponent) {
-  const singleSection = !!blok.body && blok.body.length === 1
+export default function Page({ blok, locations = [] }: PageComponentProps) {
+  // Guard clause e calcoli sicuri
+  const body = blok.body || []
+  const singleSection = body.length === 1
+
+  // Type narrowing per risolvere in modo sicuro le relazioni in Strict Mode
+  const headerStory = blok.header as ISbStoryData<any> | string | undefined
+  const headerContent =
+    headerStory && typeof headerStory !== 'string' ? headerStory.content : null
+
+  const footerStory = blok.footer as ISbStoryData<any> | string | undefined
+  const footerContent =
+    footerStory && typeof footerStory !== 'string' ? footerStory.content : null
+
   return (
-    <>
-      <Meta {...blok} />
-      {blok.header && <Nav parent='header' blok={blok.header.content} />}
-      <main className='min-h-cover'>
-        {blok.body &&
-          blok.body.map((body, index) => (
-            <StoryblokComponent
-              blok={body}
-              parent='page'
-              locations={locations}
-              key={index}
-              singleSection={singleSection}
-            />
-          ))}
+    <div {...storyblokEditable(blok as any)}>
+      <Meta {...(blok as any)} />
+
+      {headerContent && <Nav parent="header" blok={headerContent} />}
+
+      <main className="min-h-cover">
+        {body.map((bodyBlok: any) => (
+          <StoryblokComponent
+            blok={bodyBlok}
+            parent="page"
+            locations={locations}
+            key={bodyBlok._uid}
+            singleSection={singleSection}
+          />
+        ))}
       </main>
-      {blok.footer && <Nav parent='footer' blok={blok.footer.content} />}
-    </>
+
+      {footerContent && <Nav parent="footer" blok={footerContent} />}
+    </div>
   )
 }

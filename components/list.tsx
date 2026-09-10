@@ -1,12 +1,53 @@
-import type { ListProps } from '@props/types'
+import type { List as ListBlok } from '@types'
 import { storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from '@components/typography'
 import { Accordion, AccordionItem } from '@heroui/react'
 import { tv } from 'tailwind-variants'
 
-interface ListComponent {
-  blok: ListProps
+// 1. Definiamo i tipi esatti attesi da Tailwind Variants
+type SizeVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | undefined
+
+interface ListComponentProps {
+  blok: ListBlok
+}
+
+export default function List({ blok }: ListComponentProps) {
+  // 2. Fallback di sicurezza in caso l'array arrivi vuoto
+  const items = blok.items || []
+
+  if (!items.length) return null
+
+  return (
+    <Accordion
+      className={classes({ size: blok.size as SizeVariant })}
+      {...storyblokEditable(blok as any)}
+    >
+      {items.map((item: any) => (
+        <AccordionItem
+          key={item._uid}
+          aria-label={item.title || `accordion-item-${item._uid}`}
+          title={
+            item.title
+              ? compiler(item.title, {
+                wrapper: null,
+                overrides: Typography({}),
+              })
+              : ''
+          }
+        >
+          <div className="font-light">
+            {item.description
+              ? compiler(item.description, {
+                wrapper: null,
+                overrides: Typography({}),
+              })
+              : null}
+          </div>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  )
 }
 
 const classes = tv({
@@ -21,49 +62,3 @@ const classes = tv({
     },
   },
 })
-
-export default function List({ blok }: ListComponent) {
-  const typography = {}
-  return (
-    <Accordion
-      className={classes({ size: blok.size })}
-      {...storyblokEditable(blok)}
-    >
-      {blok.items.map((item, index) => (
-        <AccordionItem
-          key={`accordion-${index}`}
-          aria-label={`accordion-${index}`}
-          title={compiler(item.title, {
-            wrapper: null,
-            overrides: Typography({}),
-          })}
-        >
-          <div className='font-light'>
-            {compiler(item.description, {
-              wrapper: null,
-              overrides: Typography({}),
-            })}
-          </div>
-        </AccordionItem>
-      ))}
-    </Accordion>
-  )
-}
-
-// function ListTab(blok: ListProps) {
-//   const items = blok.items.filter(
-//     (item): item is ActionProps => item.component === 'action'
-//   )
-//   return (
-//     <div {...storyblokEditable(blok)} className='col-span-12 flex gap-2'>
-//       {blok.items.map((item, index) => (
-//         <StoryblokComponent
-//           blok={item}
-//           key={`tab-${index}`}
-//           theme='default'
-//           size='sm'
-//         />
-//       ))}
-//     </div>
-//   )
-// }

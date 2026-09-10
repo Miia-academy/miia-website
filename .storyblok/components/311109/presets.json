@@ -1,0 +1,2457 @@
+[
+  {
+    "id": 2556705,
+    "name": "Articolo con galleria",
+    "preset": {
+      "_uid": "23fe55f8-85f0-4e52-b283-c6a3cb182a2d",
+      "body": [
+        {
+          "id": "",
+          "_uid": "6d9a09a6-da7a-41ba-adde-de486a82862d",
+          "dark": false,
+          "align": [],
+          "contents": [
+            {
+              "_uid": "6ed9305d-9f23-4ce0-ada4-d30f7b4186c0",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "##### Congratulazioni ai nostri nuovi diplomati del corso di Interior Designer!",
+              "width": [
+                "2/3"
+              ],
+              "justify": "",
+              "component": "text",
+              "description": "La cucina non è solo uno spazio funzionale, ma un vero progetto di design che riflette abitudini, gusti e stili di vita. Durante la visita allo showroom di **Corò Arredamenti**, gli studenti hanno potuto scoprire da vicino come prende forma una cucina su misura, grazie al racconto diretto dei **designer** dell’azienda.\n\nDall’organizzazione degli spazi alla scelta dei materiali, dalla gestione degli impianti alle soluzioni personalizzate: ogni dettaglio è frutto di un attento lavoro di progettazione. Un dialogo costante tra estetica e funzionalità, che i ragazzi hanno potuto esplorare con occhi e domande curiose.\n\nUn grazie speciale a **Maurizio**, titolare di Corò Arredamenti, e a **Riccardo**, che ha saputo trasmettere con entusiasmo la visione e il metodo dell’azienda. La loro disponibilità e professionalità hanno reso questa esperienza concreta e stimolante: un passo in più verso la formazione di futuri progettisti consapevoli."
+            },
+            {
+              "_uid": "7dc7bec7-2306-4516-ac20-cd815cff57bf",
+              "size": "1/8",
+              "width": [],
+              "aspect": "",
+              "images": [
+                {
+                  "id": 21862019,
+                  "alt": "visita focus cucina Corò arredamenti 2024",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/5389cf851c/focus-cucina-coro-5-2024.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "visita focus cucina Corò arredamenti 2024",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21862018,
+                  "alt": "visita focus cucina Corò arredamenti 2024",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/e3872a0c59/focus-cucina-coro-1-2024.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "visita focus cucina Corò arredamenti 2024",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21862017,
+                  "alt": "visita focus cucina Corò arredamenti 2024",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/4731764736/focus-cucina-coro-3-2024.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "visita focus cucina Corò arredamenti 2024",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21862021,
+                  "alt": "visita focus cucina Corò arredamenti 2024",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/90445359f1/focus-cucina-coro-6-2024.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "visita focus cucina Corò arredamenti 2024",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21862022,
+                  "alt": "visita focus cucina Corò arredamenti 2024",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/be0c57c574/focus-cucina-coro-2-2024.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "visita focus cucina Corò arredamenti 2024",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                }
+              ],
+              "component": "gallery",
+              "fullScreen": true
+            }
+          ],
+          "component": "section"
+        }
+      ],
+      "alias": "",
+      "image": {
+        "id": 21862020,
+        "alt": "visita focus cucina Corò arredamenti 2024",
+        "name": "",
+        "focus": "",
+        "title": "",
+        "source": "",
+        "filename": "https://a.storyblok.com/f/311109/1920x1081/2d848cf3cd/focus-cucina-coro-0-2024.jpg",
+        "copyright": "",
+        "fieldtype": "asset",
+        "meta_data": {
+          "alt": "visita focus cucina Corò arredamenti 2024",
+          "title": "",
+          "source": "",
+          "copyright": ""
+        },
+        "is_external_url": false
+      },
+      "title": "Focus cucina 2024",
+      "author": "",
+      "component": "article",
+      "description": "Un’altra preziosa occasione formativa fuori dall’aula: i nostri studenti hanno visitato lo show room di Corò Arredamenti a Marano, immergendosi nel mondo della progettazione cucine grazie al racconto diretto dei professionisti del settore."
+    },
+    "component_id": 6861336,
+    "space_id": 311109,
+    "created_at": "2025-04-15T11:34:52.725Z",
+    "updated_at": "2025-04-15T11:34:52.725Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 78707210962944,
+    "name": "Articolo - corso interni avanzato",
+    "preset": {
+      "_uid": "23fe55f8-85f0-4e52-b283-c6a3cb182a2d",
+      "body": [
+        {
+          "id": "",
+          "_uid": "6d9a09a6-da7a-41ba-adde-de486a82862d",
+          "dark": false,
+          "align": [],
+          "contents": [
+            {
+              "_uid": "6ed9305d-9f23-4ce0-ada4-d30f7b4186c0",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "##### Perché la conoscenza delle normative edilizie distingue un interior designer completo",
+              "width": [
+                "2/3"
+              ],
+              "justify": "",
+              "component": "text",
+              "description": "Uno dei momenti più delicati nella vita professionale di un interior designer è quando il **progetto incontra la realtà** delle normative edilizie.  \nIl problema non è semplicemente sapere se sia necessaria una pratica o un’autorizzazione, ma comprendere **come procedere concretamente**, quali passaggi seguire e come integrare queste esigenze nel processo progettuale senza rallentare i tempi o compromettere la qualità.\n\nQuesta è una conoscenza che **distingue un professionista completo**: non solo creativo, ma capace di guidare un incarico dall’idea iniziale fino alla realizzazione finale, sempre nel pieno rispetto delle regole.\n\n**Pur non essendo autorizzato** ad aprire direttamente pratiche edilizie, un interior designer che padroneggia queste normative **può dialogare con sicurezza e competenza con architetti, geometri e imprese**, contribuendo a mantenere il progetto concreto, realizzabile e coerente con le aspettative del cliente.\n\nSaper interpretare correttamente una norma non significa cercare scorciatoie, ma **individuare la soluzione giusta** che consenta di rispettare i vincoli tecnici e burocratici, mantenendo al contempo la visione progettuale.  \nQuesta consapevolezza permette di rispondere con sicurezza alle richieste del cliente:\n\n> “Sì, si può fare. Ti spiego come, in che tempi e con quali passaggi.”  \n> Oppure:  \n> “No, così non è possibile, ma c’è un’alternativa altrettanto valida.”\n\nNel [**Corso Interni Avanzato**](/corsi/interior-design/corso-interior-design-secondo-livello/) di MIIA affrontiamo questo tema con un approccio pratico, integrando la normativa nel flusso di lavoro e nella gestione del progetto.  \nL’obiettivo è far sì che ogni studente acquisisca la capacità di **gestire in autonomia le sfide legate alla normativa**, senza incertezze o ritardi.\n\nQuesta preparazione è inoltre in linea con gli standard di **AIPI – Associazione Italiana Progettisti d’Interni**, un riferimento nazionale per il riconoscimento e la qualità professionale nel settore.  \nCiò garantisce che le competenze acquisite siano non solo teoriche, ma immediatamente spendibili e riconosciute nel mercato del lavoro.\n\nIn sintesi, conoscere le normative edilizie significa trasformare potenziali ostacoli burocratici in opportunità progettuali, aumentando la professionalità e la credibilità di un interior designer agli occhi di clienti e colleghi."
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "",
+          "_uid": "f800d06a-9a07-46df-b562-6bca4e20358a",
+          "dark": true,
+          "align": [],
+          "contents": [
+            {
+              "_uid": "c0c60bf0-d84b-4b68-9374-cbbfaa5331b7",
+              "size": "",
+              "image": {
+                "id": 21278194,
+                "alt": "ristrutturazione interni",
+                "name": "",
+                "focus": "",
+                "title": "",
+                "source": "",
+                "filename": "https://a.storyblok.com/f/311109/2540x1693/df5785f775/ristrutturazione-interni.jpg",
+                "copyright": "",
+                "fieldtype": "asset",
+                "meta_data": {
+                  "alt": "ristrutturazione interni",
+                  "title": "",
+                  "source": "",
+                  "copyright": ""
+                },
+                "is_external_url": false
+              },
+              "order": "",
+              "width": [
+                "1/1",
+                "1/2",
+                "1/3"
+              ],
+              "aspect": "",
+              "author": "",
+              "component": "image",
+              "fullScreen": false
+            },
+            {
+              "row": false,
+              "_uid": "77c8a15a-e543-4bf4-8034-b749b4991976",
+              "order": "",
+              "width": [
+                "1/1",
+                "1/2",
+                "2/3"
+              ],
+              "justify": "",
+              "contents": [
+                {
+                  "_uid": "092a7e58-a2f8-4aa2-a050-c00072094282",
+                  "hide": "",
+                  "order": "",
+                  "theme": "",
+                  "title": "### Corso avanzato di interior design",
+                  "width": [],
+                  "justify": "",
+                  "component": "text",
+                  "description": "Al termine del corso saprai gestire la realizzazione di un **progetto d'interni a tutto tondo**, gestendo i **tempi** del progetto, **documentazione**, comunicazione con le **maestranze**, **illuminotecnica**."
+                },
+                {
+                  "id": "",
+                  "_uid": "2c809bb7-a0b3-40fa-8365-c43d58fab1d3",
+                  "link": {
+                    "id": "1fdc522d-6089-41c6-809c-b137909609d9",
+                    "url": "",
+                    "linktype": "story",
+                    "fieldtype": "multilink",
+                    "cached_url": "corsi/interior-design/corso-interior-design-secondo-livello/"
+                  },
+                  "color": "primary",
+                  "label": "Vai al corso",
+                  "button": true,
+                  "external": false,
+                  "component": "action"
+                }
+              ],
+              "component": "wrapper"
+            }
+          ],
+          "component": "section"
+        }
+      ],
+      "alias": "",
+      "image": {
+        "id": 78699784122900,
+        "alt": "Normative  edilizie e  interior design",
+        "name": "",
+        "focus": "",
+        "title": "",
+        "source": "",
+        "filename": "https://a.storyblok.com/f/311109/1920x1081/dd0f95b7af/interior-designer-e-cantiere.jpg",
+        "copyright": "",
+        "fieldtype": "asset",
+        "meta_data": {
+          "alt": "Normative  edilizie e  interior design",
+          "title": "",
+          "source": "",
+          "copyright": ""
+        },
+        "is_external_url": false
+      },
+      "title": "Normative edilizie e interior design: gestire il progetto con consapevolezza",
+      "author": "df866048-b0a1-45f1-8cc7-57545b7e4bc3",
+      "component": "article",
+      "description": "Scopri perché padroneggiare le normative edilizie è una competenza chiave per un interior designer che gestisce i progetti dall’idea alla realizzazione. Nel nostro Corso di Secondo Livello, in linea con gli standard AIPI, trasformiamo la teoria in pratica concreta."
+    },
+    "component_id": 6861336,
+    "space_id": 311109,
+    "created_at": "2025-08-11T09:40:27.675Z",
+    "updated_at": "2025-08-11T09:40:27.675Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 98842739269976,
+    "name": "Campo area \"interior\" nascosto",
+    "preset": {
+      "id": "area",
+      "_uid": "9e478c3d-2168-45af-81a1-762933e9688b",
+      "input": "multiple",
+      "label": "Area",
+      "hidden": true,
+      "options": "Interni:interior\nModa:fashion",
+      "required": true,
+      "component": "field",
+      "placeholder": "interior"
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-10-07T07:12:08.141Z",
+    "updated_at": "2025-10-07T07:12:08.141Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 98842893705561,
+    "name": "Campo programma \"primo\" nascosto",
+    "preset": {
+      "id": "programma",
+      "_uid": "78d3198b-e7ce-44c0-89aa-a0c5edf8cc89",
+      "input": "multiple",
+      "label": "Programma",
+      "hidden": true,
+      "options": "Primo livello:primo\nSecondo livello:secondo",
+      "required": false,
+      "component": "field",
+      "placeholder": "primo"
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-10-07T07:12:45.845Z",
+    "updated_at": "2025-10-07T07:12:45.845Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 98843302343002,
+    "name": "Campo programma \"secondo\" nascosto",
+    "preset": {
+      "id": "programma",
+      "_uid": "4a8b22ed-c8a7-4799-8be9-e7633457c3bb",
+      "input": "multiple",
+      "label": "Programma",
+      "hidden": true,
+      "options": "Primo livello:primo\nSecondo livello:secondo",
+      "required": false,
+      "component": "field",
+      "placeholder": "secondo"
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-10-07T07:14:25.609Z",
+    "updated_at": "2025-10-07T07:14:25.609Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 2567077,
+    "name": "Card progetto",
+    "preset": {
+      "row": false,
+      "_uid": "f3c70399-186d-4a7b-8c57-e36de29a4276",
+      "boxed": false,
+      "order": "",
+      "width": [
+        "1/2",
+        "1/3"
+      ],
+      "justify": "",
+      "contents": [
+        {
+          "_uid": "d1bc10d8-b24f-49b2-a2a9-f65387288dd2",
+          "hide": "",
+          "order": "",
+          "theme": "light",
+          "title": "#### [Titolo progetto](/)\n\n[Immobile progetto <br> Città - PR](/)",
+          "width": [],
+          "justify": "",
+          "component": "text",
+          "description": ""
+        },
+        {
+          "_uid": "92c9a829-d0cc-4613-8b6e-5f123d24285b",
+          "image": {
+            "id": 21389698,
+            "alt": "default copertina",
+            "name": "",
+            "focus": "",
+            "title": "",
+            "source": "",
+            "filename": "https://a.storyblok.com/f/311109/2540x1600/e6e168c397/default-copertina.png",
+            "copyright": "",
+            "fieldtype": "asset",
+            "meta_data": {
+              "alt": "default copertina",
+              "title": "",
+              "source": "",
+              "copyright": ""
+            },
+            "is_external_url": false
+          },
+          "video": "",
+          "author": "",
+          "position": [],
+          "component": "background"
+        }
+      ],
+      "component": "wrapper"
+    },
+    "component_id": 6861326,
+    "space_id": 311109,
+    "created_at": "2025-04-22T15:36:35.402Z",
+    "updated_at": "2025-04-22T15:36:35.402Z",
+    "image": "//a.storyblok.com/f/311109/x/d4ce5ff58b/screenshot-2025-04-22-alle-17-36-04.png",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 89034335530610,
+    "name": "Cognome",
+    "preset": {
+      "id": "cognome",
+      "_uid": "6e12910a-d906-4a6c-8026-78f745df8ab7",
+      "input": "text",
+      "label": "Cognome",
+      "options": "",
+      "required": true,
+      "component": "field",
+      "placeholder": "Rossi"
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-09-09T14:01:38.321Z",
+    "updated_at": "2025-09-09T14:01:38.321Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "Obbligatorio",
+    "space_environment_id": null
+  },
+  {
+    "id": 2523272,
+    "name": "Copertina pagina",
+    "preset": {
+      "id": "introduzione",
+      "_uid": "0bc899c0-72dd-47d0-a321-2bcb7742707e",
+      "dark": true,
+      "align": "center",
+      "contain": true,
+      "contents": [
+        {
+          "row": false,
+          "_uid": "69148d84-712e-4fa9-b2d5-6090ebd243a1",
+          "size": "",
+          "boxed": false,
+          "order": "",
+          "width": [
+            "2/3",
+            "1/2"
+          ],
+          "justify": "",
+          "contents": [
+            {
+              "_uid": "134bdc81-9d35-4919-8663-aaadf260b1df",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "# Titolo della pagina..\n\n#### Sottotitolo pagina..\n\n###### Frase di introduzione alla pagina...",
+              "width": [],
+              "justify": "",
+              "component": "text",
+              "description": ""
+            },
+            {
+              "_uid": "9d877b05-3b62-423e-8933-a8fd52ecac7c",
+              "links": [
+                {
+                  "id": "",
+                  "_uid": "e45dfc35-8060-45e0-9904-edb299e18714",
+                  "link": {
+                    "id": "",
+                    "url": "#ancora",
+                    "linktype": "url",
+                    "fieldtype": "multilink",
+                    "cached_url": "#ancora"
+                  },
+                  "color": "",
+                  "label": "Ancora sezione interna",
+                  "button": true,
+                  "component": "action"
+                }
+              ],
+              "title": "",
+              "inline": true,
+              "component": "menu"
+            }
+          ],
+          "component": "wrapper"
+        },
+        {
+          "_uid": "ae77608c-9cbf-4a7f-81e8-3336b1b70042",
+          "image": {
+            "id": 21389698,
+            "alt": "default copertina",
+            "name": "",
+            "focus": "",
+            "title": "",
+            "source": "",
+            "filename": "https://a.storyblok.com/f/311109/2540x1600/e6e168c397/default-copertina.png",
+            "copyright": "",
+            "fieldtype": "asset",
+            "meta_data": {
+              "alt": "default copertina",
+              "title": "",
+              "source": "",
+              "copyright": ""
+            },
+            "is_external_url": false
+          },
+          "video": "",
+          "component": "background"
+        }
+      ],
+      "component": "section"
+    },
+    "component_id": 6861325,
+    "space_id": 311109,
+    "created_at": "2025-03-14T14:43:30.490Z",
+    "updated_at": "2025-03-14T14:43:30.490Z",
+    "image": "",
+    "color": "#f4cc48",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 89034200940145,
+    "name": "Email",
+    "preset": {
+      "id": "email",
+      "_uid": "fb792f6a-0e42-4169-bb25-b6ad8efdcbdf",
+      "input": "email",
+      "label": "Email",
+      "options": "",
+      "required": true,
+      "component": "field",
+      "placeholder": "mario.rossi@example.com"
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-09-09T14:01:05.461Z",
+    "updated_at": "2025-09-09T14:01:05.461Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "Obbligatorio",
+    "space_environment_id": null
+  },
+  {
+    "id": 89034069802608,
+    "name": "Frequenza",
+    "preset": {
+      "id": "frequenza",
+      "_uid": "ae061700-9d50-4ad5-b27c-187c47d24aae",
+      "input": "multiple",
+      "label": "Frequenze interessate",
+      "options": "Sabato:sabato\nSerale:serale",
+      "required": true,
+      "component": "field",
+      "placeholder": ""
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-09-09T14:00:33.446Z",
+    "updated_at": "2025-09-09T14:02:41.534Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "Obbligatorio",
+    "space_environment_id": null
+  },
+  {
+    "id": 2631642,
+    "name": "Mappa",
+    "preset": {
+      "id": "dove trovarci",
+      "_uid": "9fd0e211-e0ec-49c5-a16e-76eef1e85006",
+      "dark": true,
+      "align": [
+        "start"
+      ],
+      "contents": [
+        {
+          "_uid": "c6ddd343-919e-4d2d-ab8f-c7065c5f1b0b",
+          "hide": "",
+          "order": "",
+          "theme": "",
+          "title": "### Dove trovarci",
+          "width": [],
+          "justify": "",
+          "component": "text",
+          "description": ""
+        },
+        {
+          "row": false,
+          "_uid": "794fb502-cf50-4373-84da-9760f64dc2c7",
+          "order": "",
+          "width": [
+            "1/1",
+            "1/3"
+          ],
+          "justify": "",
+          "contents": [
+            {
+              "gps": "",
+              "_uid": "88a5422b-2bc1-403a-a53e-6e5b0893f6d0",
+              "alias": "89636269-f2a5-4eb6-889b-7bb63e33300d",
+              "title": "",
+              "address": "",
+              "component": "location",
+              "direction": ""
+            },
+            {
+              "_uid": "45ca0d44-ea97-42ed-b376-f0a67347de42",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "",
+              "width": [],
+              "justify": "",
+              "component": "text",
+              "description": "La sede di Padova è facilmente raggiungibile dall’uscita autostradale Padova Est, situata a pochi minuti. È accessibile anche con i mezzi pubblici: dalla stazione dei treni partono le linee U25 ed E075 con fermata nelle vicinanze."
+            },
+            {
+              "id": "",
+              "_uid": "d19ddbe3-9be9-4772-b08f-f0bbbc7d3dc5",
+              "link": {
+                "id": "",
+                "url": "https://maps.app.goo.gl/GinetyzDYN8gUDDa9",
+                "linktype": "url",
+                "fieldtype": "multilink",
+                "cached_url": "https://maps.app.goo.gl/GinetyzDYN8gUDDa9"
+              },
+              "color": "",
+              "label": "Indicazioni stradali",
+              "button": true,
+              "external": true,
+              "component": "action"
+            }
+          ],
+          "component": "wrapper"
+        },
+        {
+          "row": false,
+          "_uid": "69baee5a-ec97-47d6-96d7-129bd828a9b2",
+          "order": "",
+          "width": [
+            "1/1",
+            "2/3"
+          ],
+          "justify": "",
+          "contents": [
+            {
+              "_uid": "f5244777-7142-4224-b6f1-af62ccc84754",
+              "component": "map",
+              "locations": [
+                "89636269-f2a5-4eb6-889b-7bb63e33300d"
+              ]
+            }
+          ],
+          "component": "wrapper"
+        }
+      ],
+      "component": "section"
+    },
+    "component_id": 6861325,
+    "space_id": 311109,
+    "created_at": "2025-06-12T09:35:02.930Z",
+    "updated_at": "2025-06-12T09:35:14.882Z",
+    "image": "",
+    "color": "#4656ae",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 2504921,
+    "name": "Nome",
+    "preset": {
+      "id": "nome",
+      "input": "text",
+      "label": "Nome",
+      "required": true,
+      "placeholder": "Mario"
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-03-03T14:51:52.992Z",
+    "updated_at": "2025-09-09T14:02:31.987Z",
+    "image": null,
+    "color": null,
+    "icon": null,
+    "description": "Obbligatorio",
+    "space_environment_id": null
+  },
+  {
+    "id": 2541528,
+    "name": "Pagina progetto",
+    "preset": {
+      "_uid": "9eabbe86-5513-4fa4-9511-22b8653bf2e0",
+      "body": [
+        {
+          "id": "introduzione",
+          "_uid": "88c39705-3b47-4c00-8c60-a07007ffdafb",
+          "dark": true,
+          "align": [
+            "end",
+            "center"
+          ],
+          "contents": [
+            {
+              "_uid": "959dfaa6-3249-4cb3-bd07-d6764a3992a8",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "# Progetto casa FC\n\nCoppia di professionisti con **interessi che spaziano** dalla musica e il cinema al ballo e ai viaggi, entrambi **attenti al comfort e alla funzionalità** degli spazi domestici.\n\n##### **Casa indipendente anni 70'<br>Resana - TV**",
+              "width": [
+                "3/4",
+                "2/3",
+                "1/2"
+              ],
+              "justify": "left",
+              "component": "text",
+              "description": ""
+            },
+            {
+              "_uid": "c0c47bd8-584f-402f-a638-db0a38b265b5",
+              "image": {
+                "id": 21641710,
+                "alt": "copertina progetto fc",
+                "name": "",
+                "focus": "",
+                "title": "",
+                "source": "",
+                "filename": "https://a.storyblok.com/f/311109/2540x1600/270c70df83/copertina-progetto-fc.jpg",
+                "copyright": "",
+                "fieldtype": "asset",
+                "meta_data": {
+                  "alt": "copertina progetto fc",
+                  "title": "",
+                  "source": "",
+                  "copyright": ""
+                },
+                "is_external_url": false
+              },
+              "video": "",
+              "author": "2633a2c4-6c41-4af1-9c84-16bac0daf5a7",
+              "position": [
+                "left"
+              ],
+              "component": "background"
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "",
+          "_uid": "0dd16667-5dfc-4c01-93c2-6a09f6d6f11b",
+          "dark": true,
+          "align": [],
+          "contents": [
+            {
+              "_uid": "0520fa56-b016-41b4-a2b2-df9ee42891cd",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "### Immobile",
+              "width": [
+                "1/1",
+                "1/2"
+              ],
+              "justify": "",
+              "component": "text",
+              "description": "Ampia zona giorno con zona cucina, sala da pranzo e salotto al piano terra con camera ospiti e bagno. Al primo piano camera padronale, stanza destinata a cabina armadio e seconda camera al piano, completano il piano palestra e lavanderia.\n\nDimensione totale: **220mq**"
+            },
+            {
+              "_uid": "ae434666-c728-4bc1-a323-a067e370c965",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "### Brief",
+              "width": [
+                "1/1",
+                "1/2"
+              ],
+              "justify": "",
+              "component": "text",
+              "description": "Sfruttare la parete frontale all'ingresso con spazio contenitivo.\n\nSviluppare la cucina studiando la funzionalità migliore per la disposizione degli elettrodomestici, del piano cottura e del lavello.\n\nOrganizzare la seconda camera in modo che da poter essere usata anche come studio.\n\nCreare uno stile moderno ed essenziale caldo ed accogliente."
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "laura busatto",
+          "_uid": "95d516ca-0315-4aac-9c32-9c45b487b123",
+          "dark": false,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "_uid": "20116228-f868-4af8-88eb-43d78b38ff2d",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "### Progetti degli studenti",
+              "width": [],
+              "justify": "",
+              "component": "text",
+              "description": ""
+            },
+            {
+              "row": false,
+              "_uid": "b6c90b4e-af00-4ca8-9235-e434043850ea",
+              "order": "",
+              "width": [
+                "1/1",
+                "1/3"
+              ],
+              "justify": "center",
+              "contents": [
+                {
+                  "ref": "2633a2c4-6c41-4af1-9c84-16bac0daf5a7",
+                  "_uid": "7e57f078-8d03-48ba-871a-ab78f1a4d0e9",
+                  "hide": [
+                    "description",
+                    "links",
+                    "role",
+                    "video"
+                  ],
+                  "role": "",
+                  "image": [],
+                  "links": [],
+                  "title": "",
+                  "video": "",
+                  "component": "person",
+                  "description": ""
+                },
+                {
+                  "_uid": "6f0fb40b-4501-4d0d-b9e7-a38b7dd363ba",
+                  "hide": "description",
+                  "order": "",
+                  "theme": "",
+                  "title": "Il progetto riorganizza gli spazi per maggiore funzionalità ed estetica. Il camino separa le aree e integra un appendiabiti, la parete portante offre soluzioni contenitive, e il living è ottimizzato per una migliore visione TV.",
+                  "width": [],
+                  "justify": "center",
+                  "component": "text",
+                  "description": ""
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "_uid": "f7faefee-cb00-4d8c-b1d7-ef62c49b35ae",
+              "size": "1/2",
+              "width": [
+                "1/1",
+                "2/3"
+              ],
+              "aspect": "",
+              "images": [
+                {
+                  "id": 21641720,
+                  "alt": "corridoio progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/6806398712/corridoio-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "corridoio progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21632873,
+                  "alt": "soggiorno casa fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/23953cabc9/soggiorno-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "soggiorno casa fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21632872,
+                  "alt": "cucina progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/7c195877cf/cucina-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "cucina progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21639997,
+                  "alt": "moodboard progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/beb7f029bb/moodboard-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "moodboard progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21632871,
+                  "alt": "planimetrie casa fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/7c79b199d4/progetto-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "planimetrie casa fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21641710,
+                  "alt": "copertina progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/270c70df83/copertina-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "copertina progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                }
+              ],
+              "component": "gallery",
+              "fullScreen": false
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "laura busatto",
+          "_uid": "e6903c58-9293-4330-a9f7-69f2014fb08b",
+          "dark": false,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "row": false,
+              "_uid": "7a3af6dc-499d-43e9-9ccc-bc4853c5af5b",
+              "order": "",
+              "width": [
+                "1/1",
+                "1/3"
+              ],
+              "justify": "center",
+              "contents": [
+                {
+                  "ref": "5a2f857e-223e-41c5-ac12-4c53bbc7778c",
+                  "_uid": "5800ba27-bf0c-4e11-a54e-ffb124810cd6",
+                  "hide": [
+                    "role",
+                    "description",
+                    "links",
+                    "video"
+                  ],
+                  "role": "",
+                  "image": [],
+                  "links": [],
+                  "title": "",
+                  "video": "",
+                  "component": "person",
+                  "description": ""
+                },
+                {
+                  "_uid": "fccb9fb0-4218-4f35-a4f3-947c531c80dc",
+                  "hide": "description",
+                  "order": "",
+                  "theme": "",
+                  "title": "Il progetto riorganizza gli spazi per maggiore funzionalità ed estetica. Il camino separa le aree e integra un appendiabiti, la parete portante offre soluzioni contenitive, e il living è ottimizzato per una migliore visione TV.",
+                  "width": [],
+                  "justify": "center",
+                  "component": "text",
+                  "description": ""
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "_uid": "425683dc-2dcf-4d07-b38a-1896f5efa3e5",
+              "size": "1/2",
+              "width": [
+                "1/1",
+                "2/3"
+              ],
+              "aspect": "",
+              "images": [
+                {
+                  "id": 21632873,
+                  "alt": "soggiorno casa fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/23953cabc9/soggiorno-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "soggiorno casa fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21641710,
+                  "alt": "copertina progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/270c70df83/copertina-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "copertina progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21641720,
+                  "alt": "corridoio progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/6806398712/corridoio-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "corridoio progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21632872,
+                  "alt": "cucina progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/7c195877cf/cucina-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "cucina progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21639997,
+                  "alt": "moodboard progetto fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/beb7f029bb/moodboard-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "moodboard progetto fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 21632871,
+                  "alt": "planimetrie casa fc",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1600/7c79b199d4/progetto-progetto-fc.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "planimetrie casa fc",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                }
+              ],
+              "component": "gallery",
+              "fullScreen": false
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "",
+          "_uid": "702d9f41-a778-47d9-a554-6047be2df4a1",
+          "dark": true,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "_uid": "95a90d32-48d4-4e4e-8f41-7d28c0afa8aa",
+              "size": "",
+              "image": {
+                "id": 21640966,
+                "alt": "arredare casa",
+                "name": "",
+                "focus": "",
+                "title": "",
+                "source": "",
+                "filename": "https://a.storyblok.com/f/311109/1280x1280/2749fcd4d8/arredare-casa.jpg",
+                "copyright": "",
+                "fieldtype": "asset",
+                "meta_data": {
+                  "alt": "arredare casa",
+                  "title": "",
+                  "source": "",
+                  "copyright": ""
+                },
+                "is_external_url": false
+              },
+              "order": "",
+              "width": [
+                "1/3"
+              ],
+              "aspect": "4/3",
+              "author": "",
+              "component": "image",
+              "fullScreen": false
+            },
+            {
+              "row": false,
+              "_uid": "71a27791-c77c-4d84-b9e7-7799a1ab0ac8",
+              "order": "1",
+              "width": [
+                "2/3"
+              ],
+              "justify": "",
+              "contents": [
+                {
+                  "_uid": "7c971901-bd43-425c-949a-ea3d8857e4e3",
+                  "hide": "",
+                  "order": "",
+                  "theme": "",
+                  "title": "## Stai arredando casa?\n\nSe anche tu, stai arredando casa ma non sai da dove iniziare, **candidati per la prossima sessione**. Come te, stiamo aiutando tantissime altre persone nel realizzare la loro casa dei sogni.",
+                  "width": [],
+                  "justify": "",
+                  "component": "text",
+                  "description": ""
+                },
+                {
+                  "ref": "d2183efe-3e0f-47ab-ae2c-d253d3b8f9a4",
+                  "_uid": "8bb3f9d2-ff20-4d6a-9e11-77d6e69c95ed",
+                  "label": "",
+                  "scope": "",
+                  "title": "",
+                  "fields": [],
+                  "message": "",
+                  "component": "form"
+                }
+              ],
+              "component": "wrapper"
+            }
+          ],
+          "component": "section"
+        }
+      ],
+      "image": {
+        "id": null,
+        "alt": null,
+        "name": "",
+        "focus": null,
+        "title": null,
+        "source": null,
+        "filename": "",
+        "copyright": null,
+        "fieldtype": "asset",
+        "meta_data": {}
+      },
+      "title": "",
+      "footer": "9e739d93-5fe2-4139-8ee2-0fb0a0f7d9a6",
+      "header": "77813121-ab4f-49ef-8507-81bfb7fb9e54",
+      "component": "page",
+      "description": ""
+    },
+    "component_id": 6486303,
+    "space_id": 311109,
+    "created_at": "2025-04-03T09:37:39.530Z",
+    "updated_at": "2025-04-03T09:37:39.530Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 2539232,
+    "name": "Pagina vuota",
+    "preset": {
+      "_uid": "9eabbe86-5513-4fa4-9511-22b8653bf2e0",
+      "body": [],
+      "image": {
+        "id": null,
+        "alt": null,
+        "name": "",
+        "focus": null,
+        "title": null,
+        "source": null,
+        "filename": "",
+        "copyright": null,
+        "fieldtype": "asset",
+        "meta_data": {}
+      },
+      "title": "",
+      "footer": "9e739d93-5fe2-4139-8ee2-0fb0a0f7d9a6",
+      "header": "77813121-ab4f-49ef-8507-81bfb7fb9e54",
+      "component": "page",
+      "description": ""
+    },
+    "component_id": 6486303,
+    "space_id": 311109,
+    "created_at": "2025-04-01T08:34:48.750Z",
+    "updated_at": "2025-04-01T08:34:48.750Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 201166915827796,
+    "name": "Progetto nuovo layout",
+    "preset": {
+      "_uid": "9eabbe86-5513-4fa4-9511-22b8653bf2e0",
+      "body": [
+        {
+          "id": "introduzione",
+          "_uid": "88c39705-3b47-4c00-8c60-a07007ffdafb",
+          "dark": true,
+          "align": [
+            "end",
+            "center"
+          ],
+          "contents": [
+            {
+              "_uid": "959dfaa6-3249-4cb3-bd07-d6764a3992a8",
+              "hide": "description",
+              "order": "",
+              "theme": "",
+              "title": "# Progetto casa MI\n\n##### Casa indipendente nuova costruzione<br>Boara Pisani - PD",
+              "width": [
+                "3/4",
+                "2/3",
+                "1/2"
+              ],
+              "justify": "left",
+              "component": "text",
+              "description": "Un **ingegnere informatico che lavora da casa** e la sua compagna desiderano trasformare la nuova abitazione in un **ambiente caldo e accogliente**. Uno spazio pensato per **conciliare lo smart working**, i momenti di relax, le passioni come la lettura e i videogiochi, e la **convivialità con gli amici**."
+            },
+            {
+              "_uid": "c0c47bd8-584f-402f-a638-db0a38b265b5",
+              "image": {
+                "id": 201166304808720,
+                "alt": "Soggiorno luminoso sui toni del beige con divano modulare chiaro, tavolino rotondo e parete d'accento decorata.",
+                "name": "",
+                "focus": "",
+                "title": "",
+                "source": "",
+                "filename": "https://a.storyblok.com/f/311109/2540x1601/9bf0cb5daf/mi-venera-sciuto-copertina.jpg",
+                "copyright": "",
+                "fieldtype": "asset",
+                "meta_data": {
+                  "alt": "Soggiorno luminoso sui toni del beige con divano modulare chiaro, tavolino rotondo e parete d'accento decorata.",
+                  "title": "",
+                  "source": "",
+                  "copyright": ""
+                },
+                "is_external_url": false
+              },
+              "video": "",
+              "author": "32881863-7c0e-489e-a19f-2450bf3f2bec",
+              "position": [
+                "left"
+              ],
+              "component": "background"
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "",
+          "_uid": "0dd16667-5dfc-4c01-93c2-6a09f6d6f11b",
+          "dark": true,
+          "align": [],
+          "contents": [
+            {
+              "_uid": "0520fa56-b016-41b4-a2b2-df9ee42891cd",
+              "hide": "description",
+              "order": "",
+              "theme": "",
+              "title": "### Immobile\n\nDimensione totale: **150mq**",
+              "width": [
+                "1/1",
+                "1/2"
+              ],
+              "justify": "",
+              "component": "text",
+              "description": "Casa indipendente di nuova costruzione sviluppata su un unico livello. La zona giorno comprende un’ampia area open space con soggiorno, zona pranzo e cucina. La zona notte ospita la camera padronale con bagno en suite, una camera singola e un secondo bagno ad uso comune. Completano la distribuzione dello spazio una stanza adibita ad ufficio e la lavanderia."
+            },
+            {
+              "_uid": "ae434666-c728-4bc1-a323-a067e370c965",
+              "hide": "description",
+              "order": "",
+              "theme": "",
+              "title": "### Brief\n\nPalette cromatica basata sui toni del bianco, del beige e su nuance avvolgenti\n\nZona ingresso organizzata con armadio a muro integrato\n\nBagno padronale dotato di ampia doccia walk-in",
+              "width": [
+                "1/1",
+                "1/2"
+              ],
+              "justify": "",
+              "component": "text",
+              "description": "Pavimentazione uniforme in gres effetto legno dalle sfumature calde\n\nStanza singola flessibile predisposta per ospitare una libreria ed eventuale camera futura"
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "verena sciutto",
+          "_uid": "95d516ca-0315-4aac-9c32-9c45b487b123",
+          "dark": false,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "_uid": "20116228-f868-4af8-88eb-43d78b38ff2d",
+              "hide": "",
+              "order": "",
+              "theme": "",
+              "title": "### Progetti degli studenti",
+              "width": [],
+              "justify": "",
+              "component": "text",
+              "description": ""
+            },
+            {
+              "row": false,
+              "_uid": "b6c90b4e-af00-4ca8-9235-e434043850ea",
+              "order": "",
+              "width": [
+                "1/1",
+                "1/3"
+              ],
+              "justify": "left",
+              "contents": [
+                {
+                  "ref": "2633a2c4-6c41-4af1-9c84-16bac0daf5a7",
+                  "_uid": "7e57f078-8d03-48ba-871a-ab78f1a4d0e9",
+                  "hide": [
+                    "description",
+                    "links",
+                    "role",
+                    "video"
+                  ],
+                  "role": "",
+                  "alias": "32881863-7c0e-489e-a19f-2450bf3f2bec",
+                  "image": [],
+                  "links": [],
+                  "title": "",
+                  "video": "",
+                  "component": "person",
+                  "description": ""
+                },
+                {
+                  "_uid": "6f0fb40b-4501-4d0d-b9e7-a38b7dd363ba",
+                  "hide": "description",
+                  "order": "",
+                  "theme": "",
+                  "title": "Un intervento avvolgente guidato dai **toni dell’ocra e del sabbia**, esaltati dalla luce e dalle **travi a vista chiare**. Gli ambienti sono concepiti per trasmettere un senso immediato di quiete e armonia.",
+                  "width": [],
+                  "justify": "center",
+                  "component": "text",
+                  "description": "Il soggiorno accoglie un **divano modulare di forma organica** disposto di fronte alla parete d'accento. La cucina propone un **tavolo rotondo in travertino**, mentre la zona notte integra una **testiera boiserie con LED** e motivi botanici."
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "_uid": "f7faefee-cb00-4d8c-b1d7-ef62c49b35ae",
+              "size": "1/2",
+              "delay": "2",
+              "width": [
+                "1/1",
+                "2/3"
+              ],
+              "aspect": "",
+              "images": [
+                {
+                  "id": 201166304771855,
+                  "alt": "Cucina moderna nei toni neutri con tavolo rotondo in travertino, sedie in legno e pensili a soffitto.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/8814897961/mi-venera-sciuto-galleria.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Cucina moderna nei toni neutri con tavolo rotondo in travertino, sedie in legno e pensili a soffitto.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 201166304771854,
+                  "alt": "Shopping list cucina con tavolo rotondo in travertino, sedie in rovere e lampada in carta di riso.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/714250dc61/mi-venera-sciuto-galleria_4.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Shopping list cucina con tavolo rotondo in travertino, sedie in rovere e lampada in carta di riso.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 201166304730890,
+                  "alt": "Sezione tecnica della cucina con composizione lineare, pensili in noce e isola centrale.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/344d7e9d3d/mi-venera-sciuto-galleria_2.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Sezione tecnica della cucina con composizione lineare, pensili in noce e isola centrale.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 201166304771853,
+                  "alt": "Camera da letto padronale con testiera in legno con LED integrato, carta da parati botanica e lampada a sospensione.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/5f0e236ed8/mi-venera-sciuto-galleria_5.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Camera da letto padronale con testiera in legno con LED integrato, carta da parati botanica e lampada a sospensione.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 201166304755467,
+                  "alt": "Shopping list per la camera padronale con letto contenitore, boiserie in quercia, armadio e complementi.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/54bda5188a/mi-venera-sciuto-galleria_3.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Shopping list per la camera padronale con letto contenitore, boiserie in quercia, armadio e complementi.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 201166304767756,
+                  "alt": "Sezione tecnica della camera padronale sottotetto con boiserie retroilluminata e armadio a muro.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/3224a3728c/mi-venera-sciuto-galleria_6.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Sezione tecnica della camera padronale sottotetto con boiserie retroilluminata e armadio a muro.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                }
+              ],
+              "component": "gallery",
+              "interface": false,
+              "fullScreen": false
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "natalja zamkovaja",
+          "_uid": "e6903c58-9293-4330-a9f7-69f2014fb08b",
+          "dark": false,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "row": false,
+              "_uid": "7a3af6dc-499d-43e9-9ccc-bc4853c5af5b",
+              "order": "",
+              "width": [
+                "1/1",
+                "1/3"
+              ],
+              "justify": "center",
+              "contents": [
+                {
+                  "ref": "5a2f857e-223e-41c5-ac12-4c53bbc7778c",
+                  "_uid": "5800ba27-bf0c-4e11-a54e-ffb124810cd6",
+                  "hide": [
+                    "role",
+                    "description",
+                    "links",
+                    "video"
+                  ],
+                  "role": "",
+                  "alias": "618db750-9463-4a00-a279-acc28e2251a5",
+                  "image": [],
+                  "links": [],
+                  "title": "",
+                  "video": "",
+                  "component": "person",
+                  "description": ""
+                },
+                {
+                  "_uid": "fccb9fb0-4218-4f35-a4f3-947c531c80dc",
+                  "hide": "description",
+                  "order": "",
+                  "theme": "",
+                  "title": "Un’interpretazione in **stile Japandi** che trasforma l’abitazione in uno spazio essenziale, luminoso e riposante. La palette cromatica sposa i **toni caldi del rovere** con arredi chiari e superfici naturali.",
+                  "width": [],
+                  "justify": "center",
+                  "component": "text",
+                  "description": "La zona giorno è valorizzata dalla **boiserie in legno** e da una cucina ad angolo con **penisola e tavolo ovale**. La zona notte si distingue per la camera padronale con **dettagli terracotta** e cabina armadio con **ante in vetro**."
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "_uid": "425683dc-2dcf-4d07-b38a-1896f5efa3e5",
+              "size": "1/2",
+              "delay": "3",
+              "width": [
+                "1/1",
+                "2/3"
+              ],
+              "aspect": "",
+              "images": [
+                {
+                  "id": 200882959037084,
+                  "alt": "Cucina moderna nei toni del beige e rovere chiaro con tavolo ovale allungabile, penisola snack e travi a vista.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/69f48c5d3f/mi-natalja-zamkovaja-galleria.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Cucina moderna nei toni del beige e rovere chiaro con tavolo ovale allungabile, penisola snack e travi a vista.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200882959045277,
+                  "alt": "Planimetria tecnica e campioni materiali della camera padronale con letto contenitore, armadio e tessuto terracotta.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/0675bed69e/mi-natalja-zamkovaja-galleria_3.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Planimetria tecnica e campioni materiali della camera padronale con letto contenitore, armadio e tessuto terracotta.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200882959008409,
+                  "alt": "Shopping list cucina con composizione componibile, tavolo ovale in rovere, sedia e sospensioni moderne.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/fd173c3cb9/mi-natalja-zamkovaja-galleria_2.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Shopping list cucina con composizione componibile, tavolo ovale in rovere, sedia e sospensioni moderne.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200882959004312,
+                  "alt": "Stanza multifunzionale con poltrona in rovere, lampada da terra, cassettiera in legno e grande libreria a parete illuminata.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/88322bdd78/mi-natalja-zamkovaja-galleria_4.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Stanza multifunzionale con poltrona in rovere, lampada da terra, cassettiera in legno e grande libreria a parete illuminata.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200882959012506,
+                  "alt": "Camera da letto padronale con letto in legno e testiera terracotta, boiserie retroilluminata e cabina armadio con ante a vetrata.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/2ae651f355/mi-natalja-zamkovaja-galleria_6.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Camera da letto padronale con letto in legno e testiera terracotta, boiserie retroilluminata e cabina armadio con ante a vetrata.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200882959028891,
+                  "alt": "Shopping list della camera padronale con letto contenitore, cabina armadio modulare, pouf e dipinto decorativo.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/063ce58d82/mi-natalja-zamkovaja-galleria_5.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Shopping list della camera padronale con letto contenitore, cabina armadio modulare, pouf e dipinto decorativo.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                }
+              ],
+              "component": "gallery",
+              "fullScreen": false
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "natalja zamkovaja",
+          "_uid": "c6f53451-ddf1-4d16-b1a1-4f59206e901a",
+          "dark": false,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "row": false,
+              "_uid": "747744be-0f83-49a6-88ad-eb72bf36248c",
+              "order": "",
+              "width": [
+                "1/1",
+                "1/3"
+              ],
+              "justify": "center",
+              "contents": [
+                {
+                  "_uid": "30c34a9a-cb6b-4e94-9fc1-0548e2464561",
+                  "hide": [
+                    "video",
+                    "description",
+                    "role",
+                    "links"
+                  ],
+                  "role": "",
+                  "alias": "b6fa72c1-a73e-4de6-b0e0-79660d84f66b",
+                  "image": {
+                    "id": null,
+                    "alt": null,
+                    "name": "",
+                    "focus": null,
+                    "title": null,
+                    "source": null,
+                    "filename": "",
+                    "copyright": null,
+                    "fieldtype": "asset",
+                    "meta_data": {}
+                  },
+                  "links": [],
+                  "title": "",
+                  "video": "",
+                  "component": "person",
+                  "description": ""
+                },
+                {
+                  "_uid": "d0755b93-13f7-47c0-b511-c31c98997dbb",
+                  "hide": "description",
+                  "order": "",
+                  "theme": "",
+                  "title": "Un interior design essenziale nato per creare ambienti caldi, luminosi e riposanti. La palette gioca su **sfumature neutre del beige**, **rovere naturale** e vivaci **dettagli terracotta**",
+                  "width": [],
+                  "justify": "center",
+                  "component": "text",
+                  "description": "Il layout valorizza la zona giorno con il **divisorio in listelli di legno** e la cucina con **penisola e tavolo rotondo**. Completa l'insieme il bagno padronale con **doccia walk-in** ed elementi effetto travertino."
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "_uid": "c28e3e28-7b97-40b0-9f3f-48f79393c78c",
+              "size": "1/2",
+              "delay": "3",
+              "width": [
+                "1/1",
+                "2/3"
+              ],
+              "aspect": "",
+              "images": [
+                {
+                  "id": 200887844398147,
+                  "alt": "ngresso di casa con divisorio in listelli verticali di legno, specchio semicircolare retroilluminato e vista sul salotto.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/c5f8218fb1/mi-evelyn-simionato-galleria.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "ngresso di casa con divisorio in listelli verticali di legno, specchio semicircolare retroilluminato e vista sul salotto.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200887844357184,
+                  "alt": "Shopping list d'arredo per ingresso e salotto con divano componibile, armadiatura e lampade di design.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/ae7a7f0f13/mi-evelyn-simionato-galleria_4.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Shopping list d'arredo per ingresso e salotto con divano componibile, armadiatura e lampade di design.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200887844357183,
+                  "alt": "Moodboard dei materiali per la zona giorno con campioni di legno rovere, gres, tessuto sand e velluto terracotta.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/7346371622/mi-evelyn-simionato-galleria_2.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Moodboard dei materiali per la zona giorno con campioni di legno rovere, gres, tessuto sand e velluto terracotta.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200887844361281,
+                  "alt": "Cucina moderna e luminosa nei toni neutri con tavolo rotondo in legno, sedie trasparenti e penisola snack.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/2540x1601/34c03bc20e/mi-evelyn-simionato-copertina.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Cucina moderna e luminosa nei toni neutri con tavolo rotondo in legno, sedie trasparenti e penisola snack.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200887844492357,
+                  "alt": "Disegno tecnico in sezione della cucina componibile con indicazioni dettagliate degli elettrodomestici e dei moduli.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1440x1025/c807a91733/mi-evelyn-simionato-galleria_5.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Disegno tecnico in sezione della cucina componibile con indicazioni dettagliate degli elettrodomestici e dei moduli.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200887844369474,
+                  "alt": "Render del bagno padronale nei toni del beige con doccia walk-in, nicchie illuminate a parete e mobile lavabo in legno.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/b21be7d5f3/mi-evelyn-simionato-galleria_6.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Render del bagno padronale nei toni del beige con doccia walk-in, nicchie illuminate a parete e mobile lavabo in legno.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                },
+                {
+                  "id": 200887844320318,
+                  "alt": "Tavola tecnica con sezioni quotate del bagno padronale completo di lavabo su misura e doccia.",
+                  "name": "",
+                  "focus": "",
+                  "title": "",
+                  "source": "",
+                  "filename": "https://a.storyblok.com/f/311109/1441x1025/ce62d5a2a5/mi-evelyn-simionato-galleria_3.jpg",
+                  "copyright": "",
+                  "fieldtype": "asset",
+                  "meta_data": {
+                    "alt": "Tavola tecnica con sezioni quotate del bagno padronale completo di lavabo su misura e doccia.",
+                    "title": "",
+                    "source": "",
+                    "copyright": ""
+                  }
+                }
+              ],
+              "component": "gallery",
+              "fullScreen": false
+            }
+          ],
+          "component": "section"
+        },
+        {
+          "id": "",
+          "_uid": "702d9f41-a778-47d9-a554-6047be2df4a1",
+          "dark": true,
+          "align": [
+            "center"
+          ],
+          "contents": [
+            {
+              "_uid": "95a90d32-48d4-4e4e-8f41-7d28c0afa8aa",
+              "size": "",
+              "image": {
+                "id": 21640966,
+                "alt": "arredare casa",
+                "name": "",
+                "focus": "",
+                "title": "",
+                "source": "",
+                "filename": "https://a.storyblok.com/f/311109/1280x1280/2749fcd4d8/arredare-casa.jpg",
+                "copyright": "",
+                "fieldtype": "asset",
+                "meta_data": {
+                  "alt": "arredare casa",
+                  "title": "",
+                  "source": "",
+                  "copyright": ""
+                },
+                "is_external_url": false
+              },
+              "order": "",
+              "width": [
+                "1/3"
+              ],
+              "aspect": "4/3",
+              "author": "",
+              "component": "image",
+              "fullScreen": false
+            },
+            {
+              "row": false,
+              "_uid": "71a27791-c77c-4d84-b9e7-7799a1ab0ac8",
+              "order": "1",
+              "width": [
+                "2/3"
+              ],
+              "justify": "",
+              "contents": [
+                {
+                  "_uid": "7c971901-bd43-425c-949a-ea3d8857e4e3",
+                  "hide": "",
+                  "order": "",
+                  "theme": "",
+                  "title": "## Stai arredando casa?\n\nSe anche tu, stai arredando casa ma non sai da dove iniziare, **candidati per la prossima sessione**. Come te, stiamo aiutando tantissime altre persone nel realizzare la loro casa dei sogni.",
+                  "width": [],
+                  "justify": "",
+                  "component": "text",
+                  "description": ""
+                },
+                {
+                  "id": "",
+                  "_uid": "619c8009-aad6-4c0c-8fe0-ac9a3a70127c",
+                  "link": {
+                    "id": "54b9a108-91c9-4ea6-8e52-fb8e48a5dd78",
+                    "url": "",
+                    "linktype": "story",
+                    "fieldtype": "multilink",
+                    "cached_url": "progetti/interior-design/progetto-casa"
+                  },
+                  "color": "primary",
+                  "label": "Scopri di più",
+                  "button": true,
+                  "external": false,
+                  "component": "action"
+                }
+              ],
+              "component": "wrapper"
+            }
+          ],
+          "component": "section"
+        }
+      ],
+      "image": {
+        "id": null,
+        "alt": null,
+        "name": "",
+        "focus": null,
+        "title": null,
+        "source": null,
+        "filename": "",
+        "copyright": null,
+        "fieldtype": "asset",
+        "meta_data": {}
+      },
+      "title": "",
+      "footer": "9e739d93-5fe2-4139-8ee2-0fb0a0f7d9a6",
+      "header": "77813121-ab4f-49ef-8507-81bfb7fb9e54",
+      "component": "page",
+      "description": ""
+    },
+    "component_id": 6486303,
+    "space_id": 311109,
+    "created_at": "2026-07-23T10:30:16.555Z",
+    "updated_at": "2026-07-23T10:30:16.555Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 89034754485875,
+    "name": "Sede",
+    "preset": {
+      "id": "sede",
+      "_uid": "f3f7dd8f-3624-456f-807e-b5791d31183f",
+      "input": "multiple",
+      "label": "Sedi interessate",
+      "options": "Treviso:treviso\nPadova:padova\nBassano:bassano",
+      "required": true,
+      "component": "field",
+      "placeholder": ""
+    },
+    "component_id": 6861327,
+    "space_id": 311109,
+    "created_at": "2025-09-09T14:03:20.604Z",
+    "updated_at": "2025-09-09T14:03:20.604Z",
+    "image": "",
+    "color": "",
+    "icon": "",
+    "description": "Obbligatorio",
+    "space_environment_id": null
+  },
+  {
+    "id": 2523321,
+    "name": "Sezione introduzioni",
+    "preset": {
+      "id": "ancora sezione",
+      "_uid": "69bf14af-6d48-426e-b1df-560a89efb0b4",
+      "dark": false,
+      "align": "center",
+      "contain": true,
+      "contents": [
+        {
+          "_uid": "6572cbc5-19c3-4858-a007-7ecb39590af9",
+          "hide": "",
+          "order": "5",
+          "theme": "",
+          "title": "## Titolo della sezione...\n\n##### Introduzione alla sezione...",
+          "width": [
+            "1/1"
+          ],
+          "justify": "",
+          "component": "text",
+          "description": ""
+        },
+        {
+          "_uid": "a26a757a-67c1-44f1-a899-18c031a8fa8c",
+          "size": "",
+          "image": {
+            "id": 21389909,
+            "alt": "default immagine",
+            "name": "",
+            "focus": "",
+            "title": "",
+            "source": "",
+            "filename": "https://a.storyblok.com/f/311109/1280x900/c820c5db2b/default-immagine.png",
+            "copyright": "",
+            "fieldtype": "asset",
+            "meta_data": {
+              "alt": "default immagine",
+              "title": "",
+              "source": "",
+              "copyright": ""
+            },
+            "is_external_url": false
+          },
+          "order": "4",
+          "width": [
+            "1/3",
+            "1/2"
+          ],
+          "aspect": "",
+          "author": "",
+          "component": "image",
+          "fullScreen": false
+        },
+        {
+          "row": false,
+          "_uid": "fa77fc2d-f01f-44b1-ab68-6d3e98e6b6ad",
+          "size": "",
+          "boxed": false,
+          "order": "4",
+          "width": [
+            "2/3",
+            "1/2"
+          ],
+          "justify": "",
+          "contents": [
+            {
+              "_uid": "82ca6c67-bf82-4ecd-9b09-e03299330dc4",
+              "hide": "description",
+              "order": "",
+              "theme": "",
+              "title": "### Titolo paragrafo...\n\nInizio testo del paragrafo sempre visibile...",
+              "width": [],
+              "justify": "",
+              "component": "text",
+              "description": "Continuazione del paragrafo nascosto da mobile..."
+            },
+            {
+              "id": "",
+              "_uid": "b4b2daaa-d48e-4f04-8985-e80f6463ceac",
+              "link": {
+                "id": "",
+                "url": "",
+                "linktype": "story",
+                "fieldtype": "multilink",
+                "cached_url": ""
+              },
+              "color": "",
+              "label": "Collegamento pagina",
+              "button": true,
+              "component": "action"
+            }
+          ],
+          "component": "wrapper"
+        },
+        {
+          "row": false,
+          "_uid": "849ca579-ecde-44a1-bb47-6a627e917f67",
+          "size": "1/2",
+          "boxed": false,
+          "order": "3",
+          "width": [
+            "2/3",
+            "1/2"
+          ],
+          "justify": "",
+          "contents": [
+            {
+              "_uid": "a3c98608-8093-4dd2-a6ea-6dff17fa59c0",
+              "hide": "description",
+              "order": "1",
+              "theme": "",
+              "title": "### Titolo paragrafo...\n\nInizio testo del paragrafo sempre visibile...",
+              "width": [],
+              "justify": "",
+              "component": "text",
+              "description": "Continuazione del paragrafo nascosto da mobile..."
+            },
+            {
+              "id": "",
+              "_uid": "5e70adc1-8b65-43b1-b760-b2214753e595",
+              "link": {
+                "id": "",
+                "url": "",
+                "linktype": "story",
+                "fieldtype": "multilink",
+                "cached_url": ""
+              },
+              "color": "",
+              "label": "Collegamento pagina",
+              "button": true,
+              "component": "action"
+            }
+          ],
+          "component": "wrapper"
+        },
+        {
+          "_uid": "d285955c-6741-41ff-acf7-5b4a10b5b0c5",
+          "size": "",
+          "image": {
+            "id": 21389909,
+            "alt": "default immagine",
+            "name": "",
+            "focus": "",
+            "title": "",
+            "source": "",
+            "filename": "https://a.storyblok.com/f/311109/1280x900/c820c5db2b/default-immagine.png",
+            "copyright": "",
+            "fieldtype": "asset",
+            "meta_data": {
+              "alt": "default immagine",
+              "title": "",
+              "source": "",
+              "copyright": ""
+            },
+            "is_external_url": false
+          },
+          "order": "2",
+          "width": [
+            "1/3",
+            "1/2"
+          ],
+          "aspect": "",
+          "author": "",
+          "component": "image",
+          "fullScreen": false
+        }
+      ],
+      "component": "section"
+    },
+    "component_id": 6861325,
+    "space_id": 311109,
+    "created_at": "2025-03-14T15:12:37.092Z",
+    "updated_at": "2025-03-14T15:12:37.092Z",
+    "image": "",
+    "color": "#f5a928",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  },
+  {
+    "id": 2523322,
+    "name": "Sezione procedura",
+    "preset": {
+      "id": "",
+      "_uid": "47e5dd32-634d-442f-9706-dc1ef55a8584",
+      "dark": true,
+      "align": "",
+      "contain": true,
+      "contents": [
+        {
+          "_uid": "bd076fe6-b583-412a-94dc-b765265ec1a6",
+          "hide": "",
+          "order": "",
+          "theme": "",
+          "title": "## Titolo procedura...\n\n###### Introduzione procedura...",
+          "width": [
+            "2/3"
+          ],
+          "justify": "",
+          "component": "text",
+          "description": ""
+        },
+        {
+          "_uid": "c8190f00-9dd2-4bea-bea1-18cb015aea35",
+          "steps": [
+            {
+              "row": false,
+              "_uid": "da237dec-2bb4-4cc8-bcf6-00f6185f92f2",
+              "size": "1/2",
+              "boxed": false,
+              "order": "",
+              "width": [],
+              "justify": "",
+              "contents": [
+                {
+                  "_uid": "0dc64278-b01e-4d48-a637-1dd7736838a5",
+                  "size": "md",
+                  "image": {
+                    "id": 21389909,
+                    "alt": "default immagine",
+                    "name": "",
+                    "focus": "",
+                    "title": "",
+                    "source": "",
+                    "filename": "https://a.storyblok.com/f/311109/1280x900/c820c5db2b/default-immagine.png",
+                    "copyright": "",
+                    "fieldtype": "asset",
+                    "meta_data": {
+                      "alt": "default immagine",
+                      "title": "",
+                      "source": "",
+                      "copyright": ""
+                    },
+                    "is_external_url": false
+                  },
+                  "order": "",
+                  "width": [],
+                  "aspect": "1/1",
+                  "author": "",
+                  "component": "image",
+                  "fullScreen": false
+                },
+                {
+                  "_uid": "0a1120d0-4bf9-46e8-ab3d-78a8ab166326",
+                  "hide": "",
+                  "order": "",
+                  "theme": "",
+                  "title": "##### Titolo passaggio",
+                  "width": [],
+                  "justify": "",
+                  "component": "text",
+                  "description": "Descrizione passaggio"
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "row": false,
+              "_uid": "b2eef13a-4e47-4626-95f3-509f4cc3178e",
+              "size": "1/2",
+              "boxed": false,
+              "order": "",
+              "width": [],
+              "justify": "",
+              "contents": [
+                {
+                  "_uid": "40281c2d-16a2-479f-b1d7-88802562a469",
+                  "size": "md",
+                  "image": {
+                    "id": 21389909,
+                    "alt": "default immagine",
+                    "name": "",
+                    "focus": "",
+                    "title": "",
+                    "source": "",
+                    "filename": "https://a.storyblok.com/f/311109/1280x900/c820c5db2b/default-immagine.png",
+                    "copyright": "",
+                    "fieldtype": "asset",
+                    "meta_data": {
+                      "alt": "default immagine",
+                      "title": "",
+                      "source": "",
+                      "copyright": ""
+                    },
+                    "is_external_url": false
+                  },
+                  "order": "",
+                  "width": [],
+                  "aspect": "1/1",
+                  "author": "",
+                  "component": "image",
+                  "fullScreen": false
+                },
+                {
+                  "_uid": "590fcf40-4e39-4f4b-ac02-2626086790a3",
+                  "hide": "",
+                  "order": "",
+                  "theme": "",
+                  "title": "##### Titolo passaggio",
+                  "width": [],
+                  "justify": "",
+                  "component": "text",
+                  "description": "Descrizione passaggio"
+                }
+              ],
+              "component": "wrapper"
+            },
+            {
+              "row": false,
+              "_uid": "c1686c09-7bfa-4686-b8cb-928c14e861f1",
+              "size": "1/2",
+              "boxed": false,
+              "order": "",
+              "width": [],
+              "justify": "",
+              "contents": [
+                {
+                  "_uid": "9b999b78-c337-42c6-9ef9-ac4ad632b97e",
+                  "size": "md",
+                  "image": {
+                    "id": 21389909,
+                    "alt": "default immagine",
+                    "name": "",
+                    "focus": "",
+                    "title": "",
+                    "source": "",
+                    "filename": "https://a.storyblok.com/f/311109/1280x900/c820c5db2b/default-immagine.png",
+                    "copyright": "",
+                    "fieldtype": "asset",
+                    "meta_data": {
+                      "alt": "default immagine",
+                      "title": "",
+                      "source": "",
+                      "copyright": ""
+                    },
+                    "is_external_url": false
+                  },
+                  "order": "",
+                  "width": [],
+                  "aspect": "1/1",
+                  "author": "",
+                  "component": "image",
+                  "fullScreen": false
+                },
+                {
+                  "_uid": "ca98908f-19d4-4ae5-ad50-95a054445f9c",
+                  "hide": "",
+                  "order": "",
+                  "theme": "",
+                  "title": "##### Titolo passaggio",
+                  "width": [],
+                  "justify": "",
+                  "component": "text",
+                  "description": "Descrizione passaggio"
+                }
+              ],
+              "component": "wrapper"
+            }
+          ],
+          "component": "process"
+        }
+      ],
+      "component": "section"
+    },
+    "component_id": 6861325,
+    "space_id": 311109,
+    "created_at": "2025-03-14T15:19:56.567Z",
+    "updated_at": "2025-03-14T15:19:56.567Z",
+    "image": "",
+    "color": "#ef6252",
+    "icon": "",
+    "description": "",
+    "space_environment_id": null
+  }
+]

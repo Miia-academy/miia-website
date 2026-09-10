@@ -1,0 +1,19 @@
+export const relations: string[] = [
+  'page.header',
+  'page.footer',
+  'form.alias',
+  'aside.courses',
+  'aside.enroll',
+  'aside.contact',
+  'article.alias',
+  'article.author',
+  'person.alias',
+  'course.alias',
+  'event.alias',
+  'event.form',
+  'location.alias',
+  'map.locations',
+  'picture.author',
+  'alias.form',
+  'job.company'
+] as const

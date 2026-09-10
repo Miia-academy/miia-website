@@ -1,159 +1,205 @@
-import type { LocationProps, EventProps } from "@props/types";
-import { storyblokApi } from "@modules/storyblokApi";
-import type { BlokProps } from "@props/types";
+import { useState, useEffect, useMemo } from 'react'
+import type { GetStaticPropsContext } from 'next'
 import {
-  ISbStoryData,
-  useStoryblokState,
+  getStoryblokApi,
   StoryblokComponent,
-} from "@storyblok/react";
+  useStoryblokState,
+  type ISbStoryData,
+} from '@storyblok/react'
+import type { Page as PageBlok } from '@types'
+import { getCachedData, type GlobalData } from '@modules/cache'
+import { relations } from '@config/relations'
+import { optimizePayload } from '@modules/sanitize'
+import { getStoryblokVersion } from '@config/version'
+import AuthGate from '@components/gate'
+import { OverLink } from '@components/overlink'
 
-const excluding_slugs = ["home", "splash", "blog/"];
+const EXCLUDING_SLUGS = ['home', 'splash']
 
-const relations = [
-  "page.header",
-  "page.footer",
-  "aside.courses",
-  "aside.enroll",
-  "aside.contact",
-  "course.location",
-  "form.alias",
-  "article.alias",
-  "article.author",
-  "person.alias",
-  "course.alias",
-  "event.alias",
-  "event.form",
-  "location.alias",
-  "alias.form",
-  "map.locations",
-  "background.author",
-];
-
-type PageStory = {
-  story: ISbStoryData & {
-    id: string;
-    content: BlokProps;
-  };
-  locations: Array<{
-    content: LocationProps;
-  }>;
-  events: Array<{
-    content: EventProps;
-    name: string;
-  }>;
-};
-
-export interface Opendays {
-  fashion: Array<EventProps>;
-  interior: Array<EventProps>;
+interface PageStoryProps {
+  story: ISbStoryData<PageBlok> | null
+  data: GlobalData
+  draft: boolean
 }
 
-export const opendays: Opendays = {
-  fashion: [],
-  interior: [],
-};
+// Helper utility per accedere ai cookie nel browser lato client
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+  return null
+}
 
-export default function PageStory({ story, locations, events }: PageStory) {
+export default function PageStory({ story, data, draft }: PageStoryProps) {
+  // Abilita il real-time visual editor di Storyblok
   const page = useStoryblokState(story, {
-    resolveRelations: relations,
+    resolveRelations: relations.join(','),
     preventClicks: true,
-  });
-  if (!page) return null;
+  })
 
-  events.forEach((event) => {
-    if (event.name.startsWith("openday-interni")) {
-      opendays.interior.push(event.content);
-    } else if (event.name.startsWith("openday-moda")) {
-      opendays.fashion.push(event.content);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [mounted, setMounted] = useState<boolean>(false)
+  const [showPaywall, setShowPaywall] = useState<boolean>(false)
+
+  // Rilevamento se la pagina è aperta dentro il Visual Editor Iframe di Storyblok
+  const isStoryblokIframe = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return window.location.search.includes('_storyblok') || window.location !== window.parent.location
+  }, [])
+
+  // Check autenticazione istantaneo lato client tramite cookie 'miia_user'
+  useEffect(() => {
+    setMounted(true)
+    const rawUserCookie = getCookie('miia_user')
+    if (rawUserCookie) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(rawUserCookie))
+        if (parsed?.email) {
+          setIsAuthenticated(true)
+          setUserEmail(parsed.email)
+        }
+      } catch {
+        // Fallback per cookie salvati come stringa grezza
+        setIsAuthenticated(true)
+      }
     }
-  });
+  }, [])
+
+  // Calcolo delle condizioni di blocco pagina
+  const requiresAuth = useMemo(() => {
+    if (!page?.content) return false
+    return (page.content as any)?.auth === true || page.full_slug?.includes('nuova-inserzione')
+  }, [page])
+
+  // Non blocca se siamo in draft dentro l'Iframe dell'editor visivo di Storyblok
+  const isLocked = requiresAuth && mounted && !isAuthenticated && !isStoryblokIframe // TODO remove comment //&& !draft
+
+  // Dissolvenza e animazione dell'Overlay Paywall
+  useEffect(() => {
+    if (isLocked) {
+      const timer = setTimeout(() => setShowPaywall(true), 300)
+      return () => clearTimeout(timer)
+    } else {
+      setShowPaywall(false)
+    }
+  }, [isLocked])
 
   return (
-    <StoryblokComponent
-      locations={locations}
-      events={events}
-      blok={page.content}
-    />
-  );
+    <div className="relative min-h-screen overflow-hidden">
+      {page && page.content ? (
+        <>
+          {/* Layout della pagina: applica la sfocatura ed inabilita l'interazione se la pagina è bloccata */}
+          <div
+            className={`transition-[filter,opacity] duration-700 ease-in-out ${showPaywall
+              ? 'select-none pointer-events-none opacity-30 blur-xl aria-hidden'
+              : ''
+              }`}
+            aria-hidden={showPaywall}
+          >
+            <StoryblokComponent blok={page.content} fullSlug={page.full_slug} />
+          </div>
+
+          {/* Paywall Overlay con AuthGate integrato */}
+          {isLocked && (
+            <div
+              className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-opacity duration-700 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+            >
+              <div className="w-full max-w-lg">
+                <AuthGate onSuccess={() => setIsAuthenticated(true)} />
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-neutral-500 text-sm">Contenuto non disponibile.</p>
+        </div>
+      )}
+      <OverLink />
+    </div>
+  )
 }
 
-export async function getStaticProps({ params, preview }: any) {
-  let slug = `/${params.slug.join("/")}`;
+export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContext) => {
+  // Rileva 'draft' o 'published' in base all'ambiente Vercel/Locale
+  const version = getStoryblokVersion()
+  const isDraft = version === 'draft' || !!draftMode
 
-  const variables = { slug, relations: relations.join(",") };
-  const query = `
-    query ($slug: ID!, $relations: String) {
-      ContentNode(
-        id: $slug,
-        resolve_relations: $relations
-      ) {
-        id
-        slug
-        content
-        first_published_at
-        tag_list
-      }
-      EventItems(
-        sort_by:"content.date:cres",
-        per_page:100
-      ) {
-        items {
-          content {
-            date
-          }
-        name
-        }
-      }
-      LocationItems {
-        items {
-          content {
-            address
-            direction
-            gps
-            title
-          }
-          uuid
-        }
-      }
-    }
-  `;
-  const data = await storyblokApi({ query, variables });
+  const slugArray = params?.slug ? (Array.isArray(params.slug) ? params.slug : [params.slug]) : []
+  const slug = slugArray.join('/') || 'home'
+
+  if (slug.startsWith('_next') || slug.includes('.json') || slug.startsWith('.well-known')) {
+    return { notFound: true }
+  }
+
+  const storyblokApi = getStoryblokApi()
+  let storyResult = null
+
+  // Fetching della story con la versione corretta
+  try {
+    const response = await storyblokApi.getStory(slug, {
+      version,
+      resolve_relations: relations.join(','),
+    })
+    storyResult = response.data ? response.data.story : null
+  } catch (error) {
+    console.error(`[PageStory Error] Impossibile recuperare lo slug: ${slug}`, error)
+    return { notFound: true }
+  }
+
+  // Fetching dei dati globali per la cache e Context
+  const globalData = await getCachedData(version)
+
+  const safeStory = isDraft
+    ? JSON.parse(JSON.stringify(storyResult))
+    : optimizePayload(storyResult)
+
+  const safeGlobalData = optimizePayload(globalData)
 
   return {
     props: {
-      story: data?.ContentNode || null,
-      locations: data?.LocationItems.items || null,
-      events: data?.EventItems.items || null,
+      story: safeStory,
+      data: safeGlobalData,
+      draft: isDraft,
     },
-    revalidate: 3600,
-  };
+    revalidate: isDraft ? 1 : 3600,
+  }
 }
 
-export async function getStaticPaths() {
-  const variables = { excluding_slugs: excluding_slugs.join(",") };
-  const query = `
-    query ($excluding_slugs: String) {
-      ContentNodes(
-        excluding_slugs: $excluding_slugs,
-        filter_query: {
-          component: {
-            in: "page,enroll"
-          }
-        }
-      ) {
-        items {
-          full_slug
-        }
-      }
-    }
-  `;
-  const slugs = await storyblokApi({ query, variables });
-  const paths: Array<string> = slugs.ContentNodes.items.map(
-    ({ full_slug }: { full_slug: string }) => `/${full_slug}`
-  );
+export const getStaticPaths = async () => {
+  const storyblokApi = getStoryblokApi()
+  const version = getStoryblokVersion()
 
-  return {
-    paths: paths,
-    fallback: "blocking",
-  };
+  try {
+    const { data } = await storyblokApi.getStories({
+      version,
+      per_page: 100,
+      filter_query: {
+        component: {
+          in: 'page,enroll,project,article,job',
+        },
+      },
+    })
+
+    const paths = data.stories
+      .filter((story: ISbStoryData) => !EXCLUDING_SLUGS.includes(story.full_slug))
+      .map((story: ISbStoryData) => {
+        const slug = story.full_slug.split('/')
+        return { params: { slug } }
+      })
+
+    return {
+      paths,
+      fallback: 'blocking',
+    }
+  } catch (error) {
+    console.error('[getStaticPaths Error] Errore durante il fetching degli static paths:', error)
+    return {
+      paths: [],
+      fallback: 'blocking',
+    }
+  }
 }

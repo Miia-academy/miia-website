@@ -6,6 +6,7 @@ import { GoogleTagManager } from '@next/third-parties/google'
 import { storyblokInit, apiPlugin } from '@storyblok/react'
 import { HeroUIProvider } from '@heroui/react'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
+import { DataProvider } from '@modules/context'
 
 import { fontSans, fontSerif } from '@config/fonts'
 
@@ -23,7 +24,6 @@ import List from '@components/list'
 import Carousel from '@components/carousel'
 import Aside from '@components/aside'
 import Person from '@components/person'
-import Event from '@components/event'
 import Course from '@components/course'
 import Location from '@components/location'
 import Video from '@components/video'
@@ -33,6 +33,9 @@ import Background from '@components/background'
 import Gallery from '@components/gallery'
 import Menu from '@components/menu'
 import Process from '@components/process'
+import Grid from '@components/grid'
+import Project from '@components/project'
+import Job from '@components/job'
 
 const components = {
   page: Page,
@@ -56,26 +59,34 @@ const components = {
   text: Text,
   action: Action,
   person: Person,
-  event: Event,
   course: Course,
   location: Location,
+  grid: Grid,
+  project: Project,
+  job: Job,
+  business: () => null,
 }
 
+// Inizializzazione pulita per il nuovo stack REST + Draft Mode
 storyblokInit({
-  bridge: process.env.NEXT_PUBLIC_IS_PREVIEW === 'true' ? true : false,
   accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW,
   use: [apiPlugin],
+  apiOptions: {
+    region: 'eu', // Aggiunto: specifica 'eu' o 'us' in base a dove è hostato il tuo spazio Storyblok
+  },
   components,
 })
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
-      <HeroUIProvider>
-        <NextThemesProvider attribute="class" defaultTheme="light">
-          <Component {...pageProps} />
-        </NextThemesProvider>
-      </HeroUIProvider>
+      <DataProvider data={pageProps.data}>
+        <HeroUIProvider>
+          <NextThemesProvider attribute="class" defaultTheme="light">
+            <Component {...pageProps} />
+          </NextThemesProvider>
+        </HeroUIProvider>
+      </DataProvider>
       <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM || ''} />
     </>
   )
