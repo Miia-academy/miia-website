@@ -83,25 +83,20 @@ interface AsideComponentProps {
 }
 
 export default function Aside({ blok }: AsideComponentProps) {
-  // 🎯 1. Estraiamo le location dal Context globale (senza passare props dall'alto!)
   const { locations } = useDataContext();
 
-  // 2. Parsing dei valori numerici
   const amount = blok.amount ? parseFloat(blok.amount) : 100;
   const steps = blok.steps ? parseInt(blok.steps, 10) : null;
   const discountPercent = blok.discount ? parseFloat(blok.discount) : undefined;
 
-  // 3. Controllo logico Sconto
   const showDiscount = Boolean(
     blok.due_date && new Date() < new Date(blok.due_date)
   );
 
-  // 4. Elaborazione opzioni form e mappatura corsi
   const formOptions: Array<{ name: string; value: string }> = [];
 
   const rawCourses = Array.isArray(blok.courses) ? blok.courses : [];
   const courses = rawCourses.map((courseItem: any) => {
-    // Gestisce sia il caso in cui courseItem sia la story risolta da Storyblok, sia il caso in cui sia l'oggetto diretto
     const content = courseItem.content || courseItem || {};
 
     if (content.title) {
@@ -111,7 +106,6 @@ export default function Aside({ blok }: AsideComponentProps) {
       });
     }
 
-    // Troviamo la location dall'array in memoria preso dal Context
     const matchedLocation = locations.find(
       (loc) => loc.uuid === content.location || loc.uuid === (content.location as any)?.uuid
     );
@@ -128,11 +122,9 @@ export default function Aside({ blok }: AsideComponentProps) {
     };
   });
 
-  // 5. Estrattori array contents e forms
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
   const forms = Array.isArray(blok.forms) ? blok.forms : [];
 
-  // 6. Observer Intersezione (Sticky Banner)
   const { isIntersecting, ref } = useIntersectionObserver({ threshold: 0 });
   const isStickyBanner = !isIntersecting;
 
@@ -143,7 +135,6 @@ export default function Aside({ blok }: AsideComponentProps) {
       {...storyblokEditable(blok as any)}
     >
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-3 p-6">
-        {/* Lista Contenuti */}
         {contents.length > 0 && (
           <div className="order-last col-span-full space-y-4 md:order-1 md:col-span-8 md:space-y-6">
             {contents.map((content) => (
@@ -157,7 +148,6 @@ export default function Aside({ blok }: AsideComponentProps) {
           </div>
         )}
 
-        {/* Aside / Sticky Banner */}
         <aside ref={ref} className={asideClasses()}>
           <div className={bannerClasses({ active: isStickyBanner })}>
             <div className={containerClasses({ active: isStickyBanner })}>
@@ -170,22 +160,26 @@ export default function Aside({ blok }: AsideComponentProps) {
                 showDiscount={showDiscount}
               />
 
-              {/* Accordion Corsi */}
               {courses.length > 0 && (
                 <div className={isStickyBanner ? "hidden" : "w-full"}>
                   <Accordion
-                    selectionMode="multiple"
+                    selectionMode="single"
                     defaultExpandedKeys={courses.length === 1 ? ["0"] : []}
                   >
-                    {courses.map((course) => (
+                    {courses.map((course, index) => (
                       <AccordionItem
-                        key={course._uid}
+                        key={index.toString()}
                         HeadingComponent="h4"
                         title={course.title}
                         subtitle={
-                          course.days.length > 0
-                            ? `Frequenza ${course.days.join(" e ")}`
-                            : undefined
+                          <ul className="text-sm list-none">
+                            {course.days.length > 0 && (
+                              <li>Frequenza: {course.days.join(" e ")}</li>
+                            )}
+                            {course.seats && (
+                              <li>Posti rimasti: {course.seats}</li>
+                            )}
+                          </ul>
                         }
                         classNames={{ title: "font-bold lg:text-lg" }}
                       >
@@ -205,11 +199,6 @@ export default function Aside({ blok }: AsideComponentProps) {
                             icon="calendar-arrow-down"
                             value={course.ends}
                           />
-                          <ListItem
-                            label="posti rimasti:"
-                            icon="group"
-                            value={course.seats}
-                          />
                         </ul>
                       </AccordionItem>
                     ))}
@@ -217,9 +206,7 @@ export default function Aside({ blok }: AsideComponentProps) {
                 </div>
               )}
 
-              {/* Form Blocchi Storyblok */}
               {forms.map((form, index) => {
-                // Nasconde le form secondarie quando la barra diventa sticky in basso
                 if (index > 0 && isStickyBanner) return null;
 
                 return (
@@ -227,7 +214,7 @@ export default function Aside({ blok }: AsideComponentProps) {
                     key={form._uid}
                     blok={form}
                     variant={index === 0 ? "solid" : "ghost"}
-                    courses={formOptions} // 👈 Passiamo le opzioni form formattate al componente Form
+                    courses={formOptions}
                   />
                 );
               })}
@@ -239,7 +226,6 @@ export default function Aside({ blok }: AsideComponentProps) {
   );
 }
 
-// Styles con tailwind-variants...
 const priceClasses = tv({
   slots: {
     container: "relative flex flex-1 flex-col w-full",
