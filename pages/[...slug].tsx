@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import type { GetStaticPropsContext, GetStaticPathsContext } from 'next'
+import type { GetStaticPropsContext } from 'next'
 import {
   getStoryblokApi,
   StoryblokComponent,
@@ -8,11 +8,11 @@ import {
 } from '@storyblok/react'
 import type { Page as PageBlok } from '@types'
 import { getCachedData, type GlobalData } from '@modules/cache'
-import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
 import { optimizePayload } from '@modules/sanitize'
 import { getStoryblokVersion } from '@config/version'
 import AuthGate from '@components/gate'
+import { OverLink } from '@components/overlink'
 
 const EXCLUDING_SLUGS = ['home', 'splash']
 
@@ -87,40 +87,39 @@ export default function PageStory({ story, data, draft }: PageStoryProps) {
   }, [isLocked])
 
   return (
-    <DataProvider data={data}>
-      <div className="relative min-h-screen overflow-hidden">
-        {page && page.content ? (
-          <>
-            {/* Layout della pagina: applica la sfocatura ed inabilita l'interazione se la pagina è bloccata */}
-            <div
-              className={`transition-[filter,opacity] duration-700 ease-in-out ${showPaywall
-                ? 'select-none pointer-events-none opacity-30 blur-xl aria-hidden'
-                : ''
-                }`}
-              aria-hidden={showPaywall}
-            >
-              <StoryblokComponent blok={page.content} fullSlug={page.full_slug} />
-            </div>
-
-            {/* Paywall Overlay con AuthGate integrato */}
-            {isLocked && (
-              <div
-                className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-opacity duration-700 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                  }`}
-              >
-                <div className="w-full max-w-lg">
-                  <AuthGate onSuccess={() => setIsAuthenticated(true)} />
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="min-h-screen flex items-center justify-center">
-            <p className="text-neutral-500 text-sm">Contenuto non disponibile.</p>
+    <div className="relative min-h-screen overflow-hidden">
+      {page && page.content ? (
+        <>
+          {/* Layout della pagina: applica la sfocatura ed inabilita l'interazione se la pagina è bloccata */}
+          <div
+            className={`transition-[filter,opacity] duration-700 ease-in-out ${showPaywall
+              ? 'select-none pointer-events-none opacity-30 blur-xl aria-hidden'
+              : ''
+              }`}
+            aria-hidden={showPaywall}
+          >
+            <StoryblokComponent blok={page.content} fullSlug={page.full_slug} />
           </div>
-        )}
-      </div>
-    </DataProvider>
+
+          {/* Paywall Overlay con AuthGate integrato */}
+          {isLocked && (
+            <div
+              className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-opacity duration-700 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+            >
+              <div className="w-full max-w-lg">
+                <AuthGate onSuccess={() => setIsAuthenticated(true)} />
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-neutral-500 text-sm">Contenuto non disponibile.</p>
+        </div>
+      )}
+      <OverLink />
+    </div>
   )
 }
 
@@ -131,6 +130,10 @@ export const getStaticProps = async ({ params, draftMode }: GetStaticPropsContex
 
   const slugArray = params?.slug ? (Array.isArray(params.slug) ? params.slug : [params.slug]) : []
   const slug = slugArray.join('/') || 'home'
+
+  if (slug.startsWith('_next') || slug.includes('.json') || slug.startsWith('.well-known')) {
+    return { notFound: true }
+  }
 
   const storyblokApi = getStoryblokApi()
   let storyResult = null

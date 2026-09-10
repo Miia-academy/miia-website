@@ -8,11 +8,11 @@ import {
 } from '@storyblok/react'
 import type { Page as PageBlok } from '@types'
 import { getCachedData, type GlobalData } from '@modules/cache'
-import { DataProvider } from '@modules/context'
 import { relations } from '@config/relations'
 import { optimizePayload } from '@modules/sanitize'
 import { getStoryblokVersion } from '@config/version'
 import AuthGate from '@components/gate'
+import { OverLink } from '@components/overlink'
 
 type HomeProps = {
   story: ISbStoryData<PageBlok> | null
@@ -76,32 +76,31 @@ export default function Home({ story, data, draft }: HomeProps) {
   }, [isLocked])
 
   return (
-    <DataProvider data={data}>
-      <div className="relative min-h-screen overflow-hidden">
-        {/* Layout della Homepage: applica il blur e disabilita gli eventi mouse se bloccata */}
-        <div
-          className={`transition-[filter,opacity] duration-700 ease-in-out ${showPaywall
-            ? 'blur-xl select-none pointer-events-none aria-hidden opacity-40'
-            : ''
-            }`}
-          aria-hidden={showPaywall}
-        >
-          <StoryblokComponent blok={page.content} />
-        </div>
-
-        {/* Paywall Overlay con AuthGate integrato */}
-        {isLocked && (
-          <div
-            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-opacity duration-700 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
-          >
-            <div className="w-full max-w-lg">
-              <AuthGate onSuccess={() => setIsAuthenticated(true)} />
-            </div>
-          </div>
-        )}
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Layout della Homepage: applica il blur e disabilita gli eventi mouse se bloccata */}
+      <div
+        className={`transition-[filter,opacity] duration-700 ease-in-out ${showPaywall
+          ? 'blur-xl select-none pointer-events-none aria-hidden opacity-40'
+          : ''
+          }`}
+        aria-hidden={showPaywall}
+      >
+        <StoryblokComponent blok={page.content} />
       </div>
-    </DataProvider>
+
+      {/* Paywall Overlay con AuthGate integrato */}
+      {isLocked && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-opacity duration-700 ease-in-out ${showPaywall ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+        >
+          <div className="w-full max-w-lg">
+            <AuthGate onSuccess={() => setIsAuthenticated(true)} />
+          </div>
+        </div>
+      )}
+      <OverLink />
+    </div>
   )
 }
 

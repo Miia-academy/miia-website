@@ -6,6 +6,7 @@ import { GoogleTagManager } from '@next/third-parties/google'
 import { storyblokInit, apiPlugin } from '@storyblok/react'
 import { HeroUIProvider } from '@heroui/react'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
+import { DataProvider } from '@modules/context'
 
 import { fontSans, fontSerif } from '@config/fonts'
 
@@ -79,11 +80,13 @@ storyblokInit({
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
-      <HeroUIProvider>
-        <NextThemesProvider attribute="class" defaultTheme="light">
-          <Component {...pageProps} />
-        </NextThemesProvider>
-      </HeroUIProvider>
+      <DataProvider data={pageProps.data}>
+        <HeroUIProvider>
+          <NextThemesProvider attribute="class" defaultTheme="light">
+            <Component {...pageProps} />
+          </NextThemesProvider>
+        </HeroUIProvider>
+      </DataProvider>
       <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM || ''} />
     </>
   )
