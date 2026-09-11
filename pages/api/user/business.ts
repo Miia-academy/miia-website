@@ -4,6 +4,7 @@ import { upsertContact, BrevoError } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
 import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 
+const BREVO_LIST_AZIENDE = 30
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -35,19 +36,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 2. Sync Anagrafica Azienda unicamente su Brevo CRM (Senza Storyblok)
+    // 2. Sync Anagrafica Azienda unicamente su Brevo CRM (Lista #30, Senza Storyblok)
     await upsertContact({
       email: targetEmail,
       attributes: {
-        NOME: contact_person || companyName,
+        NOME_AZIENDA: companyName,
         AZIENDA: companyName,
-        REFERENTE: contact_person || '',
+        REFERENTE: contact_person || authData.contact_person || '',
+        NOME: contact_person || companyName,
         INDIRIZZO: address || '',
         SITO_WEB: website || '',
         SETTORE: area || '',
         DESCRIZIONE: description || '',
         TIPO_UTENTE: 'Azienda',
       },
+      listIds: [BREVO_LIST_AZIENDE], // Assegna o mantiene l'azienda nella lista #30
     })
 
     // 3. Pulizia metadata e generazione nuovo Payload JWT

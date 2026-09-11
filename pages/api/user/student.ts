@@ -13,6 +13,7 @@ export const config = {
   },
 }
 
+const BREVO_LIST_STUDENTI = 42
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
 
@@ -21,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: `Metodo ${req.method} non consentito` })
   }
 
-  // 1. Check autenticazione via Cookie JWT
+  // 1. Verifica autenticazione tramite Cookie JWT
   const token = req.cookies.miia_auth_token
   if (!token) {
     return res.status(401).json({ message: 'Non autorizzato: effettua prima il login' })
@@ -44,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     let cvDownloadUrl = authData.cv_url || (authData as any).cv || ''
 
-    // 2. Upload del CV su GCS Privato (se fornito un nuovo file)
+    // 2. Upload del CV su Google Cloud Storage Privato
     if (cvBase64 && cvFileName) {
       const buffer = Buffer.from(cvBase64.replace(/^data:application\/\w+;base64,/, ''), 'base64')
       const sanitizedFileName = `${Date.now()}-${cvFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
@@ -57,11 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isPublic: false,
       })
 
-      // Costruiamo l'URL di download protetto
+      // Generazione dell'URL sicuro di download
       cvDownloadUrl = `${BASE_URL}/api/job/download?file=${encodeURIComponent(cvUploadResult.id)}`
     }
 
-    // 3. Sync Anagrafica CRM Brevo
+    // 3. Sincronizzazione CRM Brevo (con associazione forzata alla lista #42)
     const brevoAttributes: Record<string, any> = {
       NOME: attributes?.NOME || name || '',
       COGNOME: attributes?.COGNOME || surname || '',
@@ -74,9 +75,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await upsertContact({
       email: email.trim().toLowerCase(),
       attributes: brevoAttributes,
+      listIds: [BREVO_LIST_STUDENTI], // Assicura che lo studente sia legato alla lista #42
     })
 
-    // 4. Pulizia e Costruzione Sessione JWT
+    // 4. Pulizia e rigenerazione Sessione JWT
     const { iat, exp, ...cleanAuthData } = authData
 
     const competenzeArray = typeof attributes?.COMPETENZE === 'string'
@@ -85,6 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const updatedSessionPayload: Record<string, any> = {
       ...cleanAuthData,
+      tipo_utente: 'Studente',
       name: brevoAttributes.NOME,
       surname: brevoAttributes.COGNOME,
       sms: brevoAttributes.SMS,
