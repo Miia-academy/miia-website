@@ -174,14 +174,14 @@ const classes = tv({
         list: 'text-secondary marker:text-secondary',
         link: 'text-secondary',
       },
-      light: {
+      dark: {
         title: 'text-white',
         subtitle: 'text-neutral-100',
         text: 'text-neutral-300',
         list: 'text-neutral-300 marker:text-neutral-300',
         link: 'text-neutral-100',
       },
-      dark: {
+      light: {
         title: 'text-neutral-950',
         subtitle: 'text-neutral-900',
         text: 'text-neutral-700',

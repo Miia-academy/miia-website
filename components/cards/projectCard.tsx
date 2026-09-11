@@ -14,7 +14,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   const projectSlug = project.fullSlug ? `/${project.fullSlug}` : '#'
 
   // Formattatore legato alle regole tipografiche di progetto
-  const baseTypography = Typography({ theme: 'light' })
+  const baseTypography = Typography({ theme: 'dark' })
 
   const cardTypographyOverrides = {
     ...baseTypography,

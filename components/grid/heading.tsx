@@ -26,7 +26,7 @@ export default function GridHeading({
     return subtitle.replace(/{{total}}|{{count}}/g, totalCount.toString())
   }, [subtitle, totalCount])
 
-  const baseTypography = Typography({ theme: isDarkSection ? 'light' : 'dark' })
+  const baseTypography = Typography({ theme: isDarkSection ? 'dark' : 'light' })
 
   const titleTypographyOverrides = {
     ...baseTypography,

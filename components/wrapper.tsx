@@ -79,7 +79,8 @@ const classes = tv({
       true: 'flex-row sm:max-md:col-span-12',
     },
     hasBackground: {
-      true: 'relative aspect-4/3 shadow-inner z-0 rounded-xl p-3 md:p-6 overflow-hidden justify-end [&_article]:flex-none [&_article]:backdrop-blur-sm [&_article]:rounded-3xl [&_article]:gap-1',
+      // Uso della tecnica pseudo-element con inset negativo
+      true: "relative aspect-4/3 shadow-inner z-0 rounded-xl p-3 md:p-6 overflow-hidden justify-end [&_article]:flex-none [&_article]:gap-1 [&_.text-description-blur]:relative [&_.text-description-blur]:z-0 [&_.text-description-blur::before]:content-[''] [&_.text-description-blur::before]:absolute [&_.text-description-blur::before]:-inset-3 [&_.text-description-blur::before]:-z-10 [&_.text-description-blur::before]:backdrop-blur-sm [&_.text-description-blur::before]:rounded-3xl",
     },
     justify: {
       'items-right': 'sm:items-end',
