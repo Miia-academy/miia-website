@@ -79,9 +79,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `miia_user=${encodedUserData}; Path=/; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
     ])
 
-    // 6. Validazione della destinazione (Protezione Open Redirect)
-    let destination = '/'
-    if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
+    // 6. Destinazione dinamica per ruolo con protezione Open Redirect
+    const defaultDestination = tipoUtente === 'Azienda' ? '/aziende/profilo' : '/studenti/profilo'
+    let destination = defaultDestination
+
+    if (
+      typeof redirect === 'string' &&
+      redirect.startsWith('/') &&
+      !redirect.startsWith('//') &&
+      redirect !== '/'
+    ) {
       destination = redirect
     }
 

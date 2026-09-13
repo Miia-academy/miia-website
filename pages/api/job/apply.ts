@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import type { AuthPayload } from '@modules/auth'
 import { getJobById } from '@modules/jobs/db'
 import { createApplication } from '@modules/applications/db'
+import { trackEvent } from '@modules/brevo'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
@@ -35,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 3. Recuperiamo i dettagli dell'inserzione dal DB (MOLTO PIÙ SICURO!)
+    // 3. Recuperiamo i dettagli dell'inserzione dal DB
     const job = await getJobById(jobId)
     if (!job) {
       return res.status(404).json({ message: 'Inserzione non trovata o chiusa' })
@@ -60,27 +61,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 5. Costruzione del Nome Studente
     const studentName = `${authData.name || ''} ${authData.surname || ''}`.trim() || authData.email
 
-    // 6. Invio Evento a Brevo (Inviato SOLO se l'inserimento a DB ha avuto successo)
-    const crmResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/crm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event: {
-          identifiers: { email_id: job.company_email }, // <-- Presa sicura dal DB!
-          event_name: 'job_apply',
-          event_properties: {
-            company_name: company_name || '',
-            job_title: job.title, // <-- Preso dal DB!
-            student_name: studentName,
-            cv_url: cvUrl,
-            student_email: authData.email,
-          },
+    // 6. Invio Evento a Brevo via import diretto (senza loopback HTTP/SSL)
+    try {
+      await trackEvent({
+        eventName: 'job_apply',
+        email: job.company_email,
+        properties: {
+          company_name: company_name || '',
+          job_title: job.title,
+          student_name: studentName,
+          cv_url: cvUrl,
+          student_email: authData.email,
         },
-      }),
-    })
-
-    if (!crmResponse.ok) {
-      console.warn('[API Job Apply] Candidatura salvata su DB, ma tracciamento Brevo fallito.')
+      })
+    } catch (crmError) {
+      console.warn('[API Job Apply] Candidatura salvata su DB, ma tracciamento Brevo fallito:', crmError)
     }
 
     return res.status(200).json({ message: 'Candidatura inviata con successo!', application })
