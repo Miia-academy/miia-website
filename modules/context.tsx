@@ -1,5 +1,4 @@
-// context.tsx
-import { createContext, useContext, useMemo, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useMemo, useCallback, useState, useEffect, ReactNode } from 'react'
 import type {
   GlobalData,
   ProcessedCourse,
@@ -8,6 +7,7 @@ import type {
   ProcessedArticle,
   ProcessedPerson,
   ProcessedProject,
+  Competenza,
 } from '@modules/cache'
 
 export type CourseOpendayKey =
@@ -20,6 +20,7 @@ export type CourseOpendayKey =
 export type HiddenFilter = 'all' | 'only_hidden' | 'exclude_hidden'
 
 interface DataContextType extends GlobalData {
+  loading: boolean
   getLatestItems: <T>(items: T[], dateExtractor: (item: T) => string | undefined, limit?: number) => T[]
 
   getEventsByPrefix: (prefix: string) => ProcessedEvent[]
@@ -30,7 +31,6 @@ interface DataContextType extends GlobalData {
   getProjectsByTag: (tag: string) => ProcessedProject[]
   getLatestArticle: () => ProcessedArticle | undefined
 
-  // Helper specifico per le competenze
   getCompetenzaNameByValue: (value: string) => string | undefined
 }
 
@@ -43,6 +43,34 @@ export function DataProvider({
   children: ReactNode
   data?: GlobalData
 }) {
+  const [competenzeState, setCompetenzeState] = useState<Competenza[]>(data?.competenze || [])
+  const [loading, setLoading] = useState<boolean>(!data?.competenze?.length)
+
+  // Fallback client-side per pagine SSR dove data non è disponibile in pageProps
+  useEffect(() => {
+    if (data?.competenze && data.competenze.length > 0) {
+      setCompetenzeState(data.competenze)
+      setLoading(false)
+      return
+    }
+
+    async function fetchSkillsFallback() {
+      try {
+        const res = await fetch('/api/config/skills')
+        if (res.ok) {
+          const skills = await res.json()
+          setCompetenzeState(skills)
+        }
+      } catch (err) {
+        console.error('Errore nel fetch di fallback delle skills:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSkillsFallback()
+  }, [data?.competenze])
+
   const courses = data?.courses || []
   const events = data?.events || []
   const locations = data?.locations || []
@@ -50,9 +78,7 @@ export function DataProvider({
   const jobs = data?.jobs || []
   const persons = data?.persons || []
   const projects = data?.projects || []
-  const competenze = data?.competenze || []
-
-  // --- UTILITY DI BASE ---
+  const competenze = competenzeState
 
   const getLatestItems = useCallback(
     <T,>(items: T[], dateExtractor: (item: T) => string | undefined, limit?: number): T[] => {
@@ -65,8 +91,6 @@ export function DataProvider({
     },
     []
   )
-
-  // --- HELPER SPECIFICI ---
 
   const getEventsByPrefix = useCallback(
     (prefix: string) => events.filter((e) => e.name?.startsWith(prefix)),
@@ -87,11 +111,9 @@ export function DataProvider({
     (tag: string, visibility: HiddenFilter = 'exclude_hidden', limit?: number) => {
       const filtered = articles.filter((a) => {
         const hasTag = a.tagList?.some((t) => t.toLowerCase() === tag.toLowerCase())
-
         let visibilityMatch = true
         if (visibility === 'only_hidden') visibilityMatch = a.hidden === true
         if (visibility === 'exclude_hidden') visibilityMatch = !a.hidden
-
         return hasTag && visibilityMatch
       })
 
@@ -116,7 +138,6 @@ export function DataProvider({
     return getLatestItems(articles, (a) => a.createdAt, 1)[0]
   }, [articles, getLatestItems])
 
-  // Helper per le Competenze
   const getCompetenzaNameByValue = useCallback(
     (value: string) => competenze.find((c) => c.value === value)?.name,
     [competenze]
@@ -132,6 +153,7 @@ export function DataProvider({
       persons,
       projects,
       competenze,
+      loading,
       getLatestItems,
       getEventsByPrefix,
       getCoursesByOpenday,
@@ -151,6 +173,7 @@ export function DataProvider({
       persons,
       projects,
       competenze,
+      loading,
       getLatestItems,
       getEventsByPrefix,
       getCoursesByOpenday,

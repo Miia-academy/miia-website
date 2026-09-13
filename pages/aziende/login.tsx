@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { Tabs, Tab, Input, Button, Alert, Checkbox } from '@heroui/react'
 
-// Utility per convertire il logo in Base64 (necessario per l'API esistente)
+// Utility per convertire il logo in Base64
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -45,7 +45,8 @@ export default function CompanyLogin() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, redirectUrl }),
+        // Aggiunto tipo_utente: 'Azienda' nel payload
+        body: JSON.stringify({ email: loginEmail, tipo_utente: 'Azienda', redirectUrl }),
       })
       if (res.ok) {
         setSuccessMsg('Controlla la tua casella email: ti abbiamo inviato il Magic Link per accedere.')
