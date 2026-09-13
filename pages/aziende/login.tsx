@@ -16,7 +16,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 export default function CompanyLogin() {
   const router = useRouter()
   // Default redirect alla dashboard operativa delle inserzioni
-  const redirectUrl = (router.query.redirectUrl as string) || '/aziende/inserzioni'
+  const redirectUrl = (router.query.redirectUrl as string) || '/aziende/profilo'
 
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [loading, setLoading] = useState(false)

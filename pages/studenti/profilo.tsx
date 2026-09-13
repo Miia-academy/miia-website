@@ -25,7 +25,6 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
   const { competenze } = useDataContext()
   const [loading, setLoading] = useState(false)
 
-  // Inizializziamo il form includendo provincia e skills
   const [form, setForm] = useState({
     name: user.name || '',
     surname: user.surname || '',
@@ -88,7 +87,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
       } else {
         alert(data.message || 'Errore durante l\'aggiornamento.')
       }
-    } catch (error) {
+    } catch {
       alert('Errore di connessione. Riprova più tardi.')
     } finally {
       setLoading(false)
@@ -97,11 +96,16 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
 
   return (
     <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
-      {/* HEADER DELLA PAGINA CON LINK ALLA BACHECA */}
-      <div className="mx-auto max-w-5xl mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-          Area Studente
-        </h1>
+      {/* Header Dashboard */}
+      <div className="mx-auto max-w-6xl mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+            Area Studente
+          </h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            Benvenuto, <span className="font-semibold text-neutral-800">{user.name ? `${user.name} ${user.surname}` : user.email}</span>
+          </p>
+        </div>
         <Button
           as={Link}
           href="/lavoro/inserzioni"
@@ -111,8 +115,10 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
         </Button>
       </div>
 
-      <div className="mx-auto max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Colonna Sinistra: Dati e CV */}
+      {/* Griglia Principale */}
+      <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Colonna Sinistra (1/3): Form Dati e CV */}
         <div className="lg:col-span-1 space-y-6">
           <Card shadow="sm" className="border border-neutral-200">
             <CardHeader className="pt-6 px-6 font-bold text-xl text-neutral-900">
@@ -143,7 +149,6 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   />
                 </div>
 
-                {/* Nuovi Campi Provincia e Competenze */}
                 <div className="grid grid-cols-1 gap-4 border-t border-neutral-100 pt-4">
                   <Input
                     label="Provincia (Sigla)"
@@ -195,7 +200,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
           </Card>
         </div>
 
-        {/* Colonna Destra: Storico Candidature */}
+        {/* Colonna Destra (2/3): Candidature con Titolo Linkato */}
         <div className="lg:col-span-2">
           <Card shadow="sm" className="border border-neutral-200 min-h-full">
             <CardHeader className="pt-6 px-6 font-bold text-xl text-neutral-900 border-b border-neutral-100 pb-4">
@@ -218,15 +223,23 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
               ) : (
                 <div className="divide-y divide-neutral-100">
                   {applications.map((app) => (
-                    <div key={app.application_id} className="p-6 hover:bg-neutral-50 transition-colors flex justify-between items-center">
+                    <div key={app.application_id} className="p-6 hover:bg-neutral-50 transition-colors flex justify-between items-center gap-4">
                       <div>
-                        <h4 className="font-bold text-neutral-900">{app.title}</h4>
+                        {/* Titolo offerta con Link diretto al dettaglio */}
+                        <h4 className="font-bold text-neutral-900">
+                          <Link
+                            href={`/lavoro/inserzioni/${app.job_id}`}
+                            className="hover:text-[#009245] transition-colors"
+                          >
+                            {app.title}
+                          </Link>
+                        </h4>
                         <p className="text-xs text-neutral-500 mt-1 flex items-center gap-2">
                           <span className="uppercase font-semibold">{app.provincia}</span> •
                           Candidato il: {new Date(app.applied_at).toLocaleDateString('it-IT')}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <Chip
                           size="sm"
                           variant="flat"
@@ -273,7 +286,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const applications = await getStudentApplications(decoded.email)
 
-    // Estraiamo in modo sicuro Provincia e Competenze dal token aggiornato dalla nostra API
     const userProvincia = (decoded as any).provincia || ''
     const userCompetenze = Array.isArray((decoded as any).competenze) ? (decoded as any).competenze : []
 
@@ -290,7 +302,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         applications: JSON.parse(JSON.stringify(applications)),
       },
     }
-  } catch (error) {
+  } catch {
     return { redirect: { destination: '/studenti/login', permanent: false } }
   }
 }

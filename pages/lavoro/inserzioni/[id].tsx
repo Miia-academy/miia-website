@@ -4,22 +4,36 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getJobById } from '@modules/jobs/db'
+import { getContact } from '@modules/brevo'
 import type { Job } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Button, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react'
+import { useDataContext } from '@modules/context'
+import { Button, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+
+interface CompanyDetails {
+  companyName: string
+  contactPerson: string
+  email: string
+  settore: string
+  website: string
+  description: string
+}
 
 interface DettaglioInserzioneProps {
   user: {
     email: string
     cv_url: string
+    tipo_utente: 'Azienda' | 'Studente'
   }
   job: Job
+  company: CompanyDetails
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
-export default function DettaglioInserzione({ user, job }: DettaglioInserzioneProps) {
+export default function DettaglioInserzione({ user, job, company }: DettaglioInserzioneProps) {
   const router = useRouter()
+  const { getCompetenzaNameByValue } = useDataContext()
   const [loading, setLoading] = useState(false)
   const [alertInfo, setAlertInfo] = useState({ isOpen: false, title: '', message: '', isError: false })
 
@@ -44,9 +58,7 @@ export default function DettaglioInserzione({ user, job }: DettaglioInserzionePr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jobId: job.id,
-          // Inviamo esplicitamente anche company_name vuoto se non lo abbiamo, 
-          // l'API lo gestirà per Brevo
-          company_name: ''
+          company_name: company.companyName || '',
         }),
       })
 
@@ -59,21 +71,26 @@ export default function DettaglioInserzione({ user, job }: DettaglioInserzionePr
       } else {
         showAlert('Attenzione', data.message || 'Errore durante la candidatura.', true)
       }
-    } catch (error) {
+    } catch {
       showAlert('Errore di Rete', 'Impossibile inviare la candidatura. Riprova più tardi.', true)
     } finally {
       setLoading(false)
     }
   }
 
+  const isAzienda = user.tipo_utente === 'Azienda'
+
   return (
     <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
 
-        {/* Breadcrumb / Back Button */}
+        {/* Breadcrumb dinamico in base al ruolo */}
         <div className="mb-6">
-          <Link href="/lavoro/inserzioni" className="text-sm font-medium text-neutral-500 hover:text-black transition-colors">
-            &larr; Torna alla bacheca
+          <Link
+            href={isAzienda ? '/aziende/profilo' : '/lavoro/inserzioni'}
+            className="text-sm font-medium text-neutral-500 hover:text-black transition-colors"
+          >
+            &larr; {isAzienda ? 'Torna al profilo' : 'Torna alla bacheca'}
           </Link>
         </div>
 
@@ -82,7 +99,7 @@ export default function DettaglioInserzione({ user, job }: DettaglioInserzionePr
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
             <div>
               <div className="flex items-center gap-3 mb-3">
-                <Chip size="sm" color="primary" variant="flat" className="font-bold uppercase tracking-widest text-[10px]">
+                <Chip size="sm" variant="flat" className="font-bold uppercase tracking-widest text-[10px] bg-[#009245]/10 text-[#009245]">
                   {job.provincia}
                 </Chip>
                 <span className="text-xs text-neutral-400 font-medium">
@@ -94,46 +111,114 @@ export default function DettaglioInserzione({ user, job }: DettaglioInserzionePr
               </h1>
             </div>
 
-            <div className="shrink-0 w-full md:w-auto">
-              <Button
-                onPress={handleApply}
-                isLoading={loading}
-                size="lg"
-                className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-md"
-              >
-                Candidati Ora
-              </Button>
-            </div>
+            {!isAzienda && (
+              <div className="shrink-0 w-full md:w-auto">
+                <Button
+                  onPress={handleApply}
+                  isLoading={loading}
+                  size="lg"
+                  className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-md"
+                >
+                  Candidati Ora
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Job Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 rounded-2xl bg-white p-8 shadow-sm border border-neutral-200">
-            <h2 className="text-lg font-bold text-neutral-900 mb-4 border-b border-neutral-100 pb-2">
-              Descrizione dell'offerta
-            </h2>
-            <div className="prose prose-neutral max-w-none text-neutral-600 whitespace-pre-wrap">
-              {job.description}
+        {/* Griglia Principale */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Colonna Sinistra: Descrizione e Competenze */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="rounded-2xl bg-white p-8 shadow-sm border border-neutral-200">
+              <h2 className="text-lg font-bold text-neutral-900 mb-4 pb-2 border-b border-neutral-100">
+                Descrizione dell'offerta
+              </h2>
+              <div className="prose prose-neutral max-w-none text-neutral-600 whitespace-pre-wrap leading-relaxed">
+                {job.description}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-neutral-100">
+                <h3 className="text-base font-bold text-neutral-900 mb-3">
+                  Competenze Richieste
+                </h3>
+                {job.competenze && job.competenze.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {job.competenze.map((skillKey) => {
+                      const label = getCompetenzaNameByValue(skillKey) || skillKey
+                      return (
+                        <Chip key={skillKey} variant="flat" className="bg-neutral-100 text-neutral-800 font-medium text-xs px-2 py-1">
+                          {label}
+                        </Chip>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-400">Nessuna competenza specifica indicata.</p>
+                )}
+              </div>
+
             </div>
           </div>
 
-          <div className="md:col-span-1 rounded-2xl bg-white p-8 shadow-sm border border-neutral-200 h-fit">
-            <h2 className="text-lg font-bold text-neutral-900 mb-4 border-b border-neutral-100 pb-2">
-              Competenze Richieste
-            </h2>
-            {job.competenze && job.competenze.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {job.competenze.map((skill) => (
-                  <Chip key={skill} variant="flat" className="bg-neutral-100 text-neutral-700">
-                    {skill}
-                  </Chip>
-                ))}
+          {/* Colonna Destra: Dettagli Azienda */}
+          <div className="lg:col-span-1">
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-200 sticky top-6">
+              <h2 className="text-lg font-bold text-neutral-900 mb-4 pb-2 border-b border-neutral-100">
+                Informazioni Azienda
+              </h2>
+
+              <div className="space-y-4 text-sm">
+                <div>
+                  <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Azienda</span>
+                  <span className="font-bold text-neutral-900 text-base">{company.companyName || 'Riservata'}</span>
+                </div>
+
+                {company.contactPerson && (
+                  <div>
+                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Referente</span>
+                    <span className="text-neutral-700">{company.contactPerson}</span>
+                  </div>
+                )}
+
+                {company.settore && (
+                  <div>
+                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Settore</span>
+                    <span className="text-neutral-700 capitalize">{company.settore}</span>
+                  </div>
+                )}
+
+                <div>
+                  <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Email di Contatto</span>
+                  <span className="text-neutral-700 break-all">{company.email}</span>
+                </div>
+
+                {company.website && (
+                  <div>
+                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Sito Web</span>
+                    <a
+                      href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {company.website}
+                    </a>
+                  </div>
+                )}
+
+                {company.description && (
+                  <div>
+                    <Divider className="my-2" />
+                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Chi Siamo</span>
+                    <p className="text-xs text-neutral-600 line-clamp-4 leading-relaxed">{company.description}</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-neutral-500">Nessuna competenza specifica indicata.</p>
-            )}
+            </div>
           </div>
+
         </div>
 
         {/* Feedback Modal */}
@@ -148,7 +233,6 @@ export default function DettaglioInserzione({ user, job }: DettaglioInserzionePr
                   <p className="text-neutral-700">{alertInfo.message}</p>
                 </ModalBody>
                 <ModalFooter>
-                  {/* Se manca il CV, offriamo un bottone comodo per andare al profilo */}
                   {alertInfo.isError && alertInfo.title === 'Curriculum Mancante' ? (
                     <Button color="primary" as={Link} href="/studenti/profilo">
                       Vai al Profilo
@@ -176,7 +260,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string }
   const token = context.req.cookies['miia_auth_token']
 
-  // 1. Gatekeeper: Solo loggati
+  // 1. VERIFICA AUTHENTICAZIONE (Isolata)
   if (!token) {
     return {
       redirect: {
@@ -186,37 +270,78 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
+  let decoded: AuthPayload
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+  } catch (authErr) {
+    console.error('[SSR Auth Error] Token JWT non valido o scaduto:', authErr)
+    const userCookie = context.req.cookies['miia_user']
+    let isAzienda = false
+    try {
+      if (userCookie) {
+        const parsed = JSON.parse(decodeURIComponent(userCookie))
+        isAzienda = parsed?.tipo_utente === 'Azienda'
+      }
+    } catch { }
 
-    // 2. Gatekeeper: Niente aziende
-    if (decoded.tipo_utente === 'Azienda') {
-      return { redirect: { destination: '/aziende/inserzioni', permanent: false } }
-    }
-
-    // 3. Fetch dal DB Neon dell'inserzione specifica
-    const job = await getJobById(id)
-
-    // Se non esiste o è chiusa/eliminata, mostriamo 404
-    if (!job) {
-      return { notFound: true }
-    }
-
-    return {
-      props: {
-        user: {
-          email: decoded.email,
-          cv_url: decoded.cv_url || '',
-        },
-        job: JSON.parse(JSON.stringify(job)),
-      },
-    }
-  } catch (error) {
+    const loginRoute = isAzienda ? '/aziende/login' : '/studenti/login'
     return {
       redirect: {
-        destination: `/studenti/login?redirect=/lavoro/inserzioni/${id}`,
+        destination: `${loginRoute}?redirect=/lavoro/inserzioni/${id}`,
         permanent: false,
       },
     }
+  }
+
+  // 2. RECUPERO INSERZIONE DB (Non causa più il redirect al login se fallisce)
+  let job: Job | null = null
+  try {
+    job = await getJobById(id)
+  } catch (dbErr) {
+    console.error(`[SSR DB Error] Errore durante getJobById("${id}"):`, dbErr)
+    return { notFound: true }
+  }
+
+  if (!job) {
+    return { notFound: true }
+  }
+
+  // 3. RECUPERO DETTAGLI BREVO (Isolato con Fallback)
+  let companyInfo: CompanyDetails = {
+    companyName: '',
+    contactPerson: '',
+    email: job.company_email,
+    settore: '',
+    website: '',
+    description: '',
+  }
+
+  try {
+    if (job.company_email) {
+      const contact = await getContact({ identifier: job.company_email })
+      const attrs = contact?.attributes || {}
+      companyInfo = {
+        companyName: attrs.NOME_AZIENDA || attrs.AZIENDA || attrs.COMPANY || '',
+        contactPerson: attrs.REFERENTE || attrs.CONTACT_PERSON || '',
+        email: job.company_email,
+        settore: attrs.SETTORE || attrs.AREA || '',
+        website: attrs.SITO_WEB || '',
+        description: attrs.DESCRIZIONE || '',
+      }
+    }
+  } catch (brevoErr) {
+    console.warn('[SSR Brevo Warning] Impossibile recuperare info azienda:', brevoErr)
+  }
+
+  return {
+    props: {
+      user: {
+        email: decoded.email,
+        cv_url: decoded.cv_url || '',
+        tipo_utente: decoded.tipo_utente || 'Studente',
+      },
+      job: JSON.parse(JSON.stringify(job)),
+      company: companyInfo,
+    },
   }
 }
