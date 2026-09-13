@@ -1,3 +1,4 @@
+// components/business/CreateJobModal.tsx
 import React, { useState } from 'react'
 import {
   Modal,
@@ -28,8 +29,8 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   onSuccess,
   showAlert,
 }) => {
-  const { competenze, loading } = useDataContext()
-  const [loadingForm, setLoadingForm] = useState(false)
+  const { competenze } = useDataContext()
+  const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
     title: '',
@@ -40,7 +41,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoadingForm(true)
+    setLoading(true)
 
     try {
       const payload = {
@@ -69,7 +70,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     } catch {
       showAlert('Errore di connessione', 'Riprova più tardi.', true)
     } finally {
-      setLoadingForm(false)
+      setLoading(false)
     }
   }
 
@@ -102,21 +103,18 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                 />
               </div>
 
-              {/* Utilizzo della prop items per la gestione asincrona delle opzioni HeroUI */}
               <Select
                 label="Competenze richieste"
                 selectionMode="multiple"
                 variant="flat"
-                isLoading={loading}
-                items={competenze || []}
                 selectedKeys={form.skills}
                 onSelectionChange={(keys) => setForm({ ...form, skills: keys as Set<string> })}
               >
-                {(skill) => (
+                {(competenze || []).map((skill: any) => (
                   <SelectItem key={skill.value || skill.name}>
                     {skill.name || skill.value}
                   </SelectItem>
-                )}
+                ))}
               </Select>
 
               <Textarea
@@ -130,10 +128,10 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
             </ModalBody>
             <ModalFooter>
-              <Button variant="flat" onPress={onClose} disabled={loadingForm}>
+              <Button variant="flat" onPress={onClose} disabled={loading}>
                 Annulla
               </Button>
-              <Button type="submit" isLoading={loadingForm} className="bg-[#009245] text-white">
+              <Button type="submit" isLoading={loading} className="bg-[#009245] text-white">
                 Pubblica
               </Button>
             </ModalFooter>
