@@ -1,22 +1,27 @@
 import { GetServerSideProps } from 'next'
 import React, { useState } from 'react'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getJobById } from '@modules/jobs/db'
 import { getContact } from '@modules/brevo'
 import type { Job } from '@modules/jobs/types'
+import {
+  TIPO_CONTRATTO_LABELS,
+  ORARIO_LAVORO_LABELS,
+  GRADO_ESPERIENZA_LABELS,
+  TRASFERTE_LABELS,
+  LINGUE_STRANIERE,
+} from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Button, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
 
 interface CompanyDetails {
   companyName: string
-  contactPerson: string
-  email: string
-  settore: string
+  indirizzo: string
   website: string
   description: string
+  logo_url: string
 }
 
 interface DettaglioInserzioneProps {
@@ -32,14 +37,47 @@ interface DettaglioInserzioneProps {
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function DettaglioInserzione({ user, job, company }: DettaglioInserzioneProps) {
-  const router = useRouter()
-  const { getCompetenzaNameByValue } = useDataContext()
+  const { competenze: masterCompetenze } = useDataContext()
   const [loading, setLoading] = useState(false)
   const [alertInfo, setAlertInfo] = useState({ isOpen: false, title: '', message: '', isError: false })
 
   const showAlert = (title: string, message: string, isError = false) => {
     setAlertInfo({ isOpen: true, title, message, isError })
   }
+
+  // 1. Sanifichiamo e deduplichiamo le competenze per eliminare doppioni e spazi fantasma
+  const uniqueCompetenze = Array.from(new Set((job.competenze || []).map(k => k.trim())))
+
+  // 2. Resolving bidirezionale intelligente delle competenze da Storyblok
+  const detailedSkills = uniqueCompetenze.map((skillKey) => {
+    const found = (masterCompetenze || []).find(
+      (s: any) =>
+        s.name?.trim() === skillKey ||
+        s.title?.trim() === skillKey ||
+        s.value?.trim() === skillKey
+    )
+
+    if (found) {
+      return {
+        key: skillKey,
+        title: found.name?.trim() || skillKey,
+        description: found.value && found.value.trim() !== found.name?.trim() ? found.value : null,
+      }
+    }
+
+    const isLongText = skillKey.length > 40
+    return {
+      key: skillKey,
+      title: isLongText ? 'Competenza richiesta' : skillKey,
+      description: isLongText ? skillKey : null,
+    }
+  })
+
+  // Etichette lingue
+  const selectedLanguages = (job.lingue || []).map((langKey) => {
+    const found = LINGUE_STRANIERE.find((l) => l.key === langKey)
+    return found ? found.label : langKey
+  })
 
   const handleApply = async () => {
     if (!user.cv_url) {
@@ -81,147 +119,204 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
   const isAzienda = user.tipo_utente === 'Azienda'
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-6">
 
-        {/* Breadcrumb dinamico in base al ruolo */}
-        <div className="mb-6">
+        {/* Breadcrumb */}
+        <div>
           <Link
             href={isAzienda ? '/aziende/profilo' : '/lavoro/inserzioni'}
-            className="text-sm font-medium text-neutral-500 hover:text-black transition-colors"
+            className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-black transition-colors"
           >
             &larr; {isAzienda ? 'Torna al profilo' : 'Torna alla bacheca'}
           </Link>
         </div>
 
-        {/* Job Header */}
-        <div className="rounded-2xl bg-white p-8 shadow-sm border border-neutral-200 mb-6">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Chip size="sm" variant="flat" className="font-bold uppercase tracking-widest text-[10px] bg-[#009245]/10 text-[#009245]">
-                  {job.provincia}
-                </Chip>
-                <span className="text-xs text-neutral-400 font-medium">
-                  Pubblicato il: {new Date(job.created_at).toLocaleDateString('it-IT')}
+        {/* Layout a 2 colonne pulito */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+          {/* Colonna Principale (Contenuto Annuncio) */}
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 space-y-8 shadow-xs">
+
+            {/* Header Posizione */}
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${job.status === 'attiva' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-600'}`}>
+                  {job.status === 'attiva' ? 'Offerta Attiva' : 'Chiusa'}
+                </span>
+                <span className="text-xs font-medium text-neutral-500">
+                  Pubblicato il {new Date(job.created_at).toLocaleDateString('it-IT')}
                 </span>
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900">
-                {job.title}
-              </h1>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight break-words">
+                  {job.title}
+                </h1>
+                {!isAzienda && (
+                  <Button
+                    onPress={handleApply}
+                    isLoading={loading}
+                    isDisabled={job.status !== 'attiva'}
+                    className="bg-[#009245] text-white font-bold px-6 shadow-sm shrink-0"
+                  >
+                    Candidati Ora
+                  </Button>
+                )}
+              </div>
             </div>
 
-            {!isAzienda && (
-              <div className="shrink-0 w-full md:w-auto">
-                <Button
-                  onPress={handleApply}
-                  isLoading={loading}
-                  size="lg"
-                  className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-md"
-                >
-                  Candidati Ora
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+            <Divider />
 
-        {/* Griglia Principale */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Colonna Sinistra: Descrizione e Competenze */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl bg-white p-8 shadow-sm border border-neutral-200">
-              <h2 className="text-lg font-bold text-neutral-900 mb-4 pb-2 border-b border-neutral-100">
-                Descrizione dell'offerta
+            {/* Condizioni Operative (Griglia pulita) */}
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                Condizioni & Inquadramento
               </h2>
-              <div className="prose prose-neutral max-w-none text-neutral-600 whitespace-pre-wrap leading-relaxed">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
+
+                {/* Sede di Lavoro */}
+                <div>
+                  <span className="block text-xs text-neutral-400 font-medium">Sede di lavoro</span>
+                  <span className="text-sm font-bold text-neutral-800">
+                    {job.provincie && job.provincie.length > 0 ? job.provincie.join(', ') : 'Triveneto'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="block text-xs text-neutral-400 font-medium">Contratto</span>
+                  <span className="text-sm font-bold text-neutral-800">
+                    {TIPO_CONTRATTO_LABELS[job.tipo_contratto] || job.tipo_contratto}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="block text-xs text-neutral-400 font-medium">Esperienza</span>
+                  <span className="text-sm font-bold text-neutral-800">
+                    {GRADO_ESPERIENZA_LABELS[job.grado_esperienza] || job.grado_esperienza}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="block text-xs text-neutral-400 font-medium">Orario</span>
+                  <span className="text-sm font-bold text-neutral-800">
+                    {ORARIO_LAVORO_LABELS[job.orari_lavoro] || job.orari_lavoro}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="block text-xs text-neutral-400 font-medium">Trasferte</span>
+                  <span className="text-sm font-bold text-neutral-800">
+                    {TRASFERTE_LABELS[job.trasferte] || job.trasferte}
+                  </span>
+                </div>
+
+                {job.ral && (
+                  <div>
+                    <span className="block text-xs text-neutral-400 font-medium">RAL</span>
+                    <span className="text-sm font-bold text-neutral-800">{job.ral}</span>
+                  </div>
+                )}
+
+                {selectedLanguages.length > 0 && (
+                  <div className="col-span-2 sm:col-span-1">
+                    <span className="block text-xs text-neutral-400 font-medium">Lingue</span>
+                    <span className="text-sm font-bold text-neutral-800">{selectedLanguages.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Divider />
+
+            {/* Descrizione del Ruolo */}
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                Descrizione del Ruolo
+              </h2>
+              <p className="text-neutral-700 whitespace-pre-line text-sm leading-relaxed">
                 {job.description}
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-neutral-100">
-                <h3 className="text-base font-bold text-neutral-900 mb-3">
-                  Competenze Richieste
-                </h3>
-                {job.competenze && job.competenze.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {job.competenze.map((skillKey) => {
-                      const label = getCompetenzaNameByValue(skillKey) || skillKey
-                      return (
-                        <Chip key={skillKey} variant="flat" className="bg-neutral-100 text-neutral-800 font-medium text-xs px-2 py-1">
-                          {label}
-                        </Chip>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-neutral-400">Nessuna competenza specifica indicata.</p>
-                )}
-              </div>
-
+              </p>
             </div>
+
+            {/* Competenze Richieste */}
+            {detailedSkills.length > 0 && (
+              <>
+                <Divider />
+                <div className="space-y-4">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                    Competenze Richieste
+                  </h2>
+                  <div className="space-y-4">
+                    {detailedSkills.map((skill) => (
+                      <div key={skill.key} className="flex items-start gap-3">
+                        <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-bold text-neutral-900 leading-snug">
+                            {skill.title}
+                          </h3>
+                          {skill.description && (
+                            <p className="text-xs text-neutral-500 leading-relaxed">
+                              {skill.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
           </div>
 
-          {/* Colonna Destra: Dettagli Azienda */}
-          <div className="lg:col-span-1">
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-200 sticky top-6">
-              <h2 className="text-lg font-bold text-neutral-900 mb-4 pb-2 border-b border-neutral-100">
-                Informazioni Azienda
-              </h2>
-
-              <div className="space-y-4 text-sm">
-                <div>
-                  <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Azienda</span>
-                  <span className="font-bold text-neutral-900 text-base">{company.companyName || 'Riservata'}</span>
+          {/* Colonna Destra (Dettagli Azienda EPURATI) */}
+          <div className="bg-white rounded-2xl border border-neutral-200 p-6 space-y-5 sticky top-6 shadow-xs">
+            <div className="flex items-center gap-3 pb-4 border-b border-neutral-100">
+              {company.logo_url ? (
+                <img src={company.logo_url} alt="Logo Azienda" className="w-12 h-12 rounded-xl object-contain border border-neutral-200 p-1" />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-neutral-100 flex items-center justify-center font-bold text-neutral-600 text-base">
+                  {company.companyName ? company.companyName.substring(0, 2).toUpperCase() : 'AZ'}
                 </div>
-
-                {company.contactPerson && (
-                  <div>
-                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Referente</span>
-                    <span className="text-neutral-700">{company.contactPerson}</span>
-                  </div>
-                )}
-
-                {company.settore && (
-                  <div>
-                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Settore</span>
-                    <span className="text-neutral-700 capitalize">{company.settore}</span>
-                  </div>
-                )}
-
-                <div>
-                  <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Email di Contatto</span>
-                  <span className="text-neutral-700 break-all">{company.email}</span>
-                </div>
-
-                {company.website && (
-                  <div>
-                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">Sito Web</span>
-                    <a
-                      href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
-                    >
-                      {company.website}
-                    </a>
-                  </div>
-                )}
-
-                {company.description && (
-                  <div>
-                    <Divider className="my-2" />
-                    <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Chi Siamo</span>
-                    <p className="text-xs text-neutral-600 line-clamp-4 leading-relaxed">{company.description}</p>
-                  </div>
+              )}
+              <div>
+                <h3 className="text-base font-bold text-neutral-900 leading-snug">
+                  {company.companyName}
+                </h3>
+                {company.indirizzo && (
+                  <p className="text-xs text-neutral-400">{company.indirizzo}</p>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              {company.website && (
+                <div>
+                  <span className="block font-semibold text-neutral-400 uppercase tracking-wider text-[10px]">Sito Web</span>
+                  <a
+                    href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-700 font-medium hover:underline break-all"
+                  >
+                    {company.website}
+                  </a>
+                </div>
+              )}
+
+              {company.description && (
+                <div className="pt-2 border-t border-neutral-100">
+                  <span className="block font-semibold text-neutral-400 uppercase tracking-wider text-[10px] mb-1">Chi Siamo</span>
+                  <p className="text-neutral-600 leading-relaxed line-clamp-5">{company.description}</p>
+                </div>
+              )}
             </div>
           </div>
 
         </div>
 
-        {/* Feedback Modal */}
+        {/* Modal Feedback */}
         <Modal isOpen={alertInfo.isOpen} onOpenChange={(open) => setAlertInfo({ ...alertInfo, isOpen: open })} backdrop="blur">
           <ModalContent>
             {(onClose) => (
@@ -254,13 +349,12 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
 }
 
 // ============================================================================
-// SERVER-SIDE LOGIC
+// SERVER-SIDE LOGIC CON FALLBACK COMPLETO BREVO CRM E SICUREZZA DATI
 // ============================================================================
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string }
   const token = context.req.cookies['miia_auth_token']
 
-  // 1. VERIFICA AUTHENTICAZIONE (Isolata)
   if (!token) {
     return {
       redirect: {
@@ -273,32 +367,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   let decoded: AuthPayload
   try {
     decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
-  } catch (authErr) {
-    console.error('[SSR Auth Error] Token JWT non valido o scaduto:', authErr)
-    const userCookie = context.req.cookies['miia_user']
-    let isAzienda = false
-    try {
-      if (userCookie) {
-        const parsed = JSON.parse(decodeURIComponent(userCookie))
-        isAzienda = parsed?.tipo_utente === 'Azienda'
-      }
-    } catch { }
-
-    const loginRoute = isAzienda ? '/aziende/login' : '/studenti/login'
+  } catch {
     return {
       redirect: {
-        destination: `${loginRoute}?redirect=/lavoro/inserzioni/${id}`,
+        destination: `/studenti/login?redirect=/lavoro/inserzioni/${id}`,
         permanent: false,
       },
     }
   }
 
-  // 2. RECUPERO INSERZIONE DB (Non causa più il redirect al login se fallisce)
   let job: Job | null = null
   try {
     job = await getJobById(id)
   } catch (dbErr) {
-    console.error(`[SSR DB Error] Errore durante getJobById("${id}"):`, dbErr)
+    console.error(`[SSR DB Error] getJobById("${id}"):`, dbErr)
     return { notFound: true }
   }
 
@@ -306,31 +388,37 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { notFound: true }
   }
 
-  // 3. RECUPERO DETTAGLI BREVO (Isolato con Fallback)
+  // Fallback a cascata per il nome azienda (ESCLUSI i campi sensibili)
   let companyInfo: CompanyDetails = {
-    companyName: '',
-    contactPerson: '',
-    email: job.company_email,
-    settore: '',
+    companyName: job.company_email ? job.company_email.split('@')[0].toUpperCase() : 'Azienda Partner',
+    indirizzo: '',
     website: '',
     description: '',
+    logo_url: '',
   }
 
   try {
     if (job.company_email) {
       const contact = await getContact({ identifier: job.company_email })
       const attrs = contact?.attributes || {}
+
+      const resolvedName =
+        attrs.NOME_AZIENDA ||
+        attrs.AZIENDA ||
+        attrs.COMPANY ||
+        attrs.REFERENTE ||
+        companyInfo.companyName
+
       companyInfo = {
-        companyName: attrs.NOME_AZIENDA || attrs.AZIENDA || attrs.COMPANY || '',
-        contactPerson: attrs.REFERENTE || attrs.CONTACT_PERSON || '',
-        email: job.company_email,
-        settore: attrs.SETTORE || attrs.AREA || '',
+        companyName: resolvedName,
+        indirizzo: attrs.INDIRIZZO || '',
         website: attrs.SITO_WEB || '',
         description: attrs.DESCRIZIONE || '',
+        logo_url: attrs.LOGO_URL || '',
       }
     }
   } catch (brevoErr) {
-    console.warn('[SSR Brevo Warning] Impossibile recuperare info azienda:', brevoErr)
+    console.warn('[SSR Brevo Warning] Impossibile recuperare info Brevo:', brevoErr)
   }
 
   return {

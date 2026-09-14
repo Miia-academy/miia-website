@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { Tabs, Tab, Input, Button, Alert, Checkbox } from '@heroui/react'
+import { Logo } from '@public/logo'
 
-// Utility per convertire il logo in Base64
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -15,7 +15,6 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 export default function CompanyLogin() {
   const router = useRouter()
-  // Default redirect alla dashboard operativa delle inserzioni
   const redirectUrl = (router.query.redirectUrl as string) || '/aziende/profilo'
 
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -23,17 +22,14 @@ export default function CompanyLogin() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // State form di registrazione
   const [regForm, setRegForm] = useState({
     nome: '',
     contact_person: '',
     email: '',
+    telefono: '',
     termsAccepted: false,
-    newsletter: false,
   })
   const [logoFile, setLogoFile] = useState<File | null>(null)
-
-  // State form login
   const [loginEmail, setLoginEmail] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -45,7 +41,6 @@ export default function CompanyLogin() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Aggiunto tipo_utente: 'Azienda' nel payload
         body: JSON.stringify({ email: loginEmail, tipo_utente: 'Azienda', redirectUrl }),
       })
       if (res.ok) {
@@ -68,6 +63,11 @@ export default function CompanyLogin() {
       return
     }
 
+    let finalPhone = regForm.telefono.trim()
+    if (finalPhone && !finalPhone.startsWith('+')) {
+      finalPhone = `+39${finalPhone}`
+    }
+
     setLoading(true)
     setErrorMsg(null)
 
@@ -79,7 +79,7 @@ export default function CompanyLogin() {
         logoMimeType = logoFile.type
       }
 
-      const payload = { ...regForm, logoBase64, logoFileName, logoMimeType, redirectUrl }
+      const payload = { ...regForm, telefono: finalPhone, logoBase64, logoFileName, logoMimeType, redirectUrl }
 
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -101,45 +101,81 @@ export default function CompanyLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
+    // Aggiunto "relative" al wrapper principale per posizionare il logo
+    <div className="relative min-h-screen flex items-center justify-center bg-neutral-50 p-4 overflow-x-hidden">
       <Head><title>Area Aziende | MIIA</title></Head>
 
-      <div className="w-full max-w-lg bg-white p-6 rounded-3xl shadow-sm border border-neutral-200">
-        <h1 className="text-2xl font-bold mb-6 text-center">Area Riservata Aziende</h1>
+      <div className="absolute top-0 right-0 left-0 z-10 flex justify-center p-6">
+        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#009245" />
+      </div>
+
+      <div className="w-full max-w-lg bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-neutral-200 flex flex-col max-h-[90vh] relative z-20">
+        <h1 className="text-2xl font-bold mb-6 text-center shrink-0">Area Riservata Aziende</h1>
 
         {successMsg ? (
           <Alert color="success" variant="flat">{successMsg}</Alert>
         ) : (
-          <Tabs selectedKey={mode} onSelectionChange={(k) => { setMode(k as any); setErrorMsg(null); }} fullWidth>
+          <Tabs
+            selectedKey={mode}
+            onSelectionChange={(k) => { setMode(k as any); setErrorMsg(null); }}
+            fullWidth
+            variant="underlined"
+            classNames={{ tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider" }}
+          >
             <Tab key="login" title="Accedi">
-              <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-4">
-                <Input type="email" label="Email Aziendale" isRequired value={loginEmail} onValueChange={setLoginEmail} />
-                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-medium">Invia Link di Accesso</Button>
+              <form onSubmit={handleLogin} className="flex flex-col gap-5 mt-6 px-1">
+                <Input type="email" label="Email Aziendale" isRequired value={loginEmail} onValueChange={setLoginEmail} variant="flat" />
+                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-bold shadow-sm">Invia Link di Accesso</Button>
               </form>
             </Tab>
 
             <Tab key="register" title="Registrati">
-              <form onSubmit={handleRegister} className="flex flex-col gap-4 mt-4 h-96 overflow-y-auto p-1">
-                <Input label="Nome Azienda" isRequired value={regForm.nome} onValueChange={v => setRegForm({ ...regForm, nome: v })} />
-                <Input label="Nome Referente" isRequired value={regForm.contact_person} onValueChange={v => setRegForm({ ...regForm, contact_person: v })} />
-                <Input type="email" label="Email Aziendale" isRequired value={regForm.email} onValueChange={v => setRegForm({ ...regForm, email: v })} />
+              <form onSubmit={handleRegister} className="flex flex-col mt-6 h-[50vh] min-h-[350px] max-h-[500px]">
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-neutral-600">Logo Aziendale (Opzionale)</label>
-                  <input type="file" accept="image/*" onChange={(e) => e.target.files && setLogoFile(e.target.files[0])} />
+                <div className="flex-1 overflow-y-auto px-1 pb-4 space-y-4">
+                  <Input label="Nome Azienda" isRequired value={regForm.nome} onValueChange={v => setRegForm({ ...regForm, nome: v })} variant="flat" />
+                  <Input label="Nome Referente" isRequired value={regForm.contact_person} onValueChange={v => setRegForm({ ...regForm, contact_person: v })} variant="flat" />
+                  <Input type="email" label="Email Aziendale" isRequired value={regForm.email} onValueChange={v => setRegForm({ ...regForm, email: v })} variant="flat" />
+
+                  <Input
+                    type="tel"
+                    label="Telefono Sede"
+                    placeholder="Es. +39 02 123456"
+                    description="Inserisci il prefisso internazionale (es. +39)"
+                    value={regForm.telefono}
+                    onValueChange={v => setRegForm({ ...regForm, telefono: v })}
+                    variant="flat"
+                  />
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100">
+                    <label className="text-sm font-medium text-neutral-600">Logo Aziendale (Opzionale)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files && setLogoFile(e.target.files[0])}
+                      className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 transition-colors"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <Checkbox isSelected={regForm.termsAccepted} onValueChange={v => setRegForm({ ...regForm, termsAccepted: v })}>
+                      <span className="text-sm text-neutral-600">Accetto i termini di collaborazione</span>
+                    </Checkbox>
+                  </div>
                 </div>
 
-                <Checkbox isSelected={regForm.termsAccepted} onValueChange={v => setRegForm({ ...regForm, termsAccepted: v })}>
-                  <span className="text-sm">Accetto i termini di collaborazione</span>
-                </Checkbox>
+                <div className="pt-4 border-t border-neutral-100 mt-auto shrink-0 bg-white px-1">
+                  <Button type="submit" isLoading={loading} color="primary" className="w-full h-12 font-bold shadow-sm">
+                    Invia Richiesta
+                  </Button>
+                </div>
 
-                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-medium">Invia Richiesta</Button>
               </form>
             </Tab>
           </Tabs>
         )}
 
-        {errorMsg && <Alert color="danger" variant="flat" className="mt-4">{errorMsg}</Alert>}
+        {errorMsg && <Alert color="danger" variant="flat" className="mt-4 shrink-0 mx-1">{errorMsg}</Alert>}
       </div>
     </div>
   )
