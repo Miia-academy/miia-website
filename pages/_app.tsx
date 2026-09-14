@@ -35,7 +35,6 @@ import Menu from '@components/menu'
 import Process from '@components/process'
 import Grid from '@components/grid'
 import Project from '@components/project'
-import Job from '@components/job'
 
 const components = {
   page: Page,
@@ -63,7 +62,6 @@ const components = {
   location: Location,
   grid: Grid,
   project: Project,
-  job: Job,
   business: () => null,
 }
 

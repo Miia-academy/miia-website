@@ -5,7 +5,6 @@ import Markdown from 'markdown-to-jsx'
 import { Typography } from '@components/typography'
 import { tv } from 'tailwind-variants'
 
-// Mappatura Icone e Testi per i Ruoli
 const roles: Record<string, { icon: string; text: string }> = {
   interior: { icon: 'graduation-cap', text: 'studente' },
   style: { icon: 'design-nib', text: 'estetica' },
@@ -24,17 +23,15 @@ interface PersonCardProps {
 export default function PersonCard({ person, isDark }: PersonCardProps) {
   const { isOpen, onOpen, onClose } = useDisclosure()
 
-  // Controllo per nascondere i campi in base all'array `hide` del CMS
   const isRoleHidden = person.hide?.includes('role')
   const isDescriptionHidden = person.hide?.includes('description')
   const isImageHidden = person.hide?.includes('image')
   const isTitleHidden = person.hide?.includes('title')
 
   const imageUrl = person.image?.filename
-  const displayTitle = person.title
+  const displayTitle = person.title || person.name
   const roleData = person.role ? roles[person.role] : null
 
-  // Setup Markdown Typography
   const baseTypography = Typography({ theme: isDark ? 'dark' : 'light', size: 'small' })
   const descriptionTypographyOverrides = {
     ...baseTypography,
@@ -122,7 +119,6 @@ export default function PersonCard({ person, isDark }: PersonCardProps) {
   )
 }
 
-// -- Tailwind Variants (Ripristino Stili Originali) --
 const classes = tv({
   slots: {
     cardClasses:

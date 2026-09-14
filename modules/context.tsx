@@ -1,9 +1,9 @@
+// @modules/context.tsx
 import { createContext, useContext, useMemo, useCallback, useState, useEffect, ReactNode } from 'react'
 import type {
   GlobalData,
   ProcessedCourse,
   ProcessedEvent,
-  ProcessedJob,
   ProcessedArticle,
   ProcessedPerson,
   ProcessedProject,
@@ -22,15 +22,12 @@ export type HiddenFilter = 'all' | 'only_hidden' | 'exclude_hidden'
 interface DataContextType extends GlobalData {
   loading: boolean
   getLatestItems: <T>(items: T[], dateExtractor: (item: T) => string | undefined, limit?: number) => T[]
-
   getEventsByPrefix: (prefix: string) => ProcessedEvent[]
   getCoursesByOpenday: (openday: CourseOpendayKey) => ProcessedCourse[]
-  getJobsByArea: (area: string) => ProcessedJob[]
   getArticlesByTag: (tag: string, visibility?: HiddenFilter, limit?: number) => ProcessedArticle[]
   getPersonsByRole: (roleKeyword: string) => ProcessedPerson[]
   getProjectsByTag: (tag: string) => ProcessedProject[]
   getLatestArticle: () => ProcessedArticle | undefined
-
   getCompetenzaNameByValue: (value: string) => string | undefined
 }
 
@@ -46,7 +43,6 @@ export function DataProvider({
   const [competenzeState, setCompetenzeState] = useState<Competenza[]>(data?.competenze || [])
   const [loading, setLoading] = useState<boolean>(!data?.competenze?.length)
 
-  // Fallback client-side per pagine SSR dove data non è disponibile in pageProps
   useEffect(() => {
     if (data?.competenze && data.competenze.length > 0) {
       setCompetenzeState(data.competenze)
@@ -75,7 +71,6 @@ export function DataProvider({
   const events = data?.events || []
   const locations = data?.locations || []
   const articles = data?.articles || []
-  const jobs = data?.jobs || []
   const persons = data?.persons || []
   const projects = data?.projects || []
   const competenze = competenzeState
@@ -100,11 +95,6 @@ export function DataProvider({
   const getCoursesByOpenday = useCallback(
     (openday: CourseOpendayKey) => courses.filter((c) => c.openday === openday),
     [courses]
-  )
-
-  const getJobsByArea = useCallback(
-    (area: string) => jobs.filter((j) => j.area?.toLowerCase() === area.toLowerCase()),
-    [jobs]
   )
 
   const getArticlesByTag = useCallback(
@@ -149,7 +139,6 @@ export function DataProvider({
       events,
       locations,
       articles,
-      jobs,
       persons,
       projects,
       competenze,
@@ -157,7 +146,6 @@ export function DataProvider({
       getLatestItems,
       getEventsByPrefix,
       getCoursesByOpenday,
-      getJobsByArea,
       getArticlesByTag,
       getPersonsByRole,
       getProjectsByTag,
@@ -169,7 +157,6 @@ export function DataProvider({
       events,
       locations,
       articles,
-      jobs,
       persons,
       projects,
       competenze,
@@ -177,7 +164,6 @@ export function DataProvider({
       getLatestItems,
       getEventsByPrefix,
       getCoursesByOpenday,
-      getJobsByArea,
       getArticlesByTag,
       getPersonsByRole,
       getProjectsByTag,
