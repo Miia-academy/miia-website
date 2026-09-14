@@ -8,7 +8,7 @@ import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '4.5mb', // Allineato al limite hardcapped delle Vercel Serverless Functions
+      sizeLimit: '4.5mb', // Allineato al limite delle Vercel Serverless Functions
     },
   },
 }
@@ -91,7 +91,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       portfolioDownloadUrl = `${BASE_URL}/api/job/download?file=${encodeURIComponent(portfolioUploadResult.id)}`
     }
 
-    // 4. Sincronizzazione CRM Brevo (attributi corretti e unificati)
+    // Normalizzazione Competenze per Brevo (deve essere una stringa separata da virgole)
+    const rawCompetenze = attributes?.COMPETENZE
+    const competenzeString = Array.isArray(rawCompetenze)
+      ? rawCompetenze.join(', ')
+      : typeof rawCompetenze === 'string'
+        ? rawCompetenze
+        : ''
+
+    const competenzeArray = competenzeString
+      ? competenzeString.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : []
+
+    // 4. Sincronizzazione CRM Brevo (usa TRASFERTE al posto di DISPONIBILE_TRASFERTE)
+    const isTrasferte =
+      typeof attributes?.TRASFERTE === 'boolean'
+        ? attributes.TRASFERTE
+        : typeof attributes?.DISPONIBILE_TRASFERTE === 'boolean'
+          ? attributes.DISPONIBILE_TRASFERTE
+          : false
+
     const brevoAttributes: Record<string, any> = {
       ...(attributes || {}),
       NOME: attributes?.NOME || name || '',
@@ -102,10 +121,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       PROVINCIA: attributes?.PROVINCIA || '',
       RICERCA_ATTIVA: typeof attributes?.RICERCA_ATTIVA === 'boolean' ? attributes.RICERCA_ATTIVA : true,
       AUTOMUNITO: typeof attributes?.AUTOMUNITO === 'boolean' ? attributes.AUTOMUNITO : false,
-      DISPONIBILE_TRASFERTE: typeof attributes?.DISPONIBILE_TRASFERTE === 'boolean' ? attributes.DISPONIBILE_TRASFERTE : false,
+      TRASFERTE: isTrasferte,
+      COMPETENZE: competenzeString,
       CV_URL: cvDownloadUrl,
       PORTFOLIO_URL: portfolioDownloadUrl,
     }
+
+    // Rimuoviamo la vecchia chiave se presente per evitare sovrascritture incongruenti
+    delete brevoAttributes.DISPONIBILE_TRASFERTE
 
     await upsertContact({
       email: email.trim().toLowerCase(),
@@ -115,10 +138,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 5. Rigenerazione Sessione JWT
     const { iat, exp, ...cleanAuthData } = authData
-
-    const competenzeArray = typeof attributes?.COMPETENZE === 'string'
-      ? attributes.COMPETENZE.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : (Array.isArray(attributes?.COMPETENZE) ? attributes.COMPETENZE : [])
 
     const updatedSessionPayload: Record<string, any> = {
       ...cleanAuthData,
@@ -130,7 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       provincia: brevoAttributes.PROVINCIA,
       ricerca_attiva: brevoAttributes.RICERCA_ATTIVA,
       automunito: brevoAttributes.AUTOMUNITO,
-      disponibile_trasferte: brevoAttributes.DISPONIBILE_TRASFERTE,
+      disponibile_trasferte: brevoAttributes.TRASFERTE,
       competenze: competenzeArray,
       cv_url: cvDownloadUrl,
       portfolio_url: portfolioDownloadUrl,
