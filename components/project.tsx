@@ -28,7 +28,7 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
   const backUrl = getParentPath(fullSlug)
 
   // Usiamo lo stesso pattern di text.tsx: tema 'light' per la Hero scura
-  const heroTypography = Typography({ theme: 'light' })
+  const heroTypography = Typography({ theme: 'dark' })
 
   return (
     <article {...storyblokEditable(blok as any)} className="w-full">
@@ -66,7 +66,7 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
           <div className="max-w-2xl space-y-3">
 
             {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
-              <div className="w-fit inline-block backdrop-blur-sm rounded-2xl px-4 py-2 -ml-4">
+              <div className="w-fit inline-block">
                 {compiler(blok.title, {
                   overrides: heroTypography,
                 })}

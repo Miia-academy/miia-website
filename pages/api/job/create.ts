@@ -1,65 +1,86 @@
-// pages/api/job/create.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createStory } from '@modules/storyblok'
 import jwt from 'jsonwebtoken'
+import { createJob } from '@modules/jobs/db'
 import type { AuthPayload } from '@modules/auth'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
-const JOBS_FOLDER_ID = process.env.STORYBLOK_JOBS_FOLDER_ID
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Metodo non consentito' })
-  }
-
-  // 1. Validazione Token
-  const token = req.cookies.miia_auth_token
-  if (!token) return res.status(401).json({ message: 'Non autorizzato' })
-
-  try {
-    jwt.verify(token, JWT_SECRET) as AuthPayload
-  } catch {
-    return res.status(401).json({ message: 'Sessione non valida' })
-  }
-
-  // 2. Destrutturazione del body
-  const { title, companyName, companyId, area, description, tipo_contratto, location, skills } = req.body
-
-  if (!title || !companyName || !companyId) {
-    return res.status(400).json({ message: 'Titolo, Nome Azienda e ID Azienda sono obbligatori' })
+    res.setHeader('Allow', ['POST'])
+    return res.status(405).json({ message: `Metodo ${req.method} non consentito` })
   }
 
   try {
-    const cleanCompanyName = companyName.toLowerCase().replace(/[^a-z0-9]/g, '-')
-    const cleanTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-')
-    const uniqueSlug = `${cleanCompanyName}-${cleanTitle}-${Date.now()}`
-
-    // 3. Costruzione del Content Allineato allo Schema 'job'
-    const jobContent = {
-      component: 'job',
-      title: title.trim(),
-      description: description?.trim() || '',
-      area: area || '',
-      tipo_contratto: tipo_contratto || '',
-      location: location || '',
-      skills: skills || [],
-      company: companyId,
-      business: companyId,
+    const token = req.cookies['miia_auth_token']
+    if (!token) {
+      return res.status(401).json({ message: 'Non autorizzato: Sessione mancante' })
     }
 
-    // 4. Creazione su Storyblok (In stato BOZZA / DRAFT)
-    await createStory({
-      name: `${companyName} - ${title}`,
-      slug: uniqueSlug,
-      component: 'job',
-      folderId: JOBS_FOLDER_ID,
-      content: jobContent,
-      publish: false, // 👈 Salvata in Draft
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+
+    if (decoded.tipo_utente !== 'Azienda') {
+      return res.status(403).json({ message: 'Accesso negato: Solamente le aziende possono pubblicare annunci' })
+    }
+
+    const {
+      title,
+      description,
+      provincie,
+      tipo_contratto,
+      ral,
+      orari_lavoro,
+      trasferte,
+      grado_esperienza,
+      competenze,
+      lingue,
+    } = req.body
+
+    if (!title || !description) {
+      return res.status(400).json({ message: 'I campi titolo e descrizione sono obbligatori' })
+    }
+
+    // Normalizzazione array provincie (Triveneto)
+    const provincieArray = Array.isArray(provincie)
+      ? provincie.map((p: string) => String(p).trim().toUpperCase()).filter((p) => p.length === 2)
+      : []
+
+    if (provincieArray.length === 0) {
+      return res.status(400).json({ message: 'Seleziona almeno una provincia del Triveneto' })
+    }
+
+    const competenzeArray = Array.isArray(competenze)
+      ? competenze.map((c: string) => String(c).trim()).filter(Boolean)
+      : []
+
+    const lingueArray = Array.isArray(lingue)
+      ? lingue.map((l: string) => String(l).trim()).filter(Boolean)
+      : []
+
+    const newJob = await createJob({
+      company_email: decoded.email,
+      title: String(title).trim(),
+      description: String(description).trim(),
+      provincie: provincieArray,
+      tipo_contratto: tipo_contratto || 'indeterminato',
+      ral: ral ? String(ral).trim() : '',
+      orari_lavoro: orari_lavoro || 'full_time',
+      trasferte: trasferte || 'no',
+      grado_esperienza: grado_esperienza || 'prima_esperienza',
+      competenze: competenzeArray,
+      lingue: lingueArray,
+      status: 'attiva',
     })
 
-    return res.status(200).json({ message: 'Inserzione creata con successo' })
+    return res.status(201).json({
+      message: 'Annuncio pubblicato con successo!',
+      job: newJob,
+    })
   } catch (error: any) {
-    console.error('[API Job Create Error]', error)
-    return res.status(500).json({ message: 'Errore durante la creazione dell\'inserzione' })
+    console.error('[API Create Job Error]', error)
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Sessione non valida o scaduta' })
+    }
+    return res.status(500).json({ message: 'Errore interno durante la creazione dell\'annuncio' })
   }
 }

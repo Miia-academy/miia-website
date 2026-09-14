@@ -1,111 +1,76 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createCompanyStory, uploadAssetToStoryblok } from '@modules/storyblok'
-import { upsertContact, trackEvent } from '@modules/brevo'
-import { generateMagicLink, type AuthPayload } from '@modules/auth'
+import { generateMagicLink, AuthPayload } from '@modules/auth'
+import { upsertContact, trackEvent, BrevoError } from '@modules/brevo'
+
+const BREVO_LIST_AZIENDE = 30
+
+interface RegisterCompanyBody {
+  email: string
+  nome: string             // Nome Azienda
+  contact_person?: string  // Referente
+  telefono?: string        // Nuovo campo telefono
+  redirectUrl?: string
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: `Metodo ${req.method} non consentito` })
+    return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const {
-    nome,
-    contact_person,
-    email,
-    sms = false,
-    newsletter = false,
-    logoBase64,
-    logoFileName,
-    logoMimeType,
-    redirectUrl,
-  } = req.body
+  const { email, nome, contact_person, telefono, redirectUrl }: RegisterCompanyBody = req.body
 
-  if (!nome || !email) {
-    return res.status(400).json({ message: 'Nome Azienda ed Email sono obbligatori' })
+  // 1. Validazione input (esclusiva per Aziende)
+  if (!email || !nome) {
+    return res.status(400).json({ message: 'Email e Nome Azienda sono obbligatori' })
   }
 
-  const cleanEmail = email.trim().toLowerCase()
+  const cleanEmail = String(email).trim().toLowerCase()
 
   try {
-    let logoUrl = ''
-
-    // 1. Upload Logo su Storyblok (se fornito)
-    if (logoBase64 && logoFileName) {
-      const buffer = Buffer.from(logoBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64')
-      logoUrl = await uploadAssetToStoryblok(buffer, logoFileName, logoMimeType || 'image/png')
-    }
-
-    // 2. Creazione della Story Azienda su Storyblok
-    const newStory = await createCompanyStory({
-      companyName: nome,
-      contactName: contact_person || '',
-      contactEmail: cleanEmail,
-      settore: 'interni',
-      logoUrl,
+    // 2. Sincronizzazione CRM Brevo + Assegnazione alla Lista #30
+    await upsertContact({
+      email: cleanEmail,
+      attributes: {
+        NOME_AZIENDA: nome,
+        REFERENTE: contact_person || '',
+        TELEFONO: telefono || '', // Salvataggio del telefono
+        SMS: telefono || '',      // Duplicato su SMS per compatibilità nativa con Brevo
+        TIPO_UTENTE: 'Azienda',
+      },
+      listIds: [BREVO_LIST_AZIENDE], // Inserimento forzato nella lista Aziende (#30)
     })
 
-    const storyblokId = String(newStory.id)
-    const storyblokUuid = String(newStory.uuid)
-
-    // 3. Costruzione Payload Utente per il Magic Link
-    const tokenPayload: AuthPayload = {
+    // 3. Payload e Magic Link per la sessione Azienda
+    const payload: AuthPayload = {
       email: cleanEmail,
+      tipo_utente: 'Azienda',
       company: nome,
       contact_person: contact_person || '',
-      storyblok_id: storyblokId,
-      storyblok_uuid: storyblokUuid,
-      tipo_utente: 'Azienda',
     }
 
-    // 4. Generazione del Magic Link
-    const magicLink = generateMagicLink(req, tokenPayload, redirectUrl)
+    const magicLinkUrl = generateMagicLink(req, payload, redirectUrl)
 
-    // 5. Estrazione Nome e Cognome del referente
-    let firstName = contact_person || nome
-    let lastName = ''
-    if (contact_person && contact_person.trim().includes(' ')) {
-      const parts = contact_person.trim().split(/\s+/)
-      firstName = parts[0]
-      lastName = parts.slice(1).join(' ')
-    }
-
-    // 6. Sync Anagrafica Brevo con gli attributi ufficiali dello schema
-    try {
-      await upsertContact({
-        email: cleanEmail,
-        attributes: {
-          NOME: firstName,
-          COGNOME: lastName,
-          AZIENDA: nome, // 👈 Usa AZIENDA invece di RAGIONE_SOCIALE
-          STORYBLOK_ID: storyblokId,
-          STORYBLOK_UUID: storyblokUuid,
-          ISCRIZIONE_NEWSLETTER: Boolean(newsletter), // 👈 Attributo ufficiale della tua lista
-        },
-      })
-
-      await trackEvent({
-        eventName: 'register_business',
-        email: cleanEmail,
-        properties: {
-          company_name: nome,
-          contact_person: contact_person || '',
-          storyblok_id: storyblokId,
-          storyblok_uuid: storyblokUuid,
-          magic_link: magicLink,
-          opt_in_newsletter: Boolean(newsletter),
-        },
-      })
-    } catch (brevoError) {
-      console.error('[Brevo Sync Error]', brevoError)
-    }
+    // 4. Invio evento Brevo per l'invio dell'email transazionale
+    await trackEvent({
+      eventName: 'magic_link_requested',
+      email: cleanEmail,
+      properties: {
+        magic_link: magicLinkUrl,
+        tipo_utente: 'Azienda',
+      },
+    })
 
     return res.status(200).json({
-      message: 'Registrazione avvenuta con successo! Ti abbiamo inviato una e-mail con il link per accedere.',
+      message: 'Registrazione aziendale completata! Controlla la tua email per accedere.',
     })
+
   } catch (error: any) {
-    console.error('[API Register Error]', error)
-    return res.status(500).json({
-      message: error?.message || 'Errore durante la registrazione aziendale',
-    })
+    console.error('[API Auth Register Business Error]', error)
+
+    if (error instanceof BrevoError) {
+      return res.status(error.status).json({ message: error.message })
+    }
+
+    return res.status(500).json({ message: 'Errore interno durante la registrazione' })
   }
 }

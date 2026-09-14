@@ -111,7 +111,8 @@ const tagClasses = tv({
       true: 'px-8',
     },
     hasBackground: {
-      true: 'relative z-0 py-0 min-h-cover [&_article]:backdrop-blur-sm [&_article]:rounded-3xl',
+      // Uso della tecnica pseudo-element con inset negativo
+      true: "relative z-0 py-0 min-h-cover [&_.text-description-blur]:relative [&_.text-description-blur]:z-0 [&_.text-description-blur::before]:content-[''] [&_.text-description-blur::before]:absolute [&_.text-description-blur::before]:-inset-4 [&_.text-description-blur::before]:-z-10 [&_.text-description-blur::before]:backdrop-blur-sm [&_.text-description-blur::before]:rounded-3xl",
     },
     singleSection: {
       true: 'min-h-cover',

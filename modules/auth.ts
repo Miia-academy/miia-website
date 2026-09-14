@@ -10,7 +10,7 @@ export interface AuthPayload {
   storyblok_uuid?: string    // UUID (es. "b6a76843-...") per relazioni (job.business)
   company?: string           // Nome Azienda
   contact_person?: string    // Persona di riferimento
-  tipo_utente?: 'Azienda' | 'Studente'
+  tipo_utente?: 'Azienda' | 'Studente' | 'Admin'
   name?: string              // Nome Studente
   surname?: string           // Cognome Studente
   cv_url?: string            // URL del Curriculum caricato su GCS
@@ -24,16 +24,17 @@ export function generateMagicLink(
   payload: AuthPayload,
   redirectUrl?: string
 ): string {
-  const protocol = req.headers['x-forwarded-proto'] || 'https'
   const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:9080'
+
+  // Rilevamento dinamico del protocollo (HTTP per localhost, HTTPS per Vercel/Prod)
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1')
+  const protocol = req.headers['x-forwarded-proto'] || (isLocalhost ? 'http' : 'https')
   const origin = `${protocol}://${host}`
 
-  // Token temporaneo da 15 minuti
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' })
   const encodedRedirect = redirectUrl ? encodeURIComponent(redirectUrl) : ''
 
-  return `${origin}/api/auth/verify?token=${token}${encodedRedirect ? `&redirect=${encodedRedirect}` : ''
-    }`
+  return `${origin}/api/auth/verify?token=${token}${encodedRedirect ? `&redirect=${encodedRedirect}` : ''}`
 }
 
 /**

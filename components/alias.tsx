@@ -14,6 +14,12 @@ interface AliasComponentProps {
   parent?: string
 }
 
+// Helper per pulire gli slug ed evitare doppi slash (//)
+const getCleanUrl = (url?: string | null): string | null => {
+  if (!url || url === '#') return null
+  return `/${url.replace(/^\/+/, '')}`
+}
+
 export default function Alias({ blok }: AliasComponentProps) {
   const { articles, events } = useDataContext()
 
@@ -72,7 +78,6 @@ export default function Alias({ blok }: AliasComponentProps) {
       },
     })
 
-    // 1. Estrazione del link diretta dalla proprietà dell'evento
     const rawPage = selectedEvent.page as any
     const pageUrl =
       rawPage?.cached_url ||
@@ -80,7 +85,7 @@ export default function Alias({ blok }: AliasComponentProps) {
       rawPage?.url ||
       (typeof rawPage === 'string' ? rawPage : null)
 
-    const cleanUrl = pageUrl && pageUrl !== '#' ? (pageUrl.startsWith('/') ? pageUrl : `/${pageUrl}`) : null
+    const cleanUrl = getCleanUrl(pageUrl)
     const submitForms = (blok.submit as FormBlok[]) || []
 
     return (
@@ -138,7 +143,6 @@ export default function Alias({ blok }: AliasComponentProps) {
               overrides: Typography({ theme: 'dark' }),
             })}
 
-          {/* 2. Ripristino del Bottone "Vai alla pagina" */}
           {cleanUrl && submitForms.length === 0 && (
             <div className="pt-2">
               <NextLink
@@ -167,7 +171,7 @@ export default function Alias({ blok }: AliasComponentProps) {
   }
 
   if (isArticle && selectedArticle) {
-    const articleSlug = selectedArticle.fullSlug ? `/${selectedArticle.fullSlug}` : '#'
+    const articleSlug = getCleanUrl(selectedArticle.fullSlug || selectedArticle.slug) || '#'
 
     return (
       <article

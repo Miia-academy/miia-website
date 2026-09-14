@@ -4,91 +4,108 @@ import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 import type { AuthPayload } from '@modules/auth'
 import { getContact } from '@modules/brevo'
 
+const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || 30
+const BREVO_LIST_STUDENTI = Number(process.env.BREVO_STUDENT_LIST_ID) || 42
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+
+const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
+const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' })
+    return res.status(405).json({ error: 'Metodo non consentito' })
   }
 
   const { token, redirect } = req.query
 
   if (!token || typeof token !== 'string') {
-    return res.redirect('/?error=missing_token')
+    console.error('[VERIFY API] Token mancante nella query string.')
+    return res.redirect('/aziende/login?error=missing_token')
   }
 
   try {
-    // 1. Decodifica del token temporaneo
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
 
-    if (!decoded.email) {
-      return res.redirect('/?error=invalid_payload')
+    if (!decoded || !decoded.email) {
+      console.error('[VERIFY API] Payload del token non valido o email mancante.')
+      return res.redirect('/aziende/login?error=invalid_payload')
     }
 
     const cleanEmail = decoded.email.trim().toLowerCase()
 
-    // 2. Recupero dati e inferenza del ruolo da Brevo
-    let storyblokId = decoded.storyblok_id || ''
-    let storyblokUuid = decoded.storyblok_uuid || ''
+    // Estensione del tipo per supportare 'Admin' ed evitare l'errore TypeScript
+    let tipoUtente: 'Azienda' | 'Studente' | 'Admin' = decoded.tipo_utente || 'Studente'
     let company = decoded.company || ''
     let contactPerson = decoded.contact_person || ''
     let name = decoded.name || ''
     let surname = decoded.surname || ''
-    let tipoUtente: 'Azienda' | 'Studente' = decoded.tipo_utente || 'Azienda'
+    let cvUrl = decoded.cv_url || ''
 
     try {
       const contact = await getContact({ identifier: cleanEmail })
-      const attrs = contact.attributes || {}
+      const attrs = contact?.attributes || {}
 
-      storyblokId = String(attrs.STORYBLOK_ID || attrs.storyblok_id || storyblokId)
-      storyblokUuid = String(attrs.STORYBLOK_UUID || attrs.storyblok_uuid || storyblokUuid)
+      const rawListIds: any[] = Array.isArray(contact?.listIds) ? contact.listIds : []
+      const listIds = rawListIds.map((id) => Number(id))
 
-      // 🔍 DEDUZIONE RUOLO SOLIDA: Se esiste l'attributo AZIENDA, è un'Azienda, altrimenti uno Studente
-      const aziendaName = attrs.AZIENDA || attrs.azienda || company
-      if (aziendaName && aziendaName.trim() !== '') {
+      const isAziendaList = listIds.includes(BREVO_LIST_AZIENDE) || attrs.TIPO_UTENTE === 'Azienda'
+      const isStudenteList = listIds.includes(BREVO_LIST_STUDENTI) || attrs.TIPO_UTENTE === 'Studente'
+
+      if (decoded.tipo_utente === 'Azienda' || isAziendaList) {
         tipoUtente = 'Azienda'
-        company = aziendaName
-        contactPerson = attrs.NOME ? `${attrs.NOME} ${attrs.COGNOME || ''}`.trim() : contactPerson
-      } else {
+        company = attrs.NOME_AZIENDA || attrs.AZIENDA || attrs.COMPANY || company
+        contactPerson = attrs.REFERENTE || attrs.CONTACT_PERSON || attrs.NOME || contactPerson
+      } else if (isStudenteList) {
         tipoUtente = 'Studente'
-        name = attrs.NOME || attrs.nome || ''
-        surname = attrs.COGNOME || attrs.cognome || ''
+        name = attrs.FIRSTNAME || attrs.NOME || name
+        surname = attrs.LASTNAME || attrs.COGNOME || surname
+        cvUrl = attrs.CV_URL || attrs.CV || cvUrl
       }
     } catch (brevoErr) {
-      console.warn('[VERIFY API] Impossibile recuperare il contatto da Brevo, uso i dati di fallback del token:', brevoErr)
+      console.warn('[VERIFY API] Errore fetch Brevo, uso fallback token:', brevoErr)
     }
 
-    // 3. Ricostruzione del sessionPayload completo
     const sessionPayload: AuthPayload = {
       email: cleanEmail,
-      storyblok_id: storyblokId,
-      storyblok_uuid: storyblokUuid,
       tipo_utente: tipoUtente,
-      company,
-      contact_person: contactPerson,
-      name,
-      surname,
+      ...(tipoUtente === 'Azienda'
+        ? { company, contact_person: contactPerson }
+        : { name, surname, cv_url: cvUrl }),
     }
 
-    // 4. Generazione Token di Sessione
     const sessionToken = jwt.sign(sessionPayload, JWT_SECRET, {
-      expiresIn: AUTH_JWT_EXPIRES_IN,
+      expiresIn: SAFE_EXPIRES_IN,
     })
 
     const encodedUserData = encodeURIComponent(JSON.stringify(sessionPayload))
-    const isProd = process.env.NODE_ENV === 'production'
 
-    // 5. Impostazione DOPPIO COOKIE (HttpOnly + Frontend UI)
+    const protocol = req.headers['x-forwarded-proto'] || 'http'
+    const isSecure = process.env.NODE_ENV === 'production' || protocol === 'https'
+
+    const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${SAFE_MAX_AGE}${isSecure ? '; Secure' : ''}`
+
     res.setHeader('Set-Cookie', [
-      `miia_auth_token=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
-      `miia_user=${encodedUserData}; Path=/; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
+      `miia_auth_token=${sessionToken}; HttpOnly; ${cookieOptions}`,
+      `miia_user=${encodedUserData}; ${cookieOptions}`,
     ])
 
-    const destination =
-      typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/'
+    const defaultDestination = tipoUtente === 'Azienda' ? '/aziende/profilo' : '/studenti/profilo'
+    let destination = defaultDestination
+
+    if (
+      typeof redirect === 'string' &&
+      redirect.startsWith('/') &&
+      !redirect.startsWith('//') &&
+      redirect !== '/'
+    ) {
+      destination = redirect
+    }
+
+    console.log(`[VERIFY API] Login completato con successo per ${cleanEmail}. Redirect a: ${destination}`)
     return res.redirect(destination)
+
   } catch (error) {
-    console.error('[VERIFY API] Token non valido o scaduto:', error)
-    return res.redirect('/?error=token_expired_or_invalid')
+    console.error('[VERIFY API Error]:', error)
+    return res.redirect('/aziende/login?error=token_expired_or_invalid')
   }
 }

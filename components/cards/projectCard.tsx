@@ -11,10 +11,10 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const projectSlug = project.fullSlug ? `/${project.fullSlug}` : '#'
+  const cleanSlug = `/${String(project.fullSlug || project.slug || '').replace(/^\/+/, '')}`
+  const coverAsset = project.cover || project.cover_image
 
-  // Formattatore legato alle regole tipografiche di progetto
-  const baseTypography = Typography({ theme: 'light' })
+  const baseTypography = Typography({ theme: 'dark' })
 
   const cardTypographyOverrides = {
     ...baseTypography,
@@ -32,17 +32,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Card
       as={NextLink}
-      href={projectSlug}
+      href={cleanSlug}
       isPressable
       className="group relative flex aspect-[4/3] h-full w-full flex-col justify-end overflow-hidden rounded-2xl border-none bg-neutral-900 shadow-inner sm:min-h-[320px]"
     >
       {/* 1. Sfondo Immagine */}
       <div className="absolute inset-0 z-0 h-full w-full">
-        {project.cover?.filename ? (
+        {coverAsset?.filename ? (
           <Image
             removeWrapper
-            src={project.cover.filename}
-            alt={project.cover.alt || project.title || ''}
+            src={coverAsset.filename}
+            alt={coverAsset.alt || project.title || project.name || ''}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             radius="none"
           />
@@ -53,10 +53,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         )}
       </div>
 
-      {/* 2. Sfumatura Oscurante (Gradiente per il contrasto dei testi) */}
+      {/* 2. Sfumatura Oscurante */}
       <div className="absolute inset-0 z-10 bg-gradient-to-tr from-black/80 via-black/30 to-transparent to-70% mix-blend-multiply transition-opacity duration-500 group-hover:opacity-90" />
 
-      {/* 3. Layer di Blur Graduale Angolare (Senza box o cornici) */}
+      {/* 3. Layer di Blur Graduale */}
       <div className={blurOverlayClasses()} />
 
       {/* 4. Contenuto Testuale */}
@@ -89,13 +89,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   )
 }
 
-// -- Tailwind Variants per il layer di Blur --
 const blurOverlayClasses = tv({
   base: [
     'absolute inset-0 z-20 pointer-events-none',
-    'backdrop-blur-sm', // Blur leggero
-    'bg-black/10', // Leggero tint scuro per ammorbidire
-    // Sfumatura Angolare: parte forte in basso a sinistra (black) e sfuma verso il centro/alto (transparent)
+    'backdrop-blur-sm',
+    'bg-black/10',
     '[mask-image:linear-gradient(to_top_right,black_0%,black_25%,transparent_65%)]',
     '[-webkit-mask-image:linear-gradient(to_top_right,black_0%,black_25%,transparent_65%)]',
   ],

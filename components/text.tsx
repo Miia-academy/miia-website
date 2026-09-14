@@ -70,7 +70,8 @@ export default function Text({ blok }: TextComponentProps) {
 }
 
 const titleClasses = tv({
-  base: 'space-y-2',
+  // Aggiunto relative z-10 per tenerlo sopra al backdrop-blur della descrizione
+  base: 'space-y-2 relative z-10',
   variants: {
     hide: {
       true: 'hidden sm:block',
@@ -79,7 +80,7 @@ const titleClasses = tv({
 })
 
 const descriptionClasses = tv({
-  base: 'space-y-2',
+  base: 'space-y-2 text-description-blur',
   variants: {
     hide: {
       true: 'hidden sm:block',
