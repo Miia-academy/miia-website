@@ -8,7 +8,9 @@ interface RegisterCompanyBody {
   email: string
   nome: string             // Nome Azienda
   contact_person?: string  // Referente
-  telefono?: string        // Nuovo campo telefono
+  sms?: string             // Numero cellulare per SMS / Telefono
+  telefono?: string        // Fallback da form client
+  logo_url?: string        // URL Logo Aziendale
   redirectUrl?: string
 }
 
@@ -17,40 +19,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const { email, nome, contact_person, telefono, redirectUrl }: RegisterCompanyBody = req.body
+  const { email, nome, contact_person, sms, telefono, logo_url, redirectUrl }: RegisterCompanyBody = req.body
 
-  // 1. Validazione input (esclusiva per Aziende)
   if (!email || !nome) {
     return res.status(400).json({ message: 'Email e Nome Azienda sono obbligatori' })
   }
 
   const cleanEmail = String(email).trim().toLowerCase()
+  const phoneValue = sms || telefono || ''
 
   try {
-    // 2. Sincronizzazione CRM Brevo + Assegnazione alla Lista #30
+    // 1. Sincronizzazione CRM Brevo con attributi aggiornati
     await upsertContact({
       email: cleanEmail,
       attributes: {
         NOME_AZIENDA: nome,
         REFERENTE: contact_person || '',
-        TELEFONO: telefono || '', // Salvataggio del telefono
-        SMS: telefono || '',      // Duplicato su SMS per compatibilità nativa con Brevo
+        SMS: phoneValue,
+        LOGO_URL: logo_url || '',
         TIPO_UTENTE: 'Azienda',
       },
-      listIds: [BREVO_LIST_AZIENDE], // Inserimento forzato nella lista Aziende (#30)
+      listIds: [BREVO_LIST_AZIENDE],
     })
 
-    // 3. Payload e Magic Link per la sessione Azienda
+    // 2. Payload Magic Link con i campi sms e logo_url
     const payload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: 'Azienda',
       company: nome,
       contact_person: contact_person || '',
+      sms: phoneValue,
+      logo_url: logo_url || '',
     }
 
     const magicLinkUrl = generateMagicLink(req, payload, redirectUrl)
 
-    // 4. Invio evento Brevo per l'invio dell'email transazionale
+    // 3. Tracciamento evento Brevo
     await trackEvent({
       eventName: 'magic_link_requested',
       email: cleanEmail,

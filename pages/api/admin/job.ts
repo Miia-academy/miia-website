@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { upsertContact } from '@modules/brevo'
-import { neon } from '@neondatabase/serverless'
+import { createJob } from '@modules/jobs/db'
 import type { AuthPayload } from '@modules/auth'
 
-const sql = neon(process.env.DATABASE_URL!)
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 const BREVO_LIST_AZIENDE = Number(process.env.BREVO_AZIENDE_LIST_ID) || 43
 
@@ -38,11 +37,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const normalizedEmail = company_email?.trim().toLowerCase()
 
-    if (!normalizedEmail || !title || !description || !provincie || provincie.length === 0) {
-      return res.status(400).json({ message: 'Email azienda, titolo, descrizione e provincia sono obbligatori.' })
+    const provincieArray = Array.isArray(provincie)
+      ? provincie.map((p: string) => String(p).trim().toUpperCase()).filter((p) => p.length === 2)
+      : []
+
+    if (!normalizedEmail || !title || !description || provincieArray.length === 0) {
+      return res.status(400).json({ message: 'Email azienda, titolo, descrizione e provincie sono obbligatori.' })
     }
 
-    // 1. Sincronizzazione Silenziosa Azienda su Brevo (Senza Magic Link o Flow di Registrazione)
+    // 1. Sincronizzazione Silenziosa Azienda su Brevo
     try {
       await upsertContact({
         email: normalizedEmail,
@@ -57,47 +60,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn('⚠️ Avviso Brevo: Creazione contatto azienda non completata:', brevoErr)
     }
 
-    // 2. Inserimento Job nel Database Neon
-    const provinciaPrincipale = provincie[0] || 'TV'
-
-    const rows = await sql`
-      INSERT INTO jobs (
-        title, 
-        description, 
-        company_email, 
-        provincia, 
-        provincie, 
-        tipo_contratto, 
-        ral, 
-        orari_lavoro, 
-        trasferte, 
-        grado_esperienza, 
-        competenze, 
-        lingue, 
-        status
-      )
-      VALUES (
-        ${title}, 
-        ${description}, 
-        ${normalizedEmail}, 
-        ${provinciaPrincipale}, 
-        ${JSON.stringify(provincie)}, 
-        ${tipo_contratto || 'indeterminato'}, 
-        ${ral || ''}, 
-        ${orari_lavoro || 'full_time'}, 
-        ${trasferte || 'no'}, 
-        ${grado_esperienza || 'prima_esperienza'}, 
-        ${JSON.stringify(competenze || [])}, 
-        ${JSON.stringify(lingue || [])}, 
-        'attiva'
-      )
-      RETURNING id, title, company_email, status, created_at
-    `
+    // 2. Inserimento Job nel DB Neon via DB Layer
+    const newJob = await createJob({
+      company_email: normalizedEmail,
+      title: String(title).trim(),
+      description: String(description).trim(),
+      provincie: provincieArray,
+      tipo_contratto: tipo_contratto || 'indeterminato',
+      ral: ral ? String(ral).trim() : '',
+      orari_lavoro: orari_lavoro || 'full_time',
+      trasferte: trasferte || 'no',
+      grado_esperienza: grado_esperienza || 'prima_esperienza',
+      competenze: Array.isArray(competenze) ? competenze : [],
+      lingue: Array.isArray(lingue) ? lingue : [],
+      status: 'attiva',
+    })
 
     return res.status(201).json({
       success: true,
       message: 'Inserzione creata con successo e assegnata all\'azienda.',
-      job: rows[0],
+      job: newJob,
     })
 
   } catch (error) {

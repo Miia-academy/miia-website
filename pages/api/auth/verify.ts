@@ -33,10 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const cleanEmail = decoded.email.trim().toLowerCase()
 
-    // Estensione del tipo per supportare 'Admin' ed evitare l'errore TypeScript
     let tipoUtente: 'Azienda' | 'Studente' | 'Admin' = decoded.tipo_utente || 'Studente'
     let company = decoded.company || ''
     let contactPerson = decoded.contact_person || ''
+    let sms = decoded.sms || ''
+    let logoUrl = decoded.logo_url || ''
     let name = decoded.name || ''
     let surname = decoded.surname || ''
     let cvUrl = decoded.cv_url || ''
@@ -55,6 +56,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tipoUtente = 'Azienda'
         company = attrs.NOME_AZIENDA || attrs.AZIENDA || attrs.COMPANY || company
         contactPerson = attrs.REFERENTE || attrs.CONTACT_PERSON || attrs.NOME || contactPerson
+        sms = attrs.SMS || attrs.TELEFONO || sms
+        logoUrl = attrs.LOGO_URL || attrs.LOGO || logoUrl
       } else if (isStudenteList) {
         tipoUtente = 'Studente'
         name = attrs.FIRSTNAME || attrs.NOME || name
@@ -69,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email: cleanEmail,
       tipo_utente: tipoUtente,
       ...(tipoUtente === 'Azienda'
-        ? { company, contact_person: contactPerson }
+        ? { company, contact_person: contactPerson, sms, logo_url: logoUrl }
         : { name, surname, cv_url: cvUrl }),
     }
 
