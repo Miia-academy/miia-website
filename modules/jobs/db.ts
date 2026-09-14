@@ -3,7 +3,6 @@ import type { Job, JobStatus, JobWithApplicantsCount, CreateJobInput, UpdateJobI
 
 const sql = neon(process.env.DATABASE_URL!)
 
-// 1. Recupera tutte le offerte attive per la bacheca pubblica
 export async function getActiveJobs(): Promise<Job[]> {
   const rows = await sql`
     SELECT 
@@ -18,7 +17,6 @@ export async function getActiveJobs(): Promise<Job[]> {
   return rows as Job[]
 }
 
-// 2. Recupera i dettagli di un singolo job tramite UUID
 export async function getJobById(id: string): Promise<Job | null> {
   const rows = await sql`
     SELECT 
@@ -33,7 +31,6 @@ export async function getJobById(id: string): Promise<Job | null> {
   return (rows[0] as Job) || null
 }
 
-// 3. Recupera le inserzioni dell'azienda con il conteggio dei candidati
 export async function getBusinessJobs(companyEmail: string): Promise<JobWithApplicantsCount[]> {
   const rows = await sql`
     SELECT 
@@ -54,7 +51,9 @@ export async function getBusinessJobs(companyEmail: string): Promise<JobWithAppl
       j.updated_at,
       COUNT(a.id)::int AS applicant_count
     FROM jobs j
-    LEFT JOIN applications a ON a.job_id = j.id
+    LEFT JOIN applications a 
+      ON a.job_id = j.id 
+     AND a.status != 'bozza' -- oppure AND a.status IN ('in_valutazione', 'accettata', 'rifiutata')
     WHERE j.company_email = ${companyEmail} 
       AND j.status != 'eliminata'
     GROUP BY j.id
@@ -63,16 +62,15 @@ export async function getBusinessJobs(companyEmail: string): Promise<JobWithAppl
   return rows as JobWithApplicantsCount[]
 }
 
-// 4. Inserimento di una nuova offerta di lavoro
 export async function createJob(data: CreateJobInput): Promise<Job> {
-  // Deduplichiamo e puliamo gli array prima dell'inserimento
-  const competenzeArray = data.competenze && data.competenze.length > 0
-    ? Array.from(new Set(data.competenze.map(s => s.trim())))
-    : []
-  const provincieArray = data.provincie && data.provincie.length > 0 ? data.provincie : []
-  const lingueArray = data.lingue && data.lingue.length > 0
-    ? Array.from(new Set(data.lingue.map(s => s.trim())))
-    : []
+  // Fallback sicuro a array vuoto per evitare l'errore 'possibly undefined'
+  const competenzeArray = Array.from(
+    new Set((data.competenze ?? []).map((s) => s.trim()).filter(Boolean))
+  )
+  const provincieArray = data.provincie ?? []
+  const lingueArray = Array.from(
+    new Set((data.lingue ?? []).map((s) => s.trim()).filter(Boolean))
+  )
 
   const rows = await sql`
     INSERT INTO jobs (
@@ -91,19 +89,22 @@ export async function createJob(data: CreateJobInput): Promise<Job> {
   return rows[0] as Job
 }
 
-// 5. Aggiornamento completo di un'inserzione
 export async function updateJob(
   id: string,
   companyEmail: string,
   data: UpdateJobInput
 ): Promise<Job | null> {
-  // Deduplichiamo e puliamo gli array prima dell'aggiornamento
-  const competenzeArray = data.competenze && data.competenze.length > 0
-    ? Array.from(new Set(data.competenze.map(s => s.trim())))
+  const hasProvincie = Array.isArray(data.provincie)
+  const provincieArray = data.provincie ?? []
+
+  const hasCompetenze = Array.isArray(data.competenze)
+  const competenzeArray = hasCompetenze
+    ? Array.from(new Set((data.competenze ?? []).map((s) => s.trim()).filter(Boolean)))
     : []
-  const provincieArray = data.provincie && data.provincie.length > 0 ? data.provincie : []
-  const lingueArray = data.lingue && data.lingue.length > 0
-    ? Array.from(new Set(data.lingue.map(s => s.trim())))
+
+  const hasLingue = Array.isArray(data.lingue)
+  const lingueArray = hasLingue
+    ? Array.from(new Set((data.lingue ?? []).map((s) => s.trim()).filter(Boolean)))
     : []
 
   const rows = await sql`
@@ -111,14 +112,14 @@ export async function updateJob(
     SET 
       title = COALESCE(${data.title}, title),
       description = COALESCE(${data.description}, description),
-      provincie = ${provincieArray},
+      provincie = CASE WHEN ${hasProvincie} THEN ${provincieArray} ELSE provincie END,
       tipo_contratto = COALESCE(${data.tipo_contratto}, tipo_contratto),
-      ral = ${data.ral || null},
+      ral = COALESCE(${data.ral}, ral),
       orari_lavoro = COALESCE(${data.orari_lavoro}, orari_lavoro),
       trasferte = COALESCE(${data.trasferte}, trasferte),
       grado_esperienza = COALESCE(${data.grado_esperienza}, grado_esperienza),
-      competenze = ${competenzeArray},
-      lingue = ${lingueArray},
+      competenze = CASE WHEN ${hasCompetenze} THEN ${competenzeArray} ELSE competenze END,
+      lingue = CASE WHEN ${hasLingue} THEN ${lingueArray} ELSE lingue END,
       updated_at = NOW()
     WHERE id = ${id} AND company_email = ${companyEmail} AND status != 'eliminata'
     RETURNING *
@@ -126,7 +127,6 @@ export async function updateJob(
   return (rows[0] as Job) || null
 }
 
-// Alias per retrocompatibilità se usato altrove
 export const updateJobDetails = async (
   id: string,
   companyEmail: string,
@@ -136,7 +136,6 @@ export const updateJobDetails = async (
   return Boolean(result)
 }
 
-// 6. Cambia solo lo stato di un'offerta (es. 'attiva' <-> 'chiusa')
 export async function updateJobStatus(id: string, companyEmail: string, status: JobStatus): Promise<boolean> {
   const rows = await sql`
     UPDATE jobs
@@ -147,7 +146,6 @@ export async function updateJobStatus(id: string, companyEmail: string, status: 
   return rows.length > 0
 }
 
-// 7. Eliminazione logica (Soft Delete)
 export async function deleteJob(id: string, companyEmail: string): Promise<boolean> {
   const rows = await sql`
     UPDATE jobs

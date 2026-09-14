@@ -10,12 +10,13 @@ export interface AuthPayload {
   storyblok_uuid?: string    // UUID (es. "b6a76843-...") per relazioni (job.business)
   company?: string           // Nome Azienda
   contact_person?: string    // Persona di riferimento
+  sms?: string               // Numero di cellulare / SMS (campo nativo Brevo)
+  logo_url?: string          // URL del Logo aziendale
   tipo_utente?: 'Azienda' | 'Studente' | 'Admin'
   name?: string              // Nome Studente
   surname?: string           // Cognome Studente
   cv_url?: string            // URL del Curriculum caricato su GCS
 }
-
 /**
  * Genera l'URL del Magic Link integrando l'intero AuthPayload nel JWT
  */
