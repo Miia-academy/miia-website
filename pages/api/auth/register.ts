@@ -8,6 +8,7 @@ interface RegisterCompanyBody {
   email: string
   nome: string             // Nome Azienda
   contact_person?: string  // Referente
+  telefono?: string        // Nuovo campo telefono
   redirectUrl?: string
 }
 
@@ -16,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const { email, nome, contact_person, redirectUrl }: RegisterCompanyBody = req.body
+  const { email, nome, contact_person, telefono, redirectUrl }: RegisterCompanyBody = req.body
 
   // 1. Validazione input (esclusiva per Aziende)
   if (!email || !nome) {
@@ -32,9 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       attributes: {
         NOME_AZIENDA: nome,
         REFERENTE: contact_person || '',
+        TELEFONO: telefono || '', // Salvataggio del telefono
+        SMS: telefono || '',      // Duplicato su SMS per compatibilità nativa con Brevo
         TIPO_UTENTE: 'Azienda',
       },
-      listIds: [BREVO_LIST_AZIENDE], // 👈 Inserimento forzato nella lista Aziende (#30)
+      listIds: [BREVO_LIST_AZIENDE], // Inserimento forzato nella lista Aziende (#30)
     })
 
     // 3. Payload e Magic Link per la sessione Azienda

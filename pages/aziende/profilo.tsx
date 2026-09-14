@@ -4,10 +4,11 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getBusinessJobs } from '@modules/jobs/db'
-import type { JobWithApplicantsCount } from '@modules/jobs/types'
+import type { Job, JobWithApplicantsCount } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
 import {
   Input,
+  Textarea,
   Button,
   Card,
   CardBody,
@@ -21,10 +22,10 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter
+  ModalFooter,
+  Chip,
 } from '@heroui/react'
-import { CreateJobModal } from '@components/business/CreateJobModal'
-import { UpdateJobModal } from '@components/business/UpdateJobModal'
+import { JobFormModal } from '@components/business/JobFormModal'
 import { DeleteJobModal } from '@components/business/DeleteJobModal'
 import { ApplicationsModal } from '@components/business/ApplicationsModal'
 
@@ -32,9 +33,12 @@ interface BusinessProfileDashboardProps {
   user: {
     email: string
     company: string
-    name: string
-    surname: string
-    vatNumber: string
+    contactPerson: string
+    telefono: string
+    indirizzo: string
+    website: string
+    description: string
+    logo_url: string
   }
   initialJobs: JobWithApplicantsCount[]
 }
@@ -44,40 +48,88 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env
 export default function BusinessProfileDashboard({ user, initialJobs }: BusinessProfileDashboardProps) {
   const router = useRouter()
 
-  // Stato form profilo aziendale
-  const [profileLoading, setProfileLoading] = useState(false)
-  const [form, setForm] = useState({
+  // 1. Stato dei dati confermati (mostrati in UI)
+  const [profileData, setProfileData] = useState({
     company: user.company || '',
-    name: user.name || '',
-    surname: user.surname || '',
-    vatNumber: user.vatNumber || '',
+    contactPerson: user.contactPerson || '',
+    telefono: user.telefono || '',
+    indirizzo: user.indirizzo || '',
+    website: user.website || '',
+    description: user.description || '',
+    logo_url: user.logo_url || '',
   })
 
-  // Stati per le modali di gestione inserzioni
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [isUpdateOpen, setIsUpdateOpen] = useState(false)
+  // 2. Stato temporaneo per il form nella modale
+  const [editForm, setEditForm] = useState(profileData)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [profileLoading, setProfileLoading] = useState(false)
+
+  // 3. Stati Modali
+  const [isProfileFormOpen, setIsProfileFormOpen] = useState(false)
+  const [isJobFormOpen, setIsJobFormOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false)
 
-  const [selectedJob, setSelectedJob] = useState<any | null>(null)
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-
-  // Feedback Alert UI Modal
   const [alertInfo, setAlertInfo] = useState({ isOpen: false, title: '', message: '', isError: false })
 
+  // ==========================================
+  // HANDLERS
+  // ==========================================
   const showAlert = (title: string, message: string, isError = false) => {
     setAlertInfo({ isOpen: true, title, message, isError })
   }
 
-  // 1. Aggiornamento Profilo Aziendale (Sync su Brevo CRM)
+  const handleOpenProfileModal = () => {
+    setEditForm(profileData) // Reset form ai dati salvati
+    setLogoFile(null)
+    setIsProfileFormOpen(true)
+  }
+
+  const handleOpenCreate = () => {
+    setSelectedJob(null)
+    setIsJobFormOpen(true)
+  }
+
+  const handleOpenEdit = (job: Job) => {
+    setSelectedJob(job)
+    setIsJobFormOpen(true)
+  }
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setProfileLoading(true)
 
     try {
+      let logoBase64 = '', logoFileName = '', logoMimeType = ''
+      if (logoFile) {
+        if (logoFile.size > 3 * 1024 * 1024) {
+          showAlert('Errore', 'Il logo non può superare i 3MB.', true)
+          setProfileLoading(false)
+          return
+        }
+
+        logoBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(logoFile)
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = (error) => reject(error)
+        })
+        logoFileName = logoFile.name
+        logoMimeType = logoFile.type
+      }
+
       const payload = {
-        nome: form.company,
-        contact_person: `${form.name} ${form.surname}`.trim(),
+        companyName: editForm.company,
+        contactPerson: editForm.contactPerson,
+        telefono: editForm.telefono,
+        indirizzo: editForm.indirizzo,
+        website: editForm.website,
+        description: editForm.description,
+        logoBase64,
+        logoFileName,
+        logoMimeType,
       }
 
       const res = await fetch('/api/user/business', {
@@ -86,20 +138,25 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
         body: JSON.stringify(payload),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
-        showAlert('Successo', 'Dati aziendali aggiornati con successo!')
+        setProfileData({
+          ...editForm,
+          logo_url: data.user?.logo_url || profileData.logo_url
+        })
+        showAlert('Successo', 'Dati aziendali salvati con successo!')
+        setIsProfileFormOpen(false)
       } else {
-        const data = await res.json()
-        showAlert('Errore', data.message || 'Errore durante l\'aggiornamento del profilo.', true)
+        showAlert('Errore', data.message || 'Errore durante l\'aggiornamento.', true)
       }
     } catch {
-      showAlert('Errore di Connessione', 'Riprova più tardi.', true)
+      showAlert('Errore', 'Connessione fallita. Riprova.', true)
     } finally {
       setProfileLoading(false)
     }
   }
 
-  // 2. Toggle Stato Inserzione (Attiva / Chiusa)
   const handleToggleStatus = async (jobId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'attiva' ? 'chiusa' : 'attiva'
     setActionLoading(jobId)
@@ -114,294 +171,264 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
       if (!res.ok) throw new Error()
       router.replace(router.asPath)
     } catch {
-      showAlert('Errore', 'Impossibile aggiornare lo stato dell\'inserzione.', true)
+      showAlert('Errore', 'Impossibile cambiare lo stato dell\'inserzione.', true)
     } finally {
       setActionLoading(null)
     }
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
-      {/* Header Dashboard */}
-      <div className="mx-auto max-w-6xl mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-neutral-200 pb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-            Area Riservata Azienda
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Azienda: <span className="font-semibold text-neutral-800">{user.company || user.email}</span>
-          </p>
+    <div className="min-h-screen bg-neutral-50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
+      {/* Header Responsivo */}
+      <div className="mx-auto max-w-6xl mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6 border-b border-neutral-200 pb-6">
+        <div className="flex items-center gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 truncate">Area Azienda</h1>
+            <p className="mt-0.5 text-sm text-neutral-500 truncate">
+              Gestisci le tue inserzioni e le candidature
+            </p>
+          </div>
         </div>
-        <Button
-          onPress={() => setIsCreateOpen(true)}
-          className="bg-[#009245] text-white font-bold shadow-sm"
-        >
+        <Button onPress={handleOpenCreate} className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-sm shrink-0 h-11">
           + Nuova Inserzione
         </Button>
       </div>
 
-      <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
 
-        {/* Colonna Sinistra (1/3): Form Profilo e Referente */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* Colonna SX: Profilo Operativo (Invertito su mobile: order-2) */}
+        <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
           <Card shadow="sm" className="border border-neutral-200">
-            <CardHeader className="pt-6 px-6 font-bold text-xl text-neutral-900">
-              Dati Anagrafici
+            <CardHeader className="pt-6 px-5 sm:px-6 font-bold text-xl text-neutral-900 flex justify-between items-center">
+              <span>Profilo Operativo</span>
             </CardHeader>
             <Divider className="my-2" />
-            <CardBody className="px-6 pb-6">
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase text-neutral-400 tracking-wider">Azienda</h3>
-                  <Input
-                    label="Email di Accesso"
-                    value={user.email}
-                    isReadOnly
-                    variant="flat"
-                    className="opacity-70"
-                  />
-                  <Input
-                    label="Ragione Sociale"
-                    isRequired
-                    value={form.company}
-                    onValueChange={(v) => setForm({ ...form, company: v })}
-                    variant="flat"
-                  />
-                  <Input
-                    label="Partita IVA"
-                    value={form.vatNumber}
-                    onValueChange={(v) => setForm({ ...form, vatNumber: v })}
-                    variant="flat"
-                  />
+
+            <CardBody className="px-5 sm:px-6 pb-6 space-y-6">
+              {/* Logo Preview */}
+              <div className="flex items-center gap-4">
+                {profileData.logo_url ? (
+                  <img src={profileData.logo_url} alt="Logo Azienda" className="w-16 h-16 rounded-xl object-contain border border-neutral-200 bg-white p-1 shrink-0 shadow-sm" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-neutral-100 flex items-center justify-center font-bold text-neutral-400 text-xl shrink-0 border border-neutral-200 border-dashed">
+                    {profileData.company ? profileData.company.substring(0, 2).toUpperCase() : 'AZ'}
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-lg font-bold text-neutral-900 leading-tight">{profileData.company || <span className="text-red-500 italic text-sm">Nome mancante</span>}</h2>
+                  <p className="text-xs text-neutral-500 font-mono mt-0.5">{user.email}</p>
+                </div>
+              </div>
+
+              {/* Dati Testuali */}
+              <div className="space-y-4 text-sm">
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Referente</span>
+                  <p className="font-medium text-neutral-800">{profileData.contactPerson || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                 </div>
 
-                <Divider className="my-3" />
-
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase text-neutral-400 tracking-wider">Referente</h3>
-                  <Input
-                    label="Nome Referente"
-                    value={form.name}
-                    onValueChange={(v) => setForm({ ...form, name: v })}
-                    variant="flat"
-                  />
-                  <Input
-                    label="Cognome Referente"
-                    value={form.surname}
-                    onValueChange={(v) => setForm({ ...form, surname: v })}
-                    variant="flat"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Telefono</span>
+                    <p className="font-medium text-neutral-800">{profileData.telefono || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Sito Web</span>
+                    {profileData.website ? (
+                      <a href={profileData.website.startsWith('http') ? profileData.website : `https://${profileData.website}`} target="_blank" rel="noreferrer" className="font-medium text-emerald-600 hover:underline truncate block">
+                        {profileData.website.replace(/^https?:\/\//, '')}
+                      </a>
+                    ) : (
+                      <span className="text-red-500 italic text-xs">Mancante</span>
+                    )}
+                  </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  isLoading={profileLoading}
-                  className="w-full bg-black text-white font-bold mt-4"
-                >
-                  Salva Modifiche Profilo
-                </Button>
-              </form>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Indirizzo Sede</span>
+                  <p className="font-medium text-neutral-800">{profileData.indirizzo || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                </div>
+
+                <div>
+                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Chi Siamo</span>
+                  {profileData.description ? (
+                    <p className="text-neutral-600 leading-relaxed line-clamp-4">{profileData.description}</p>
+                  ) : (
+                    <span className="text-red-500 italic text-xs">Descrizione mancante. I candidati non sapranno di cosa vi occupate.</span>
+                  )}
+                </div>
+              </div>
+
+              <Button onPress={handleOpenProfileModal} className="w-full bg-neutral-900 text-white font-bold h-11">
+                Modifica Profilo
+              </Button>
             </CardBody>
           </Card>
         </div>
 
-        {/* Colonna Destra (2/3): Tabella Inserzioni Minimal */}
-        <div className="lg:col-span-2">
-          <Card shadow="sm" className="border border-neutral-200 min-h-full">
-            <CardHeader className="pt-6 px-6 font-bold text-xl text-neutral-900 border-b border-neutral-100 pb-4">
-              Gestione Inserzioni di Lavoro
-            </CardHeader>
-            <CardBody className="p-0 overflow-x-auto">
-              {initialJobs.length === 0 ? (
-                <div className="p-12 text-center text-neutral-500">
-                  <p className="mb-4">Nessun annuncio creato finora.</p>
-                  <Button
-                    onPress={() => setIsCreateOpen(true)}
-                    variant="flat"
-                    color="primary"
-                    className="font-semibold"
-                  >
-                    Pubblica la prima inserzione
-                  </Button>
+        <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
+          <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
+            <h2 className="font-bold text-xl text-neutral-900">Le Tue Inserzioni</h2>
+            <span className="text-sm text-neutral-500 font-medium">{initialJobs.length} {initialJobs.length === 1 ? 'Annuncio' : 'Annunci'}</span>
+          </div>
+
+          {initialJobs.length === 0 ? (
+            <div className="p-10 text-center border border-dashed border-neutral-300 rounded-2xl bg-white mt-4">
+              <p className="mb-4 text-neutral-500">Nessun annuncio creato finora.</p>
+              <Button onPress={handleOpenCreate} variant="flat" color="primary" className="font-semibold">
+                Pubblica la prima inserzione
+              </Button>
+            </div>
+          ) : (
+            /* Layout a singola colonna (flex-col) che si allarga al 100% */
+            <div className="flex flex-col gap-3 mt-4">
+              {initialJobs.map((job) => (
+                <div key={job.id} className="bg-white border border-neutral-200 rounded-xl p-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-neutral-300 hover:shadow transition-all">
+
+                  {/* Sinistra: Titolo e Provincia */}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/lavoro/inserzioni/${job.id}`}
+                      className="text-[17px] font-bold text-neutral-900 hover:text-[#009245] transition-colors leading-tight line-clamp-1 truncate block"
+                    >
+                      {job.title}
+                    </Link>
+                    <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mt-1">
+                      {job.provincie && job.provincie.length > 0 ? job.provincie.join(', ') : 'Triveneto'}
+                    </p>
+                  </div>
+
+                  {/* Destra: Candidati, Stato e Azioni */}
+                  <div className="flex items-center gap-4 sm:gap-6 shrink-0 border-t sm:border-t-0 border-neutral-100 pt-3 sm:pt-0 mt-1 sm:mt-0">
+                    <button
+                      onClick={() => { setSelectedJob(job); setIsApplicationsOpen(true); }}
+                      className="text-sm font-semibold text-[#009245] hover:underline whitespace-nowrap"
+                    >
+                      {job.applicant_count} {job.applicant_count === 1 ? 'Candidato' : 'Candidati'}
+                    </button>
+
+                    <Chip size="sm" color={job.status === 'attiva' ? 'success' : 'default'} variant="flat" className="shrink-0 font-medium">
+                      {job.status === 'attiva' ? 'Attiva' : 'Chiusa'}
+                    </Chip>
+
+                    <Dropdown placement="bottom-end">
+                      <DropdownTrigger>
+                        <Button isIconOnly size="sm" variant="light" className="text-neutral-500 hover:text-neutral-900 text-2xl font-bold min-w-8 w-8 h-8">
+                          &#8942;
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu aria-label="Azioni Inserzione">
+                        <DropdownItem key="status" onPress={() => handleToggleStatus(job.id, job.status)}>
+                          {job.status === 'attiva' ? 'Disattiva Annuncio' : 'Riattiva Annuncio'}
+                        </DropdownItem>
+                        <DropdownItem key="edit" onPress={() => handleOpenEdit(job)}>
+                          Modifica Inserzione
+                        </DropdownItem>
+                        <DropdownItem key="delete" className="text-danger" color="danger" onPress={() => { setSelectedJob(job); setIsDeleteOpen(true); }}>
+                          Elimina Inserzione
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
+                  </div>
+
                 </div>
-              ) : (
-                <table className="w-full text-left text-sm text-neutral-600">
-                  <thead className="bg-neutral-50 text-xs font-semibold uppercase text-neutral-400 border-b border-neutral-100">
-                    <tr>
-                      <th className="px-6 py-3.5 w-1/2">Titolo</th>
-                      <th className="px-4 py-3.5">Sede</th>
-                      <th className="px-4 py-3.5">Candidati</th>
-                      <th className="px-4 py-3.5">Stato</th>
-                      <th className="px-6 py-3.5 text-right"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-100">
-                    {initialJobs.map((job) => (
-                      <tr key={job.id} className="hover:bg-neutral-50/60 transition-colors">
-
-                        {/* Titolo più ampio e linkabile */}
-                        <td className="px-6 py-4 font-semibold text-neutral-900">
-                          <Link
-                            href={`/lavoro/inserzioni/${job.id}`}
-                            className="hover:text-[#009245] transition-colors line-clamp-1"
-                          >
-                            {job.title}
-                          </Link>
-                        </td>
-
-                        {/* Sede */}
-                        <td className="px-4 py-4 font-semibold uppercase text-neutral-500 text-xs">
-                          {job.provincia}
-                        </td>
-
-                        {/* Candidati pulito (click per aprire il modale) */}
-                        <td className="px-4 py-4">
-                          <button
-                            onClick={() => {
-                              setSelectedJob(job)
-                              setIsApplicationsOpen(true)
-                            }}
-                            className="text-xs font-semibold text-neutral-700 hover:text-black hover:underline focus:outline-none"
-                          >
-                            {job.applicant_count} {job.applicant_count === 1 ? 'candidato' : 'candidati'}
-                          </button>
-                        </td>
-
-                        {/* Stato con pallino minimale */}
-                        <td className="px-4 py-4">
-                          {job.status === 'attiva' ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                              Attiva
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400">
-                              <span className="w-2 h-2 rounded-full bg-neutral-300"></span>
-                              Chiusa
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Menu Azioni 3 puntini */}
-                        <td className="px-6 py-4 text-right">
-                          <Dropdown placement="bottom-end">
-                            <DropdownTrigger>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                isLoading={actionLoading === job.id}
-                                className="text-neutral-400 hover:text-neutral-700"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-                                </svg>
-                              </Button>
-                            </DropdownTrigger>
-                            <DropdownMenu aria-label="Azioni Inserzione">
-                              <DropdownItem
-                                key="applications"
-                                onPress={() => {
-                                  setSelectedJob(job)
-                                  setIsApplicationsOpen(true)
-                                }}
-                              >
-                                Vedi Candidati ({job.applicant_count})
-                              </DropdownItem>
-                              <DropdownItem
-                                key="status"
-                                onPress={() => handleToggleStatus(job.id, job.status)}
-                              >
-                                {job.status === 'attiva' ? 'Disattiva annuncio' : 'Attiva annuncio'}
-                              </DropdownItem>
-                              <DropdownItem
-                                key="edit"
-                                onPress={() => {
-                                  setSelectedJob(job)
-                                  setIsUpdateOpen(true)
-                                }}
-                              >
-                                Modifica inserzione
-                              </DropdownItem>
-                              <DropdownItem
-                                key="delete"
-                                className="text-danger"
-                                color="danger"
-                                onPress={() => {
-                                  setSelectedJob(job)
-                                  setIsDeleteOpen(true)
-                                }}
-                              >
-                                Elimina inserzione
-                              </DropdownItem>
-                            </DropdownMenu>
-                          </Dropdown>
-                        </td>
-
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </CardBody>
-          </Card>
+              ))}
+            </div>
+          )}
         </div>
-
       </div>
 
-      {/* Modale Creazione Inserzione */}
-      <CreateJobModal
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
+      {/* =========================================
+          MODALE MODIFICA PROFILO AZIENDALE
+      ========================================= */}
+      <Modal isOpen={isProfileFormOpen} onOpenChange={setIsProfileFormOpen} size="lg" scrollBehavior="inside" backdrop="blur">
+        <ModalContent>
+          {(onClose) => (
+            <form onSubmit={handleUpdateProfile} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <ModalHeader className="border-b border-neutral-100 px-6 py-4 text-xl font-bold">
+                Modifica Profilo
+              </ModalHeader>
+
+              <ModalBody className="py-6 px-4 sm:px-6 space-y-6">
+                <div className="space-y-4">
+                  <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Identità Aziendale</span>
+                  <Input label="Nome Azienda" isRequired value={editForm.company} onValueChange={(v) => setEditForm({ ...editForm, company: v })} variant="flat" />
+
+                  <div className="pt-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">Logo (PNG/JPG max 3MB)</label>
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                      className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <Divider className="my-1" />
+
+                <div className="space-y-4">
+                  <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Contatti & Sede</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label="Referente / Contatto" isRequired value={editForm.contactPerson} onValueChange={(v) => setEditForm({ ...editForm, contactPerson: v })} variant="flat" />
+                    <Input type="tel" label="Telefono (es. +39...)" value={editForm.telefono} onValueChange={(v) => setEditForm({ ...editForm, telefono: v })} variant="flat" />
+                  </div>
+                  <Input label="Indirizzo Sede" placeholder="Via/Piazza, Città, CAP" value={editForm.indirizzo} onValueChange={(v) => setEditForm({ ...editForm, indirizzo: v })} variant="flat" />
+                </div>
+
+                <Divider className="my-1" />
+
+                <div className="space-y-4">
+                  <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Presentazione</span>
+                  <Input type="url" label="Sito Web" placeholder="https://..." value={editForm.website} onValueChange={(v) => setEditForm({ ...editForm, website: v })} variant="flat" />
+                  <Textarea label="Chi Siamo" placeholder="Descrivi brevemente l'azienda per i candidati..." value={editForm.description} onValueChange={(v) => setEditForm({ ...editForm, description: v })} variant="flat" minRows={4} />
+                </div>
+              </ModalBody>
+
+              <ModalFooter className="border-t border-neutral-100 px-6 py-4">
+                <Button variant="flat" onPress={onClose} disabled={profileLoading} className="w-full sm:w-auto">
+                  Annulla
+                </Button>
+                <Button type="submit" isLoading={profileLoading} className="w-full sm:w-auto bg-black text-white font-bold shadow-sm">
+                  Salva Modifiche
+                </Button>
+              </ModalFooter>
+            </form>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Modali Job e Altri */}
+      <JobFormModal
+        isOpen={isJobFormOpen}
+        onOpenChange={setIsJobFormOpen}
+        onClose={() => { setIsJobFormOpen(false); setSelectedJob(null); }}
+        jobData={selectedJob}
         onSuccess={() => router.replace(router.asPath)}
         showAlert={showAlert}
       />
 
-      {/* Modale Modifica Inserzione */}
-      {selectedJob && (
-        <UpdateJobModal
-          isOpen={isUpdateOpen}
-          onOpenChange={setIsUpdateOpen}
-          onClose={() => {
-            setIsUpdateOpen(false)
-            setSelectedJob(null)
-          }}
-          jobData={selectedJob}
-          onSuccess={() => router.replace(router.asPath)}
-          showAlert={showAlert}
-        />
-      )}
-
-      {/* Modale Eliminazione Inserzione */}
       {selectedJob && (
         <DeleteJobModal
           isOpen={isDeleteOpen}
           onOpenChange={setIsDeleteOpen}
-          onClose={() => {
-            setIsDeleteOpen(false)
-            setSelectedJob(null)
-          }}
+          onClose={() => { setIsDeleteOpen(false); setSelectedJob(null); }}
           jobData={selectedJob}
           onSuccess={() => router.replace(router.asPath)}
           showAlert={showAlert}
         />
       )}
 
-      {/* Modale Consultazione Candidature */}
       {selectedJob && (
         <ApplicationsModal
           isOpen={isApplicationsOpen}
           onOpenChange={setIsApplicationsOpen}
-          onClose={() => {
-            setIsApplicationsOpen(false)
-            setSelectedJob(null)
-          }}
+          onClose={() => { setIsApplicationsOpen(false); setSelectedJob(null); }}
           job={selectedJob}
         />
       )}
 
-      {/* Modale Alert UI Feedback */}
+      {/* Alert Feedback Modal */}
       <Modal isOpen={alertInfo.isOpen} onOpenChange={(open) => setAlertInfo({ ...alertInfo, isOpen: open })} backdrop="blur">
         <ModalContent>
           {(onClose) => (
@@ -421,28 +448,34 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
           )}
         </ModalContent>
       </Modal>
-
     </div>
   )
 }
 
 // ============================================================================
-// SERVER-SIDE LOGIC
+// SERVER-SIDE LOGIC CON BLOCCHI TRY/CATCH ISOLATI
 // ============================================================================
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const token = context.req.cookies['miia_auth_token']
 
   if (!token) {
-    return { redirect: { destination: '/aziende/login?redirect=/aziende/profilo', permanent: false } }
+    return { redirect: { destination: '/aziende/login?redirectUrl=/aziende/profilo', permanent: false } }
+  }
+
+  let decoded: AuthPayload
+
+  try {
+    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+  } catch (err) {
+    console.error('❌ Errore JWT Profilo Azienda:', err)
+    return { redirect: { destination: '/aziende/login?redirectUrl=/aziende/profilo', permanent: false } }
+  }
+
+  if (decoded.tipo_utente !== 'Azienda') {
+    return { redirect: { destination: '/studenti/profilo', permanent: false } }
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
-
-    if (decoded.tipo_utente !== 'Azienda') {
-      return { redirect: { destination: '/', permanent: false } }
-    }
-
     const initialJobs = await getBusinessJobs(decoded.email)
 
     return {
@@ -450,14 +483,33 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         user: {
           email: decoded.email,
           company: decoded.company || '',
-          name: decoded.name || '',
-          surname: decoded.surname || '',
-          vatNumber: (decoded as any).vatNumber || '',
+          contactPerson: decoded.contact_person || (decoded as any).contactPerson || '',
+          telefono: (decoded as any).telefono || '',
+          indirizzo: (decoded as any).indirizzo || '',
+          website: (decoded as any).website || '',
+          description: (decoded as any).description || '',
+          logo_url: (decoded as any).logo_url || '',
         },
         initialJobs: JSON.parse(JSON.stringify(initialJobs)),
       },
     }
-  } catch {
-    return { redirect: { destination: '/aziende/login', permanent: false } }
+  } catch (dbError) {
+    console.error('❌ Errore Database in getBusinessJobs:', dbError)
+
+    return {
+      props: {
+        user: {
+          email: decoded.email,
+          company: decoded.company || '',
+          contactPerson: decoded.contact_person || (decoded as any).contactPerson || '',
+          telefono: (decoded as any).telefono || '',
+          indirizzo: (decoded as any).indirizzo || '',
+          website: (decoded as any).website || '',
+          description: (decoded as any).description || '',
+          logo_url: (decoded as any).logo_url || '',
+        },
+        initialJobs: [],
+      },
+    }
   }
 }

@@ -8,6 +8,10 @@ const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || 30
 const BREVO_LIST_STUDENTI = Number(process.env.BREVO_STUDENT_LIST_ID) || 42
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
+// Fallback di sicurezza: se l'import config fallisce, non rompiamo i cookie (7 giorni default)
+const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
+const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Metodo non consentito' })
@@ -16,20 +20,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { token, redirect } = req.query
 
   if (!token || typeof token !== 'string') {
-    return res.redirect('/?error=missing_token')
+    console.error('[VERIFY API] Token mancante nella query string.')
+    return res.redirect('/aziende/login?error=missing_token')
   }
 
   try {
-    // 1. Decodifica e verifica del token temporaneo del Magic Link
+    // 1. Decodifica token temporaneo dal Magic Link
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
 
     if (!decoded || !decoded.email) {
-      return res.redirect('/?error=invalid_payload')
+      console.error('[VERIFY API] Payload del token non valido o email mancante.')
+      return res.redirect('/aziende/login?error=invalid_payload')
     }
 
     const cleanEmail = decoded.email.trim().toLowerCase()
 
-    // 2. Recupero del profilo aggiornato da Brevo CRM
     let tipoUtente: 'Azienda' | 'Studente' = decoded.tipo_utente || 'Studente'
     let company = decoded.company || ''
     let contactPerson = decoded.contact_person || ''
@@ -37,49 +42,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let surname = decoded.surname || ''
     let cvUrl = decoded.cv_url || ''
 
+    // 2. Sincronizzazione anagrafica da Brevo CRM
     try {
       const contact = await getContact({ identifier: cleanEmail })
-      const attrs = contact.attributes || {}
-      const listIds: number[] = Array.isArray(contact.listIds) ? contact.listIds : []
+      const attrs = contact?.attributes || {}
 
-      if (listIds.includes(BREVO_LIST_AZIENDE) || attrs.TIPO_UTENTE === 'Azienda') {
+      const rawListIds: any[] = Array.isArray(contact?.listIds) ? contact.listIds : []
+      const listIds = rawListIds.map((id) => Number(id))
+
+      const isAziendaList = listIds.includes(BREVO_LIST_AZIENDE) || attrs.TIPO_UTENTE === 'Azienda'
+      const isStudenteList = listIds.includes(BREVO_LIST_STUDENTI) || attrs.TIPO_UTENTE === 'Studente'
+
+      if (decoded.tipo_utente === 'Azienda' || isAziendaList) {
         tipoUtente = 'Azienda'
         company = attrs.NOME_AZIENDA || attrs.AZIENDA || attrs.COMPANY || company
         contactPerson = attrs.REFERENTE || attrs.CONTACT_PERSON || attrs.NOME || contactPerson
-      } else if (listIds.includes(BREVO_LIST_STUDENTI) || attrs.TIPO_UTENTE === 'Studente') {
+      } else if (isStudenteList) {
         tipoUtente = 'Studente'
         name = attrs.FIRSTNAME || attrs.NOME || name
         surname = attrs.LASTNAME || attrs.COGNOME || surname
         cvUrl = attrs.CV_URL || attrs.CV || cvUrl
       }
     } catch (brevoErr) {
-      console.warn('[VERIFY API] Impossibile recuperare dati aggiornati da Brevo. Uso i dati del token:', brevoErr)
+      console.warn('[VERIFY API] Errore fetch Brevo, uso fallback token:', brevoErr)
     }
 
-    // 3. Generazione del payload di sessione pulito
+    // 3. Generazione Payload di Sessione Definitivo
     const sessionPayload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: tipoUtente,
       ...(tipoUtente === 'Azienda'
         ? { company, contact_person: contactPerson }
-        : { name, surname, cv_url: cvUrl })
+        : { name, surname, cv_url: cvUrl }),
     }
 
-    // 4. Generazione del JWT di sessione definitivo
+    // 4. Generazione del JWT di sessione
     const sessionToken = jwt.sign(sessionPayload, JWT_SECRET, {
-      expiresIn: AUTH_JWT_EXPIRES_IN,
+      expiresIn: SAFE_EXPIRES_IN,
     })
 
     const encodedUserData = encodeURIComponent(JSON.stringify(sessionPayload))
-    const isProd = process.env.NODE_ENV === 'production'
 
-    // 5. Scrittura dei Cookie di Sessione (30 giorni)
+    // Essendo tu in HTTPS (anche se in localhost), forziamo Secure se il protocollo è HTTPS
+    const protocol = req.headers['x-forwarded-proto'] || 'http'
+    const isSecure = process.env.NODE_ENV === 'production' || protocol === 'https'
+
+    // 5. Scrittura dei Cookie di Sessione (corretta la sintassi per evitare dangling semicolons)
+    const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${SAFE_MAX_AGE}${isSecure ? '; Secure' : ''}`
+
     res.setHeader('Set-Cookie', [
-      `miia_auth_token=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
-      `miia_user=${encodedUserData}; Path=/; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
+      `miia_auth_token=${sessionToken}; HttpOnly; ${cookieOptions}`,
+      `miia_user=${encodedUserData}; ${cookieOptions}`,
     ])
 
-    // 6. Destinazione dinamica per ruolo con protezione Open Redirect
+    // 6. Redirect alla destinazione corretta
     const defaultDestination = tipoUtente === 'Azienda' ? '/aziende/profilo' : '/studenti/profilo'
     let destination = defaultDestination
 
@@ -92,10 +108,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       destination = redirect
     }
 
+    console.log(`[VERIFY API] Login completato con successo per ${cleanEmail}. Redirect a: ${destination}`)
     return res.redirect(destination)
 
   } catch (error) {
-    console.error('[VERIFY API] Errore durante la verifica del token:', error)
-    return res.redirect('/?error=token_expired_or_invalid')
+    console.error('[VERIFY API Error]:', error)
+    return res.redirect('/aziende/login?error=token_expired_or_invalid')
   }
 }
