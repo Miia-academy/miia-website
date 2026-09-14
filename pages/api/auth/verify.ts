@@ -8,7 +8,6 @@ const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || 30
 const BREVO_LIST_STUDENTI = Number(process.env.BREVO_STUDENT_LIST_ID) || 42
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
-// Fallback di sicurezza: se l'import config fallisce, non rompiamo i cookie (7 giorni default)
 const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
 const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
@@ -25,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. Decodifica token temporaneo dal Magic Link
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
 
     if (!decoded || !decoded.email) {
@@ -35,14 +33,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const cleanEmail = decoded.email.trim().toLowerCase()
 
-    let tipoUtente: 'Azienda' | 'Studente' = decoded.tipo_utente || 'Studente'
+    // Estensione del tipo per supportare 'Admin' ed evitare l'errore TypeScript
+    let tipoUtente: 'Azienda' | 'Studente' | 'Admin' = decoded.tipo_utente || 'Studente'
     let company = decoded.company || ''
     let contactPerson = decoded.contact_person || ''
     let name = decoded.name || ''
     let surname = decoded.surname || ''
     let cvUrl = decoded.cv_url || ''
 
-    // 2. Sincronizzazione anagrafica da Brevo CRM
     try {
       const contact = await getContact({ identifier: cleanEmail })
       const attrs = contact?.attributes || {}
@@ -67,7 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn('[VERIFY API] Errore fetch Brevo, uso fallback token:', brevoErr)
     }
 
-    // 3. Generazione Payload di Sessione Definitivo
     const sessionPayload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: tipoUtente,
@@ -76,18 +73,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : { name, surname, cv_url: cvUrl }),
     }
 
-    // 4. Generazione del JWT di sessione
     const sessionToken = jwt.sign(sessionPayload, JWT_SECRET, {
       expiresIn: SAFE_EXPIRES_IN,
     })
 
     const encodedUserData = encodeURIComponent(JSON.stringify(sessionPayload))
 
-    // Essendo tu in HTTPS (anche se in localhost), forziamo Secure se il protocollo è HTTPS
     const protocol = req.headers['x-forwarded-proto'] || 'http'
     const isSecure = process.env.NODE_ENV === 'production' || protocol === 'https'
 
-    // 5. Scrittura dei Cookie di Sessione (corretta la sintassi per evitare dangling semicolons)
     const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${SAFE_MAX_AGE}${isSecure ? '; Secure' : ''}`
 
     res.setHeader('Set-Cookie', [
@@ -95,7 +89,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `miia_user=${encodedUserData}; ${cookieOptions}`,
     ])
 
-    // 6. Redirect alla destinazione corretta
     const defaultDestination = tipoUtente === 'Azienda' ? '/aziende/profilo' : '/studenti/profilo'
     let destination = defaultDestination
 
