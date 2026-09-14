@@ -1,4 +1,4 @@
-export type ApplicationStatus = 'in_revisione' | 'letta' | 'rifiutata' | string
+export type ApplicationStatus = 'in_revisione' | 'validata' | 'letta' | 'rifiutata' | string
 
 export interface Application {
   id: string

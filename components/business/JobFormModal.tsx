@@ -34,6 +34,7 @@ interface JobFormModalProps {
   jobData?: Job | null
   onSuccess: () => void
   showAlert: (title: string, message: string, isError?: boolean) => void
+  isAdmin?: boolean // Flag per abilitare le funzionalità Admin
 }
 
 function parseStoryblokSkill(item: any) {
@@ -46,6 +47,7 @@ function parseStoryblokSkill(item: any) {
 }
 
 const INITIAL_FORM_STATE = {
+  company_email: '',
   title: '',
   description: '',
   provincie: new Set<string>([]),
@@ -65,6 +67,7 @@ export function JobFormModal({
   jobData,
   onSuccess,
   showAlert,
+  isAdmin = false,
 }: JobFormModalProps) {
   const { competenze } = useDataContext()
   const [loading, setLoading] = useState(false)
@@ -72,11 +75,11 @@ export function JobFormModal({
 
   const [form, setForm] = useState(INITIAL_FORM_STATE)
 
-  // Sincronizza lo stato all'apertura del modale (Creazione vs Modifica)
   useEffect(() => {
     if (isOpen) {
       if (jobData) {
         setForm({
+          company_email: (jobData as any).company_email || '',
           title: jobData.title || '',
           description: jobData.description || '',
           provincie: new Set<string>(jobData.provincie || []),
@@ -97,6 +100,11 @@ export function JobFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (isAdmin && !isEdit && !form.company_email.trim()) {
+      showAlert('Email Mancante', 'Inserisci l\'email dell\'azienda a cui assegnare l\'inserzione.', true)
+      return
+    }
+
     if (!form.title.trim() || !form.description.trim()) {
       showAlert('Campo obbligatorio', 'Compila sia il titolo che la descrizione.', true)
       return
@@ -109,11 +117,16 @@ export function JobFormModal({
 
     setLoading(true)
 
-    const endpoint = isEdit ? `/api/job/${jobData!.id}` : '/api/job/create'
+    // Reindirizzamento endpoint se la richiesta proviene dall'Admin
+    const endpoint = isEdit
+      ? `/api/job/${jobData!.id}`
+      : (isAdmin ? '/api/admin/job' : '/api/job/create')
+
     const method = isEdit ? 'PUT' : 'POST'
 
     try {
       const payload = {
+        ...(isAdmin ? { company_email: form.company_email } : {}),
         title: form.title,
         description: form.description,
         provincie: Array.from(form.provincie),
@@ -135,7 +148,7 @@ export function JobFormModal({
       const data = await res.json()
 
       if (res.ok) {
-        showAlert('Successo', isEdit ? 'Inserzione modificata con successo!' : 'Inserzione pubblicata correttamente!')
+        showAlert('Successo', isEdit ? 'Inserzione modificata!' : 'Inserzione creata correttamente!')
         onClose()
         onSuccess()
       } else {
@@ -170,6 +183,25 @@ export function JobFormModal({
             </ModalHeader>
 
             <ModalBody className="space-y-6">
+
+              {/* Sezione Admin: Assegnazione Azienda */}
+              {isAdmin && !isEdit && (
+                <div className="space-y-2 bg-emerald-50/60 p-4 rounded-xl border border-emerald-100">
+                  <span className="text-[11px] font-bold uppercase text-emerald-800 tracking-wider">
+                    Assegnazione Azienda (Admin)
+                  </span>
+                  <Input
+                    label="Email Azienda Proprietaria"
+                    placeholder="es. hr@azienda.it"
+                    type="email"
+                    isRequired
+                    value={form.company_email}
+                    onValueChange={(v) => setForm({ ...form, company_email: v })}
+                    variant="flat"
+                  />
+                </div>
+              )}
+
               {/* SEZIONE 1: Informazioni & Requisiti */}
               <div className="space-y-4">
                 <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">

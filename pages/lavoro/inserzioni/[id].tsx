@@ -117,6 +117,7 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
   }
 
   const isAzienda = user.tipo_utente === 'Azienda'
+  const isStudente = user.tipo_utente === 'Studente'
 
   return (
     <div className="min-h-screen bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -158,7 +159,7 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
                     onPress={handleApply}
                     isLoading={loading}
                     isDisabled={job.status !== 'attiva'}
-                    className="bg-[#009245] text-white font-bold px-6 shadow-sm shrink-0"
+                    color='primary'
                   >
                     Candidati Ora
                   </Button>

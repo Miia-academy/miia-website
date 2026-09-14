@@ -10,7 +10,7 @@ export interface AuthPayload {
   storyblok_uuid?: string    // UUID (es. "b6a76843-...") per relazioni (job.business)
   company?: string           // Nome Azienda
   contact_person?: string    // Persona di riferimento
-  tipo_utente?: 'Azienda' | 'Studente'
+  tipo_utente?: 'Azienda' | 'Studente' | 'Admin'
   name?: string              // Nome Studente
   surname?: string           // Cognome Studente
   cv_url?: string            // URL del Curriculum caricato su GCS
