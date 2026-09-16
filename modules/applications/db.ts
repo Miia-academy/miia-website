@@ -15,23 +15,31 @@ export async function hasStudentApplied(jobId: string, studentEmail: string): Pr
   return rows.length > 0
 }
 
-// 2. Inserisce una nuova candidatura (gestendo il vincolo UNIQUE in modo nativo)
+// 2. Inserisce una nuova candidatura
 export async function createApplication(data: CreateApplicationInput): Promise<Application | null> {
   const cleanEmail = data.student_email.trim().toLowerCase()
   const rows = await sql`
     INSERT INTO applications (job_id, student_email, cv_url, status)
     VALUES (${data.job_id}, ${cleanEmail}, ${data.cv_url}, 'in_revisione')
     ON CONFLICT (job_id, student_email) DO NOTHING
-    RETURNING id, job_id, student_email, cv_url, status, applied_at
+    RETURNING id, job_id, student_email, cv_url, status, applied_at, viewed_at, cv_downloaded_at
   `
   return (rows[0] as Application) || null
 }
 
-// 3. Recupera le candidature per una specifica inserzione assicurandosi che l'azienda sia proprietaria
+// 3. Recupera le candidature per un'inserzione (aziende proprietarie) comprese le metriche di lettura
 export async function getApplicationsByJobId(jobId: string, companyEmail: string): Promise<Application[]> {
   const cleanEmail = companyEmail.trim().toLowerCase()
   const rows = await sql`
-    SELECT a.id, a.job_id, a.student_email, a.cv_url, a.status, a.applied_at
+    SELECT 
+      a.id, 
+      a.job_id, 
+      a.student_email, 
+      a.cv_url, 
+      a.status, 
+      a.applied_at,
+      a.viewed_at,
+      a.cv_downloaded_at
     FROM applications a
     JOIN jobs j ON a.job_id = j.id
     WHERE a.job_id = ${jobId} 
@@ -42,7 +50,35 @@ export async function getApplicationsByJobId(jobId: string, companyEmail: string
   return rows as Application[]
 }
 
-// 4. Recupera le candidature per studente (Corretto a.applied_at ed eliminato campo a.notes inesistente)
+// 4. Traccia la prima visualizzazione della scheda candidato da parte dell'azienda
+export async function markApplicationAsViewed(applicationId: string, companyEmail: string) {
+  const cleanEmail = companyEmail.trim().toLowerCase()
+  const rows = await sql`
+    UPDATE applications a
+    SET 
+      viewed_at = COALESCE(a.viewed_at, NOW()),
+      status = CASE WHEN a.status = 'validata' THEN 'letta' ELSE a.status END
+    FROM jobs j
+    WHERE a.id = ${applicationId} 
+      AND a.job_id = j.id 
+      AND LOWER(j.company_email) = ${cleanEmail}
+    RETURNING a.id, a.viewed_at, a.status
+  `
+  return rows[0] || null
+}
+
+// 5. Traccia il primo download del CV da parte dell'azienda
+export async function markCvDownloaded(applicationId: string) {
+  const rows = await sql`
+    UPDATE applications
+    SET cv_downloaded_at = COALESCE(cv_downloaded_at, NOW())
+    WHERE id = ${applicationId}
+    RETURNING id, cv_downloaded_at
+  `
+  return rows[0] || null
+}
+
+// 6. Recupera le candidature per studente
 export async function getStudentApplications(studentEmail: string) {
   const cleanEmail = studentEmail.trim().toLowerCase()
 
@@ -52,6 +88,8 @@ export async function getStudentApplications(studentEmail: string) {
       a.job_id,
       a.status,
       a.applied_at,
+      a.viewed_at,
+      a.cv_downloaded_at,
       j.title,
       j.provincie,
       j.status AS job_status
@@ -64,17 +102,18 @@ export async function getStudentApplications(studentEmail: string) {
   return rows
 }
 
-// 5. Aggiorna lo stato di una singola candidatura (per uso Admin/Azienda)
+// 7. Aggiorna lo stato di una singola candidatura
 export async function updateApplicationStatus(id: string, status: ApplicationStatus): Promise<Application | null> {
   const rows = await sql`
     UPDATE applications
     SET status = ${status}
     WHERE id = ${id}
-    RETURNING id, job_id, student_email, cv_url, status, applied_at
+    RETURNING id, job_id, student_email, cv_url, status, applied_at, viewed_at, cv_downloaded_at
   `
   return (rows[0] as Application) || null
 }
 
+// 8. Recupera tutte le candidature per il Backoffice Admin con metrica visite e download
 export async function getAllApplications(): Promise<any[]> {
   const rows = await sql`
     SELECT 
@@ -82,6 +121,8 @@ export async function getAllApplications(): Promise<any[]> {
       a.job_id,
       a.status, 
       a.applied_at, 
+      a.viewed_at,
+      a.cv_downloaded_at,
       a.student_email,
       a.cv_url,
       j.title AS job_title, 
@@ -91,21 +132,4 @@ export async function getAllApplications(): Promise<any[]> {
     ORDER BY a.applied_at DESC
   `
   return rows
-}
-
-export interface CreateJobByAdminInput {
-  title: string
-  company_email: string
-  provincia: string
-  status?: string
-}
-
-export async function createJobByAdmin(data: CreateJobByAdminInput) {
-  const cleanEmail = data.company_email.trim().toLowerCase()
-  const rows = await sql`
-    INSERT INTO jobs (title, company_email, provincia, status)
-    VALUES (${data.title}, ${cleanEmail}, ${data.provincia}, ${data.status || 'attiva'})
-    RETURNING id, title, company_email, provincia, status, created_at
-  `
-  return rows[0]
 }

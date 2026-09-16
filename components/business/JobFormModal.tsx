@@ -34,7 +34,7 @@ interface JobFormModalProps {
   jobData?: Job | null
   onSuccess: () => void
   showAlert: (title: string, message: string, isError?: boolean) => void
-  isAdmin?: boolean // Flag per abilitare le funzionalità Admin
+  isAdmin?: boolean
 }
 
 function parseStoryblokSkill(item: any) {
@@ -48,6 +48,12 @@ function parseStoryblokSkill(item: any) {
 
 const INITIAL_FORM_STATE = {
   company_email: '',
+  company_name: '',
+  contact_person: '',
+  sms: '',
+  indirizzo: '',
+  website: '',
+  company_description: '',
   title: '',
   description: '',
   provincie: new Set<string>([]),
@@ -80,6 +86,12 @@ export function JobFormModal({
       if (jobData) {
         setForm({
           company_email: (jobData as any).company_email || '',
+          company_name: '',
+          contact_person: '',
+          sms: '',
+          indirizzo: '',
+          website: '',
+          company_description: '',
           title: jobData.title || '',
           description: jobData.description || '',
           provincie: new Set<string>(jobData.provincie || []),
@@ -106,7 +118,7 @@ export function JobFormModal({
     }
 
     if (!form.title.trim() || !form.description.trim()) {
-      showAlert('Campo obbligatorio', 'Compila sia il titolo che la descrizione.', true)
+      showAlert('Campo obbligatorio', 'Compila sia il titolo che la descrizione dell\'inserzione.', true)
       return
     }
 
@@ -117,7 +129,6 @@ export function JobFormModal({
 
     setLoading(true)
 
-    // Reindirizzamento endpoint se la richiesta proviene dall'Admin
     const endpoint = isEdit
       ? `/api/job/${jobData!.id}`
       : (isAdmin ? '/api/admin/job' : '/api/job/create')
@@ -126,7 +137,17 @@ export function JobFormModal({
 
     try {
       const payload = {
-        ...(isAdmin ? { company_email: form.company_email } : {}),
+        ...(isAdmin
+          ? {
+            company_email: form.company_email,
+            company_name: form.company_name,
+            contact_person: form.contact_person,
+            sms: form.sms,
+            indirizzo: form.indirizzo,
+            website: form.website,
+            company_description: form.company_description,
+          }
+          : {}),
         title: form.title,
         description: form.description,
         provincie: Array.from(form.provincie),
@@ -148,7 +169,7 @@ export function JobFormModal({
       const data = await res.json()
 
       if (res.ok) {
-        showAlert('Successo', isEdit ? 'Inserzione modificata!' : 'Inserzione creata correttamente!')
+        showAlert('Successo', isEdit ? 'Inserzione modificata!' : 'Inserzione creata e dati azienda salvati!')
         onClose()
         onSuccess()
       } else {
@@ -184,28 +205,81 @@ export function JobFormModal({
 
             <ModalBody className="space-y-6">
 
-              {/* Sezione Admin: Assegnazione Azienda */}
+              {/* SEZIONE ADMIN: Dati Anagrafici Azienda */}
               {isAdmin && !isEdit && (
-                <div className="space-y-2 bg-emerald-50/60 p-4 rounded-xl border border-emerald-100">
-                  <span className="text-[11px] font-bold uppercase text-emerald-800 tracking-wider">
-                    Assegnazione Azienda (Admin)
+                <div className="space-y-4 bg-emerald-50/60 p-4 rounded-xl border border-emerald-100">
+                  <span className="text-[11px] font-bold uppercase text-emerald-800 tracking-wider block">
+                    Anagrafica Azienda Proprietaria (Admin)
                   </span>
-                  <Input
-                    label="Email Azienda Proprietaria"
-                    placeholder="es. hr@azienda.it"
-                    type="email"
-                    isRequired
-                    value={form.company_email}
-                    onValueChange={(v) => setForm({ ...form, company_email: v })}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Email Azienda"
+                      placeholder="es. hr@azienda.it"
+                      type="email"
+                      isRequired
+                      value={form.company_email}
+                      onValueChange={(v) => setForm({ ...form, company_email: v })}
+                      variant="flat"
+                    />
+                    <Input
+                      label="Nome Azienda / Ragione Sociale"
+                      placeholder="es. Mobilificio Rossi Srl"
+                      value={form.company_name}
+                      onValueChange={(v) => setForm({ ...form, company_name: v })}
+                      variant="flat"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Referente Aziendale"
+                      placeholder="es. Mario Rossi"
+                      value={form.contact_person}
+                      onValueChange={(v) => setForm({ ...form, contact_person: v })}
+                      variant="flat"
+                    />
+                    <Input
+                      label="Telefono / SMS"
+                      placeholder="es. +393401234567"
+                      value={form.sms}
+                      onValueChange={(v) => setForm({ ...form, sms: v })}
+                      variant="flat"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Indirizzo Sede"
+                      placeholder="es. Via Treviso 12, Treviso"
+                      value={form.indirizzo}
+                      onValueChange={(v) => setForm({ ...form, indirizzo: v })}
+                      variant="flat"
+                    />
+                    <Input
+                      label="Sito Web"
+                      placeholder="es. www.azienda.it"
+                      value={form.website}
+                      onValueChange={(v) => setForm({ ...form, website: v })}
+                      variant="flat"
+                    />
+                  </div>
+
+                  <Textarea
+                    label="Descrizione Azienda (Chi siamo)"
+                    placeholder="Breve presentazione dell'azienda..."
+                    minRows={2}
+                    value={form.company_description}
+                    onValueChange={(v) => setForm({ ...form, company_description: v })}
                     variant="flat"
                   />
                 </div>
               )}
 
-              {/* SEZIONE 1: Informazioni & Requisiti */}
+              {/* SEZIONE 1: Informazioni & Requisiti Inserzione */}
               <div className="space-y-4">
                 <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">
-                  Informazioni & Requisiti
+                  Informazioni & Requisiti Inserzione
                 </span>
 
                 <Input

@@ -1,8 +1,11 @@
-// pages/api/job/download.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
+import jwt from 'jsonwebtoken'
 import { Storage } from '@google-cloud/storage'
+import { markCvDownloaded } from '@modules/applications/db'
+import type { AuthPayload } from '@modules/auth'
 
 const PRIVATE_BUCKET_NAME = process.env.GCS_BUCKET_PRIVATE || 'miia-documents'
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 function getStorageClient() {
   const clientEmail = process.env.GCS_CLIENT_EMAIL
@@ -25,8 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  // Ora ci aspettiamo solo il parametro "file" (il path esatto su GCS)
-  const { file } = req.query
+  const { file, application_id } = req.query
 
   try {
     const filePath = typeof file === 'string' ? file.trim() : ''
@@ -35,12 +37,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Parametro file mancante o non valido.' })
     }
 
-    // Generazione della Signed URL temporanea (7 giorni) dal Bucket Privato GCS
+    // Tracciamento atomico del download CV se la richiesta viene inviata dall'Azienda/Admin
+    const token = req.cookies['miia_auth_token']
+    if (token && typeof application_id === 'string' && application_id.trim()) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+        if (decoded.tipo_utente === 'Azienda' || decoded.tipo_utente === 'Admin') {
+          await markCvDownloaded(application_id.trim())
+        }
+      } catch (authErr) {
+        console.warn('[API Job Download] Token non valido per tracciamento download:', authErr)
+      }
+    }
+
     const storage = getStorageClient()
     const bucket = storage.bucket(PRIVATE_BUCKET_NAME)
     const gcsFile = bucket.file(filePath)
 
-    // Verifica se il file esiste realmente per evitare redirect a vuoto
     const [exists] = await gcsFile.exists()
     if (!exists) {
       return res.status(404).json({ message: 'Curriculum Vitae non trovato sul server.' })
@@ -49,10 +62,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const [signedUrl] = await gcsFile.getSignedUrl({
       version: 'v4',
       action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // Validità 7 giorni
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     })
 
-    // Redirect 302 sicuro verso la risorsa firmata
     return res.redirect(302, signedUrl)
 
   } catch (error: any) {

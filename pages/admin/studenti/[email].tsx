@@ -207,7 +207,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           </CardBody>
         </Card>
 
-        {/* Scheda Candidature Postgres */}
+        {/* Scheda Candidature Postgres & Tracciamento Backoffice Admin */}
         <Card shadow="sm" className="border border-neutral-200">
           <CardHeader className="pt-6 px-6 pb-2 flex justify-between items-center">
             <h2 className="text-xl font-bold text-neutral-900">
@@ -223,26 +223,49 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                 Lo studente non si è ancora candidato a nessuna offerta di lavoro.
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {applications.map((app) => (
                   <div
                     key={app.application_id}
-                    className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
-                    <div>
+                    <div className="space-y-1">
                       <Link
                         href={`/lavoro/inserzioni/${app.job_id}`}
                         className="text-base font-bold text-neutral-900 hover:text-[#009245] transition-colors"
                       >
                         {app.title}
                       </Link>
-                      <p className="text-xs text-neutral-500 mt-1">
+                      <p className="text-xs text-neutral-500">
                         Inviata il: {new Date(app.applied_at).toLocaleDateString('it-IT')}
                         {app.provincie && app.provincie.length > 0 && ` • Sede: ${app.provincie.join(', ')}`}
                       </p>
+
+                      {/* Metriche di lettura/download visibili all'Admin */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {app.viewed_at ? (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                            ✓ Visto dall'Azienda il {new Date(app.viewed_at).toLocaleDateString('it-IT')}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                            ● Non ancora letto dall'azienda
+                          </span>
+                        )}
+
+                        {app.cv_downloaded_at ? (
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
+                            📄 CV Scaricato il {new Date(app.cv_downloaded_at).toLocaleDateString('it-IT')}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded">
+                            CV Non scaricato dall'azienda
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <Chip
                         size="sm"
                         variant="flat"

@@ -23,6 +23,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const {
       company_email,
+      company_name,
+      contact_person,
+      sms,
+      indirizzo,
+      website,
+      company_description,
       title,
       description,
       provincie,
@@ -45,22 +51,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Email azienda, titolo, descrizione e provincie sono obbligatori.' })
     }
 
-    // 1. Sincronizzazione Silenziosa Azienda su Brevo
+    // 1. Sincronizzazione Anagrafica Aziendale su Brevo CRM
     try {
       await upsertContact({
         email: normalizedEmail,
         attributes: {
           TIPO_UTENTE: 'Azienda',
+          AZIENDA: company_name ? String(company_name).trim() : '',
+          NOME_AZIENDA: company_name ? String(company_name).trim() : '',
+          REFERENTE: contact_person ? String(contact_person).trim() : '',
+          SMS: sms ? String(sms).trim() : '',
+          INDIRIZZO: indirizzo ? String(indirizzo).trim() : '',
+          SITO_WEB: website ? String(website).trim() : '',
+          DESCRIZIONE: company_description ? String(company_description).trim() : '',
           INSERZIONE_CREATA_DA_ADMIN: true,
           ULTIMO_TITOLO_INSERZIONE: title,
         },
         listIds: [BREVO_LIST_AZIENDE],
       })
     } catch (brevoErr) {
-      console.warn('⚠️ Avviso Brevo: Creazione contatto azienda non completata:', brevoErr)
+      console.warn('⚠️ Avviso Brevo: Sincronizzazione anagrafica azienda non completata:', brevoErr)
     }
 
-    // 2. Inserimento Job nel DB Neon via DB Layer
+    // 2. Inserimento Inserzione nel DB Neon
     const newJob = await createJob({
       company_email: normalizedEmail,
       title: String(title).trim(),
@@ -78,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(201).json({
       success: true,
-      message: 'Inserzione creata con successo e assegnata all\'azienda.',
+      message: 'Inserzione creata con successo e anagrafica azienda aggiornata.',
       job: newJob,
     })
 

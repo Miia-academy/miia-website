@@ -7,6 +7,8 @@ export interface Application {
   cv_url: string
   status: ApplicationStatus
   applied_at: string
+  viewed_at?: string | null
+  cv_downloaded_at?: string | null
 }
 
 export interface CreateApplicationInput {
