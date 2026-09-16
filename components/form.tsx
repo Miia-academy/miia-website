@@ -36,7 +36,7 @@ export type FormData = Record<string, FieldData>
 export interface BrevoProps {
   id?: string | number
   email?: string
-  attributes: Record<string, any>
+  attributes?: Record<string, any>
 }
 
 export interface OptionProps {
@@ -50,7 +50,6 @@ const dateFormat = {
   day: '2-digit' as const,
 }
 
-// Estensione del tipo generato da Storyblok per supportare la prop dinamica endpoint / action
 type ExtendedFormBlok = FormBlok & {
   action?: string
   endpoint?: string
@@ -149,7 +148,7 @@ function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
           const NAME = name.toUpperCase()
           let parsedValue = value
 
-          if (user && typeof user.attributes[NAME] !== 'undefined') {
+          if (user?.attributes && typeof user.attributes[NAME] !== 'undefined') {
             const attribute = user.attributes[NAME]
             if (Array.isArray(attribute) && Array.isArray(parsedValue)) {
               parsedValue = [...new Set([...attribute, ...parsedValue])]
@@ -326,20 +325,14 @@ export default function Form({
     }
   }
 
-  /**
-   * Determinazione dinamica e agnostica dell'endpoint di destinazione
-   */
   const targetEndpoint = useMemo(() => {
-    // 1. Se impostato da Storyblok tramite il campo 'endpoint' o 'action'
     if (form.endpoint && form.endpoint.trim() !== '') return form.endpoint
     if (form.action && form.action.trim() !== '') return form.action
 
-    // 2. Mappatura legacy di sicurezza basata sullo scope/tracking
     if (form.tracking === 'recruit' || form.tracking === 'partnership') {
       return '/api/jobs'
     }
 
-    // 3. Fallback predefinito per la lead generation standard su Brevo
     return '/api/crm'
   }, [form.endpoint, form.action, form.tracking])
 
@@ -357,12 +350,10 @@ export default function Form({
       const event = buildEvent(newData, globalEvents, form.tracking)
       const contact = buildContact(newData, user, form.list)
 
-      // Estrazione dinamica di tutte le coppie id: value
       const rawFieldValues = Object.fromEntries(
         Object.entries(newData).map(([key, field]) => [key, field.value])
       )
 
-      // Payload universale da inviare alle API
       const payload = {
         contact,
         event,
@@ -376,14 +367,12 @@ export default function Form({
       }
 
       try {
-        // Chiamata all'endpoint selezionato da Storyblok
         const response = await fetch(targetEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })
 
-        // Se l'endpoint non è crm, registriamo il contatto in modo asincrono anche sul CRM
         if (targetEndpoint !== '/api/crm') {
           fetch('/api/crm', {
             method: 'POST',
@@ -489,8 +478,8 @@ export default function Form({
             {state !== 'done' && user && (
               <div className="mb-4">
                 <h4 className="text-xl font-semibold capitalize">
-                  Bentornato {user.attributes.NOME?.toString()}{' '}
-                  {user.attributes.COGNOME?.toString()}!
+                  Bentornato {user.attributes?.NOME?.toString() || ''}{' '}
+                  {user.attributes?.COGNOME?.toString() || ''}!
                 </h4>
                 <p>
                   Abbiamo recuperato i tuoi dati, se vuoi cambiarli consulta
