@@ -3,18 +3,35 @@ import type { Job, JobStatus, JobWithApplicantsCount, CreateJobInput, UpdateJobI
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function getActiveJobs(): Promise<Job[]> {
+export async function getActiveJobs(studentEmail?: string) {
+  const cleanEmail = studentEmail ? studentEmail.trim().toLowerCase() : ''
+
   const rows = await sql`
     SELECT 
-      id, company_email, title, description, provincie, 
-      tipo_contratto, ral, orari_lavoro, 
-      trasferte, grado_esperienza, competenze, lingue, status, 
-      created_at, updated_at
-    FROM jobs
-    WHERE status = 'attiva'
-    ORDER BY created_at DESC
+      j.id, 
+      j.company_email, 
+      j.title, 
+      j.description, 
+      j.provincie, 
+      j.tipo_contratto, 
+      j.ral, 
+      j.orari_lavoro, 
+      j.trasferte, 
+      j.grado_esperienza, 
+      j.competenze, 
+      j.lingue, 
+      j.status, 
+      j.created_at, 
+      j.updated_at,
+      COUNT(DISTINCT CASE WHEN a.status IN ('validata', 'letta') THEN a.id END)::int AS applicant_count,
+      COUNT(DISTINCT CASE WHEN LOWER(a.student_email) = ${cleanEmail} THEN a.id END) > 0 AS has_applied
+    FROM jobs j
+    LEFT JOIN applications a ON a.job_id = j.id
+    WHERE j.status = 'attiva'
+    GROUP BY j.id
+    ORDER BY j.created_at DESC
   `
-  return rows as Job[]
+  return rows
 }
 
 export async function getJobById(id: string): Promise<Job | null> {
@@ -32,6 +49,8 @@ export async function getJobById(id: string): Promise<Job | null> {
 }
 
 export async function getBusinessJobs(companyEmail: string): Promise<JobWithApplicantsCount[]> {
+  const cleanEmail = companyEmail.trim().toLowerCase()
+
   const rows = await sql`
     SELECT 
       j.id, 
@@ -49,12 +68,10 @@ export async function getBusinessJobs(companyEmail: string): Promise<JobWithAppl
       j.status, 
       j.created_at,
       j.updated_at,
-      COUNT(a.id)::int AS applicant_count
+      COUNT(DISTINCT CASE WHEN a.status IN ('validata', 'letta') THEN a.id END)::int AS applicant_count
     FROM jobs j
-    LEFT JOIN applications a 
-      ON a.job_id = j.id 
-     AND a.status != 'bozza' -- oppure AND a.status IN ('in_valutazione', 'accettata', 'rifiutata')
-    WHERE j.company_email = ${companyEmail} 
+    LEFT JOIN applications a ON a.job_id = j.id
+    WHERE LOWER(j.company_email) = ${cleanEmail} 
       AND j.status != 'eliminata'
     GROUP BY j.id
     ORDER BY j.created_at DESC
@@ -63,7 +80,7 @@ export async function getBusinessJobs(companyEmail: string): Promise<JobWithAppl
 }
 
 export async function createJob(data: CreateJobInput): Promise<Job> {
-  // Fallback sicuro a array vuoto per evitare l'errore 'possibly undefined'
+  const cleanEmail = data.company_email.trim().toLowerCase()
   const competenzeArray = Array.from(
     new Set((data.competenze ?? []).map((s) => s.trim()).filter(Boolean))
   )
@@ -78,7 +95,7 @@ export async function createJob(data: CreateJobInput): Promise<Job> {
       ral, orari_lavoro, trasferte, grado_esperienza, competenze, lingue, status
     )
     VALUES (
-      ${data.company_email}, ${data.title}, ${data.description}, ${provincieArray}, 
+      ${cleanEmail}, ${data.title}, ${data.description}, ${provincieArray}, 
       ${data.tipo_contratto || 'indeterminato'}, ${data.ral || null}, 
       ${data.orari_lavoro || 'full_time'}, ${data.trasferte || 'no'}, 
       ${data.grado_esperienza || 'prima_esperienza'}, 
@@ -94,6 +111,7 @@ export async function updateJob(
   companyEmail: string,
   data: UpdateJobInput
 ): Promise<Job | null> {
+  const cleanEmail = companyEmail.trim().toLowerCase()
   const hasProvincie = Array.isArray(data.provincie)
   const provincieArray = data.provincie ?? []
 
@@ -121,7 +139,7 @@ export async function updateJob(
       competenze = CASE WHEN ${hasCompetenze} THEN ${competenzeArray} ELSE competenze END,
       lingue = CASE WHEN ${hasLingue} THEN ${lingueArray} ELSE lingue END,
       updated_at = NOW()
-    WHERE id = ${id} AND company_email = ${companyEmail} AND status != 'eliminata'
+    WHERE id = ${id} AND LOWER(company_email) = ${cleanEmail} AND status != 'eliminata'
     RETURNING *
   `
   return (rows[0] as Job) || null
@@ -137,20 +155,22 @@ export const updateJobDetails = async (
 }
 
 export async function updateJobStatus(id: string, companyEmail: string, status: JobStatus): Promise<boolean> {
+  const cleanEmail = companyEmail.trim().toLowerCase()
   const rows = await sql`
     UPDATE jobs
     SET status = ${status}, updated_at = NOW()
-    WHERE id = ${id} AND company_email = ${companyEmail} AND status != 'eliminata'
+    WHERE id = ${id} AND LOWER(company_email) = ${cleanEmail} AND status != 'eliminata'
     RETURNING id
   `
   return rows.length > 0
 }
 
 export async function deleteJob(id: string, companyEmail: string): Promise<boolean> {
+  const cleanEmail = companyEmail.trim().toLowerCase()
   const rows = await sql`
     UPDATE jobs
     SET status = 'eliminata', updated_at = NOW()
-    WHERE id = ${id} AND company_email = ${companyEmail}
+    WHERE id = ${id} AND LOWER(company_email) = ${cleanEmail}
     RETURNING id
   `
   return rows.length > 0

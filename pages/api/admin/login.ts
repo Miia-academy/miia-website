@@ -13,22 +13,28 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   // Verifica ferrea contro il file .env
   if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    const token = jwt.sign(
-      {
-        email,
-        tipo_utente: 'Admin',
-        name: 'Amministratore'
-      },
-      JWT_SECRET,
-      { expiresIn: '8h' }
-    )
 
-    // Soluzione nativa: costruiamo la stringa del cookie a mano
-    const isProd = process.env.NODE_ENV === 'production'
-    const cookieString = `miia_auth_token=${token}; HttpOnly; Path=/; Max-Age=28800; SameSite=Lax${isProd ? '; Secure' : ''}`
+    const payload = {
+      email,
+      tipo_utente: 'Admin',
+      name: 'Amministratore'
+    }
 
-    // Impostiamo l'header nativamente
-    res.setHeader('Set-Cookie', cookieString)
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
+    const encodedUserData = encodeURIComponent(JSON.stringify(payload))
+
+    // 1. Allineamento logica Secure esatta come in verify.ts e logout.ts
+    const protocol = req.headers['x-forwarded-proto'] || 'http'
+    const isSecure = process.env.NODE_ENV === 'production' || protocol === 'https'
+
+    // 28800 secondi = 8 ore
+    const cookieOptions = `Path=/; SameSite=Lax; Max-Age=28800${isSecure ? '; Secure' : ''}`
+
+    // 2. Rilascio di entrambi i cookie per uniformità di stato
+    res.setHeader('Set-Cookie', [
+      `miia_auth_token=${token}; HttpOnly; ${cookieOptions}`,
+      `miia_user=${encodedUserData}; ${cookieOptions}`
+    ])
 
     return res.status(200).json({ success: true })
   }

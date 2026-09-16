@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getJobById } from '@modules/jobs/db'
+import { hasStudentApplied } from '@modules/applications/db'
 import { getContact } from '@modules/brevo'
 import type { Job } from '@modules/jobs/types'
 import {
@@ -32,23 +33,23 @@ interface DettaglioInserzioneProps {
   }
   job: Job
   company: CompanyDetails
+  hasApplied: boolean
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
-export default function DettaglioInserzione({ user, job, company }: DettaglioInserzioneProps) {
+export default function DettaglioInserzione({ user, job, company, hasApplied }: DettaglioInserzioneProps) {
   const { competenze: masterCompetenze } = useDataContext()
   const [loading, setLoading] = useState(false)
+  const [hasAppliedState, setHasAppliedState] = useState(hasApplied)
   const [alertInfo, setAlertInfo] = useState({ isOpen: false, title: '', message: '', isError: false })
 
   const showAlert = (title: string, message: string, isError = false) => {
     setAlertInfo({ isOpen: true, title, message, isError })
   }
 
-  // 1. Sanifichiamo e deduplichiamo le competenze per eliminare doppioni e spazi fantasma
-  const uniqueCompetenze = Array.from(new Set((job.competenze || []).map(k => k.trim())))
+  const uniqueCompetenze = Array.from(new Set((job.competenze || []).map((k) => k.trim())))
 
-  // 2. Resolving bidirezionale intelligente delle competenze da Storyblok
   const detailedSkills = uniqueCompetenze.map((skillKey) => {
     const found = (masterCompetenze || []).find(
       (s: any) =>
@@ -73,7 +74,6 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
     }
   })
 
-  // Etichette lingue
   const selectedLanguages = (job.lingue || []).map((langKey) => {
     const found = LINGUE_STRANIERE.find((l) => l.key === langKey)
     return found ? found.label : langKey
@@ -103,8 +103,10 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
       const data = await res.json()
 
       if (res.status === 201 || res.status === 200) {
-        showAlert('Candidatura Inviata!', 'La tua candidatura è stata inoltrata con successo all\'azienda.')
+        setHasAppliedState(true)
+        showAlert('Candidatura Inviata!', 'La tua candidatura verrà presa in esame.')
       } else if (res.status === 409) {
+        setHasAppliedState(true)
         showAlert('Già Candidato', data.message, false)
       } else {
         showAlert('Attenzione', data.message || 'Errore durante la candidatura.', true)
@@ -117,7 +119,6 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
   }
 
   const isAzienda = user.tipo_utente === 'Azienda'
-  const isStudente = user.tipo_utente === 'Studente'
 
   return (
     <div className="min-h-screen bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -133,10 +134,10 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
           </Link>
         </div>
 
-        {/* Layout a 2 colonne pulito */}
+        {/* Layout a 2 colonne */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-          {/* Colonna Principale (Contenuto Annuncio) */}
+          {/* Colonna Principale */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 space-y-8 shadow-xs">
 
             {/* Header Posizione */}
@@ -155,28 +156,36 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
                   {job.title}
                 </h1>
                 {!isAzienda && (
-                  <Button
-                    onPress={handleApply}
-                    isLoading={loading}
-                    isDisabled={job.status !== 'attiva'}
-                    color='primary'
-                  >
-                    Candidati Ora
-                  </Button>
+                  hasAppliedState ? (
+                    <Button
+                      isDisabled
+                      className="bg-[#009245]/10 text-[#009245] font-bold border border-[#009245]/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
+                    >
+                      ✓ Già candidato
+                    </Button>
+                  ) : (
+                    <Button
+                      onPress={handleApply}
+                      isLoading={loading}
+                      isDisabled={job.status !== 'attiva'}
+                      className="bg-[#009245] text-white font-bold shrink-0 h-11 px-6 shadow-sm"
+                    >
+                      Candidati Ora
+                    </Button>
+                  )
                 )}
               </div>
             </div>
 
             <Divider />
 
-            {/* Condizioni Operative (Griglia pulita) */}
+            {/* Condizioni Operative */}
             <div className="space-y-3">
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                 Condizioni & Inquadramento
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
 
-                {/* Sede di Lavoro */}
                 <div>
                   <span className="block text-xs text-neutral-400 font-medium">Sede di lavoro</span>
                   <span className="text-sm font-bold text-neutral-800">
@@ -271,7 +280,7 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
 
           </div>
 
-          {/* Colonna Destra (Dettagli Azienda EPURATI) */}
+          {/* Colonna Destra */}
           <div className="bg-white rounded-2xl border border-neutral-200 p-6 space-y-5 sticky top-6 shadow-xs">
             <div className="flex items-center gap-3 pb-4 border-b border-neutral-100">
               {company.logo_url ? (
@@ -349,9 +358,6 @@ export default function DettaglioInserzione({ user, job, company }: DettaglioIns
   )
 }
 
-// ============================================================================
-// SERVER-SIDE LOGIC CON FALLBACK COMPLETO BREVO CRM E SICUREZZA DATI
-// ============================================================================
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string }
   const token = context.req.cookies['miia_auth_token']
@@ -389,7 +395,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { notFound: true }
   }
 
-  // Fallback a cascata per il nome azienda (ESCLUSI i campi sensibili)
+  let hasApplied = false
+  if (decoded.tipo_utente === 'Studente') {
+    try {
+      hasApplied = await hasStudentApplied(id, decoded.email)
+    } catch (err) {
+      console.error(`[SSR DB Error] hasStudentApplied("${id}", "${decoded.email}"):`, err)
+    }
+  }
+
   let companyInfo: CompanyDetails = {
     companyName: job.company_email ? job.company_email.split('@')[0].toUpperCase() : 'Azienda Partner',
     indirizzo: '',
@@ -431,6 +445,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
       job: JSON.parse(JSON.stringify(job)),
       company: companyInfo,
+      hasApplied,
     },
   }
 }

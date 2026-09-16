@@ -8,7 +8,6 @@ import { TIPO_CONTRATTO_LABELS, GRADO_ESPERIENZA_LABELS } from '@modules/jobs/ty
 import type { AuthPayload } from '@modules/auth'
 import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Divider } from '@heroui/react'
 
-// Estendiamo l'interfaccia Job per includere i dati delle candidature
 interface JobWithStats extends Job {
   applicant_count?: number
   has_applied?: boolean
@@ -29,7 +28,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
     <div className="min-h-screen bg-neutral-50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
 
-        {/* Link di ritorno minimalista */}
+        {/* Link di ritorno */}
         <div className="mb-4 sm:mb-6">
           <Link
             href="/studenti/profilo"
@@ -60,12 +59,12 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
             {jobs.map((job) => {
               const skillsCount = job.competenze?.length || 0
               const sediText = job.provincie && job.provincie.length > 0 ? job.provincie.join(', ') : 'Triveneto'
+              const isApplied = Boolean(job.has_applied)
 
               return (
                 <Card key={job.id} shadow="sm" className="border border-neutral-200 hover:shadow-md transition-shadow flex flex-col h-full">
 
                   <CardHeader className="flex flex-col items-start px-4 pt-4 sm:px-6 sm:pt-6 pb-0">
-                    {/* RIGA 1: Titolo e Data */}
                     <div className="flex w-full justify-between items-start gap-3">
                       <h3 className="text-lg sm:text-2xl font-extrabold leading-tight text-neutral-900 line-clamp-2">
                         {job.title}
@@ -75,7 +74,6 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                       </span>
                     </div>
 
-                    {/* RIGA 2: Info rapide (Zona, Contratto, Esperienza) */}
                     <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                       <Chip size="sm" variant="flat" className="bg-neutral-100 text-neutral-700 font-medium">
                         <span className="font-semibold opacity-70 mr-1">Zona:</span>
@@ -94,13 +92,11 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                     </div>
                   </CardHeader>
 
-                  <CardBody className="px-4 py-3 sm:px-6 sm:py-4 flex-grow flex flex-col gap-3 sm-gap-4">
-                    {/* RIGA 3: Descrizione */}
+                  <CardBody className="px-4 py-3 sm:px-6 sm:py-4 flex-grow flex flex-col gap-3 sm:gap-4">
                     <p className="text-xs sm:text-sm text-neutral-600 line-clamp-3 leading-relaxed flex-grow">
                       {job.description}
                     </p>
 
-                    {/* RIGA 4: Competenze */}
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Competenze richieste:</span>
                       <Chip size="sm" variant="flat" className="bg-neutral-100 text-neutral-700 font-bold text-xs">
@@ -110,8 +106,8 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
 
                     <Divider className="my-1 sm:my-2" />
 
-                    {/* RIGA 5: Statistiche Candidature */}
-                    <div className="w-full flex justify-between items-center text-[11px] sm:text-xs">
+                    {/* Statistiche Candidature & Badge "Già candidato" */}
+                    <div className="w-full flex justify-between items-center text-[11px] sm:text-xs min-h-[28px]">
                       <span className="text-neutral-500 font-medium flex items-center gap-1.5">
                         <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -119,8 +115,8 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                         {job.applicant_count || 0} {(job.applicant_count === 1) ? 'candidatura' : 'candidature'} in corso
                       </span>
 
-                      {job.has_applied && (
-                        <span className="text-[#009245] font-bold flex items-center gap-1 bg-[#009245]/10 px-2 py-0.5 rounded">
+                      {isApplied && (
+                        <span className="text-[#009245] font-bold flex items-center gap-1 bg-[#009245]/10 px-2.5 py-1 rounded-md">
                           ✓ Già candidato
                         </span>
                       )}
@@ -128,7 +124,6 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                   </CardBody>
 
                   <CardFooter className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
-                    {/* Bottone Ghost Nativo */}
                     <Button
                       as={Link}
                       href={`/lavoro/inserzioni/${job.id}`}
@@ -153,7 +148,6 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const token = context.req.cookies['miia_auth_token']
 
-  // 1. Controllo presenza token
   if (!token) {
     return {
       redirect: {
@@ -165,7 +159,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   let decoded: AuthPayload
 
-  // 2. Validazione JWT isolata
   try {
     decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
   } catch (err) {
@@ -178,7 +171,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // 3. Controllo Ruolo
   if (decoded.tipo_utente === 'Azienda') {
     return {
       redirect: {
@@ -188,15 +180,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // 4. Fetching Dati Database
   try {
-    const jobs = await getActiveJobs()
+    const jobs = await getActiveJobs(decoded.email)
 
     return {
       props: {
         user: {
           email: decoded.email,
-          name: decoded.name || '',
+          name: decoded.nome || (decoded as any).name || '',
         },
         jobs: JSON.parse(JSON.stringify(jobs)),
       },
@@ -208,7 +199,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         user: {
           email: decoded.email,
-          name: decoded.name || '',
+          name: decoded.nome || (decoded as any).name || '',
         },
         jobs: [],
       },

@@ -3,10 +3,11 @@ import React from 'react'
 import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getContact } from '@modules/brevo'
+import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
 import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
 
-interface StudentProfileProps {
+interface StudentDetailProps {
   student: {
     email: string
     nome: string
@@ -14,21 +15,21 @@ interface StudentProfileProps {
     sms: string
     indirizzo: string
     provincia: string
-    ricercaAttiva: boolean | null
+    ricerca_attiva: boolean | null
     automunito: boolean | null
-    disponibileTrasferte: boolean | null
-    cvUrl: string
-    portfolioUrl: string
+    trasferte: boolean | null
+    cv_url: string
+    portfolio_url: string
     competenze: string[]
   }
+  applications: any[]
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
-export default function AdminStudentView({ student }: StudentProfileProps) {
+export default function AdminStudentView({ student, applications }: StudentDetailProps) {
   const fullName = [student.nome, student.cognome].filter(Boolean).join(' ')
 
-  // Helper a 3 stati con nome del campo sempre esplicito
   const renderBooleanStatus = (
     val: boolean | null,
     label: string,
@@ -48,9 +49,22 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
     )
   }
 
+  const getStatusChipColor = (status: string) => {
+    switch (status) {
+      case 'validata':
+      case 'accettata':
+      case 'letta':
+        return 'success'
+      case 'rifiutata':
+        return 'danger'
+      default:
+        return 'warning'
+    }
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
 
         <Link
           href="/admin/profilo"
@@ -59,23 +73,24 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
           &larr; Torna al Pannello Operativo
         </Link>
 
+        {/* Scheda Dati Candidato */}
         <Card shadow="sm" className="border border-neutral-200">
           <CardHeader className="pt-6 px-6 pb-4 flex flex-col items-start gap-1">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
                 Profilo Candidato
               </span>
-              {student.ricercaAttiva === true && (
+              {student.ricerca_attiva === true && (
                 <Chip size="sm" color="success" variant="flat" className="font-bold">
                   In Cerca Attiva
                 </Chip>
               )}
-              {student.ricercaAttiva === false && (
+              {student.ricerca_attiva === false && (
                 <Chip size="sm" color="default" variant="flat" className="font-bold">
                   Non in Cerca Attiva
                 </Chip>
               )}
-              {student.ricercaAttiva === null && (
+              {student.ricerca_attiva === null && (
                 <Chip size="sm" color="warning" variant="flat" className="font-bold text-neutral-700">
                   Cerca Attiva: Mancante
                 </Chip>
@@ -101,21 +116,21 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
               <div>
                 <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Telefono / SMS</span>
                 <span className="text-base font-semibold text-neutral-800">
-                  {student.sms || 'Mancante'}
+                  {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
                 <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Provincia</span>
                 <span className="text-base font-semibold text-neutral-800 uppercase">
-                  {student.provincia || 'Mancante'}
+                  {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
                 <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Indirizzo</span>
                 <span className="text-base font-medium text-neutral-800">
-                  {student.indirizzo || 'Mancante'}
+                  {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
                 </span>
               </div>
             </div>
@@ -128,7 +143,7 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
               </span>
               <div className="flex flex-wrap gap-2">
                 {renderBooleanStatus(student.automunito, 'Automunito', 'Automunito', 'Non Automunito')}
-                {renderBooleanStatus(student.disponibileTrasferte, 'Trasferte', 'Disponibile a Trasferte', 'No Trasferte')}
+                {renderBooleanStatus(student.trasferte, 'Trasferte', 'Disponibile a Trasferte', 'No Trasferte')}
               </div>
             </div>
 
@@ -147,7 +162,7 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-neutral-400 italic">Mancante</p>
+                <p className="text-sm text-neutral-400 italic">Nessuna competenza salvata</p>
               )}
             </div>
 
@@ -158,36 +173,89 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
                 Allegati Candidato
               </span>
               <div className="flex flex-wrap gap-3 items-center">
-                {student.cvUrl ? (
+                {student.cv_url ? (
                   <Button
                     as="a"
-                    href={student.cvUrl}
+                    href={student.cv_url}
                     target="_blank"
-                    color="primary"
-                    className="font-bold text-white"
+                    rel="noreferrer"
+                    className="font-bold text-white bg-[#009245]"
                   >
-                    Download Curriculum (PDF)
+                    📄 Download Curriculum (PDF)
                   </Button>
                 ) : (
-                  <span className="text-sm text-neutral-400 italic">Curriculum: Mancante</span>
+                  <span className="text-sm text-red-500 italic font-semibold">Curriculum: Mancante</span>
                 )}
 
-                {student.portfolioUrl ? (
+                {student.portfolio_url ? (
                   <Button
                     as="a"
-                    href={student.portfolioUrl}
+                    href={student.portfolio_url}
                     target="_blank"
+                    rel="noreferrer"
                     variant="flat"
                     className="font-bold"
                   >
-                    Vedi Portfolio
+                    🔗 Vedi Portfolio
                   </Button>
                 ) : (
-                  <span className="text-sm text-neutral-400 italic">Portfolio: Mancante</span>
+                  <span className="text-sm text-neutral-400 italic">Portfolio: Non caricato</span>
                 )}
               </div>
             </div>
 
+          </CardBody>
+        </Card>
+
+        {/* Scheda Candidature Postgres */}
+        <Card shadow="sm" className="border border-neutral-200">
+          <CardHeader className="pt-6 px-6 pb-2 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-neutral-900">
+              Candidature Inviate ({applications.length})
+            </h2>
+          </CardHeader>
+
+          <Divider className="my-2" />
+
+          <CardBody className="p-6">
+            {applications.length === 0 ? (
+              <p className="text-sm text-neutral-500 italic">
+                Lo studente non si è ancora candidato a nessuna offerta di lavoro.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {applications.map((app) => (
+                  <div
+                    key={app.application_id}
+                    className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div>
+                      <Link
+                        href={`/lavoro/inserzioni/${app.job_id}`}
+                        className="text-base font-bold text-neutral-900 hover:text-[#009245] transition-colors"
+                      >
+                        {app.title}
+                      </Link>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Inviata il: {new Date(app.applied_at).toLocaleDateString('it-IT')}
+                        {app.provincie && app.provincie.length > 0 && ` • Sede: ${app.provincie.join(', ')}`}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        color={getStatusChipColor(app.status)}
+                        className="font-semibold uppercase tracking-wider text-[10px]"
+                      >
+                        {app.status ? app.status.replace('_', ' ') : 'in revisione'}
+                      </Chip>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardBody>
         </Card>
 
@@ -198,9 +266,9 @@ export default function AdminStudentView({ student }: StudentProfileProps) {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const token = context.req.cookies['miia_auth_token']
-  const studentEmail = context.params?.email as string
+  const studentEmailParam = context.params?.email as string
 
-  if (!token || !studentEmail) {
+  if (!token || !studentEmailParam) {
     return { redirect: { destination: '/admin/login', permanent: false } }
   }
 
@@ -211,8 +279,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return { redirect: { destination: '/', permanent: false } }
     }
 
-    const decodedEmail = decodeURIComponent(studentEmail)
-    const contact = await getContact({ identifier: decodedEmail }).catch(() => null)
+    const cleanEmail = decodeURIComponent(studentEmailParam).trim().toLowerCase()
+    const contact = await getContact({ identifier: cleanEmail }).catch(() => null)
     const attrs = contact?.attributes || {}
 
     const parseBooleanAttr = (val: any): boolean | null => {
@@ -227,22 +295,30 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ? rawSkills.split(',').map((s: string) => s.trim()).filter(Boolean)
       : Array.isArray(rawSkills) ? rawSkills : []
 
+    let applications: any[] = []
+    try {
+      applications = await getStudentApplications(cleanEmail)
+    } catch (appErr) {
+      console.warn('[Admin Student SSR Warning] Errore recupero candidature:', appErr)
+    }
+
     return {
       props: {
         student: {
-          email: decodedEmail,
-          nome: attrs.NOME || '',
-          cognome: attrs.COGNOME || '',
-          sms: attrs.SMS || '',
+          email: cleanEmail,
+          nome: attrs.NOME || attrs.FIRSTNAME || '',
+          cognome: attrs.COGNOME || attrs.LASTNAME || '',
+          sms: attrs.SMS || attrs.TELEFONO || '',
           indirizzo: attrs.INDIRIZZO || '',
           provincia: attrs.PROVINCIA || '',
-          ricercaAttiva: parseBooleanAttr(attrs.RICERCA_ATTIVA),
+          ricerca_attiva: parseBooleanAttr(attrs.RICERCA_ATTIVA),
           automunito: parseBooleanAttr(attrs.AUTOMUNITO),
-          disponibileTrasferte: parseBooleanAttr(attrs.TRASFERTE),
-          cvUrl: attrs.CV_URL || '',
-          portfolioUrl: attrs.PORTFOLIO_URL || '',
+          trasferte: parseBooleanAttr(attrs.TRASFERTE),
+          cv_url: attrs.CV_URL || '',
+          portfolio_url: attrs.PORTFOLIO_URL || '',
           competenze,
         },
+        applications: JSON.parse(JSON.stringify(applications)),
       },
     }
   } catch (err) {
