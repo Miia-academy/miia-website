@@ -332,17 +332,6 @@ export default function Form({
     }
   }
 
-  const targetEndpoint = useMemo(() => {
-    if (form.endpoint && form.endpoint.trim() !== '') return form.endpoint
-    if (form.action && form.action.trim() !== '') return form.action
-
-    if (form.tracking === 'recruit' || form.tracking === 'partnership') {
-      return '/api/jobs'
-    }
-
-    return '/api/crm'
-  }, [form.endpoint, form.action, form.tracking])
-
   const handleSubmit = async () => {
     const newData = validateFields(data)
     const hasError = Object.values(newData).some((f) => !!f.error)
@@ -383,19 +372,11 @@ export default function Form({
     }
 
     try {
-      const response = await fetch(targetEndpoint, {
+      const response = await fetch('/api/crm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-
-      if (targetEndpoint !== '/api/crm') {
-        fetch('/api/crm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contact, event }),
-        }).catch((e) => console.error('[Async Brevo Sync Error]', e))
-      }
 
       if (response.ok) {
         setMessage({

@@ -1,4 +1,4 @@
-// pages/api/brevo.ts
+// pages/api/brevo.ts o pages/api/crm.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 export interface BrevoEvent {
@@ -97,19 +97,26 @@ export default async function handler(
 
       const contactRes = await fetch(contactEndpoint, contactOptions)
 
-      if (
-        contactRes.status !== 204 &&
-        contactRes.headers.get('content-type')?.includes('application/json')
-      ) {
-        try {
-          contactData = await contactRes.json()
-        } catch (error) {
-          console.warn('Contact JSON parse error:', error)
-        }
+      if (!contactRes.ok) {
+        let errData = null
+        try { errData = await contactRes.json() } catch (e) { }
+        return res.status(contactRes.status).json({ error: errData || 'Error syncing contact' })
       }
 
-      if (!contactRes.ok) {
-        return res.status(contactRes.status).json({ error: contactData || 'Error syncing contact' })
+      // Se la chiamata è andata a buon fine (201 o 204), Brevo non ritorna gli attributi su Upsert. 
+      // Effettuiamo una GET esplicita per restituire i dati al frontend.
+      const identifier = contact.id || contact.email;
+      if (identifier) {
+        const getContactRes = await fetch(`${apiUrl}/contacts/${encodeURIComponent(identifier)}`, {
+          ...optionsInit,
+          method: 'GET',
+        });
+
+        if (getContactRes.ok) {
+          contactData = await getContactRes.json();
+        } else {
+          console.warn('Attenzione: Impossibile fare fetch del contatto dopo sync');
+        }
       }
     }
 

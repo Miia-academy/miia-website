@@ -183,9 +183,15 @@ const DateField = ({ blok, data, onChange }: FieldComponentProps) => (
 
 const SelectField = ({ blok, data, onChange }: FieldComponentProps) => {
   const options = getOptions(blok.options)
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleChange = (keys: any) => {
     onChange({ ...data, value: Array.from(keys) })
+
+    // Se la selezione non è multipla, forziamo la chiusura del popover
+    if (blok.input !== 'multiple') {
+      setIsOpen(false)
+    }
   }
 
   return (
@@ -198,6 +204,8 @@ const SelectField = ({ blok, data, onChange }: FieldComponentProps) => {
       errorMessage={data.error}
       isInvalid={!!data.error}
       hidden={blok.hidden}
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
       selectedKeys={
         Array.isArray(data.value)
           ? data.value
