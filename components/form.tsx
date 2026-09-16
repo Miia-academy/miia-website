@@ -299,28 +299,31 @@ export default function Form({
           body: JSON.stringify({ contact: { email: field.value } }),
         })
 
-        const responseUser = response.ok ? await response.json() : null
-        setUser(responseUser)
+        const responseData = response.ok ? await response.json() : null
+        // Estrazione corretta del contact dal JSON root ({ success: true, contact: { ... } })
+        const fetchedContact = responseData?.contact || null
+
+        setUser(fetchedContact)
 
         setData((prev) => ({
           ...prev,
           email: {
             ...prev.email,
-            value: responseUser?.email || field.value,
+            value: fetchedContact?.email || field.value,
             error: field.error,
           },
           nome: {
             ...prev.nome,
-            value: responseUser?.attributes?.NOME || prev.nome?.value || '',
+            value: fetchedContact?.attributes?.NOME || prev.nome?.value || '',
           },
           cognome: {
             ...prev.cognome,
-            value: responseUser?.attributes?.COGNOME || prev.cognome?.value || '',
+            value: fetchedContact?.attributes?.COGNOME || prev.cognome?.value || '',
           },
           sms: {
             ...prev.sms,
-            value: responseUser?.attributes?.SMS
-              ? responseUser.attributes.SMS.toString().substring(2)
+            value: fetchedContact?.attributes?.SMS
+              ? fetchedContact.attributes.SMS.toString().substring(2)
               : prev.sms?.value || '',
           },
         }))
