@@ -50,6 +50,8 @@ const dateFormat = {
   day: '2-digit' as const,
 }
 
+const hiddenUserFields = ['nome', 'cognome', 'sms', 'email']
+
 type ExtendedFormBlok = FormBlok & {
   action?: string
   endpoint?: string
@@ -67,6 +69,7 @@ type FormStates = 'close' | 'open' | 'search' | 'send' | 'error' | 'done'
 function validateFields(data: FormData) {
   const updated = { ...data }
   Object.entries(updated).forEach(([name, field]) => {
+    if (!field || typeof field !== 'object') return
     updated[name] = { ...field, error: fieldValidation(field as any) }
   })
   return updated
@@ -90,7 +93,10 @@ function buildEvent(
 
   Object.entries(data)
     .filter(([name]) => !eventFilterData.includes(name))
-    .forEach(([name, { value }]) => {
+    .forEach(([name, field]) => {
+      if (!field) return
+      const value = field.value
+
       if (typeof value === 'number') {
         properties[name] = value.toString()
       } else if (Array.isArray(value)) {
@@ -144,7 +150,9 @@ function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
     attributes: Object.fromEntries(
       Object.entries(data)
         .filter(([name]) => !contactFilterData.includes(name))
-        .map(([name, { value }]) => {
+        .map(([name, field]) => {
+          if (!field) return [name.toUpperCase(), '']
+          const value = field.value
           const NAME = name.toUpperCase()
           let parsedValue = value
 
@@ -300,33 +308,39 @@ export default function Form({
         })
 
         const responseData = response.ok ? await response.json() : null
-        // Estrazione corretta del contact dal JSON root ({ success: true, contact: { ... } })
         const fetchedContact = responseData?.contact || null
 
         setUser(fetchedContact)
 
-        setData((prev) => ({
-          ...prev,
-          email: {
-            ...prev.email,
-            value: fetchedContact?.email || field.value,
-            error: field.error,
-          },
-          nome: {
-            ...prev.nome,
-            value: fetchedContact?.attributes?.NOME || prev.nome?.value || '',
-          },
-          cognome: {
-            ...prev.cognome,
-            value: fetchedContact?.attributes?.COGNOME || prev.cognome?.value || '',
-          },
-          sms: {
-            ...prev.sms,
-            value: fetchedContact?.attributes?.SMS
-              ? fetchedContact.attributes.SMS.toString().substring(2)
-              : prev.sms?.value || '',
-          },
-        }))
+        setData((prev) => {
+          const emailData = prev.email ? { ...prev.email } : { id: 'email', required: true, value: '' }
+          const nomeData = prev.nome ? { ...prev.nome } : { id: 'nome', required: false, value: '' }
+          const cognomeData = prev.cognome ? { ...prev.cognome } : { id: 'cognome', required: false, value: '' }
+          const smsData = prev.sms ? { ...prev.sms } : { id: 'sms', required: false, value: '' }
+
+          return {
+            ...prev,
+            email: {
+              ...emailData,
+              value: fetchedContact?.email || field.value,
+              error: field.error,
+            },
+            nome: {
+              ...nomeData,
+              value: fetchedContact?.attributes?.NOME || nomeData.value || '',
+            },
+            cognome: {
+              ...cognomeData,
+              value: fetchedContact?.attributes?.COGNOME || cognomeData.value || '',
+            },
+            sms: {
+              ...smsData,
+              value: fetchedContact?.attributes?.SMS
+                ? fetchedContact.attributes.SMS.toString().substring(2)
+                : smsData.value || '',
+            },
+          }
+        })
       } catch (e) {
         console.error('Errore recupero contatto Brevo:', e)
       } finally {
@@ -337,7 +351,7 @@ export default function Form({
 
   const handleSubmit = async () => {
     const newData = validateFields(data)
-    const hasError = Object.values(newData).some((f) => !!f.error)
+    const hasError = Object.values(newData).some((f) => !!f?.error)
 
     if (hasError) {
       setState('error')
@@ -359,7 +373,7 @@ export default function Form({
     const contact = buildContact(newData, user, form.list)
 
     const rawFieldValues = Object.fromEntries(
-      Object.entries(newData).map(([key, field]) => [key, field.value])
+      Object.entries(newData).map(([key, field]) => [key, field?.value])
     )
 
     const payload = {
@@ -434,8 +448,23 @@ export default function Form({
     return text
   }, [])
 
+  // Verifica dinamica: nascondi il campo solo se è tra quelli "riservati" 
+  // e se esiste effettivamente un valore nel profilo recuperato dal CRM.
+  const isFieldPopulatedByCrm = useCallback(
+    (fieldId: string) => {
+      if (!user || !hiddenUserFields.includes(fieldId)) return false
+
+      if (fieldId === 'email') return !!user.email
+      if (fieldId === 'nome') return !!user.attributes?.NOME
+      if (fieldId === 'cognome') return !!user.attributes?.COGNOME
+      if (fieldId === 'sms') return !!user.attributes?.SMS
+
+      return false
+    },
+    [user]
+  )
+
   const { button, close, spinner, label, clear } = classes()
-  const hiddenUserFields = ['nome', 'cognome', 'sms', 'email']
 
   return (
     <>
@@ -501,12 +530,13 @@ export default function Form({
 
             {state !== 'done' &&
               visibleFields.map((field) => {
-                if (!field.id || (user && hiddenUserFields.includes(field.id)))
-                  return null
+                // Se il campo non ha un id o se è stato correttamente popolato dal CRM, lo nascondiamo.
+                if (!field.id || isFieldPopulatedByCrm(field.id)) return null
+
                 return (
                   <StoryblokComponent
                     blok={field}
-                    data={data[field.id]}
+                    data={data[field.id] || { id: field.id, required: !!field.required, value: '' }}
                     onChange={handleChange}
                     onBlur={field.id === 'email' ? handleUser : undefined}
                     key={field._uid || field.id}
