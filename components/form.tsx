@@ -283,9 +283,13 @@ export default function Form({
       field.value = getCapitalize(field.value)
     }
     setData((prev) => ({ ...prev, [field.id]: field }))
+    setError(null)
+    setState((prev) => (prev === 'error' ? 'open' : prev))
   }, [])
 
   const handleUser = async (field: FieldData) => {
+    if (field.id !== 'email') return
+
     if (!field.error && field.value) {
       setState('search')
       try {
@@ -305,16 +309,19 @@ export default function Form({
             value: responseUser?.email || field.value,
             error: field.error,
           },
-          nome: { ...prev.nome, value: responseUser?.attributes?.NOME || '' },
+          nome: {
+            ...prev.nome,
+            value: responseUser?.attributes?.NOME || prev.nome?.value || '',
+          },
           cognome: {
             ...prev.cognome,
-            value: responseUser?.attributes?.COGNOME || '',
+            value: responseUser?.attributes?.COGNOME || prev.cognome?.value || '',
           },
           sms: {
             ...prev.sms,
             value: responseUser?.attributes?.SMS
               ? responseUser.attributes.SMS.toString().substring(2)
-              : '',
+              : prev.sms?.value || '',
           },
         }))
       } catch (e) {
@@ -340,67 +347,72 @@ export default function Form({
     const newData = validateFields(data)
     const hasError = Object.values(newData).some((f) => !!f.error)
 
-    if (!hasError) {
-      setState(!agreement ? 'error' : 'open')
-      setError(!agreement ? errors.agreement : null)
-      if (!agreement) return
-
-      setState('send')
-
-      const event = buildEvent(newData, globalEvents, form.tracking)
-      const contact = buildContact(newData, user, form.list)
-
-      const rawFieldValues = Object.fromEntries(
-        Object.entries(newData).map(([key, field]) => [key, field.value])
-      )
-
-      const payload = {
-        contact,
-        event,
-        fields: rawFieldValues,
-        company: rawFieldValues.azienda || rawFieldValues.company || user?.attributes?.AZIENDA || '',
-        title: rawFieldValues.titolo || rawFieldValues.title || '',
-        description: rawFieldValues.messaggio || rawFieldValues.description || '',
-        location: rawFieldValues.citta || rawFieldValues.location || '',
-        area: Array.isArray(rawFieldValues.area) ? rawFieldValues.area[0] : rawFieldValues.area || '',
-        email: newData.email?.value,
-      }
-
-      try {
-        const response = await fetch(targetEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (targetEndpoint !== '/api/crm') {
-          fetch('/api/crm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contact, event }),
-          }).catch((e) => console.error('[Async Brevo Sync Error]', e))
-        }
-
-        if (response.ok) {
-          setMessage({
-            title: parseText(titles[user ? 'user' : 'new'], newData),
-            body: parseText(form.message || '', newData),
-          })
-          setState('done')
-          sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
-        } else {
-          const errRes = await response.json().catch(() => null)
-          setState('error')
-          setError(errRes?.message || errors.default)
-        }
-      } catch (e) {
-        console.error('[Form Submit Error]', e)
-        setState('error')
-        setError(errors.default)
-      }
-    } else {
+    if (hasError) {
       setState('error')
       setData(newData)
+      setError('Verifica i campi evidenziati prima di procedere.')
+      return
+    }
+
+    if (!agreement) {
+      setState('error')
+      setError(errors.agreement)
+      return
+    }
+
+    setState('send')
+    setError(null)
+
+    const event = buildEvent(newData, globalEvents, form.tracking)
+    const contact = buildContact(newData, user, form.list)
+
+    const rawFieldValues = Object.fromEntries(
+      Object.entries(newData).map(([key, field]) => [key, field.value])
+    )
+
+    const payload = {
+      contact,
+      event,
+      fields: rawFieldValues,
+      company: rawFieldValues.azienda || rawFieldValues.company || user?.attributes?.AZIENDA || '',
+      title: rawFieldValues.titolo || rawFieldValues.title || '',
+      description: rawFieldValues.messaggio || rawFieldValues.description || '',
+      location: rawFieldValues.citta || rawFieldValues.location || '',
+      area: Array.isArray(rawFieldValues.area) ? rawFieldValues.area[0] : rawFieldValues.area || '',
+      email: newData.email?.value,
+    }
+
+    try {
+      const response = await fetch(targetEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (targetEndpoint !== '/api/crm') {
+        fetch('/api/crm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contact, event }),
+        }).catch((e) => console.error('[Async Brevo Sync Error]', e))
+      }
+
+      if (response.ok) {
+        setMessage({
+          title: parseText(titles[user ? 'user' : 'new'], newData),
+          body: parseText(form.message || '', newData),
+        })
+        setState('done')
+        sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
+      } else {
+        const errRes = await response.json().catch(() => null)
+        setState('error')
+        setError(errRes?.message || errors.default)
+      }
+    } catch (e) {
+      console.error('[Form Submit Error]', e)
+      setState('error')
+      setError(errors.default)
     }
   }
 
@@ -457,7 +469,11 @@ export default function Form({
       <Drawer
         size="lg"
         isOpen={state !== 'close'}
-        onOpenChange={handleReset}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) handleReset();
+        }}
+        isDismissable={false}
+        isKeyboardDismissDisabled={true}
         classNames={{ closeButton: close() }}
       >
         <DrawerContent>
@@ -478,8 +494,9 @@ export default function Form({
             {state !== 'done' && user && (
               <div className="mb-4">
                 <h4 className="text-xl font-semibold capitalize">
-                  Bentornato {user.attributes?.NOME?.toString() || ''}{' '}
-                  {user.attributes?.COGNOME?.toString() || ''}!
+                  Bentornato{' '}
+                  {user.attributes?.NOME ? `${user.attributes.NOME}` : ''}{' '}
+                  {user.attributes?.COGNOME ? `${user.attributes.COGNOME}` : ''}!
                 </h4>
                 <p>
                   Abbiamo recuperato i tuoi dati, se vuoi cambiarli consulta
@@ -507,7 +524,7 @@ export default function Form({
                     blok={field}
                     data={data[field.id]}
                     onChange={handleChange}
-                    onBlur={handleUser}
+                    onBlur={field.id === 'email' ? handleUser : undefined}
                     key={field._uid || field.id}
                   />
                 )
@@ -520,8 +537,13 @@ export default function Form({
                   isSelected={agreement}
                   onValueChange={(value) => {
                     setAgreement(value)
-                    setError(!value ? errors.agreement : null)
-                    setState(!value ? 'error' : 'open')
+                    if (value) {
+                      setError(null)
+                      setState((prev) => (prev === 'error' ? 'open' : prev))
+                    } else {
+                      setError(errors.agreement)
+                      setState('error')
+                    }
                   }}
                 />
                 <div>
@@ -559,7 +581,8 @@ export default function Form({
                 <Button
                   color="primary"
                   onPress={handleSubmit}
-                  isDisabled={state === 'error'}
+                  isDisabled={state === 'send' || state === 'search'}
+                  isLoading={state === 'send'}
                 >
                   Invia
                 </Button>

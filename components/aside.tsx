@@ -5,6 +5,7 @@ import { tv } from "tailwind-variants";
 import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
+import { useMemo } from "react";
 
 interface ListItemProps {
   label: string;
@@ -93,34 +94,38 @@ export default function Aside({ blok }: AsideComponentProps) {
     blok.due_date && new Date() < new Date(blok.due_date)
   );
 
-  const formOptions: Array<{ name: string; value: string }> = [];
+  const { courses, formOptions } = useMemo(() => {
+    const opts: Array<{ name: string; value: string }> = [];
+    const rawCourses = Array.isArray(blok.courses) ? blok.courses : [];
 
-  const rawCourses = Array.isArray(blok.courses) ? blok.courses : [];
-  const courses = rawCourses.map((courseItem: any) => {
-    const content = courseItem.content || courseItem || {};
+    const crs = rawCourses.map((courseItem: any) => {
+      const content = courseItem.content || courseItem || {};
 
-    if (content.title) {
-      formOptions.push({
-        name: content.title,
-        value: content.id || content.title,
-      });
-    }
+      if (content.title) {
+        opts.push({
+          name: content.title,
+          value: content.id || content.title,
+        });
+      }
 
-    const matchedLocation = locations.find(
-      (loc) => loc.uuid === content.location || loc.uuid === (content.location as any)?.uuid
-    );
+      const matchedLocation = locations.find(
+        (loc) => loc.uuid === content.location || loc.uuid === (content.location as any)?.uuid
+      );
 
-    return {
-      _uid: courseItem._uid || content._uid || Math.random().toString(),
-      title: content.title || "",
-      days: Array.isArray(content.days) ? content.days : [],
-      hours: Array.isArray(content.hours) ? content.hours.join(", ") : null,
-      starts: content.starts ? getLongDate(content.starts) : "in programmazione",
-      ends: content.ends ? getShortDate(content.ends) : null,
-      seats: content.seats || null,
-      location: matchedLocation,
-    };
-  });
+      return {
+        _uid: courseItem._uid || content._uid || Math.random().toString(),
+        title: content.title || "",
+        days: Array.isArray(content.days) ? content.days : [],
+        hours: Array.isArray(content.hours) ? content.hours.join(", ") : null,
+        starts: content.starts ? getLongDate(content.starts) : "in programmazione",
+        ends: content.ends ? getShortDate(content.ends) : null,
+        seats: content.seats || null,
+        location: matchedLocation,
+      };
+    });
+
+    return { courses: crs, formOptions: opts };
+  }, [blok.courses, locations]);
 
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
   const forms = Array.isArray(blok.forms) ? blok.forms : [];
@@ -207,15 +212,17 @@ export default function Aside({ blok }: AsideComponentProps) {
               )}
 
               {forms.map((form, index) => {
-                if (index > 0 && isStickyBanner) return null;
-
                 return (
-                  <StoryblokComponent
+                  <div
                     key={form._uid}
-                    blok={form}
-                    variant={index === 0 ? "solid" : "ghost"}
-                    courses={formOptions}
-                  />
+                    className={index > 0 && isStickyBanner ? "hidden" : "w-full sm:w-auto"}
+                  >
+                    <StoryblokComponent
+                      blok={form}
+                      variant={index === 0 ? "solid" : "ghost"}
+                      courses={formOptions}
+                    />
+                  </div>
                 );
               })}
             </div>
