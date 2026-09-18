@@ -55,16 +55,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 3. Estrazione dei dati anagrafici per il payload temporaneo del Magic Link
+    // 3. Estrazione dei dati anagrafici canonici dal CRM
     const attributes = contact?.attributes || {}
+
+    // Normalizzazione array Competenze da CSV Brevo con tipizzazione esplicita
+    const competenzeArray = typeof attributes.COMPETENZE === 'string'
+      ? attributes.COMPETENZE.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : []
+
     const payload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: isAzienda ? 'Azienda' : 'Studente',
-      company: attributes.NOME_AZIENDA || attributes.AZIENDA || attributes.COMPANY || '',
-      contact_person: attributes.REFERENTE || attributes.CONTACT_PERSON || '',
-      name: attributes.FIRSTNAME || attributes.NOME || '',
-      surname: attributes.LASTNAME || attributes.COGNOME || '',
-      cv_url: attributes.CV_URL || attributes.CV || '',
+
+      // Dati Base / Studente
+      nome: attributes.NOME || '',
+      cognome: attributes.COGNOME || '',
+      provincia: attributes.PROVINCIA || '',
+      ricerca_attiva: Boolean(attributes.RICERCA_ATTIVA),
+      automunito: Boolean(attributes.AUTOMUNITO),
+      trasferte: Boolean(attributes.TRASFERTE),
+      competenze: competenzeArray,
+      cv_url: attributes.CV_URL || '',
+      portfolio_url: attributes.PORTFOLIO_URL || '',
+
+      // Dati Azienda
+      azienda: attributes.AZIENDA || '',
+      referente: attributes.REFERENTE || '',
+      sms: attributes.SMS || '',
+      indirizzo: attributes.INDIRIZZO || '',
+      sito_web: attributes.SITO_WEB || '',
+      descrizione: attributes.DESCRIZIONE || '',
+      logo_url: attributes.LOGO_URL || '',
     }
 
     // 4. Generazione del Magic Link contenente l'URL di destinazione finale

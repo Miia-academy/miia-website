@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await upsertContact({
       email: cleanEmail,
       attributes: {
-        NOME_AZIENDA: nome,
+        AZIENDA: nome,
         REFERENTE: contact_person || '',
         SMS: phoneValue,
         LOGO_URL: logo_url || '',
@@ -42,12 +42,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       listIds: [BREVO_LIST_AZIENDE],
     })
 
-    // 2. Payload Magic Link con i campi sms e logo_url
+    // 2. Payload Magic Link allineato all'interfaccia AuthPayload in italiano
     const payload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: 'Azienda',
-      company: nome,
-      contact_person: contact_person || '',
+      azienda: nome,
+      referente: contact_person || '',
       sms: phoneValue,
       logo_url: logo_url || '',
     }
