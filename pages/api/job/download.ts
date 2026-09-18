@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { Storage } from '@google-cloud/storage'
 import { markCvDownloaded } from '@modules/applications/db'
+import { trackEvent } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
 
 const PRIVATE_BUCKET_NAME = process.env.GCS_BUCKET_PRIVATE || 'miia-documents'
@@ -37,13 +38,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Parametro file mancante o non valido.' })
     }
 
-    // Tracciamento atomico del download CV se la richiesta viene inviata dall'Azienda/Admin
     const token = req.cookies['miia_auth_token']
     if (token && typeof application_id === 'string' && application_id.trim()) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
         if (decoded.tipo_utente === 'Azienda' || decoded.tipo_utente === 'Admin') {
+          // Aggiornamento logico su DB
           await markCvDownloaded(application_id.trim())
+
+          // Tracciamento CRM in capo all'utente che ha scaricato il CV
+          await trackEvent({
+            eventName: 'cv_downloaded',
+            email: decoded.email,
+            properties: {
+              application_id: application_id.trim(),
+              file_path: filePath,
+              tipo_utente: decoded.tipo_utente,
+            },
+          })
         }
       } catch (authErr) {
         console.warn('[API Job Download] Token non valido per tracciamento download:', authErr)

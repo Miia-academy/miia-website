@@ -29,7 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const phoneValue = sms || telefono || ''
 
   try {
-    // 1. Sincronizzazione CRM Brevo con attributi aggiornati
     await upsertContact({
       email: cleanEmail,
       attributes: {
@@ -42,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       listIds: [BREVO_LIST_AZIENDE],
     })
 
-    // 2. Payload Magic Link allineato all'interfaccia AuthPayload in italiano
     const payload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: 'Azienda',
@@ -54,7 +52,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const magicLinkUrl = generateMagicLink(req, payload, redirectUrl)
 
-    // 3. Tracciamento evento Brevo
+    // Tracciamento registrazione con payload form completo
+    await trackEvent({
+      eventName: 'company_registered',
+      email: cleanEmail,
+      properties: {
+        azienda: nome,
+        referente: contact_person || '',
+        sms: phoneValue,
+        logo_url: logo_url || '',
+      },
+    })
+
+    // Tracciamento richiesta Magic Link
     await trackEvent({
       eventName: 'magic_link_requested',
       email: cleanEmail,
@@ -70,11 +80,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error: any) {
     console.error('[API Auth Register Business Error]', error)
-
     if (error instanceof BrevoError) {
       return res.status(error.status).json({ message: error.message })
     }
-
     return res.status(500).json({ message: 'Errore interno durante la registrazione' })
   }
 }

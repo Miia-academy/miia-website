@@ -37,15 +37,27 @@ async function applyHandler(req: NextApiRequest, res: NextApiResponse, authData:
   const studentName = `${authData.nome || ''} ${authData.cognome || ''}`.trim() || cleanStudentEmail
 
   try {
+    // 1. Tracciamento sul contatto dello STUDENTE (Storico attività)
     await trackEvent({
-      eventName: 'job_apply',
+      eventName: 'job_applied',
+      email: cleanStudentEmail,
+      properties: {
+        job_id: jobId,
+        job_title: job.title,
+        company_name: company_name || '',
+      },
+    })
+
+    // 2. Tracciamento sul contatto dell'AZIENDA (Ricezione nuova candidatura)
+    await trackEvent({
+      eventName: 'candidate_received',
       email: job.company_email,
       properties: {
-        company_name: company_name || '',
+        job_id: jobId,
         job_title: job.title,
         student_name: studentName,
-        cv_url: cvUrl,
         student_email: cleanStudentEmail,
+        cv_url: cvUrl,
       },
     })
   } catch (crmError) {
