@@ -28,12 +28,24 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
 
   const rawSkills = Array.from(profileData.skills).map((skillKey) => {
     const cleanKey = skillKey.trim()
-    const found = (competenze || []).find((s: any) => s.name?.trim() === cleanKey || s.title?.trim() === cleanKey || s.value?.trim() === cleanKey)
-    if (found) {
-      return { key: cleanKey, title: found.name?.trim() || cleanKey, description: found.value && found.value.trim() !== found.name?.trim() ? found.value : null }
+
+    // Fallback storico: se la stringa salvata nel DB è un'intera frase
+    if (cleanKey.length > 40) {
+      return { key: cleanKey, title: 'Competenza Storica', description: cleanKey }
     }
-    const isLongText = cleanKey.length > 40
-    return { key: cleanKey, title: isLongText ? 'Competenza' : cleanKey, description: isLongText ? cleanKey : null }
+
+    // Casting as any per scavalcare il limite dell'interfaccia Competenza e testare chiavi fallback
+    const found = (competenze || []).find((s: any) =>
+      s.name?.trim() === cleanKey || s.title?.trim() === cleanKey
+    ) as any
+
+    if (found) {
+      const title = found.name?.trim() || found.title?.trim() || cleanKey
+      const description = found.value && found.value.trim() !== title ? found.value.trim() : null
+      return { key: cleanKey, title, description }
+    }
+
+    return { key: cleanKey, title: cleanKey, description: null }
   })
 
   const detailedSkills = rawSkills.filter((skill, index, self) => index === self.findIndex((s) => s.title.toLowerCase() === skill.title.toLowerCase()))

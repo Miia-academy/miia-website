@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getJobById } from '@modules/jobs/db'
 import { createApplication } from '@modules/applications/db'
-import { trackEvent } from '@modules/brevo'
+import { trackEvent, getContact } from '@modules/brevo'
 import { withApiAuth } from '@modules/api-wrapper'
 import type { AuthPayload } from '@modules/auth'
 
@@ -35,33 +35,40 @@ async function applyHandler(req: NextApiRequest, res: NextApiResponse, authData:
   }
 
   const studentName = `${authData.nome || ''} ${authData.cognome || ''}`.trim() || cleanStudentEmail
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+  const jobUrl = `${baseUrl}/lavoro/inserzioni/${job.id}`
+
+  let nomeAzienda = company_name || ''
+  let telefonoAzienda = ''
+  try {
+    const companyContact = await getContact({ identifier: job.company_email })
+    const attrs = companyContact?.attributes || {}
+    nomeAzienda = attrs.AZIENDA || nomeAzienda
+    telefonoAzienda = attrs.SMS || attrs.TELEFONO || ''
+  } catch (crmFetchError) {
+    console.warn('[API Job Apply] Impossibile recuperare anagrafica azienda per tracciamento:', crmFetchError)
+  }
 
   try {
-    // 1. Tracciamento sul contatto dello STUDENTE (Storico attività)
+    // 3. Evento: job_applied
     await trackEvent({
       eventName: 'job_applied',
       email: cleanStudentEmail,
       properties: {
-        job_id: jobId,
-        job_title: job.title,
-        company_name: company_name || '',
-      },
-    })
-
-    // 2. Tracciamento sul contatto dell'AZIENDA (Ricezione nuova candidatura)
-    await trackEvent({
-      eventName: 'candidate_received',
-      email: job.company_email,
-      properties: {
-        job_id: jobId,
-        job_title: job.title,
-        student_name: studentName,
-        student_email: cleanStudentEmail,
-        cv_url: cvUrl,
+        nome_studente: studentName,
+        email_studente: cleanStudentEmail,
+        telefono_studente: authData.sms || '',
+        link_studente: cvUrl,
+        titolo_inserzione: job.title,
+        sede_lavoro: job.provincie.join(', '),
+        nome_azienda: nomeAzienda,
+        email_azienda: job.company_email,
+        telefono_azienda: telefonoAzienda,
+        link_inserzione: jobUrl,
       },
     })
   } catch (crmError) {
-    console.warn('[API Job Apply] Candidatura salvata su DB, ma tracciamento Brevo fallito:', crmError)
+    console.warn('[API Job Apply] Tracciamento Brevo fallito per job_applied:', crmError)
   }
 
   return res.status(200).json({ message: 'Candidatura inviata con successo!', application })

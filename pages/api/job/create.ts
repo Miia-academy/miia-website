@@ -53,21 +53,24 @@ async function createJobHandler(req: NextApiRequest, res: NextApiResponse, authD
     status: 'attiva',
   })
 
-  // Tracciamento evento creazione inserzione su profilo Azienda
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+    // 2. Evento: job_posted
     await trackEvent({
       eventName: 'job_posted',
       email: authData.email,
       properties: {
-        job_id: newJob.id,
-        job_title: newJob.title,
+        nome_azienda: authData.azienda || '',
+        referente_azienda: authData.referente || '',
+        email_azienda: authData.email,
+        telefono_azienda: authData.sms || '',
+        titolo_inserzione: newJob.title,
+        sede_lavoro: newJob.provincie.join(', '),
+        livello_esperienza: newJob.grado_esperienza,
         tipo_contratto: newJob.tipo_contratto,
-        ral: newJob.ral,
-        provincie: newJob.provincie.join(', '),
-        job_url: `${baseUrl}/lavoro/inserzioni/${newJob.id}`,
-        azienda_nome: authData.azienda || '',
-        referente: authData.referente || '',
+        orario_lavoro: newJob.orari_lavoro,
+        frequenza_trasferte: newJob.trasferte,
+        compenso_lavoro: newJob.ral || '',
+        competenze_richieste: newJob.competenze.join(', '),
       },
     })
   } catch (crmError) {

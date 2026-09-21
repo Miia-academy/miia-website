@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { updateApplicationStatus } from '@modules/applications/db'
 import { getJobById } from '@modules/jobs/db'
-import { trackEvent } from '@modules/brevo'
+import { trackEvent, getContact } from '@modules/brevo'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
@@ -31,10 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Nuovo stato mancante nel payload' })
     }
 
-    // 1. Aggiornamento nel Database
     const application = await updateApplicationStatus(applicationId, status)
 
-    // 2. Tracciamento eventi su Brevo
     if (application) {
       try {
         const job = await getJobById(application.job_id)
@@ -43,25 +41,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const isAccepted = status === 'validata'
           const eventToStudent = isAccepted ? 'application_accepted' : 'application_rejected'
 
-          // Evento verso lo Studente: Esito candidatura
+          // Recupero info studente da Brevo (nome e telefono) 
+          let nomeStudente = application.student_email
+          let telefonoStudente = ''
+          try {
+            const studentContact = await getContact({ identifier: application.student_email })
+            const attrs = studentContact?.attributes || {}
+            nomeStudente = `${attrs.NOME || ''} ${attrs.COGNOME || ''}`.trim() || application.student_email
+            telefonoStudente = attrs.SMS || attrs.TELEFONO || ''
+          } catch (fetchErr) {
+            console.warn('[API Admin Application] Impossibile recuperare info studente', fetchErr)
+          }
+
+          // 4/5. Evento: application_accepted / application_rejected
           await trackEvent({
             eventName: eventToStudent,
             email: application.student_email,
             properties: {
-              job_title: job.title,
-              status: status,
+              titolo_inserzione: job.title,
+              sede_lavoro: job.provincie.join(', '),
+              livello_esperienza: job.grado_esperienza,
+              tipo_contratto: job.tipo_contratto,
+              orario_lavoro: job.orari_lavoro,
+              frequenza_trasferte: job.trasferte,
+              compenso_lavoro: job.ral || '',
+              competenze_richieste: job.competenze.join(', '),
+              nome_studente: nomeStudente,
+              email_studente: application.student_email,
+              telefono_studente: telefonoStudente,
+              link_studente: application.cv_url,
             },
           })
 
-          // Evento verso l'Azienda: Candidatura ricevuta (solo se approvata dall'Admin)
+          // Evento storico mantenuto verso l'azienda
           if (isAccepted) {
             await trackEvent({
               eventName: 'candidate_received',
               email: job.company_email,
               properties: {
-                job_id: application.job_id,
-                job_title: job.title,
-                student_email: application.student_email,
+                id_inserzione: application.job_id,
+                titolo_inserzione: job.title,
+                email_studente: application.student_email,
                 cv_url: application.cv_url,
               },
             })

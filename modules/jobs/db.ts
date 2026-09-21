@@ -175,3 +175,18 @@ export async function deleteJob(id: string, companyEmail: string): Promise<boole
   `
   return rows.length > 0
 }
+
+export async function getJobByApplicationId(applicationId: string): Promise<{ job_id: string; title: string; company_email: string; student_email: string } | null> {
+  const rows = await sql`
+    SELECT 
+      j.id AS job_id, 
+      j.title, 
+      j.company_email, 
+      a.student_email
+    FROM jobs j
+    INNER JOIN applications a ON a.job_id = j.id
+    WHERE a.id = ${applicationId}
+    LIMIT 1
+  `
+  return (rows[0] as { job_id: string; title: string; company_email: string; student_email: string }) || null
+}

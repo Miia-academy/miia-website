@@ -36,9 +36,18 @@ export function withApiAuth(options: WrapperOptions, handler: ApiHandlerWithAuth
       return res.status(401).json({ message: 'Sessione scaduta o non valida' })
     }
 
-    // 3. Guardia di Ruolo
-    if (options.allowedRoles && !options.allowedRoles.includes(authData.tipo_utente as any)) {
-      return res.status(403).json({ message: 'Accesso negato: rotta non autorizzata per questo ruolo' })
+    // 3. Guardia di Ruolo (Case-insensitive per tolleranza vecchi cookie)
+    if (options.allowedRoles && options.allowedRoles.length > 0) {
+      const userRole = String(authData.tipo_utente || '').toLowerCase().trim()
+      const isAuthorized = options.allowedRoles.some(
+        (allowedRole) => allowedRole.toLowerCase() === userRole
+      )
+
+      if (!isAuthorized) {
+        return res.status(403).json({
+          message: 'Accesso negato: rotta non autorizzata per questo ruolo',
+        })
+      }
     }
 
     // 4. Esecuzione Handler con Error Boundary unificato

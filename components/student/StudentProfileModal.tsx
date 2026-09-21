@@ -157,9 +157,13 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                   classNames={{ popoverContent: 'max-w-[500px]' }}
                 >
                   {(competenze || []).map((skill: any) => {
-                    const title = skill.name?.trim() || skill.value?.trim() || ''
-                    const description = (skill.value && skill.value.trim() !== skill.name?.trim()) ? skill.value.trim() : null
-                    const key = skill.value || skill.name
+                    // La chiave deve essere SEMPRE il nome breve, non la descrizione
+                    const key = skill.name?.trim() || skill.title?.trim() || ''
+                    const title = skill.name?.trim() || skill.title?.trim() || key
+                    const description = (skill.value && skill.value.trim() !== key) ? skill.value.trim() : null
+
+                    if (!key) return null
+
                     return (
                       <SelectItem key={key} textValue={title}>
                         <div className="flex flex-col gap-0.5 py-1.5 whitespace-normal">

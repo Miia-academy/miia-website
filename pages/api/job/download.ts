@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { Storage } from '@google-cloud/storage'
 import { markCvDownloaded } from '@modules/applications/db'
-import { trackEvent } from '@modules/brevo'
+import { getJobByApplicationId } from '@modules/jobs/db'
+import { trackEvent, getContact } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
 
 const PRIVATE_BUCKET_NAME = process.env.GCS_BUCKET_PRIVATE || 'miia-documents'
@@ -42,20 +43,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (token && typeof application_id === 'string' && application_id.trim()) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+
         if (decoded.tipo_utente === 'Azienda' || decoded.tipo_utente === 'Admin') {
-          // Aggiornamento logico su DB
+          // 1. Aggiornamento logico su DB (Sia Azienda che Admin)
           await markCvDownloaded(application_id.trim())
 
-          // Tracciamento CRM in capo all'utente che ha scaricato il CV
-          await trackEvent({
-            eventName: 'cv_downloaded',
-            email: decoded.email,
-            properties: {
-              application_id: application_id.trim(),
-              file_path: filePath,
-              tipo_utente: decoded.tipo_utente,
-            },
-          })
+          // 2. Tracciamento CRM: l'evento parte ESCLUSIVAMENTE se è un'Azienda a scaricare
+          if (decoded.tipo_utente === 'Azienda') {
+            try {
+              const jobInfo = await getJobByApplicationId(application_id.trim())
+
+              if (jobInfo) {
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+                const linkInserzione = `${baseUrl}/lavoro/inserzioni/${jobInfo.job_id}`
+
+                // Normalizzazione Nome Azienda
+                let nomeAzienda = decoded.azienda || ''
+                if (!nomeAzienda) {
+                  try {
+                    const companyContact = await getContact({ identifier: jobInfo.company_email })
+                    nomeAzienda = companyContact?.attributes?.AZIENDA || jobInfo.company_email
+                  } catch (compErr) {
+                    nomeAzienda = jobInfo.company_email
+                  }
+                }
+
+                // Recupero Nome Studente
+                let nomeStudente = jobInfo.student_email
+                try {
+                  const studentContact = await getContact({ identifier: jobInfo.student_email })
+                  const attrs = studentContact?.attributes || {}
+                  nomeStudente = `${attrs.NOME || ''} ${attrs.COGNOME || ''}`.trim() || jobInfo.student_email
+                } catch (fetchErr) {
+                  console.warn('[API Job Download] Impossibile recuperare anagrafica studente:', fetchErr)
+                }
+
+                // Invio evento "cv_downloaded" ALLA MAIL DELLO STUDENTE
+                await trackEvent({
+                  eventName: 'cv_downloaded',
+                  email: jobInfo.student_email,
+                  properties: {
+                    nome_studente: nomeStudente,
+                    nome_inserzione: jobInfo.title,
+                    nome_azienda: nomeAzienda,
+                    link_inserzione: linkInserzione,
+                  },
+                })
+              }
+            } catch (fetchErr) {
+              console.warn('[API Job Download] Impossibile eseguire tracking CV scaricato:', fetchErr)
+            }
+          }
         }
       } catch (authErr) {
         console.warn('[API Job Download] Token non valido per tracciamento download:', authErr)

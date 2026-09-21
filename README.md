@@ -44,44 +44,45 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/b
 Riepilogo degli eventi inviati a Brevo (Job Manager)
 Di seguito l'architettura aggiornata dei trigger CRM e le relative properties passate al payload:
 
-company_registered (Nuova azienda registrata)
+#### company_registered
+(Nuova azienda registrata)
 
 Target: Email Azienda
 
 Dati: azienda (Nome), referente, sms, logo_url
 
-magic_link_requested (Richiesta di login)
+#### magic_link_requested (Richiesta di login)
 
 Target: Email Utente (Azienda o Studente)
 
 Dati: magic_link (URL tokenizzato), tipo_utente, redirect_url
 
-job_posted (Creazione nuova inserzione)
+#### job_posted (Creazione nuova inserzione)
 
 Target: Email Azienda
 
 Dati: job_id, job_title, tipo_contratto, ral, provincie, job_url, azienda_nome, referente
 
-job_applied (Studente si candida)
+#### job_applied (Studente si candida)
 
 Target: Email Studente
 
 Dati: job_id, job_title, company_name
 
-cv_downloaded (Azienda/Admin scarica un CV)
+#### cv_downloaded (Azienda/Admin scarica un CV)
 
 Target: Email Recruiter/Admin (chi scarica)
 
 Dati: application_id, file_path, tipo_utente
 
 Eventi da implementare nel file Admin ([id].ts) una volta fornito il DB model:
-6. application_accepted / application_rejected
+#### application_accepted / application_rejected
 
 Target: Email Studente
 
 Dati: job_title, company_name, status
 
-candidate_received (Spostato qui e triggerato solo se status === 'accepted')
+#### candidate_received (Spostato qui e triggerato solo se status === 'accepted')
 
 Target: Email Azienda
 

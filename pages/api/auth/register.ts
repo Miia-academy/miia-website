@@ -2,15 +2,15 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { generateMagicLink, AuthPayload } from '@modules/auth'
 import { upsertContact, trackEvent, BrevoError } from '@modules/brevo'
 
-const BREVO_LIST_AZIENDE = 30
+const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || Number(process.env.BREVO_AZIENDE_LIST_ID) || 30
 
 interface RegisterCompanyBody {
   email: string
-  nome: string             // Nome Azienda
-  contact_person?: string  // Referente
-  sms?: string             // Numero cellulare per SMS / Telefono
-  telefono?: string        // Fallback da form client
-  logo_url?: string        // URL Logo Aziendale
+  nome: string
+  contact_person?: string
+  sms?: string
+  telefono?: string
+  logo_url?: string
   redirectUrl?: string
 }
 
@@ -52,19 +52,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const magicLinkUrl = generateMagicLink(req, payload, redirectUrl)
 
-    // Tracciamento registrazione con payload form completo
+    // 1. Evento: company_registered
     await trackEvent({
       eventName: 'company_registered',
       email: cleanEmail,
       properties: {
-        azienda: nome,
-        referente: contact_person || '',
-        sms: phoneValue,
-        logo_url: logo_url || '',
+        nome_azienda: nome,
+        referente_azienda: contact_person || '',
+        email_azienda: cleanEmail,
+        telefono_azienda: phoneValue,
       },
     })
 
-    // Tracciamento richiesta Magic Link
+    // Evento storico mantenuto per funzionamento login
     await trackEvent({
       eventName: 'magic_link_requested',
       email: cleanEmail,
