@@ -39,6 +39,29 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Costruiamo le opzioni Select mappando e curando le chiavi
+  const selectOptions = (competenze || []).map((skill: any) => {
+    const key = skill.name?.trim() || skill.title?.trim() || ''
+    const title = skill.name?.trim() || skill.title?.trim() || key
+    const description = (skill.value && skill.value.trim() !== key) ? skill.value.trim() : null
+    return { key, title, description }
+  }).filter(Boolean)
+
+  // Integriamo dinamicamente nell'elenco eventuali competenze storiche/orfane
+  // già salvate dal candidato ma rimosse o modificate nel CMS anagrafico.
+  const allSelectKeys = new Set(selectOptions.map(opt => opt.key))
+  Array.from(initialData.skills).forEach(skill => {
+    const s = skill.trim()
+    if (s && !allSelectKeys.has(s)) {
+      selectOptions.push({
+        key: s,
+        title: s.length > 40 ? 'Competenza Specifica' : s,
+        description: s.length > 40 ? s : null
+      })
+      allSelectKeys.add(s)
+    }
+  })
+
   useEffect(() => {
     if (isOpen) {
       setEditForm(initialData)
@@ -156,23 +179,14 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                   onSelectionChange={(keys) => setEditForm({ ...editForm, skills: keys as Set<string> })}
                   classNames={{ popoverContent: 'max-w-[500px]' }}
                 >
-                  {(competenze || []).map((skill: any) => {
-                    // La chiave deve essere SEMPRE il nome breve, non la descrizione
-                    const key = skill.name?.trim() || skill.title?.trim() || ''
-                    const title = skill.name?.trim() || skill.title?.trim() || key
-                    const description = (skill.value && skill.value.trim() !== key) ? skill.value.trim() : null
-
-                    if (!key) return null
-
-                    return (
-                      <SelectItem key={key} textValue={title}>
-                        <div className="flex flex-col gap-0.5 py-1.5 whitespace-normal">
-                          <span className="text-sm font-semibold text-neutral-900 leading-tight">{title}</span>
-                          {description && <span className="text-xs text-neutral-500 font-normal leading-relaxed block">{description}</span>}
-                        </div>
-                      </SelectItem>
-                    )
-                  })}
+                  {selectOptions.map((opt) => (
+                    <SelectItem key={opt.key} textValue={opt.title}>
+                      <div className="flex flex-col gap-0.5 py-1.5 whitespace-normal">
+                        <span className="text-sm font-semibold text-neutral-900 leading-tight">{opt.title}</span>
+                        {opt.description && <span className="text-xs text-neutral-500 font-normal leading-relaxed block">{opt.description}</span>}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </Select>
               </div>
 

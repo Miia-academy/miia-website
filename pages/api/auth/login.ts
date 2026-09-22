@@ -63,6 +63,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? attributes.COMPETENZE.split(',').map((s: string) => s.trim()).filter(Boolean)
       : []
 
+    // Assicura il recupero univoco del numero di telefono
+    const telefonoValue = attributes.SMS || attributes.TELEFONO || ''
+
     const payload: AuthPayload = {
       email: cleanEmail,
       tipo_utente: isAzienda ? 'Azienda' : 'Studente',
@@ -78,10 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       cv_url: attributes.CV_URL || '',
       portfolio_url: attributes.PORTFOLIO_URL || '',
 
-      // Dati Azienda
+      // Dati Azienda & Condivisi
       azienda: attributes.AZIENDA || '',
       referente: attributes.REFERENTE || '',
-      sms: attributes.SMS || '',
+      sms: telefonoValue, // Compilato correttamente sia per Studente che per Azienda
       indirizzo: attributes.INDIRIZZO || '',
       sito_web: attributes.SITO_WEB || '',
       descrizione: attributes.DESCRIZIONE || '',

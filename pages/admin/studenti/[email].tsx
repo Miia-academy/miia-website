@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import { getContact } from '@modules/brevo'
 import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
+import { useDataContext } from '@modules/context'
 import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
 
 interface StudentDetailProps {
@@ -28,7 +29,32 @@ interface StudentDetailProps {
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function AdminStudentView({ student, applications }: StudentDetailProps) {
+  const { competenze: masterCompetenze } = useDataContext()
   const fullName = [student.nome, student.cognome].filter(Boolean).join(' ')
+
+  const detailedSkills = student.competenze.map((skillKey) => {
+    const found = (masterCompetenze || []).find(
+      (s: any) =>
+        s.name?.trim() === skillKey ||
+        s.title?.trim() === skillKey ||
+        s.value?.trim() === skillKey
+    )
+
+    if (found) {
+      return {
+        key: skillKey,
+        title: found.name?.trim() || skillKey,
+        description: found.value && found.value.trim() !== found.name?.trim() ? found.value : null,
+      }
+    }
+
+    const isLongText = skillKey.length > 40
+    return {
+      key: skillKey,
+      title: isLongText ? 'Competenza specifica' : skillKey,
+      description: isLongText ? skillKey : null,
+    }
+  })
 
   const renderBooleanStatus = (
     val: boolean | null,
@@ -70,10 +96,9 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           href="/admin/profilo"
           className="text-sm font-medium text-neutral-500 hover:text-black transition-colors inline-flex items-center gap-1"
         >
-          &larr; Torna al Pannello Operativo
+          &larr; Torna al Pannello
         </Link>
 
-        {/* Scheda Dati Candidato */}
         <Card shadow="sm" className="border border-neutral-200">
           <CardHeader className="pt-6 px-6 pb-4 flex flex-col items-start gap-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -153,12 +178,22 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
                 Competenze
               </span>
-              {student.competenze.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {student.competenze.map((skill, idx) => (
-                    <Chip key={idx} size="md" variant="flat" className="bg-neutral-100 text-neutral-800 font-medium">
-                      {skill}
-                    </Chip>
+              {detailedSkills.length > 0 ? (
+                <div className="space-y-4 mt-2">
+                  {detailedSkills.map((skill, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                      <div className="space-y-0.5">
+                        <h3 className="text-sm font-bold text-neutral-900 leading-snug">
+                          {skill.title}
+                        </h3>
+                        {skill.description && (
+                          <p className="text-xs text-neutral-500 leading-relaxed">
+                            {skill.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -207,7 +242,6 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           </CardBody>
         </Card>
 
-        {/* Scheda Candidature Postgres & Tracciamento Backoffice Admin */}
         <Card shadow="sm" className="border border-neutral-200">
           <CardHeader className="pt-6 px-6 pb-2 flex justify-between items-center">
             <h2 className="text-xl font-bold text-neutral-900">
@@ -241,7 +275,6 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                         {app.provincie && app.provincie.length > 0 && ` • Sede: ${app.provincie.join(', ')}`}
                       </p>
 
-                      {/* Metriche di lettura/download visibili all'Admin */}
                       <div className="flex flex-wrap items-center gap-2 pt-1">
                         {app.viewed_at ? (
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
@@ -313,10 +346,31 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return null
     }
 
-    const rawSkills = attrs.COMPETENZE || ''
-    const competenze = typeof rawSkills === 'string'
-      ? rawSkills.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : Array.isArray(rawSkills) ? rawSkills : []
+    const parseAndHealCompetenze = (raw: any): string[] => {
+      let arr: string[] = []
+      if (Array.isArray(raw)) {
+        arr = raw.map(s => String(s).trim())
+      } else if (typeof raw === 'string') {
+        try {
+          const parsed = JSON.parse(raw)
+          if (Array.isArray(parsed)) arr = parsed.map(s => String(s).trim())
+          else arr = raw.split(',').map(s => s.trim())
+        } catch {
+          arr = raw.split(',').map(s => s.trim())
+        }
+      }
+
+      const grouped: string[] = []
+      for (const frag of arr) {
+        if (!frag) continue
+        if (grouped.length > 0 && /^[a-zèéìòù]/.test(frag)) {
+          grouped[grouped.length - 1] += ', ' + frag
+        } else {
+          grouped.push(frag)
+        }
+      }
+      return grouped
+    }
 
     let applications: any[] = []
     try {
@@ -339,7 +393,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           trasferte: parseBooleanAttr(attrs.TRASFERTE),
           cv_url: attrs.CV_URL || '',
           portfolio_url: attrs.PORTFOLIO_URL || '',
-          competenze,
+          competenze: parseAndHealCompetenze(attrs.COMPETENZE),
         },
         applications: JSON.parse(JSON.stringify(applications)),
       },

@@ -29,14 +29,8 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
   const rawSkills = Array.from(profileData.skills).map((skillKey) => {
     const cleanKey = skillKey.trim()
 
-    // Fallback storico: se la stringa salvata nel DB è un'intera frase
-    if (cleanKey.length > 40) {
-      return { key: cleanKey, title: 'Competenza Storica', description: cleanKey }
-    }
-
-    // Casting as any per scavalcare il limite dell'interfaccia Competenza e testare chiavi fallback
     const found = (competenze || []).find((s: any) =>
-      s.name?.trim() === cleanKey || s.title?.trim() === cleanKey
+      s.name?.trim() === cleanKey || s.title?.trim() === cleanKey || s.value?.trim() === cleanKey
     ) as any
 
     if (found) {
@@ -45,7 +39,12 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
       return { key: cleanKey, title, description }
     }
 
-    return { key: cleanKey, title: cleanKey, description: null }
+    const isLongText = cleanKey.length > 40
+    return {
+      key: cleanKey,
+      title: isLongText ? 'Competenza specifica' : cleanKey,
+      description: isLongText ? cleanKey : null,
+    }
   })
 
   const detailedSkills = rawSkills.filter((skill, index, self) => index === self.findIndex((s) => s.title.toLowerCase() === skill.title.toLowerCase()))
@@ -122,20 +121,26 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-2">Disponibilità</span>
                   <div className="flex flex-wrap gap-2">
                     {profileData.ricerca_attiva ? <Chip size="sm" color="success" variant="flat">Ricerca Attiva</Chip> : <Chip size="sm" color="default" variant="flat">Non in ricerca</Chip>}
-                    {profileData.automunito && <Chip size="sm" color="primary" variant="flat">Automunito</Chip>}
-                    {profileData.trasferte && <Chip size="sm" color="primary" variant="flat">Trasferte Ok</Chip>}
+                    {profileData.automunito && <Chip size="sm" color="success" variant="flat">Automunito</Chip>}
+                    {profileData.trasferte && <Chip size="sm" color="success" variant="flat">Trasferte Ok</Chip>}
                   </div>
                 </div>
                 <div>
                   <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-3">Le Mie Competenze</span>
                   {detailedSkills.length > 0 ? (
-                    <div className="space-y-3.5 mt-1">
+                    <div className="space-y-4 mt-2">
                       {detailedSkills.map((skill) => (
                         <div key={skill.key} className="flex items-start gap-3">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
                           <div className="space-y-0.5">
-                            <h3 className="text-sm font-bold text-neutral-900 leading-tight">{skill.title}</h3>
-                            {skill.description && <p className="text-xs text-neutral-500 leading-relaxed">{skill.description}</p>}
+                            <h3 className="text-sm font-bold text-neutral-900 leading-snug">
+                              {skill.title}
+                            </h3>
+                            {skill.description && (
+                              <p className="text-xs text-neutral-500 leading-relaxed">
+                                {skill.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -223,6 +228,31 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   if (decoded.tipo_utente !== 'Studente') return { redirect: { destination: '/', permanent: false } }
 
+  const parseAndHealCompetenze = (raw: any): string[] => {
+    let arr: string[] = []
+    if (Array.isArray(raw)) {
+      arr = raw.map(s => String(s).trim())
+    } else if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) arr = parsed.map(s => String(s).trim())
+        else arr = raw.split(',').map(s => s.trim())
+      } catch {
+        arr = raw.split(',').map(s => s.trim())
+      }
+    }
+    const grouped: string[] = []
+    for (const frag of arr) {
+      if (!frag) continue
+      if (grouped.length > 0 && /^[a-zèéìòù]/.test(frag)) {
+        grouped[grouped.length - 1] += ', ' + frag
+      } else {
+        grouped.push(frag)
+      }
+    }
+    return grouped
+  }
+
   const mappedUser = {
     email: decoded.email,
     nome: decoded.nome || (decoded as any).name || '',
@@ -233,7 +263,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     ricerca_attiva: decoded.ricerca_attiva ?? true,
     automunito: decoded.automunito ?? false,
     trasferte: decoded.trasferte ?? (decoded as any).disponibile_trasferte ?? false,
-    competenze: Array.isArray(decoded.competenze) ? decoded.competenze : [],
+    competenze: parseAndHealCompetenze(decoded.competenze),
     cv_url: decoded.cv_url || '',
     portfolio_url: decoded.portfolio_url || '',
   }

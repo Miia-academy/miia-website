@@ -29,7 +29,7 @@ interface DettaglioInserzioneProps {
   user: {
     email: string
     cv_url: string
-    tipo_utente: 'Azienda' | 'Studente'
+    tipo_utente: 'Azienda' | 'Studente' | 'Admin'
   }
   job: Job
   company: CompanyDetails
@@ -118,19 +118,26 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
     }
   }
 
-  const isAzienda = user.tipo_utente === 'Azienda'
+  // Routerino dinamico per la navigazione
+  const navRouter: Record<string, { text: string; url: string }> = {
+    Azienda: { text: 'Torna alla dashboard', url: '/aziende/profilo' },
+    Studente: { text: 'Torna alla bacheca', url: '/lavoro/inserzioni' },
+    Admin: { text: 'Torna al pannello', url: '/admin/profilo' },
+  }
+
+  const backNavigation = navRouter[user.tipo_utente] || navRouter['Studente']
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl space-y-6">
+    <div className="min-h-screen bg-neutral-50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
 
-        {/* Breadcrumb */}
-        <div>
+        {/* Link di ritorno dinamico */}
+        <div className="mb-4 sm:mb-6">
           <Link
-            href={isAzienda ? '/aziende/profilo' : '/lavoro/inserzioni'}
-            className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-black transition-colors"
+            href={backNavigation.url}
+            className="text-sm font-medium text-neutral-500 hover:text-black transition-colors inline-flex items-center gap-1"
           >
-            &larr; {isAzienda ? 'Torna al profilo' : 'Torna alla bacheca'}
+            &larr; {backNavigation.text}
           </Link>
         </div>
 
@@ -155,7 +162,9 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
                 <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight break-words">
                   {job.title}
                 </h1>
-                {!isAzienda && (
+
+                {/* Visualizza il bottone Candidati SOLO per gli Studenti */}
+                {user.tipo_utente === 'Studente' && (
                   hasAppliedState ? (
                     <Button
                       isDisabled
@@ -441,7 +450,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       user: {
         email: decoded.email,
         cv_url: decoded.cv_url || '',
-        tipo_utente: decoded.tipo_utente || 'Studente',
+        tipo_utente: decoded.tipo_utente,
       },
       job: JSON.parse(JSON.stringify(job)),
       company: companyInfo,

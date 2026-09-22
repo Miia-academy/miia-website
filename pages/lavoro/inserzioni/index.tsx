@@ -17,6 +17,7 @@ interface BachecaLavoroProps {
   user: {
     email: string
     name: string
+    tipo_utente: 'Azienda' | 'Studente'
   }
   jobs: JobWithStats[]
 }
@@ -24,6 +25,9 @@ interface BachecaLavoroProps {
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
+  const isStudente = user.tipo_utente === 'Studente'
+  console.log(user.tipo_utente)
+
   return (
     <div className="min-h-screen bg-neutral-50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
