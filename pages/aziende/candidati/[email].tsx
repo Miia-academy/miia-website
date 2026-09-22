@@ -41,10 +41,10 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
     return <Chip variant="flat" color="warning" className="text-neutral-700">Mancante</Chip>
   }
 
+  // FIX: Instradamento verso l'API di tracciamento e download GCS
   const getCvDownloadUrl = () => {
     if (!student.cv_url) return '#'
-    const joinChar = student.cv_url.includes('?') ? '&' : '?'
-    return `${student.cv_url}${joinChar}application_id=${encodeURIComponent(appId)}`
+    return `/api/job/download?file=${encodeURIComponent(student.cv_url)}&application_id=${encodeURIComponent(appId)}`
   }
 
   return (

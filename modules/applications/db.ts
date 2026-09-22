@@ -67,15 +67,29 @@ export async function markApplicationAsViewed(applicationId: string, companyEmai
   return rows[0] || null
 }
 
-// 5. Traccia il primo download del CV da parte dell'azienda
+// 5. Traccia il primo download del CV da parte dell'azienda con flag di controllo multiplo
 export async function markCvDownloaded(applicationId: string) {
-  const rows = await sql`
-    UPDATE applications
-    SET cv_downloaded_at = COALESCE(cv_downloaded_at, NOW())
+  const check = await sql`
+    SELECT cv_downloaded_at 
+    FROM applications 
     WHERE id = ${applicationId}
-    RETURNING id, cv_downloaded_at
   `
-  return rows[0] || null
+
+  if (check.length === 0) return null
+
+  const isFirstDownload = check[0].cv_downloaded_at === null
+
+  if (isFirstDownload) {
+    const rows = await sql`
+      UPDATE applications
+      SET cv_downloaded_at = NOW()
+      WHERE id = ${applicationId}
+      RETURNING id, cv_downloaded_at
+    `
+    return { ...rows[0], is_first_download: true }
+  }
+
+  return { id: applicationId, cv_downloaded_at: check[0].cv_downloaded_at, is_first_download: false }
 }
 
 // 6. Recupera le candidature per studente

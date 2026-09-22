@@ -50,7 +50,6 @@ async function applyHandler(req: NextApiRequest, res: NextApiResponse, authData:
   }
 
   try {
-    // 3. Evento: job_applied
     await trackEvent({
       eventName: 'job_applied',
       email: cleanStudentEmail,
@@ -60,7 +59,7 @@ async function applyHandler(req: NextApiRequest, res: NextApiResponse, authData:
         telefono_studente: authData.sms || '',
         link_studente: cvUrl,
         titolo_inserzione: job.title,
-        sede_lavoro: job.provincie.join(', '),
+        sede_lavoro: Array.isArray(job.provincie) ? job.provincie.join(', ') : '',
         nome_azienda: nomeAzienda,
         email_azienda: job.company_email,
         telefono_azienda: telefonoAzienda,

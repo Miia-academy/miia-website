@@ -39,9 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (job) {
           const isAccepted = status === 'validata'
-          const eventToStudent = isAccepted ? 'application_accepted' : 'application_rejected'
+          const statoPayload = isAccepted ? 'accettata' : 'rifiutata'
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+          const jobUrl = `${baseUrl}/lavoro/inserzioni/${job.id}`
 
-          // Recupero info studente da Brevo (nome e telefono) 
           let nomeStudente = application.student_email
           let telefonoStudente = ''
           try {
@@ -53,39 +54,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.warn('[API Admin Application] Impossibile recuperare info studente', fetchErr)
           }
 
-          // 4/5. Evento: application_accepted / application_rejected
+          let nomeAzienda = job.company_email
+          let telefonoAzienda = ''
+          try {
+            const compContact = await getContact({ identifier: job.company_email })
+            const attrs = compContact?.attributes || {}
+            nomeAzienda = attrs.AZIENDA || job.company_email
+            telefonoAzienda = attrs.SMS || attrs.TELEFONO || ''
+          } catch (fetchErr) {
+            console.warn('[API Admin Application] Impossibile recuperare info azienda', fetchErr)
+          }
+
           await trackEvent({
-            eventName: eventToStudent,
+            eventName: 'application_updated',
             email: application.student_email,
             properties: {
+              stato_candidatura: statoPayload,
               titolo_inserzione: job.title,
-              sede_lavoro: job.provincie.join(', '),
-              livello_esperienza: job.grado_esperienza,
-              tipo_contratto: job.tipo_contratto,
-              orario_lavoro: job.orari_lavoro,
-              frequenza_trasferte: job.trasferte,
+              sede_lavoro: Array.isArray(job.provincie) ? job.provincie.join(', ') : '',
+              livello_esperienza: job.grado_esperienza || '',
+              tipo_contratto: job.tipo_contratto || '',
+              orario_lavoro: job.orari_lavoro || '',
+              frequenza_trasferte: job.trasferte || '',
               compenso_lavoro: job.ral || '',
-              competenze_richieste: job.competenze.join(', '),
+              competenze_richieste: Array.isArray(job.competenze) ? job.competenze.join(', ') : '',
               nome_studente: nomeStudente,
               email_studente: application.student_email,
               telefono_studente: telefonoStudente,
               link_studente: application.cv_url,
+              nome_azienda: nomeAzienda,
+              email_azienda: job.company_email,
+              telefono_azienda: telefonoAzienda,
+              link_inserzione: jobUrl,
             },
           })
-
-          // Evento storico mantenuto verso l'azienda
-          if (isAccepted) {
-            await trackEvent({
-              eventName: 'candidate_received',
-              email: job.company_email,
-              properties: {
-                id_inserzione: application.job_id,
-                titolo_inserzione: job.title,
-                email_studente: application.student_email,
-                cv_url: application.cv_url,
-              },
-            })
-          }
         }
       } catch (crmError) {
         console.warn('[API Admin Application] Errore tracciamento Brevo:', crmError)
