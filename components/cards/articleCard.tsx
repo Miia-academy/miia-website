@@ -9,16 +9,17 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ article, isDark }: ArticleCardProps) {
-  const articleSlug = article.fullSlug ? `/${article.fullSlug}` : '#'
+  const articleSlug = `/${String(article.fullSlug || article.slug || '').replace(/^\/+/, '')}`
+  const imageAsset = article.image || article.cover_image
 
   return (
     <article className={cardClasses({ isDark })}>
       {/* Immagine con Tag sovrapposti in basso */}
-      {article.image?.filename && (
+      {imageAsset?.filename && (
         <NextLink href={articleSlug} className="relative block overflow-hidden rounded-xl">
           <Image
-            src={article.image.filename}
-            alt={article.image.alt || article.title || ''}
+            src={imageAsset.filename}
+            alt={imageAsset.alt || article.title || ''}
             isZoomed
             classNames={{
               wrapper: 'aspect-[16/10] w-full overflow-hidden',
@@ -64,8 +65,6 @@ export default function ArticleCard({ article, isDark }: ArticleCardProps) {
   )
 }
 
-// -- Tailwind Variants per la pulizia del componente --
-// -- Tailwind Variants --
 const cardClasses = tv({
   base: 'flex flex-col space-y-2 w-full',
   variants: {

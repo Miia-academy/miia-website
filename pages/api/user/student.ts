@@ -1,129 +1,136 @@
-// pages/api/user/student.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { uploadFile } from '@modules/google'
-import { upsertContact } from '@modules/brevo'
+import { UserService } from '@modules/user/service'
+import { withApiAuth } from '@modules/api-wrapper'
+import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 import type { AuthPayload } from '@modules/auth'
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: '4.5mb',
     },
   },
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
+const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: `Metodo ${req.method} non consentito` })
+async function studentHandler(req: NextApiRequest, res: NextApiResponse, authData: AuthPayload & { iat?: number; exp?: number }) {
+  const { email } = authData
+  if (!email) {
+    return res.status(400).json({ message: 'Email non trovata nella sessione' })
   }
-
-  // 1. Check autenticazione JWT
-  const token = req.cookies.miia_auth_token
-  if (!token) {
-    return res.status(401).json({ message: 'Non autorizzato: effettua prima il login' })
-  }
-
-  let authData: AuthPayload & { iat?: number; exp?: number }
-  try {
-    authData = jwt.verify(token, JWT_SECRET) as any
-  } catch {
-    return res.status(401).json({ message: 'Sessione scaduta o non valida' })
-  }
-
-  const { email, name, surname } = authData
 
   const {
     cvBase64,
     cvFileName,
     cvMimeType,
-    attributes // Gli attributi dal frontend (NOME, COGNOME, SMS, OCCUPAZIONE, COMUNE, PROVINCIA, RICERCA, COMPETENZE)
+    portfolioBase64,
+    portfolioFileName,
+    portfolioMimeType,
+    attributes,
   } = req.body
 
-  if (!email) {
-    return res.status(400).json({ message: 'Email non trovata nella sessione' })
+  let cvDownloadUrl = authData.cv_url || ''
+  let portfolioDownloadUrl = authData.portfolio_url || ''
+
+  if (cvBase64 && cvFileName) {
+    const buffer = Buffer.from(cvBase64.replace(/^data:.*;base64,/, ''), 'base64')
+    const sanitizedFileName = `${Date.now()}-cv-${cvFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
+    const uploadResult = await uploadFile({
+      fileBuffer: buffer,
+      fileName: sanitizedFileName,
+      mimeType: cvMimeType || 'application/pdf',
+      folderPath: 'cv',
+      isPublic: false,
+    })
+    cvDownloadUrl = `${BASE_URL}/api/job/download?file=${encodeURIComponent(uploadResult.id)}`
   }
 
-  try {
-    let cvDownloadUrl = authData.cv_url || (authData as any).cv || ''
-
-    // 2. Upload del CV su GCS Privato (se fornito un nuovo file)
-    if (cvBase64 && cvFileName) {
-      const buffer = Buffer.from(cvBase64.replace(/^data:application\/\w+;base64,/, ''), 'base64')
-      const sanitizedFileName = `${Date.now()}-${cvFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
-
-      const cvUploadResult = await uploadFile({
-        fileBuffer: buffer,
-        fileName: sanitizedFileName,
-        mimeType: cvMimeType || 'application/pdf',
-        folderPath: 'cv',
-        isPublic: false,
-      })
-
-      // Costruiamo l'URL sicuro che passa dalla nostra API di download
-      cvDownloadUrl = `${BASE_URL}/api/job/download?file=${encodeURIComponent(cvUploadResult.id)}`
-    }
-
-    // 3. Sync CRM Brevo
-    const brevoAttributes: Record<string, any> = {
-      NOME: attributes?.NOME || name || '',
-      COGNOME: attributes?.COGNOME || surname || '',
-      SMS: attributes?.SMS || '',
-      TIPO_UTENTE: 'Studente',
-      CV_URL: cvDownloadUrl,
-      ...(attributes || {})
-    }
-
-    await upsertContact({
-      email: email.trim().toLowerCase(),
-      attributes: brevoAttributes,
+  if (portfolioBase64 && portfolioFileName) {
+    const buffer = Buffer.from(portfolioBase64.replace(/^data:.*;base64,/, ''), 'base64')
+    const sanitizedName = `${Date.now()}-portfolio-${portfolioFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
+    const uploadResult = await uploadFile({
+      fileBuffer: buffer,
+      fileName: sanitizedName,
+      mimeType: portfolioMimeType || 'application/pdf',
+      folderPath: 'portfolio',
+      isPublic: false,
     })
-
-    // 4. Pulizia metadati JWT ed Estrazione delle competenze come array per la sessione
-    const { iat, exp, ...cleanAuthData } = authData
-
-    const competenzeArray = typeof attributes?.COMPETENZE === 'string'
-      ? attributes.COMPETENZE.split(', ').map((s: string) => s.trim()).filter(Boolean)
-      : (Array.isArray(attributes?.COMPETENZE) ? attributes.COMPETENZE : [])
-
-    // 💡 SALVIAMO TUTTI I DATI NEL PAYLOAD DEL COOKIE!
-    const updatedSessionPayload: Record<string, any> = {
-      ...cleanAuthData,
-      name: brevoAttributes.NOME,
-      surname: brevoAttributes.COGNOME,
-      sms: brevoAttributes.SMS,
-      occupazione: attributes?.OCCUPAZIONE || '',
-      comune: attributes?.COMUNE || '',
-      provincia: attributes?.PROVINCIA || '',
-      ricerca: typeof attributes?.RICERCA === 'boolean' ? attributes.RICERCA : false,
-      competenze: competenzeArray,
-      cv_url: cvDownloadUrl,
-      cv: cvDownloadUrl,
-    }
-
-    const updatedSessionToken = jwt.sign(updatedSessionPayload, JWT_SECRET, {
-      expiresIn: '30d',
-    })
-
-    const isProd = process.env.NODE_ENV === 'production'
-    const encodedUserData = encodeURIComponent(JSON.stringify(updatedSessionPayload))
-
-    res.setHeader('Set-Cookie', [
-      `miia_auth_token=${updatedSessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000; ${isProd ? 'Secure;' : ''}`,
-      `miia_user=${encodedUserData}; Path=/; SameSite=Lax; Max-Age=2592000; ${isProd ? 'Secure;' : ''}`,
-    ])
-
-    return res.status(200).json({
-      message: 'Preferenze e Curriculum aggiornati con successo!',
-      user: updatedSessionPayload,
-    })
-  } catch (error: any) {
-    console.error('[API Student Update Error]', error)
-    return res.status(500).json({
-      message: error?.message || 'Errore durante l\'aggiornamento del profilo studente',
-    })
+    portfolioDownloadUrl = `${BASE_URL}/api/job/download?file=${encodeURIComponent(uploadResult.id)}`
   }
+
+  const rawCompetenze = attributes?.COMPETENZE
+  const competenzeString = Array.isArray(rawCompetenze)
+    ? rawCompetenze.join(', ')
+    : typeof rawCompetenze === 'string'
+      ? rawCompetenze
+      : ''
+  const competenzeArray = competenzeString ? competenzeString.split(',').map((s) => s.trim()).filter(Boolean) : []
+
+  const nomeVal = attributes?.NOME || authData.nome || ''
+  const cognomeVal = attributes?.COGNOME || authData.cognome || ''
+  const smsVal = attributes?.SMS || authData.sms || ''
+  const indirizzoVal = attributes?.INDIRIZZO || authData.indirizzo || ''
+  const provinciaVal = attributes?.PROVINCIA || authData.provincia || ''
+  const ricercaAttivaVal = typeof attributes?.RICERCA_ATTIVA === 'boolean' ? attributes.RICERCA_ATTIVA : true
+  const automunitoVal = typeof attributes?.AUTOMUNITO === 'boolean' ? attributes.AUTOMUNITO : false
+  const trasferteVal = typeof attributes?.TRASFERTE === 'boolean' ? attributes.TRASFERTE : (typeof attributes?.DISPONIBILE_TRASFERTE === 'boolean' ? attributes.DISPONIBILE_TRASFERTE : false)
+
+  await UserService.syncStudentToCrm(email, {
+    NOME: nomeVal,
+    COGNOME: cognomeVal,
+    SMS: smsVal,
+    INDIRIZZO: indirizzoVal,
+    PROVINCIA: provinciaVal,
+    RICERCA_ATTIVA: ricercaAttivaVal,
+    AUTOMUNITO: automunitoVal,
+    TRASFERTE: trasferteVal,
+    COMPETENZE: competenzeString,
+    CV_URL: cvDownloadUrl,
+    PORTFOLIO_URL: portfolioDownloadUrl,
+  })
+
+  const { iat, exp, ...cleanAuthData } = authData
+  const updatedSessionPayload: AuthPayload = {
+    ...cleanAuthData,
+    email,
+    tipo_utente: 'Studente',
+    nome: nomeVal,
+    cognome: cognomeVal,
+    sms: smsVal,
+    indirizzo: indirizzoVal,
+    provincia: provinciaVal,
+    ricerca_attiva: ricercaAttivaVal,
+    automunito: automunitoVal,
+    trasferte: trasferteVal,
+    competenze: competenzeArray,
+    cv_url: cvDownloadUrl,
+    portfolio_url: portfolioDownloadUrl,
+  }
+
+  const updatedSessionToken = jwt.sign(updatedSessionPayload, JWT_SECRET, { expiresIn: SAFE_EXPIRES_IN })
+  const encodedUserData = encodeURIComponent(JSON.stringify(updatedSessionPayload))
+
+  const protocol = req.headers['x-forwarded-proto'] || 'http'
+  const isSecure = process.env.NODE_ENV === 'production' || protocol === 'https'
+  const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${SAFE_MAX_AGE}${isSecure ? '; Secure' : ''}`
+
+  res.setHeader('Set-Cookie', [
+    `miia_auth_token=${updatedSessionToken}; HttpOnly; ${cookieOptions}`,
+    `miia_user=${encodedUserData}; ${cookieOptions}`,
+  ])
+
+  return res.status(200).json({
+    message: 'Profilo studente aggiornato con successo!',
+    user: updatedSessionPayload,
+    cv_url: cvDownloadUrl,
+    portfolio_url: portfolioDownloadUrl,
+  })
 }
+
+export default withApiAuth({ allowedMethods: ['POST'], allowedRoles: ['Studente'] }, studentHandler)

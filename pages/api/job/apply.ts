@@ -1,66 +1,76 @@
-// pages/api/job/apply.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
-import jwt from 'jsonwebtoken'
+import { getJobById } from '@modules/jobs/db'
+import { createApplication } from '@modules/applications/db'
+import { trackEvent, getContact } from '@modules/brevo'
+import { withApiAuth } from '@modules/api-wrapper'
 import type { AuthPayload } from '@modules/auth'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+async function applyHandler(req: NextApiRequest, res: NextApiResponse, authData: AuthPayload) {
+  const { jobId, company_name } = req.body
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Metodo non consentito' })
+  if (!jobId) {
+    return res.status(400).json({ message: 'ID inserzione mancante' })
   }
 
-  // 1. Validazione sessione Studente
-  const token = req.cookies.miia_auth_token
-  if (!token) {
-    return res.status(401).json({ message: 'Devi essere loggato per candidarti' })
+  const job = await getJobById(jobId)
+  if (!job) {
+    return res.status(404).json({ message: 'Inserzione non trovata o chiusa' })
   }
 
-  let authData: AuthPayload
+  const cvUrl = authData.cv_url || req.body.cv_url || ''
+  if (!cvUrl) {
+    return res.status(400).json({ message: 'CV mancante nel profilo. Aggiorna il tuo profilo prima di candidarti.' })
+  }
+
+  const cleanStudentEmail = authData.email.trim().toLowerCase()
+
+  const application = await createApplication({
+    job_id: jobId,
+    student_email: cleanStudentEmail,
+    cv_url: cvUrl,
+  })
+
+  if (!application) {
+    return res.status(409).json({ message: 'Ti sei già candidato a questa inserzione in precedenza.' })
+  }
+
+  const studentName = `${authData.nome || ''} ${authData.cognome || ''}`.trim() || cleanStudentEmail
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+  const jobUrl = `${baseUrl}/lavoro/inserzioni/${job.id}`
+
+  let nomeAzienda = company_name || ''
+  let telefonoAzienda = ''
   try {
-    authData = jwt.verify(token, JWT_SECRET) as AuthPayload
-  } catch {
-    return res.status(401).json({ message: 'Sessione non valida o scaduta' })
+    const companyContact = await getContact({ identifier: job.company_email })
+    const attrs = companyContact?.attributes || {}
+    nomeAzienda = attrs.AZIENDA || nomeAzienda
+    telefonoAzienda = attrs.SMS || attrs.TELEFONO || ''
+  } catch (crmFetchError) {
+    console.warn('[API Job Apply] Impossibile recuperare anagrafica azienda per tracciamento:', crmFetchError)
   }
-
-  const { job_title, company_name, company_email } = req.body
-
-  if (!company_email || !job_title) {
-    return res.status(400).json({ message: 'Dati inserzione mancanti (company_email, job_title)' })
-  }
-
-  // 2. Costruzione del Nome Studente e CV URL
-  const studentName = `${authData.name || ''} ${authData.surname || ''}`.trim() || authData.email
-  const cvUrl = authData.cv_url || ''
 
   try {
-    // 3. Invio Evento a Brevo tramite la nostra rotta /api/crm
-    // Inviando company_email come identifiers, l'email di Brevo partirà verso l'AZIENDA!
-    const crmResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/crm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event: {
-          identifiers: { email_id: company_email.trim().toLowerCase() },
-          event_name: 'job_apply',
-          event_properties: {
-            company_name: company_name || '',
-            job_title: job_title || '',
-            student_name: studentName,
-            cv_url: cvUrl,
-            student_email: authData.email,
-          },
-        },
-      }),
+    await trackEvent({
+      eventName: 'job_applied',
+      email: cleanStudentEmail,
+      properties: {
+        nome_studente: studentName,
+        email_studente: cleanStudentEmail,
+        telefono_studente: authData.sms || '',
+        link_studente: cvUrl,
+        titolo_inserzione: job.title,
+        sede_lavoro: Array.isArray(job.provincie) ? job.provincie.join(', ') : '',
+        nome_azienda: nomeAzienda,
+        email_azienda: job.company_email,
+        telefono_azienda: telefonoAzienda,
+        link_inserzione: jobUrl,
+      },
     })
-
-    if (!crmResponse.ok) {
-      throw new Error('Errore durante l\'invio del tracciamento a Brevo')
-    }
-
-    return res.status(200).json({ message: 'Candidatura inviata con successo!' })
-  } catch (error: any) {
-    console.error('[API Job Apply Error]', error)
-    return res.status(500).json({ message: 'Errore durante l\'invio della candidatura' })
+  } catch (crmError) {
+    console.warn('[API Job Apply] Tracciamento Brevo fallito per job_applied:', crmError)
   }
+
+  return res.status(200).json({ message: 'Candidatura inviata con successo!', application })
 }
+
+export default withApiAuth({ allowedMethods: ['POST'], allowedRoles: ['Studente'] }, applyHandler)

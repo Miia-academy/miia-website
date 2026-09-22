@@ -1,111 +1,133 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createCompanyStory, uploadAssetToStoryblok } from '@modules/storyblok'
-import { upsertContact, trackEvent } from '@modules/brevo'
-import { generateMagicLink, type AuthPayload } from '@modules/auth'
+import { generateMagicLink, AuthPayload } from '@modules/auth'
+import { upsertContact, trackEvent, BrevoError } from '@modules/brevo'
+import { Storage } from '@google-cloud/storage'
+
+const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || Number(process.env.BREVO_AZIENDE_LIST_ID) || 30
+const PUBLIC_BUCKET_NAME = process.env.GCS_BUCKET_PUBLIC || 'miia-public'
+
+function getStorageClient() {
+  const clientEmail = process.env.GCS_CLIENT_EMAIL
+  const privateKey = process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, '\n')
+
+  if (!clientEmail || !privateKey) {
+    throw new Error('[GCS] Credenziali di servizio mancanti nelle variabili d\'ambiente')
+  }
+
+  return new Storage({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+  })
+}
+
+interface RegisterCompanyBody {
+  email: string
+  nome: string
+  contact_person?: string
+  sms?: string
+  telefono?: string
+  logoBase64?: string
+  logoFileName?: string
+  logoMimeType?: string
+  redirectUrl?: string
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: `Metodo ${req.method} non consentito` })
+    return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const {
-    nome,
-    contact_person,
-    email,
-    sms = false,
-    newsletter = false,
-    logoBase64,
-    logoFileName,
-    logoMimeType,
-    redirectUrl,
-  } = req.body
+  const { email, nome, contact_person, sms, telefono, logoBase64, logoFileName, logoMimeType, redirectUrl }: RegisterCompanyBody = req.body
 
-  if (!nome || !email) {
-    return res.status(400).json({ message: 'Nome Azienda ed Email sono obbligatori' })
+  if (!email || !nome) {
+    return res.status(400).json({ message: 'Email e Nome Azienda sono obbligatori' })
   }
 
-  const cleanEmail = email.trim().toLowerCase()
+  const cleanEmail = String(email).trim().toLowerCase()
+  const phoneValue = sms || telefono || ''
+
+  let finalLogoUrl = ''
+
+  // 1. Gestione caricamento immagine su Google Cloud Storage
+  if (logoBase64 && logoFileName) {
+    try {
+      const storage = getStorageClient()
+      const bucket = storage.bucket(PUBLIC_BUCKET_NAME)
+
+      const safeFileName = logoFileName.replace(/[^a-zA-Z0-9.-]/g, '_')
+      const uniqueFileName = `aziende/loghi/${Date.now()}-${safeFileName}`
+      const file = bucket.file(uniqueFileName)
+
+      const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+
+      await file.save(buffer, {
+        metadata: { contentType: logoMimeType || 'image/jpeg' },
+      })
+
+      finalLogoUrl = `https://storage.googleapis.com/${PUBLIC_BUCKET_NAME}/${uniqueFileName}`
+    } catch (gcsError) {
+      console.warn('[API Auth Register] Errore durante il caricamento del logo su GCS:', gcsError)
+    }
+  }
 
   try {
-    let logoUrl = ''
-
-    // 1. Upload Logo su Storyblok (se fornito)
-    if (logoBase64 && logoFileName) {
-      const buffer = Buffer.from(logoBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64')
-      logoUrl = await uploadAssetToStoryblok(buffer, logoFileName, logoMimeType || 'image/png')
-    }
-
-    // 2. Creazione della Story Azienda su Storyblok
-    const newStory = await createCompanyStory({
-      companyName: nome,
-      contactName: contact_person || '',
-      contactEmail: cleanEmail,
-      settore: 'interni',
-      logoUrl,
+    // 2. Registrazione o aggiornamento contatto in Brevo
+    await upsertContact({
+      email: cleanEmail,
+      attributes: {
+        AZIENDA: nome,
+        REFERENTE: contact_person || '',
+        SMS: phoneValue,
+        LOGO_URL: finalLogoUrl,
+        TIPO_UTENTE: 'Azienda',
+      },
+      listIds: [BREVO_LIST_AZIENDE],
     })
 
-    const storyblokId = String(newStory.id)
-    const storyblokUuid = String(newStory.uuid)
-
-    // 3. Costruzione Payload Utente per il Magic Link
-    const tokenPayload: AuthPayload = {
+    const payload: AuthPayload = {
       email: cleanEmail,
-      company: nome,
-      contact_person: contact_person || '',
-      storyblok_id: storyblokId,
-      storyblok_uuid: storyblokUuid,
       tipo_utente: 'Azienda',
+      azienda: nome,
+      referente: contact_person || '',
+      sms: phoneValue,
+      logo_url: finalLogoUrl,
     }
 
-    // 4. Generazione del Magic Link
-    const magicLink = generateMagicLink(req, tokenPayload, redirectUrl)
+    const magicLinkUrl = generateMagicLink(req, payload, redirectUrl)
 
-    // 5. Estrazione Nome e Cognome del referente
-    let firstName = contact_person || nome
-    let lastName = ''
-    if (contact_person && contact_person.trim().includes(' ')) {
-      const parts = contact_person.trim().split(/\s+/)
-      firstName = parts[0]
-      lastName = parts.slice(1).join(' ')
-    }
+    // 3. Tracciamento eventi
+    await trackEvent({
+      eventName: 'company_registered',
+      email: cleanEmail,
+      properties: {
+        nome_azienda: nome,
+        referente_azienda: contact_person || '',
+        email_azienda: cleanEmail,
+        telefono_azienda: phoneValue,
+      },
+    })
 
-    // 6. Sync Anagrafica Brevo con gli attributi ufficiali dello schema
-    try {
-      await upsertContact({
-        email: cleanEmail,
-        attributes: {
-          NOME: firstName,
-          COGNOME: lastName,
-          AZIENDA: nome, // 👈 Usa AZIENDA invece di RAGIONE_SOCIALE
-          STORYBLOK_ID: storyblokId,
-          STORYBLOK_UUID: storyblokUuid,
-          ISCRIZIONE_NEWSLETTER: Boolean(newsletter), // 👈 Attributo ufficiale della tua lista
-        },
-      })
-
-      await trackEvent({
-        eventName: 'register_business',
-        email: cleanEmail,
-        properties: {
-          company_name: nome,
-          contact_person: contact_person || '',
-          storyblok_id: storyblokId,
-          storyblok_uuid: storyblokUuid,
-          magic_link: magicLink,
-          opt_in_newsletter: Boolean(newsletter),
-        },
-      })
-    } catch (brevoError) {
-      console.error('[Brevo Sync Error]', brevoError)
-    }
+    await trackEvent({
+      eventName: 'magic_link_requested',
+      email: cleanEmail,
+      properties: {
+        magic_link: magicLinkUrl,
+        tipo_utente: 'Azienda',
+      },
+    })
 
     return res.status(200).json({
-      message: 'Registrazione avvenuta con successo! Ti abbiamo inviato una e-mail con il link per accedere.',
+      message: 'Registrazione aziendale completata! Controlla la tua email per accedere.',
     })
+
   } catch (error: any) {
-    console.error('[API Register Error]', error)
-    return res.status(500).json({
-      message: error?.message || 'Errore durante la registrazione aziendale',
-    })
+    console.error('[API Auth Register Business Error]', error)
+    if (error instanceof BrevoError) {
+      return res.status(error.status).json({ message: error.message })
+    }
+    return res.status(500).json({ message: 'Errore interno durante la registrazione' })
   }
 }

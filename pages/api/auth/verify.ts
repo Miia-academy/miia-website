@@ -5,90 +5,111 @@ import type { AuthPayload } from '@modules/auth'
 import { getContact } from '@modules/brevo'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
+const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' })
+    return res.status(405).json({ error: 'Metodo non consentito' })
   }
 
   const { token, redirect } = req.query
 
   if (!token || typeof token !== 'string') {
-    return res.redirect('/?error=missing_token')
+    return res.redirect('/aziende/login?error=missing_token')
   }
 
   try {
-    // 1. Decodifica del token temporaneo
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
 
-    if (!decoded.email) {
-      return res.redirect('/?error=invalid_payload')
+    if (!decoded || !decoded.email || !decoded.tipo_utente) {
+      return res.redirect('/aziende/login?error=invalid_payload')
     }
 
     const cleanEmail = decoded.email.trim().toLowerCase()
+    const tipoUtente = decoded.tipo_utente
 
-    // 2. Recupero dati e inferenza del ruolo da Brevo
-    let storyblokId = decoded.storyblok_id || ''
-    let storyblokUuid = decoded.storyblok_uuid || ''
-    let company = decoded.company || ''
-    let contactPerson = decoded.contact_person || ''
-    let name = decoded.name || ''
-    let surname = decoded.surname || ''
-    let tipoUtente: 'Azienda' | 'Studente' = decoded.tipo_utente || 'Azienda'
+    const sessionPayload: AuthPayload = {
+      email: cleanEmail,
+      tipo_utente: tipoUtente,
+    }
 
     try {
       const contact = await getContact({ identifier: cleanEmail })
-      const attrs = contact.attributes || {}
+      const attrs = contact?.attributes || {}
 
-      storyblokId = String(attrs.STORYBLOK_ID || attrs.storyblok_id || storyblokId)
-      storyblokUuid = String(attrs.STORYBLOK_UUID || attrs.storyblok_uuid || storyblokUuid)
+      if (tipoUtente === 'Azienda') {
+        sessionPayload.azienda = attrs.AZIENDA || attrs.NOME_AZIENDA || decoded.azienda || ''
+        sessionPayload.referente = attrs.REFERENTE || decoded.referente || ''
+        sessionPayload.sms = attrs.SMS || attrs.TELEFONO || decoded.sms || ''
+        sessionPayload.indirizzo = attrs.INDIRIZZO || decoded.indirizzo || ''
+        sessionPayload.sito_web = attrs.SITO_WEB || decoded.sito_web || ''
+        sessionPayload.descrizione = attrs.DESCRIZIONE || decoded.descrizione || ''
+        sessionPayload.logo_url = attrs.LOGO_URL || decoded.logo_url || ''
+      } else if (tipoUtente === 'Studente') {
+        sessionPayload.nome = attrs.NOME || attrs.FIRSTNAME || decoded.nome || ''
+        sessionPayload.cognome = attrs.COGNOME || attrs.LASTNAME || decoded.cognome || ''
+        sessionPayload.sms = attrs.SMS || attrs.TELEFONO || decoded.sms || ''
+        sessionPayload.indirizzo = attrs.INDIRIZZO || decoded.indirizzo || ''
+        sessionPayload.provincia = attrs.PROVINCIA || decoded.provincia || ''
+        sessionPayload.ricerca_attiva = typeof attrs.RICERCA_ATTIVA === 'boolean' ? attrs.RICERCA_ATTIVA : (decoded.ricerca_attiva ?? true)
+        sessionPayload.automunito = typeof attrs.AUTOMUNITO === 'boolean' ? attrs.AUTOMUNITO : (decoded.automunito ?? false)
+        sessionPayload.trasferte = typeof attrs.TRASFERTE === 'boolean' ? attrs.TRASFERTE : (decoded.trasferte ?? false)
+        sessionPayload.cv_url = attrs.CV_URL || decoded.cv_url || ''
+        sessionPayload.portfolio_url = attrs.PORTFOLIO_URL || decoded.portfolio_url || ''
 
-      // 🔍 DEDUZIONE RUOLO SOLIDA: Se esiste l'attributo AZIENDA, è un'Azienda, altrimenti uno Studente
-      const aziendaName = attrs.AZIENDA || attrs.azienda || company
-      if (aziendaName && aziendaName.trim() !== '') {
-        tipoUtente = 'Azienda'
-        company = aziendaName
-        contactPerson = attrs.NOME ? `${attrs.NOME} ${attrs.COGNOME || ''}`.trim() : contactPerson
-      } else {
-        tipoUtente = 'Studente'
-        name = attrs.NOME || attrs.nome || ''
-        surname = attrs.COGNOME || attrs.cognome || ''
+        const competenzeStr = attrs.COMPETENZE || ''
+        sessionPayload.competenze = competenzeStr ? competenzeStr.split(',').map((s: string) => s.trim()).filter(Boolean) : (decoded.competenze || [])
       }
     } catch (brevoErr) {
-      console.warn('[VERIFY API] Impossibile recuperare il contatto da Brevo, uso i dati di fallback del token:', brevoErr)
+      console.warn('[VERIFY API] Errore fetch Brevo, uso fallback token:', brevoErr)
+      if (tipoUtente === 'Azienda') {
+        sessionPayload.azienda = decoded.azienda || ''
+        sessionPayload.referente = decoded.referente || ''
+        sessionPayload.sms = decoded.sms || ''
+        sessionPayload.indirizzo = decoded.indirizzo || ''
+        sessionPayload.sito_web = decoded.sito_web || ''
+        sessionPayload.descrizione = decoded.descrizione || ''
+        sessionPayload.logo_url = decoded.logo_url || ''
+      } else if (tipoUtente === 'Studente') {
+        sessionPayload.nome = decoded.nome || ''
+        sessionPayload.cognome = decoded.cognome || ''
+        sessionPayload.sms = decoded.sms || ''
+        sessionPayload.indirizzo = decoded.indirizzo || ''
+        sessionPayload.provincia = decoded.provincia || ''
+        sessionPayload.ricerca_attiva = decoded.ricerca_attiva ?? true
+        sessionPayload.automunito = decoded.automunito ?? false,
+          sessionPayload.trasferte = decoded.trasferte ?? false
+        sessionPayload.cv_url = decoded.cv_url || ''
+        sessionPayload.portfolio_url = decoded.portfolio_url || ''
+        sessionPayload.competenze = decoded.competenze || []
+      }
     }
 
-    // 3. Ricostruzione del sessionPayload completo
-    const sessionPayload: AuthPayload = {
-      email: cleanEmail,
-      storyblok_id: storyblokId,
-      storyblok_uuid: storyblokUuid,
-      tipo_utente: tipoUtente,
-      company,
-      contact_person: contactPerson,
-      name,
-      surname,
-    }
-
-    // 4. Generazione Token di Sessione
     const sessionToken = jwt.sign(sessionPayload, JWT_SECRET, {
-      expiresIn: AUTH_JWT_EXPIRES_IN,
+      expiresIn: SAFE_EXPIRES_IN,
     })
 
     const encodedUserData = encodeURIComponent(JSON.stringify(sessionPayload))
-    const isProd = process.env.NODE_ENV === 'production'
 
-    // 5. Impostazione DOPPIO COOKIE (HttpOnly + Frontend UI)
+    const protocol = req.headers['x-forwarded-proto'] || 'http'
+    const isSecure = process.env.NODE_ENV === 'production' || protocol === 'https'
+    const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${SAFE_MAX_AGE}${isSecure ? '; Secure' : ''}`
+
     res.setHeader('Set-Cookie', [
-      `miia_auth_token=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
-      `miia_user=${encodedUserData}; Path=/; SameSite=Lax; Max-Age=${AUTH_COOKIE_MAX_AGE}; ${isProd ? 'Secure;' : ''}`,
+      `miia_auth_token=${sessionToken}; HttpOnly; ${cookieOptions}`,
+      `miia_user=${encodedUserData}; ${cookieOptions}`,
     ])
 
-    const destination =
-      typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/'
+    let destination = tipoUtente === 'Azienda' ? '/aziende/profilo' : '/studenti/profilo'
+
+    if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') && redirect !== '/') {
+      destination = redirect
+    }
+
     return res.redirect(destination)
+
   } catch (error) {
-    console.error('[VERIFY API] Token non valido o scaduto:', error)
-    return res.redirect('/?error=token_expired_or_invalid')
+    return res.redirect('/aziende/login?error=token_expired_or_invalid')
   }
 }
