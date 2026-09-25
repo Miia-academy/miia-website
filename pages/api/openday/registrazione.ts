@@ -6,24 +6,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 
-  const { email, area } = req.query
+  const { email, area, nome } = req.query
 
   if (!email || typeof email !== 'string') {
-    // Se manca l'email, reindirizza alla home o a un errore generico
     return res.redirect(302, '/')
   }
 
   const areaQuery = typeof area === 'string' ? area : ''
+  const nomeQuery = typeof nome === 'string' ? nome : ''
 
   try {
-    // 1. Recupero eventi tramite Storyblok Delivery API (CDN)
-    const sbToken = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW
+    const sbToken = process.env.STORYBLOK_TOKEN
     if (!sbToken) {
-      throw new Error('NEXT_PUBLIC_STORYBLOK_PREVIEW non configurato')
+      throw new Error('STORYBLOK_TOKEN non configurato')
     }
 
+    // Aggiunto filtro content_type=event
     const sbRes = await fetch(
-      `https://api.storyblok.com/v2/cdn/stories?token=${sbToken}&per_page=100`
+      `https://api.storyblok.com/v2/cdn/stories?token=${sbToken}&per_page=100&content_type=event`
     )
 
     if (!sbRes.ok) {
@@ -32,7 +32,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sbData = await sbRes.json()
 
-    // 2. Calcolo del prossimo Open Day
     const today = new Date()
     const upcomingEvents = (sbData.stories || [])
       .filter((story: any) => story.content?.date)
@@ -57,11 +56,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     let opendayDateStr = ''
+    let opendayDataLocale = ''
+
     if (targetEvent) {
       opendayDateStr = targetEvent.date.toISOString().split('T')[0]
+      opendayDataLocale = targetEvent.date.toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
     }
 
-    // 3. Preparazione Attributi e Chiamate a Brevo
     const attributes: Record<string, string> = {
       ULTIMA_AZIONE: 'openday',
     }
@@ -70,33 +75,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       attributes.OPENDAY = opendayDateStr
     }
 
-    // Upsert su Brevo
     await upsertContact({
       email: email.trim().toLowerCase(),
       listIds: [16],
       attributes,
     })
 
-    // Trigger automazione Open Day
     await trackEvent({
       eventName: 'submit_open_day',
       email: email.trim().toLowerCase(),
     })
 
-    // 4. Redirect con passaggio parametri di successo
     const redirectUrl = new URL('/conferma', `https://${req.headers.host || 'localhost'}`)
     redirectUrl.searchParams.append('status', 'success')
     redirectUrl.searchParams.append('type', 'openday')
-    if (areaQuery) {
-      redirectUrl.searchParams.append('area', areaQuery)
-    }
+
+    if (areaQuery) redirectUrl.searchParams.append('area', areaQuery)
+    if (nomeQuery) redirectUrl.searchParams.append('nome', nomeQuery)
+    if (opendayDataLocale) redirectUrl.searchParams.append('openday_data', opendayDataLocale)
 
     return res.redirect(302, redirectUrl.toString().replace(redirectUrl.origin, ''))
 
   } catch (error) {
     console.error('[OpenDay Enroll Error]:', error)
-
-    // Redirect con passaggio parametri di errore per feedback visivo
     const errorUrl = new URL('/conferma', `https://${req.headers.host || 'localhost'}`)
     errorUrl.searchParams.append('status', 'error')
     errorUrl.searchParams.append('type', 'openday')

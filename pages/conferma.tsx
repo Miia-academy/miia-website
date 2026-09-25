@@ -144,27 +144,28 @@ export default function Feedback() {
                 <title>Conferma partecipazione Open Day</title>
               </Head>
               <h1 className={title()}>
-                {params.nome ? (
-                  <>
-                    <span>Buongiorno {params.nome},</span>
-                    <br />
-                  </>
-                ) : (
-                  <>
-                    <span>Tutto pronto!</span>
-                    <br />
-                  </>
-                )}
+                <span>{params.nome ? `Ciao ${params.nome},` : 'Ciao,'}</span>
+                <br />
                 <span className="text-5xl">
-                  {params.type === 'openday'
-                    ? `L'iscrizione all'Open Day ${areaFormatted ? `di ${areaFormatted}` : ''} è confermata!`
-                    : 'grazie per aver confermato la tua partecipazione all’Open Day!'}
+                  l'iscrizione all'Open Day è confermata!
                 </span>
               </h1>
-              <p className={description()}>
-                Nei prossimi giorni riceverai via email i dettagli per accedere
-                all’incontro. {collegamentoCorso ? 'Se vuoi iniziare a farti un’idea dei temi che affronteremo, visita la pagina del corso.' : 'Nel frattempo, puoi esplorare il nostro sito per scoprire di più.'}
-              </p>
+              <div className={description()}>
+                <p className="mb-4">
+                  Confermiamo che il tuo nominativo è stato inserito tra i partecipanti al prossimo Open Day {areaFormatted ? `di ${areaFormatted} ` : ''}design.
+                </p>
+                {params.openday_data && (
+                  <p className="mb-4">
+                    L’incontro si svolgerà il giorno <strong>{params.openday_data}</strong> online alle ore 21:00 per circa un'ora, in diretta con la nostra direzione e i docenti, per offrirti una panoramica completa e concreta del nostro percorso formativo.
+                  </p>
+                )}
+                <p className="mb-4">
+                  Il giorno dell'Open Day riceverai il link per collegarti alla video call un'ora prima dell'inizio.
+                </p>
+                <p>
+                  Sarà un piacere incontrarti, anche se virtualmente!
+                </p>
+              </div>
               {collegamentoCorso ? (
                 <Button href={collegamentoCorso} color="primary" as={HeroLink}>
                   Visita la pagina
