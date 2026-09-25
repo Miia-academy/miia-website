@@ -91,6 +91,31 @@ function buildEvent(
   const properties: { [key: string]: Date | string } = {}
   const today = new Date()
 
+  const areaValue = data['area']?.value
+  let selectedArea: string | null = null
+
+  if (Array.isArray(areaValue) && areaValue.length > 0) {
+    selectedArea = String(areaValue[0]).toLowerCase()
+  } else if (typeof areaValue === 'string' && areaValue.trim() !== '') {
+    selectedArea = areaValue.toLowerCase()
+  }
+
+  if (selectedArea) {
+    const matchingEvent = globalEvents
+      .filter((ev) => !!ev.date && ev.name?.toLowerCase().includes(selectedArea as string))
+      .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
+      .find((ev) => new Date(ev.date!) >= today)
+
+    if (matchingEvent?.date) {
+      const nextEventDate = new Date(matchingEvent.date)
+      properties['openday'] = nextEventDate
+      properties['openday_data'] = nextEventDate.toLocaleDateString(
+        'it-IT',
+        dateFormat
+      )
+    }
+  }
+
   Object.entries(data)
     .filter(([name]) => !eventFilterData.includes(name))
     .forEach(([name, field]) => {
@@ -100,23 +125,6 @@ function buildEvent(
       if (typeof value === 'number') {
         properties[name] = value.toString()
       } else if (Array.isArray(value)) {
-        if (name === 'area' && value.length > 0) {
-          const selectedArea = String(value[0]).toLowerCase()
-
-          const matchingEvent = globalEvents
-            .filter((ev) => {
-              if (!ev.date) return false
-              return ev.name?.toLowerCase().includes(selectedArea)
-            })
-            .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
-            .find((ev) => new Date(ev.date!) >= today)
-
-          if (matchingEvent?.date) {
-            properties['openday_data'] = new Date(
-              matchingEvent.date
-            ).toLocaleDateString('it-IT', dateFormat)
-          }
-        }
         properties[name] = value.join(', ')
       } else if (typeof value === 'string' && value.trim() !== '') {
         const dateValue = new Date(value)
@@ -376,6 +384,16 @@ export default function Form({
       Object.entries(newData).map(([key, field]) => [key, field?.value])
     )
 
+    if (event.event_properties['openday']) {
+      rawFieldValues.openday = event.event_properties['openday']
+      rawFieldValues.openday_data = event.event_properties['openday_data']
+      contact.attributes = {
+        ...contact.attributes,
+        OPENDAY: event.event_properties['openday'],
+        OPENDAY_DATA: event.event_properties['openday_data'],
+      }
+    }
+
     const payload = {
       contact,
       event,
@@ -448,8 +466,6 @@ export default function Form({
     return text
   }, [])
 
-  // Verifica dinamica: nascondi il campo solo se è tra quelli "riservati" 
-  // e se esiste effettivamente un valore nel profilo recuperato dal CRM.
   const isFieldPopulatedByCrm = useCallback(
     (fieldId: string) => {
       if (!user || !hiddenUserFields.includes(fieldId)) return false
@@ -530,7 +546,6 @@ export default function Form({
 
             {state !== 'done' &&
               visibleFields.map((field) => {
-                // Se il campo non ha un id o se è stato correttamente popolato dal CRM, lo nascondiamo.
                 if (!field.id || isFieldPopulatedByCrm(field.id)) return null
 
                 return (
@@ -617,7 +632,7 @@ export default function Form({
 }
 
 const titles = {
-  new: '###Bentornato {{nome}}!',
+  new: '###Benvenuto {{nome}}!',
   user: '###Bentornato {{nome}}!\nAbbiamo recuperato i tuoi dati.',
   done: '###Grazie {{nome}}!',
 }
