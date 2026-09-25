@@ -25,6 +25,10 @@ export default function Feedback() {
 
   const { title, subtitle, description, wrapper } = classes()
 
+  const areaFormatted = params.area
+    ? String(params.area).charAt(0).toUpperCase() + String(params.area).slice(1)
+    : ''
+
   return (
     <main>
       <section className="relative flex flex-col justify-center p-6 sm:py-8 md:py-10 lg:py-12 max-w-[1280px] min-h-inherit mx-auto h-screen">
@@ -132,30 +136,67 @@ export default function Feedback() {
               </p>
             </Fragment>
           )}
-          {params.openday && (
+
+          {/* Blocco Open Day (Successo) */}
+          {(params.openday || (params.type === 'openday' && params.status === 'success')) && (
             <Fragment>
               <Head>
-                <title>Conferma partecipazione</title>
+                <title>Conferma partecipazione Open Day</title>
               </Head>
               <h1 className={title()}>
-                <span>Buongiorno {params.nome || null},</span>
-                <br />
+                {params.nome ? (
+                  <>
+                    <span>Buongiorno {params.nome},</span>
+                    <br />
+                  </>
+                ) : (
+                  <>
+                    <span>Tutto pronto!</span>
+                    <br />
+                  </>
+                )}
                 <span className="text-5xl">
-                  per aver confermato la tua partecipazione all’Open Day!
+                  {params.type === 'openday'
+                    ? `L'iscrizione all'Open Day ${areaFormatted ? `di ${areaFormatted}` : ''} è confermata!`
+                    : 'grazie per aver confermato la tua partecipazione all’Open Day!'}
                 </span>
               </h1>
               <p className={description()}>
-                Nei prossimi giorni riceverai via email il link per accedere
-                all’incontro. Se vuoi iniziare a farti un’idea dei temi che
-                affronteremo, visita la pagina del corso.
+                Nei prossimi giorni riceverai via email i dettagli per accedere
+                all’incontro. {collegamentoCorso ? 'Se vuoi iniziare a farti un’idea dei temi che affronteremo, visita la pagina del corso.' : 'Nel frattempo, puoi esplorare il nostro sito per scoprire di più.'}
               </p>
-              {collegamentoCorso && (
+              {collegamentoCorso ? (
                 <Button href={collegamentoCorso} color="primary" as={HeroLink}>
                   Visita la pagina
+                </Button>
+              ) : (
+                <Button href="/corsi" color="primary" as={HeroLink}>
+                  Scopri i corsi
                 </Button>
               )}
             </Fragment>
           )}
+
+          {/* Blocco Open Day (Errore) */}
+          {params.type === 'openday' && params.status === 'error' && (
+            <Fragment>
+              <Head>
+                <title>Errore iscrizione Open Day</title>
+              </Head>
+              <h1 className={title()}>
+                <span className="text-5xl text-danger-500">
+                  Ops, qualcosa è andato storto!
+                </span>
+              </h1>
+              <p className={description()}>
+                Si è verificato un errore imprevisto durante l'iscrizione all'Open Day {areaFormatted ? `di ${areaFormatted}` : ''}. Ti preghiamo di riprovare più tardi o di contattare la segreteria.
+              </p>
+              <Button href="/" color="primary" as={HeroLink}>
+                Torna alla home
+              </Button>
+            </Fragment>
+          )}
+
         </div>
       </section>
     </main>
