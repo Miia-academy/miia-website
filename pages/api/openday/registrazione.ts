@@ -16,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const nomeQuery = typeof nome === 'string' ? nome : ''
 
   try {
-    const sbToken = process.env.STORYBLOK_TOKEN
+    const sbToken = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW
     if (!sbToken) {
-      throw new Error('STORYBLOK_TOKEN non configurato')
+      throw new Error('NEXT_PUBLIC_STORYBLOK_PREVIEW non configurato')
     }
 
     // Aggiunto filtro content_type=event
