@@ -91,8 +91,12 @@ function buildEvent(
   const properties: Record<string, string | number | boolean> = {}
   const today = new Date()
 
-  // 1. Estrazione area con fallback per campi nascosti / download form
-  const rawArea = data['area']?.value || data['area_disciplinare']?.value || data['corso']?.value
+  const rawArea =
+    data['area']?.value ||
+    data['area_disciplinare']?.value ||
+    data['enroll']?.value ||
+    data['corso']?.value
+
   let selectedArea: string | null = null
 
   if (Array.isArray(rawArea) && rawArea.length > 0) {
@@ -101,7 +105,16 @@ function buildEvent(
     selectedArea = rawArea.toLowerCase()
   }
 
-  if (selectedArea) {
+  if (data['openday']?.value) {
+    const directDate = new Date(data['openday'].value)
+    if (!isNaN(directDate.valueOf())) {
+      properties['openday'] = directDate.toISOString()
+      properties['openday_data'] = directDate.toLocaleDateString(
+        'it-IT',
+        dateFormat
+      )
+    }
+  } else if (selectedArea) {
     const areaKeywordsMap: Record<string, string[]> = {
       interior: ['interior', 'interni'],
       interni: ['interior', 'interni'],
@@ -172,6 +185,7 @@ function buildEvent(
     event_properties: properties,
   }
 }
+
 function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
   const contactFilterData = ['email']
   return {
@@ -332,22 +346,35 @@ export default function Form({
     if (!field.error && field.value) {
       setState('search')
       try {
-        const response = await fetch('/api/crm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contact: { email: field.value } }),
-        })
+        const response = await fetch(
+          `/api/crm?email=${encodeURIComponent(field.value.trim().toLowerCase())}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
 
-        const responseData = response.ok ? await response.json() : null
-        const fetchedContact = responseData?.contact || null
+        if (!response.ok) {
+          setUser(null)
+          return
+        }
 
+        const fetchedContact = await response.json()
         setUser(fetchedContact)
 
         setData((prev) => {
-          const emailData = prev.email ? { ...prev.email } : { id: 'email', required: true, value: '' }
-          const nomeData = prev.nome ? { ...prev.nome } : { id: 'nome', required: false, value: '' }
-          const cognomeData = prev.cognome ? { ...prev.cognome } : { id: 'cognome', required: false, value: '' }
-          const smsData = prev.sms ? { ...prev.sms } : { id: 'sms', required: false, value: '' }
+          const emailData = prev.email
+            ? { ...prev.email }
+            : { id: 'email', required: true, value: '' }
+          const nomeData = prev.nome
+            ? { ...prev.nome }
+            : { id: 'nome', required: false, value: '' }
+          const cognomeData = prev.cognome
+            ? { ...prev.cognome }
+            : { id: 'cognome', required: false, value: '' }
+          const smsData = prev.sms
+            ? { ...prev.sms }
+            : { id: 'sms', required: false, value: '' }
 
           return {
             ...prev,
@@ -358,11 +385,15 @@ export default function Form({
             },
             nome: {
               ...nomeData,
-              value: fetchedContact?.attributes?.NOME || nomeData.value || '',
+              value:
+                fetchedContact?.attributes?.NOME || nomeData.value || '',
             },
             cognome: {
               ...cognomeData,
-              value: fetchedContact?.attributes?.COGNOME || cognomeData.value || '',
+              value:
+                fetchedContact?.attributes?.COGNOME ||
+                cognomeData.value ||
+                '',
             },
             sms: {
               ...smsData,
@@ -374,6 +405,7 @@ export default function Form({
         })
       } catch (e) {
         console.error('Errore recupero contatto Brevo:', e)
+        setUser(null)
       } finally {
         setState('open')
       }
@@ -425,11 +457,18 @@ export default function Form({
       contact,
       event,
       fields: rawFieldValues,
-      company: rawFieldValues.azienda || rawFieldValues.company || user?.attributes?.AZIENDA || '',
+      company:
+        rawFieldValues.azienda ||
+        rawFieldValues.company ||
+        user?.attributes?.AZIENDA ||
+        '',
       title: rawFieldValues.titolo || rawFieldValues.title || '',
-      description: rawFieldValues.messaggio || rawFieldValues.description || '',
+      description:
+        rawFieldValues.messaggio || rawFieldValues.description || '',
       location: rawFieldValues.citta || rawFieldValues.location || '',
-      area: Array.isArray(rawFieldValues.area) ? rawFieldValues.area[0] : rawFieldValues.area || '',
+      area: Array.isArray(rawFieldValues.area)
+        ? rawFieldValues.area[0]
+        : rawFieldValues.area || '',
       email: newData.email?.value,
     }
 
@@ -526,7 +565,7 @@ export default function Form({
         size="lg"
         isOpen={state !== 'close'}
         onOpenChange={(isOpen) => {
-          if (!isOpen) handleReset();
+          if (!isOpen) handleReset()
         }}
         isDismissable={false}
         isKeyboardDismissDisabled={true}
@@ -578,7 +617,13 @@ export default function Form({
                 return (
                   <StoryblokComponent
                     blok={field}
-                    data={data[field.id] || { id: field.id, required: !!field.required, value: '' }}
+                    data={
+                      data[field.id] || {
+                        id: field.id,
+                        required: !!field.required,
+                        value: '',
+                      }
+                    }
                     onChange={handleChange}
                     onBlur={field.id === 'email' ? handleUser : undefined}
                     key={field._uid || field.id}
