@@ -101,8 +101,31 @@ function buildEvent(
   }
 
   if (selectedArea) {
+    const areaKeywordsMap: Record<string, string[]> = {
+      interior: ['interior', 'interni'],
+      interni: ['interior', 'interni'],
+      fashion: ['fashion', 'moda'],
+      moda: ['fashion', 'moda'],
+    }
+
+    const keywords = areaKeywordsMap[selectedArea] || [selectedArea]
+
     const matchingEvent = globalEvents
-      .filter((ev) => !!ev.date && ev.name?.toLowerCase().includes(selectedArea as string))
+      .filter((ev) => {
+        if (!ev.date || !ev.isOpenday) return false
+
+        const nameMatch = keywords.some((kw) =>
+          ev.name?.toLowerCase().includes(kw)
+        )
+        const opendayMatch = keywords.some((kw) =>
+          ev.openday?.toLowerCase().includes(kw)
+        )
+        const pageUrlMatch = keywords.some((kw) =>
+          ev.page?.cached_url?.toLowerCase().includes(kw)
+        )
+
+        return nameMatch || opendayMatch || pageUrlMatch
+      })
       .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
       .find((ev) => new Date(ev.date!) >= today)
 
