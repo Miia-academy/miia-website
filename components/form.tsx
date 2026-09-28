@@ -88,16 +88,17 @@ function buildEvent(
     'newsletter',
     'validation',
   ]
-  const properties: { [key: string]: Date | string } = {}
+  const properties: Record<string, string | number | boolean> = {}
   const today = new Date()
 
-  const areaValue = data['area']?.value
+  // 1. Estrazione area con fallback per campi nascosti / download form
+  const rawArea = data['area']?.value || data['area_disciplinare']?.value || data['corso']?.value
   let selectedArea: string | null = null
 
-  if (Array.isArray(areaValue) && areaValue.length > 0) {
-    selectedArea = String(areaValue[0]).toLowerCase()
-  } else if (typeof areaValue === 'string' && areaValue.trim() !== '') {
-    selectedArea = areaValue.toLowerCase()
+  if (Array.isArray(rawArea) && rawArea.length > 0) {
+    selectedArea = String(rawArea[0]).toLowerCase()
+  } else if (typeof rawArea === 'string' && rawArea.trim() !== '') {
+    selectedArea = rawArea.toLowerCase()
   }
 
   if (selectedArea) {
@@ -131,7 +132,7 @@ function buildEvent(
 
     if (matchingEvent?.date) {
       const nextEventDate = new Date(matchingEvent.date)
-      properties['openday'] = nextEventDate
+      properties['openday'] = nextEventDate.toISOString()
       properties['openday_data'] = nextEventDate.toLocaleDateString(
         'it-IT',
         dateFormat
@@ -151,8 +152,8 @@ function buildEvent(
         properties[name] = value.join(', ')
       } else if (typeof value === 'string' && value.trim() !== '') {
         const dateValue = new Date(value)
-        if (!isNaN(dateValue.valueOf())) {
-          properties[name] = dateValue
+        if (!isNaN(dateValue.valueOf()) && value.includes('-')) {
+          properties[name] = dateValue.toISOString()
           properties[name + '_data'] = dateValue.toLocaleDateString(
             'it-IT',
             dateFormat
@@ -171,7 +172,6 @@ function buildEvent(
     event_properties: properties,
   }
 }
-
 function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
   const contactFilterData = ['email']
   return {
@@ -408,12 +408,16 @@ export default function Form({
     )
 
     if (event.event_properties['openday']) {
-      rawFieldValues.openday = event.event_properties['openday']
-      rawFieldValues.openday_data = event.event_properties['openday_data']
+      const opendayVal = String(event.event_properties['openday'])
+      const opendayDataVal = String(event.event_properties['openday_data'])
+
+      rawFieldValues.openday = opendayVal
+      rawFieldValues.openday_data = opendayDataVal
+
       contact.attributes = {
         ...contact.attributes,
-        OPENDAY: event.event_properties['openday'],
-        OPENDAY_DATA: event.event_properties['openday_data'],
+        OPENDAY: opendayVal,
+        OPENDAY_DATA: opendayDataVal,
       }
     }
 
