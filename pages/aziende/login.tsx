@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Link from 'next/link'
 import { Tabs, Tab, Input, Button, Alert, Checkbox } from '@heroui/react'
 import { Logo } from '@public/logo'
 
@@ -58,6 +59,12 @@ export default function CompanyLogin() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!logoFile) {
+      setErrorMsg('Il logo aziendale è obbligatorio per completare la registrazione.')
+      return
+    }
+
     if (!regForm.termsAccepted) {
       setErrorMsg('Devi accettare i termini per proseguire.')
       return
@@ -72,12 +79,9 @@ export default function CompanyLogin() {
     setErrorMsg(null)
 
     try {
-      let logoBase64 = '', logoFileName = '', logoMimeType = ''
-      if (logoFile) {
-        logoBase64 = await fileToBase64(logoFile)
-        logoFileName = logoFile.name
-        logoMimeType = logoFile.type
-      }
+      const logoBase64 = await fileToBase64(logoFile)
+      const logoFileName = logoFile.name
+      const logoMimeType = logoFile.type
 
       const payload = { ...regForm, telefono: finalPhone, logoBase64, logoFileName, logoMimeType, redirectUrl }
 
@@ -101,7 +105,6 @@ export default function CompanyLogin() {
   }
 
   return (
-    // Aggiunto "relative" al wrapper principale per posizionare il logo
     <div className="relative min-h-screen flex items-center justify-center bg-neutral-50 p-4 overflow-x-hidden">
       <Head><title>Area Aziende | MIIA</title></Head>
 
@@ -110,7 +113,7 @@ export default function CompanyLogin() {
       </div>
 
       <div className="w-full max-w-lg bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-neutral-200 flex flex-col max-h-[90vh] relative z-20">
-        <h1 className="text-2xl font-bold mb-6 text-center shrink-0">Area Riservata Aziende</h1>
+        <h1 className="text-2xl font-bold mb-4 text-center shrink-0">Area Riservata Aziende</h1>
 
         {successMsg ? (
           <Alert color="success" variant="flat">{successMsg}</Alert>
@@ -124,18 +127,50 @@ export default function CompanyLogin() {
           >
             <Tab key="login" title="Accedi">
               <form onSubmit={handleLogin} className="flex flex-col gap-5 mt-6 px-1">
-                <Input type="email" label="Email Aziendale" isRequired value={loginEmail} onValueChange={setLoginEmail} variant="flat" />
-                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-bold shadow-sm">Invia Link di Accesso</Button>
+                <Input
+                  type="email"
+                  label="Email Aziendale"
+                  isRequired
+                  classNames={{ label: "after:text-red-500" }}
+                  value={loginEmail}
+                  onValueChange={setLoginEmail}
+                  variant="flat"
+                />
+                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-bold shadow-sm">
+                  Invia Link di Accesso
+                </Button>
               </form>
             </Tab>
 
             <Tab key="register" title="Registrati">
-              <form onSubmit={handleRegister} className="flex flex-col mt-6 h-[50vh] min-h-[350px] max-h-[500px]">
+              <form onSubmit={handleRegister} className="flex flex-col mt-2 h-[50vh] min-h-[350px] max-h-[500px]">
 
-                <div className="flex-1 overflow-y-auto px-1 pb-4 space-y-4">
-                  <Input label="Nome Azienda" isRequired value={regForm.nome} onValueChange={v => setRegForm({ ...regForm, nome: v })} variant="flat" />
-                  <Input label="Nome Referente" isRequired value={regForm.contact_person} onValueChange={v => setRegForm({ ...regForm, contact_person: v })} variant="flat" />
-                  <Input type="email" label="Email Aziendale" isRequired value={regForm.email} onValueChange={v => setRegForm({ ...regForm, email: v })} variant="flat" />
+                <div className="flex-1 overflow-y-auto px-1 pb-3 space-y-4">
+                  <Input
+                    label="Nome Azienda"
+                    isRequired
+                    classNames={{ label: "after:text-red-500" }}
+                    value={regForm.nome}
+                    onValueChange={v => setRegForm({ ...regForm, nome: v })}
+                    variant="flat"
+                  />
+                  <Input
+                    label="Nome Referente"
+                    isRequired
+                    classNames={{ label: "after:text-red-500" }}
+                    value={regForm.contact_person}
+                    onValueChange={v => setRegForm({ ...regForm, contact_person: v })}
+                    variant="flat"
+                  />
+                  <Input
+                    type="email"
+                    label="Email Aziendale"
+                    isRequired
+                    classNames={{ label: "after:text-red-500" }}
+                    value={regForm.email}
+                    onValueChange={v => setRegForm({ ...regForm, email: v })}
+                    variant="flat"
+                  />
 
                   <Input
                     type="tel"
@@ -147,24 +182,43 @@ export default function CompanyLogin() {
                     variant="flat"
                   />
 
-                  <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100">
-                    <label className="text-sm font-medium text-neutral-600">Logo Aziendale (Opzionale)</label>
+                  <div className="flex flex-col gap-2 border-t border-neutral-100">
+                    <label className="text-xs font-medium text-neutral-500">
+                      Logo Aziendale<span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="file"
                       accept="image/*"
+                      required
                       onChange={(e) => e.target.files && setLogoFile(e.target.files[0])}
                       className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 transition-colors"
                     />
                   </div>
 
-                  <div className="pt-2">
-                    <Checkbox isSelected={regForm.termsAccepted} onValueChange={v => setRegForm({ ...regForm, termsAccepted: v })}>
-                      <span className="text-sm text-neutral-600">Accetto i termini di collaborazione</span>
-                    </Checkbox>
+                  <div className="pt-2 flex items-center gap-2">
+                    <Checkbox
+                      isSelected={regForm.termsAccepted}
+                      onValueChange={v => setRegForm({ ...regForm, termsAccepted: v })}
+                    />
+                    <span
+                      className="text-sm text-neutral-600 cursor-pointer select-none"
+                      onClick={() => setRegForm({ ...regForm, termsAccepted: !regForm.termsAccepted })}
+                    >
+                      Accetto i{' '}
+                      <Link
+                        href="/aziende/termini-condizioni"
+                        target="_blank"
+                        className="text-primary underline font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        termini e condizioni
+                      </Link>{' '}
+                      di collaborazione
+                    </span>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-neutral-100 mt-auto shrink-0 bg-white px-1">
+                <div className="pt-3 border-t border-neutral-100 mt-auto shrink-0 bg-white px-1">
                   <Button type="submit" isLoading={loading} color="primary" className="w-full h-12 font-bold shadow-sm">
                     Invia Richiesta
                   </Button>

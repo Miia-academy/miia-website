@@ -19,6 +19,7 @@ interface BusinessStudentViewProps {
     ricerca_attiva: boolean | null
     automunito: boolean | null
     trasferte: boolean | null
+    freelance: boolean | null
     cv_url: string
     portfolio_url: string
     competenze: string[]
@@ -63,14 +64,15 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
     trueLabel: string,
     falseLabel: string
   ) => {
-    if (val === true) return <Chip variant="flat" color="primary">✓ {trueLabel}</Chip>
-    if (val === false) return <Chip variant="flat" color="default">✕ {falseLabel}</Chip>
+    if (val === true) return <Chip variant="flat" color="success">{trueLabel}</Chip>
+    if (val === false) return <Chip variant="flat" color="danger">✕ {falseLabel}</Chip>
     return <Chip variant="flat" color="warning" className="text-neutral-700">Mancante</Chip>
   }
 
   const getCvDownloadUrl = () => {
     if (!student.cv_url) return '#'
-    return `/api/job/download?file=${encodeURIComponent(student.cv_url)}&application_id=${encodeURIComponent(appId)}`
+    const separator = student.cv_url.includes('?') ? '&' : '?'
+    return `${student.cv_url}${separator}application_id=${encodeURIComponent(appId)}`
   }
 
   return (
@@ -139,6 +141,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
               <div className="flex flex-wrap gap-2">
                 {renderBooleanStatus(student.automunito, 'Automunito', 'Non Automunito')}
                 {renderBooleanStatus(student.trasferte, 'Disponibile a Trasferte', 'No Trasferte')}
+                {renderBooleanStatus(student.freelance, 'Freelance / P.IVA', 'Nessuna P.IVA')}
               </div>
             </div>
 
@@ -288,6 +291,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           ricerca_attiva: parseBooleanAttr(attrs.RICERCA_ATTIVA),
           automunito: parseBooleanAttr(attrs.AUTOMUNITO),
           trasferte: parseBooleanAttr(attrs.TRASFERTE),
+          freelance: parseBooleanAttr(attrs.FREELANCE),
           cv_url: attrs.CV_URL || '',
           portfolio_url: attrs.PORTFOLIO_URL || '',
           competenze: parseAndHealCompetenze(attrs.COMPETENZE),

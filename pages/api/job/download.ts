@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { markCvDownloaded } from '@modules/applications/db'
 import { getJobByApplicationId } from '@modules/jobs/db'
 import { trackEvent, getContact } from '@modules/brevo'
+import { getSignedFileUrl } from '@modules/google'
 import type { AuthPayload } from '@modules/auth'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
@@ -92,6 +93,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  // 3. Redirect istantaneo all'URL originale passatogli
-  return res.redirect(302, filePath)
+  // 3. Generazione Signed URL e Redirect
+  try {
+    const signedUrl = await getSignedFileUrl(filePath, false)
+    return res.redirect(302, signedUrl)
+  } catch (storageErr) {
+    console.error('[API Job Download] Errore generazione Signed URL:', storageErr)
+    return res.status(500).json({ message: 'Errore durante la generazione del link di download.' })
+  }
 }

@@ -62,8 +62,20 @@ export async function uploadFile({
     id: fullPath,
     name: fileName,
     bucket: targetBucket.name,
-    // Se è privato, l'URL pubblica non funzionerà (dovremo usare una Signed URL in futuro),
-    // ma la generiamo comunque per i file di miia-assets
     publicUrl: `https://storage.googleapis.com/${targetBucket.name}/${fullPath}`,
   }
+}
+
+export async function getSignedFileUrl(filePath: string, isPublic = false): Promise<string> {
+  const { publicBucket, privateBucket } = getGcsClient()
+  const targetBucket = isPublic ? publicBucket : privateBucket
+  const file = targetBucket.file(filePath)
+
+  const [url] = await file.getSignedUrl({
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 15 * 60 * 1000, // Scadenza 15 minuti
+  })
+
+  return url
 }
