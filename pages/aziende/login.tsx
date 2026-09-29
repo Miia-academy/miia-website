@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Link from 'next/link'
 import { Tabs, Tab, Input, Button, Alert, Checkbox } from '@heroui/react'
 import { Logo } from '@public/logo'
 
@@ -58,6 +59,12 @@ export default function CompanyLogin() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!logoFile) {
+      setErrorMsg('Il logo aziendale è obbligatorio per completare la registrazione.')
+      return
+    }
+
     if (!regForm.termsAccepted) {
       setErrorMsg('Devi accettare i termini per proseguire.')
       return
@@ -72,12 +79,9 @@ export default function CompanyLogin() {
     setErrorMsg(null)
 
     try {
-      let logoBase64 = '', logoFileName = '', logoMimeType = ''
-      if (logoFile) {
-        logoBase64 = await fileToBase64(logoFile)
-        logoFileName = logoFile.name
-        logoMimeType = logoFile.type
-      }
+      const logoBase64 = await fileToBase64(logoFile)
+      const logoFileName = logoFile.name
+      const logoMimeType = logoFile.type
 
       const payload = { ...regForm, telefono: finalPhone, logoBase64, logoFileName, logoMimeType, redirectUrl }
 
@@ -101,7 +105,6 @@ export default function CompanyLogin() {
   }
 
   return (
-    // Aggiunto "relative" al wrapper principale per posizionare il logo
     <div className="relative min-h-screen flex items-center justify-center bg-neutral-50 p-4 overflow-x-hidden">
       <Head><title>Area Aziende | MIIA</title></Head>
 
@@ -148,10 +151,11 @@ export default function CompanyLogin() {
                   />
 
                   <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100">
-                    <label className="text-sm font-medium text-neutral-600">Logo Aziendale (Opzionale)</label>
+                    <label className="text-sm font-medium text-neutral-600">Logo Aziendale (Obbligatorio) *</label>
                     <input
                       type="file"
                       accept="image/*"
+                      required
                       onChange={(e) => e.target.files && setLogoFile(e.target.files[0])}
                       className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 transition-colors"
                     />
@@ -159,7 +163,9 @@ export default function CompanyLogin() {
 
                   <div className="pt-2">
                     <Checkbox isSelected={regForm.termsAccepted} onValueChange={v => setRegForm({ ...regForm, termsAccepted: v })}>
-                      <span className="text-sm text-neutral-600">Accetto i termini di collaborazione</span>
+                      <span className="text-sm text-neutral-600">
+                        Accetto i <Link href="/aziende/termini-condizioni" target="_blank" className="text-primary hover:underline font-medium">termini e condizioni</Link> di collaborazione
+                      </span>
                     </Checkbox>
                   </div>
                 </div>
