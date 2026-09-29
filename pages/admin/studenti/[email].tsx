@@ -19,6 +19,7 @@ interface StudentDetailProps {
     ricerca_attiva: boolean | null
     automunito: boolean | null
     trasferte: boolean | null
+    freelance: boolean | null
     cv_url: string
     portfolio_url: string
     competenze: string[]
@@ -169,6 +170,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               <div className="flex flex-wrap gap-2">
                 {renderBooleanStatus(student.automunito, 'Automunito', 'Automunito', 'Non Automunito')}
                 {renderBooleanStatus(student.trasferte, 'Trasferte', 'Disponibile a Trasferte', 'No Trasferte')}
+                {renderBooleanStatus(student.freelance, 'Freelance', 'Freelance / P.IVA', 'Nessuna P.IVA')}
               </div>
             </div>
 
@@ -391,6 +393,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           ricerca_attiva: parseBooleanAttr(attrs.RICERCA_ATTIVA),
           automunito: parseBooleanAttr(attrs.AUTOMUNITO),
           trasferte: parseBooleanAttr(attrs.TRASFERTE),
+          freelance: parseBooleanAttr(attrs.FREELANCE),
           cv_url: attrs.CV_URL || '',
           portfolio_url: attrs.PORTFOLIO_URL || '',
           competenze: parseAndHealCompetenze(attrs.COMPETENZE),

@@ -123,6 +123,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                     {profileData.ricerca_attiva ? <Chip size="sm" color="success" variant="flat">Ricerca Attiva</Chip> : <Chip size="sm" color="default" variant="flat">Non in ricerca</Chip>}
                     {profileData.automunito && <Chip size="sm" color="success" variant="flat">Automunito</Chip>}
                     {profileData.trasferte && <Chip size="sm" color="success" variant="flat">Trasferte Ok</Chip>}
+                    {profileData.freelance && <Chip size="sm" color="warning" variant="flat">Freelance / P.IVA</Chip>}
                   </div>
                 </div>
                 <div>
@@ -263,6 +264,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     ricerca_attiva: decoded.ricerca_attiva ?? true,
     automunito: decoded.automunito ?? false,
     trasferte: decoded.trasferte ?? (decoded as any).disponibile_trasferte ?? false,
+    freelance: (decoded as any).freelance ?? false,
     competenze: parseAndHealCompetenze(decoded.competenze),
     cv_url: decoded.cv_url || '',
     portfolio_url: decoded.portfolio_url || '',

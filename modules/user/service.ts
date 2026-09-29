@@ -13,6 +13,7 @@ export interface StudentBrevoAttributes {
   RICERCA_ATTIVA: boolean
   AUTOMUNITO: boolean
   TRASFERTE: boolean
+  FREELANCE: boolean
   COMPETENZE: string
   CV_URL: string
   PORTFOLIO_URL: string

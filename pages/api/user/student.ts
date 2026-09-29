@@ -80,6 +80,7 @@ async function studentHandler(req: NextApiRequest, res: NextApiResponse, authDat
   const ricercaAttivaVal = typeof attributes?.RICERCA_ATTIVA === 'boolean' ? attributes.RICERCA_ATTIVA : true
   const automunitoVal = typeof attributes?.AUTOMUNITO === 'boolean' ? attributes.AUTOMUNITO : false
   const trasferteVal = typeof attributes?.TRASFERTE === 'boolean' ? attributes.TRASFERTE : (typeof attributes?.DISPONIBILE_TRASFERTE === 'boolean' ? attributes.DISPONIBILE_TRASFERTE : false)
+  const freelanceVal = typeof attributes?.FREELANCE === 'boolean' ? attributes.FREELANCE : false
 
   await UserService.syncStudentToCrm(email, {
     NOME: nomeVal,
@@ -90,13 +91,14 @@ async function studentHandler(req: NextApiRequest, res: NextApiResponse, authDat
     RICERCA_ATTIVA: ricercaAttivaVal,
     AUTOMUNITO: automunitoVal,
     TRASFERTE: trasferteVal,
+    FREELANCE: freelanceVal,
     COMPETENZE: competenzeString,
     CV_URL: cvDownloadUrl,
     PORTFOLIO_URL: portfolioDownloadUrl,
   })
 
   const { iat, exp, ...cleanAuthData } = authData
-  const updatedSessionPayload: AuthPayload = {
+  const updatedSessionPayload = {
     ...cleanAuthData,
     email,
     tipo_utente: 'Studente',
@@ -108,10 +110,11 @@ async function studentHandler(req: NextApiRequest, res: NextApiResponse, authDat
     ricerca_attiva: ricercaAttivaVal,
     automunito: automunitoVal,
     trasferte: trasferteVal,
+    freelance: freelanceVal,
     competenze: competenzeArray,
     cv_url: cvDownloadUrl,
     portfolio_url: portfolioDownloadUrl,
-  }
+  } as AuthPayload & { freelance: boolean }
 
   const updatedSessionToken = jwt.sign(updatedSessionPayload, JWT_SECRET, { expiresIn: SAFE_EXPIRES_IN })
   const encodedUserData = encodeURIComponent(JSON.stringify(updatedSessionPayload))

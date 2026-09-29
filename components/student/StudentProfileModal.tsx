@@ -11,6 +11,7 @@ export interface StudentProfileData {
   ricerca_attiva: boolean
   automunito: boolean
   trasferte: boolean
+  freelance: boolean
   skills: Set<string>
   cv_url: string
   portfolio_url: string
@@ -109,6 +110,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
           RICERCA_ATTIVA: editForm.ricerca_attiva,
           AUTOMUNITO: editForm.automunito,
           TRASFERTE: editForm.trasferte,
+          FREELANCE: editForm.freelance,
           COMPETENZE: Array.from(editForm.skills),
         },
         cvBase64,
@@ -203,6 +205,9 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                   </Checkbox>
                   <Checkbox isSelected={editForm.trasferte} onValueChange={(v) => setEditForm({ ...editForm, trasferte: v })}>
                     <span className="text-sm text-neutral-700">Disponibile a trasferte / trasferimenti</span>
+                  </Checkbox>
+                  <Checkbox isSelected={editForm.freelance} onValueChange={(v) => setEditForm({ ...editForm, freelance: v })}>
+                    <span className="text-sm text-neutral-700">In possesso di Partita IVA (Freelance)</span>
                   </Checkbox>
                 </div>
               </div>
