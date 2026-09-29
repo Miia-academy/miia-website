@@ -123,7 +123,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                     {profileData.ricerca_attiva ? <Chip size="sm" color="success" variant="flat">Ricerca Attiva</Chip> : <Chip size="sm" color="default" variant="flat">Non in ricerca</Chip>}
                     {profileData.automunito && <Chip size="sm" color="success" variant="flat">Automunito</Chip>}
                     {profileData.trasferte && <Chip size="sm" color="success" variant="flat">Trasferte Ok</Chip>}
-                    {profileData.freelance && <Chip size="sm" color="warning" variant="flat">Freelance / P.IVA</Chip>}
+                    {profileData.freelance && <Chip size="sm" color="success" variant="flat">Freelance / P.IVA</Chip>}
                   </div>
                 </div>
                 <div>

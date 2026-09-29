@@ -64,8 +64,8 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
     trueLabel: string,
     falseLabel: string
   ) => {
-    if (val === true) return <Chip variant="flat" color="primary">✓ {trueLabel}</Chip>
-    if (val === false) return <Chip variant="flat" color="default">✕ {falseLabel}</Chip>
+    if (val === true) return <Chip variant="flat" color="success">{trueLabel}</Chip>
+    if (val === false) return <Chip variant="flat" color="danger">✕ {falseLabel}</Chip>
     return <Chip variant="flat" color="warning" className="text-neutral-700">Mancante</Chip>
   }
 

@@ -64,10 +64,10 @@ export default function AdminStudentView({ student, applications }: StudentDetai
     falseLabel: string
   ) => {
     if (val === true) {
-      return <Chip variant="flat" color="primary">✓ {trueLabel}</Chip>
+      return <Chip variant="flat" color="success">{trueLabel}</Chip>
     }
     if (val === false) {
-      return <Chip variant="flat" color="default">✕ {falseLabel}</Chip>
+      return <Chip variant="flat" color="danger">{falseLabel}</Chip>
     }
     return (
       <Chip variant="flat" color="warning" className="text-neutral-700 font-medium">
