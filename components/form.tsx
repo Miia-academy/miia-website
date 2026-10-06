@@ -33,12 +33,6 @@ export interface FieldData {
 
 export type FormData = Record<string, FieldData>
 
-export interface BrevoProps {
-  id?: string | number
-  email?: string
-  attributes?: Record<string, any>
-}
-
 export interface OptionProps {
   name: string | { title: string; days?: string[]; hours?: string[] } | any
   value: string
@@ -49,8 +43,6 @@ const dateFormat = {
   month: '2-digit' as const,
   day: '2-digit' as const,
 }
-
-const hiddenUserFields = ['nome', 'cognome', 'sms', 'email']
 
 type ExtendedFormBlok = FormBlok & {
   action?: string
@@ -186,30 +178,17 @@ function buildEvent(
   }
 }
 
-function buildContact(data: FormData, user: BrevoProps | null, list?: any[]) {
+// Il contatto viene identificato solo dall'email. Prefisso del telefono e unione
+// dei valori già presenti in Brevo vengono gestiti dal server (/api/crm).
+function buildContact(data: FormData, list?: any[]) {
   const contactFilterData = ['email']
   return {
-    id: user?.id,
     email: data.email?.value,
     listIds: list || [],
     attributes: Object.fromEntries(
       Object.entries(data)
         .filter(([name]) => !contactFilterData.includes(name))
-        .map(([name, field]) => {
-          if (!field) return [name.toUpperCase(), '']
-          const value = field.value
-          const NAME = name.toUpperCase()
-          let parsedValue = value
-
-          if (user?.attributes && typeof user.attributes[NAME] !== 'undefined') {
-            const attribute = user.attributes[NAME]
-            if (Array.isArray(attribute) && Array.isArray(parsedValue)) {
-              parsedValue = [...new Set([...attribute, ...parsedValue])]
-            }
-          }
-          if (name === 'sms' && parsedValue) parsedValue = '+39' + parsedValue
-          return [NAME, parsedValue]
-        })
+        .map(([name, field]) => [name.toUpperCase(), field ? field.value : ''])
     ),
   }
 }
@@ -304,7 +283,6 @@ export default function Form({
   const form = useMemo(() => mergeForm(blok, courses), [blok, courses])
 
   const [data, setData] = useState(() => getData(form.fields))
-  const [user, setUser] = useState<BrevoProps | null>(null)
   const [agreement, setAgreement] = useState(!form.terms)
   const [error, setError] = useState<string | null>(null)
   const [state, setState] = useState<FormStates>('close')
@@ -340,78 +318,6 @@ export default function Form({
     setState((prev) => (prev === 'error' ? 'open' : prev))
   }, [])
 
-  const handleUser = async (field: FieldData) => {
-    if (field.id !== 'email') return
-
-    if (!field.error && field.value) {
-      setState('search')
-      try {
-        const response = await fetch(
-          `/api/crm?email=${encodeURIComponent(field.value.trim().toLowerCase())}`,
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-
-        if (!response.ok) {
-          setUser(null)
-          return
-        }
-
-        const fetchedContact = await response.json()
-        setUser(fetchedContact)
-
-        setData((prev) => {
-          const emailData = prev.email
-            ? { ...prev.email }
-            : { id: 'email', required: true, value: '' }
-          const nomeData = prev.nome
-            ? { ...prev.nome }
-            : { id: 'nome', required: false, value: '' }
-          const cognomeData = prev.cognome
-            ? { ...prev.cognome }
-            : { id: 'cognome', required: false, value: '' }
-          const smsData = prev.sms
-            ? { ...prev.sms }
-            : { id: 'sms', required: false, value: '' }
-
-          return {
-            ...prev,
-            email: {
-              ...emailData,
-              value: fetchedContact?.email || field.value,
-              error: field.error,
-            },
-            nome: {
-              ...nomeData,
-              value:
-                fetchedContact?.attributes?.NOME || nomeData.value || '',
-            },
-            cognome: {
-              ...cognomeData,
-              value:
-                fetchedContact?.attributes?.COGNOME ||
-                cognomeData.value ||
-                '',
-            },
-            sms: {
-              ...smsData,
-              value: fetchedContact?.attributes?.SMS
-                ? fetchedContact.attributes.SMS.toString().substring(2)
-                : smsData.value || '',
-            },
-          }
-        })
-      } catch (e) {
-        console.error('Errore recupero contatto Brevo:', e)
-        setUser(null)
-      } finally {
-        setState('open')
-      }
-    }
-  }
-
   const handleSubmit = async () => {
     const newData = validateFields(data)
     const hasError = Object.values(newData).some((f) => !!f?.error)
@@ -433,7 +339,7 @@ export default function Form({
     setError(null)
 
     const event = buildEvent(newData, globalEvents, form.tracking)
-    const contact = buildContact(newData, user, form.list)
+    const contact = buildContact(newData, form.list)
 
     const rawFieldValues = Object.fromEntries(
       Object.entries(newData).map(([key, field]) => [key, field?.value])
@@ -460,7 +366,6 @@ export default function Form({
       company:
         rawFieldValues.azienda ||
         rawFieldValues.company ||
-        user?.attributes?.AZIENDA ||
         '',
       title: rawFieldValues.titolo || rawFieldValues.title || '',
       description:
@@ -480,8 +385,9 @@ export default function Form({
       })
 
       if (response.ok) {
+        const result = await response.json().catch(() => null)
         setMessage({
-          title: parseText(titles[user ? 'user' : 'new'], newData),
+          title: parseText(titles[result?.returning ? 'user' : 'new'], newData),
           body: parseText(form.message || '', newData),
         })
         setState('done')
@@ -499,7 +405,6 @@ export default function Form({
   }
 
   const handleClear = useCallback(() => {
-    setUser(null)
     const newData = getData(form.fields)
     if (openday) newData.openday = openday
     setData(newData)
@@ -531,20 +436,6 @@ export default function Form({
     }
     return text
   }, [])
-
-  const isFieldPopulatedByCrm = useCallback(
-    (fieldId: string) => {
-      if (!user || !hiddenUserFields.includes(fieldId)) return false
-
-      if (fieldId === 'email') return !!user.email
-      if (fieldId === 'nome') return !!user.attributes?.NOME
-      if (fieldId === 'cognome') return !!user.attributes?.COGNOME
-      if (fieldId === 'sms') return !!user.attributes?.SMS
-
-      return false
-    },
-    [user]
-  )
 
   const { button, close, spinner, label, clear } = classes()
 
@@ -586,22 +477,6 @@ export default function Form({
               </div>
             )}
 
-            {state !== 'done' && user && (
-              <div className="mb-4">
-                <h4 className="text-xl font-semibold capitalize">
-                  Bentornato{' '}
-                  {user.attributes?.NOME ? `${user.attributes.NOME}` : ''}{' '}
-                  {user.attributes?.COGNOME ? `${user.attributes.COGNOME}` : ''}!
-                </h4>
-                <p>
-                  Abbiamo recuperato i tuoi dati, se vuoi cambiarli consulta
-                  l'email di benvenuto.
-                </p>
-                <span className={clear()} onClick={handleClear}>
-                  Non sono io
-                </span>
-              </div>
-            )}
 
             {state === 'done' &&
               message?.title &&
@@ -612,7 +487,7 @@ export default function Form({
 
             {state !== 'done' &&
               visibleFields.map((field) => {
-                if (!field.id || isFieldPopulatedByCrm(field.id)) return null
+                if (!field.id) return null
 
                 return (
                   <StoryblokComponent
@@ -625,7 +500,6 @@ export default function Form({
                       }
                     }
                     onChange={handleChange}
-                    onBlur={field.id === 'email' ? handleUser : undefined}
                     key={field._uid || field.id}
                   />
                 )
@@ -705,7 +579,7 @@ export default function Form({
 
 const titles = {
   new: '###Benvenuto {{nome}}!',
-  user: '###Bentornato {{nome}}!\nAbbiamo recuperato i tuoi dati.',
+  user: '###Bentornato {{nome}}!',
   done: '###Grazie {{nome}}!',
 }
 
