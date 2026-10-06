@@ -27,7 +27,7 @@ interface FieldComponentProps {
   blok: FieldBlok
   data: DataProps
   onChange: (data: DataProps) => void
-  onBlur: (data: DataProps) => void
+  onBlur?: (data: DataProps) => void
 }
 
 export default function Field(props: FieldComponentProps) {
@@ -79,7 +79,7 @@ const TextField = ({ blok, data, onChange, onBlur }: FieldComponentProps) => (
       )
     }
     onValueChange={(value) => onChange({ ...data, value })}
-    onBlur={() => (blok.id === 'email' ? onBlur({ ...data }) : null)}
+    onBlur={() => (blok.id === 'email' ? onBlur?.({ ...data }) : null)}
   />
 )
 

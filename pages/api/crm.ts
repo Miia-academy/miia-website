@@ -1,155 +1,86 @@
-// pages/api/brevo.ts o pages/api/crm.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { BrevoError, getContact, upsertContact, trackEvent } from '@modules/brevo'
+import {
+  isBotSubmission,
+  normalizeEmail,
+  sanitizeAttributes,
+  sanitizeEventName,
+  sanitizeEventProperties,
+  sanitizeLists,
+} from '@modules/crm-form'
 
-export interface BrevoEvent {
-  identifiers: { email_id: string }
-  event_name: string
-  event_date?: string
-  event_properties: { [key: string]: string | number | boolean }
-}
-
-export interface BrevoContact {
-  id?: string | number
-  listIds?: Array<number>
-  email: string
-  attributes?: {
-    [key: string]: any
-  }
-  updateEnabled?: boolean
-}
-
-interface BrevoRequestBody {
-  event?: BrevoEvent
-  contact?: BrevoContact
-}
-
-const apiUrl = 'https://api.brevo.com/v3'
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-): Promise<void> {
-  // Verifica i metodi consentiti
-  if (!['POST', 'PUT', 'GET'].includes(req.method || '')) {
-    res.setHeader('Allow', ['POST', 'PUT', 'GET'])
-    return res.status(405).json({ error: 'Method Not Allowed' })
+/**
+ * Invio dei moduli pubblici del sito verso Brevo.
+ *
+ * Accetta solo POST. Non restituisce mai i dati del contatto al browser e non
+ * permette di aggiornare un contatto per ID: il contatto è identificato solo
+ * dall'email inserita nel modulo, e vengono scritti solo attributi e liste ammessi.
+ */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST'])
+    return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const token = process.env.BREVO_TOKEN
-  if (!token) {
-    return res.status(500).json({ error: 'Missing Brevo Api Token' })
+  const body = req.body && typeof req.body === 'object' ? req.body : {}
+  const { contact, event, fields } = body as {
+    contact?: { email?: unknown; attributes?: unknown; listIds?: unknown }
+    event?: { event_name?: unknown; event_properties?: unknown }
+    fields?: unknown
   }
 
-  const optionsInit: RequestInit = {
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      'api-key': token,
-    },
+  const email = normalizeEmail(contact?.email)
+  if (!email) {
+    return res.status(400).json({ message: "L'indirizzo email non è valido" })
+  }
+
+  // Bot: rispondiamo come se fosse andato tutto bene, senza scrivere nulla.
+  if (isBotSubmission(fields, contact?.attributes)) {
+    return res.status(200).json({ success: true })
   }
 
   try {
-    // --- 1. GESTIONE CHIAMATE GET (Lettura Contatto) ---
-    if (req.method === 'GET') {
-      const email = req.query.email as string
-      if (!email) {
-        return res.status(400).json({ error: 'Email query param required for GET' })
-      }
+    // Lettura lato server, solo per unire i valori a scelta multipla già presenti.
+    let existing: Record<string, unknown> = {}
+    let returning = false
+    try {
+      const current = await getContact({ identifier: email })
+      existing = (current?.attributes as Record<string, unknown>) || {}
+      returning = true
+    } catch (error) {
+      if (!(error instanceof BrevoError && error.status === 404)) throw error
+    }
 
-      const getRes = await fetch(`${apiUrl}/contacts/${encodeURIComponent(email)}`, {
-        ...optionsInit,
-        method: 'GET',
+    const attributes = sanitizeAttributes(contact?.attributes, existing)
+    const listIds = sanitizeLists(contact?.listIds)
+
+    try {
+      await upsertContact({ email, attributes, listIds })
+    } catch (error) {
+      // Se Brevo rifiuta un valore (per esempio un'opzione non prevista in un
+      // attributo a scelta multipla), salviamo comunque il contatto con i dati
+      // essenziali, così la richiesta non va persa. L'errore resta nei log.
+      if (!(error instanceof BrevoError && error.status === 400)) throw error
+      console.error('[CRM] Attributi rifiutati da Brevo, salvo i dati essenziali:', error.message)
+      const essentials: Record<string, unknown> = {}
+      for (const key of ['NOME', 'COGNOME', 'SMS']) {
+        if (attributes[key] !== undefined) essentials[key] = attributes[key]
+      }
+      await upsertContact({ email, attributes: essentials, listIds })
+    }
+
+    const eventName = sanitizeEventName(event?.event_name)
+    if (eventName) {
+      await trackEvent({
+        eventName,
+        email,
+        properties: sanitizeEventProperties(event?.event_properties),
       })
-
-      if (!getRes.ok) {
-        const errData = await getRes.json().catch(() => ({}))
-        return res.status(getRes.status).json({ error: errData || 'Brevo API Error' })
-      }
-
-      const data = await getRes.json()
-      return res.status(200).json(data)
     }
 
-    // --- 2. GESTIONE CHIAMATE POST/PUT (Upsert Contatto e Tracking Eventi) ---
-    const { contact, event }: BrevoRequestBody = req.body
-    let contactData = null
-
-    // A. Sincronizzazione Contatto (se presente nel body)
-    if (contact) {
-      let contactEndpoint = `${apiUrl}/contacts`
-      let contactOptions = { ...optionsInit }
-
-      if (contact.id) {
-        // Aggiornamento esatto per ID
-        contactEndpoint += `/${contact.id}`
-        contactOptions.method = 'PUT'
-        contactOptions.body = JSON.stringify(contact)
-      } else if (req.method === 'PUT') {
-        // Aggiornamento per Email
-        contactEndpoint += `/${encodeURIComponent(contact.email)}`
-        contactOptions.method = 'PUT'
-        contactOptions.body = JSON.stringify(contact)
-      } else {
-        // POST con Upsert (Crea o Aggiorna in sicurezza tramite l'email)
-        contactOptions.method = 'POST'
-        contactOptions.body = JSON.stringify({ ...contact, updateEnabled: true })
-      }
-
-      const contactRes = await fetch(contactEndpoint, contactOptions)
-
-      if (!contactRes.ok) {
-        let errData = null
-        try { errData = await contactRes.json() } catch (e) { }
-        return res.status(contactRes.status).json({ error: errData || 'Error syncing contact' })
-      }
-
-      // Se la chiamata è andata a buon fine (201 o 204), Brevo non ritorna gli attributi su Upsert. 
-      // Effettuiamo una GET esplicita per restituire i dati al frontend.
-      const identifier = contact.id || contact.email;
-      if (identifier) {
-        const getContactRes = await fetch(`${apiUrl}/contacts/${encodeURIComponent(identifier)}`, {
-          ...optionsInit,
-          method: 'GET',
-        });
-
-        if (getContactRes.ok) {
-          contactData = await getContactRes.json();
-        } else {
-          console.warn('Attenzione: Impossibile fare fetch del contatto dopo sync');
-        }
-      }
-    }
-
-    // B. Tracking Evento (se presente nel body)
-    if (event) {
-      const eventOptions = {
-        ...optionsInit,
-        method: 'POST',
-        body: JSON.stringify(event),
-      }
-      const eventRes = await fetch(`${apiUrl}/events`, eventOptions)
-
-      let eventData = null
-      if (
-        eventRes.status !== 204 &&
-        eventRes.headers.get('content-type')?.includes('application/json')
-      ) {
-        try {
-          eventData = await eventRes.json()
-        } catch (error) {
-          console.warn('Event JSON parse error:', error)
-        }
-      }
-
-      if (!eventRes.ok) {
-        return res.status(eventRes.status).json({ error: eventData || 'Error tracking event' })
-      }
-    }
-
-    return res.status(200).json({ success: true, contact: contactData })
-
+    return res.status(200).json({ success: true, returning })
   } catch (error) {
-    console.error('Brevo Api call failed:', error)
-    return res.status(500).json({ error: 'Internal server Error' })
+    console.error('[CRM] Invio modulo non riuscito:', error)
+    return res.status(502).json({ message: 'Si è verificato un errore, riprova più tardi' })
   }
 }

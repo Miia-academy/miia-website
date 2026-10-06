@@ -19,13 +19,13 @@ type Validations = {
 
 export const validations: Validations = {
   nome: (value: string) => {
-    if (!min_length(value, 3))
-      return 'Il nome deve essere di almeno 3 caratteri'
+    if (value.trim().length < 2)
+      return 'Il nome deve essere di almeno 2 caratteri'
     if (has_number(value)) return 'Il nome non può includere numeri'
     return null
   },
   cognome: (value: string) => {
-    if (!min_length(value, 2))
+    if (value.trim().length < 2)
       return 'Il cognome deve essere di almeno 2 caratteri'
     if (has_number(value)) return 'Il cognome non può includere numeri'
     return null
@@ -81,14 +81,15 @@ export const validations: Validations = {
   },
 }
 
-const min_length = (value: string, num: number) => value.length > num
 const equal_length = (value: string, num: number) => value.length === num
 const min_words = (value: string, num: number) => value.split(' ').length > num
 const has_number = (value: string) => /[0-9]/.test(value)
 const email_format = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.toLowerCase())
+// Accetta spazi, trattini, punti e parentesi; prefisso internazionale facoltativo
+// (+39 o 0039). Il server normalizza il numero prima di salvarlo in Brevo.
 const phone_format = (value: string) =>
-  /^(\+\d{1,3}(\s?[\(\)-]?)?)?\d{10}$/.test(value)
+  /^(\+|00)?\d{8,15}$/.test(value.replace(/[\s().\-/]/g, ''))
 const european_identity_format = (value: string) =>
   /^[A-Z]{2}[0-9]{5}[A-Z]{2}/.test(value)
 const italian_identity_format = (value: string) =>
