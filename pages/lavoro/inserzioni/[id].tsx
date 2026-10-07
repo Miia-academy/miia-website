@@ -16,6 +16,7 @@ import {
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 interface CompanyDetails {
   companyName: string
@@ -35,8 +36,6 @@ interface DettaglioInserzioneProps {
   company: CompanyDetails
   hasApplied: boolean
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function DettaglioInserzione({ user, job, company, hasApplied }: DettaglioInserzioneProps) {
   const { competenze: masterCompetenze } = useDataContext()
@@ -382,7 +381,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   let decoded: AuthPayload
   try {
-    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
   } catch {
     return {
       redirect: {

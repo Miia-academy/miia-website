@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken'
 import { updateApplicationStatus } from '@modules/applications/db'
 import { getJobById } from '@modules/jobs/db'
 import { trackEvent, getContact } from '@modules/brevo'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
@@ -18,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any
+    const decoded = jwt.verify(token, getJwtSecret()) as any
 
     if (decoded.tipo_utente !== 'Admin') {
       return res.status(403).json({ message: 'Accesso negato: Privilegi insufficienti' })

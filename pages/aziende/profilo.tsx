@@ -13,13 +13,12 @@ import { ApplicationsModal } from '@components/business/ApplicationsModal'
 import { BusinessProfileModal, BusinessProfileData } from '@components/business/BusinessProfileModal'
 import { AlertModal } from '@components/shared/AlertModal'
 import { LogoutButton } from '@components/shared/LogoutButton'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 interface BusinessProfileDashboardProps {
   user: BusinessProfileData & { email: string }
   initialJobs: JobWithApplicantsCount[]
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function BusinessProfileDashboard({ user, initialJobs }: BusinessProfileDashboardProps) {
   const router = useRouter()
@@ -204,7 +203,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   let decoded: AuthPayload
   try {
-    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
   } catch (err) {
     return { redirect: { destination: '/aziende/login?redirectUrl=/aziende/profilo', permanent: false } }
   }

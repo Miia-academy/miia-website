@@ -7,6 +7,7 @@ import type { Job } from '@modules/jobs/types'
 import { TIPO_CONTRATTO_LABELS, GRADO_ESPERIENZA_LABELS } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
 import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Divider } from '@heroui/react'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 interface JobWithStats extends Job {
   applicant_count?: number
@@ -21,8 +22,6 @@ interface BachecaLavoroProps {
   }
   jobs: JobWithStats[]
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
   const isStudente = user.tipo_utente === 'Studente'
@@ -164,7 +163,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   let decoded: AuthPayload
 
   try {
-    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
   } catch (err) {
     console.error('❌ Errore JWT Bacheca Lavoro:', err)
     return {

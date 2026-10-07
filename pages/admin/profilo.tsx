@@ -9,13 +9,12 @@ import { AlertModal } from '@components/shared/AlertModal'
 import type { AuthPayload } from '@modules/auth'
 import { LogoutButton } from '@components/shared/LogoutButton'
 import { Button, useDisclosure } from '@heroui/react'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 interface AdminProfileProps {
   user: { email: string }
   initialApplications: any[]
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function AdminProfile({ user, initialApplications }: AdminProfileProps) {
   const router = useRouter()
@@ -94,7 +93,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
 
     if (decoded.tipo_utente !== 'Admin') {
       return { redirect: { destination: '/', permanent: false } }

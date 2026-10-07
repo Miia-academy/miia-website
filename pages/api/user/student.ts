@@ -5,6 +5,7 @@ import { UserService } from '@modules/user/service'
 import { withApiAuth } from '@modules/api-wrapper'
 import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 import type { AuthPayload } from '@modules/auth'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export const config = {
   api: {
@@ -14,7 +15,6 @@ export const config = {
   },
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
 const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
 const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
@@ -116,7 +116,7 @@ async function studentHandler(req: NextApiRequest, res: NextApiResponse, authDat
     portfolio_url: portfolioDownloadUrl,
   } as AuthPayload & { freelance: boolean }
 
-  const updatedSessionToken = jwt.sign(updatedSessionPayload, JWT_SECRET, { expiresIn: SAFE_EXPIRES_IN })
+  const updatedSessionToken = jwt.sign(updatedSessionPayload, getJwtSecret(), { expiresIn: SAFE_EXPIRES_IN })
   const encodedUserData = encodeURIComponent(JSON.stringify(updatedSessionPayload))
 
   const protocol = req.headers['x-forwarded-proto'] || 'http'
