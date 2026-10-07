@@ -4,6 +4,7 @@ import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getContact } from '@modules/brevo'
 import { markApplicationAsViewed } from '@modules/applications/db'
+import { getCompanyApplicationForStudent } from '@modules/applications/access'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
 import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
@@ -68,11 +69,14 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
     return <Chip variant="flat" color="warning" className="text-neutral-700">Mancante</Chip>
   }
 
-  const getCvDownloadUrl = () => {
-    if (!student.cv_url) return '#'
-    const separator = student.cv_url.includes('?') ? '&' : '?'
-    return `${student.cv_url}${separator}application_id=${encodeURIComponent(appId)}`
+  // I file caricati sul sito si scaricano solo con la candidatura a cui appartengono
+  const withApplicationId = (url: string) => {
+    if (!url || !url.includes('/api/job/download')) return url
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}application_id=${encodeURIComponent(appId)}`
   }
+
+  const getCvDownloadUrl = () => (student.cv_url ? withApplicationId(student.cv_url) : '#')
 
   return (
     <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -197,7 +201,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                 {student.portfolio_url && (
                   <Button
                     as="a"
-                    href={student.portfolio_url}
+                    href={withApplicationId(student.portfolio_url)}
                     target="_blank"
                     rel="noreferrer"
                     variant="flat"
@@ -236,11 +240,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const cleanEmail = decodeURIComponent(studentEmailParam).trim().toLowerCase()
 
-    if (appId) {
-      await markApplicationAsViewed(appId, decoded.email).catch((err) =>
-        console.warn('[SSR View Tracking Warning]', err)
-      )
+    // Una scheda si apre solo se lo studente si è candidato a un annuncio di questa azienda
+    // e la candidatura è stata validata: altrimenti nessun dato personale viene letto.
+    const application = await getCompanyApplicationForStudent(appId, decoded.email, cleanEmail)
+    if (!application) {
+      return { redirect: { destination: '/aziende/profilo', permanent: false } }
     }
+
+    await markApplicationAsViewed(application.id, decoded.email).catch((err) =>
+      console.warn('[SSR View Tracking Warning]', err)
+    )
 
     const contact = await getContact({ identifier: cleanEmail }).catch(() => null)
     const attrs = contact?.attributes || {}
