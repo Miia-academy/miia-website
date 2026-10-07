@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken'
 import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 import type { AuthPayload } from '@modules/auth'
 import { getContact } from '@modules/brevo'
+import { getJwtSecret } from '@modules/jwt-secret'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
 const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
 
     if (!decoded || !decoded.email || !decoded.tipo_utente) {
       return res.redirect('/aziende/login?error=invalid_payload')
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const sessionToken = jwt.sign(sessionPayload, JWT_SECRET, {
+    const sessionToken = jwt.sign(sessionPayload, getJwtSecret(), {
       expiresIn: SAFE_EXPIRES_IN,
     })
 
