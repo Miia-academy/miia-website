@@ -1,7 +1,7 @@
 import { Logo } from '@public/logo'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { tv } from 'tailwind-variants'
 import { Link as HeroLink, Button } from '@heroui/react'
 import Link from 'next/link'
@@ -9,6 +9,34 @@ import Link from 'next/link'
 export default function Feedback() {
   const router = useRouter()
   const params = router.query
+  const [confirming, setConfirming] = useState(false)
+  const [confirmError, setConfirmError] = useState('')
+
+  // Open Day: l'iscrizione avviene solo dopo il click sul pulsante
+  const confirmOpenday = async () => {
+    setConfirming(true)
+    setConfirmError('')
+    try {
+      const res = await fetch('/api/openday/registrazione', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.ok) {
+        setConfirmError(
+          res.status === 400
+            ? 'Il link è scaduto. Riapri il link dall’email per confermare di nuovo.'
+            : 'Non siamo riusciti a completare l’iscrizione. Riprova tra qualche minuto.'
+        )
+        return
+      }
+      const next = new URLSearchParams({ type: 'openday', status: 'success' })
+      if (params.area) next.set('area', String(params.area))
+      if (data.openday_data) next.set('openday_data', data.openday_data)
+      router.replace(`/conferma?${next.toString()}`)
+    } catch {
+      setConfirmError('Errore di connessione. Riprova.')
+    } finally {
+      setConfirming(false)
+    }
+  }
 
   if (!params) {
     return router.replace('/')
@@ -134,6 +162,28 @@ export default function Feedback() {
                 Abbiamo preso in carico la sua richiesta, la ricontatteremo non
                 appena possibile!
               </p>
+            </Fragment>
+          )}
+
+          {/* Blocco Open Day (Conferma con un click) */}
+          {params.type === 'openday' && params.status === 'confirm' && (
+            <Fragment>
+              <Head>
+                <title>Conferma partecipazione Open Day</title>
+                <meta name="robots" content="noindex" />
+              </Head>
+              <h1 className={title()}>
+                <span className="text-5xl">
+                  Vuoi partecipare all'Open Day {areaFormatted ? `di ${areaFormatted}` : ''}?
+                </span>
+              </h1>
+              <p className={description()}>
+                Conferma la tua partecipazione con un click: ti inseriamo tra gli iscritti e ti scriviamo con tutte le informazioni.
+              </p>
+              <Button color="primary" onPress={confirmOpenday} isLoading={confirming}>
+                Confermo la partecipazione
+              </Button>
+              {confirmError && <p className="mt-4 text-danger-500">{confirmError}</p>}
             </Fragment>
           )}
 
