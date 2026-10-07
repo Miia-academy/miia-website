@@ -92,7 +92,11 @@ export default function CompanyLogin() {
       })
 
       if (res.ok) {
-        setSuccessMsg('Registrazione completata con successo! Riceverai un’email con il link di accesso.')
+        const data = await res.json().catch(() => null)
+        setSuccessMsg(
+          data?.message ||
+            'Richiesta ricevuta. Verificheremo i dati dell’azienda e ti scriveremo non appena l’account sarà approvato.'
+        )
       } else {
         const data = await res.json()
         setErrorMsg(data.message || 'Errore durante la registrazione.')

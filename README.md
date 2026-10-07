@@ -254,7 +254,8 @@ cp .env.example .env.local
 | `BREVO_API_KEY` / `BREVO_TOKEN` | Sì | Chiave API REST v3 per Brevo |
 | `BREVO_MANAGEMENT` | Opzionale | Token addizionale per chiamate management Brevo |
 | `BREVO_STUDENT_LIST_ID` | Sì | ID lista Brevo contenente gli studenti diplomati autorizzati (default `42`) |
-| `BREVO_BUSINESS_LIST_ID`| Sì | ID lista Brevo contenente le aziende registrate (default `43`) |
+| `BREVO_BUSINESS_LIST_ID`| Sì | ID lista Brevo delle aziende approvate, l'unica che dà accesso all'area aziende. Si gestisce solo da Brevo (default `30`) |
+| `BREVO_BUSINESS_REQUESTS_LIST_ID`| No | ID lista Brevo delle richieste di accesso delle aziende in attesa di approvazione (default `8`) |
 | `NEXT_PUBLIC_MAPBOX_TOKEN` | Sì | Token pubblico Mapbox GL per il rendering delle mappe |
 | `JWT_SECRET` | Sì | Chiave segreta per la firma e verifica dei token JWT |
 | `NEXT_PUBLIC_BASE_URL` | Sì | URL base dell'applicazione per i Magic Link (es. `http://localhost:8080`) |
