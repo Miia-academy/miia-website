@@ -237,3 +237,17 @@ export function sanitizeAttribution(
     ...touchAttributes(last || first, 'ULTIMA'),
   }
 }
+
+/**
+ * La stessa provenienza per l'evento Brevo che avvia le automazioni, con i nomi
+ * in minuscolo (per esempio `ultima_campagna`). Qui `origine_*` è sempre il
+ * primo contatto noto al browser, anche se in Brevo il contatto ne ha già uno.
+ */
+export function attributionEventProperties(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const { first, last } = raw as { first?: unknown; last?: unknown }
+  const properties: Record<string, string> = {}
+  const all = { ...touchAttributes(first || last, 'ORIGINE'), ...touchAttributes(last || first, 'ULTIMA') }
+  for (const [key, value] of Object.entries(all)) properties[key.toLowerCase()] = value
+  return properties
+}

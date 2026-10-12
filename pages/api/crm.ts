@@ -3,6 +3,7 @@ import { BrevoError, getContact, upsertContact, trackEvent } from '@modules/brev
 import {
   isBotSubmission,
   isSourceTrackingEnabled,
+  attributionEventProperties,
   normalizeEmail,
   sanitizeAttribution,
   sanitizeAttributes,
@@ -80,7 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await trackEvent({
         eventName,
         email,
-        properties: sanitizeEventProperties(event?.event_properties),
+        properties: {
+          ...sanitizeEventProperties(event?.event_properties),
+          ...(isSourceTrackingEnabled() ? attributionEventProperties(source) : {}),
+        },
       })
     }
 
