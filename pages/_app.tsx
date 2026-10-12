@@ -7,6 +7,9 @@ import { storyblokInit, apiPlugin } from '@storyblok/react'
 import { HeroUIProvider } from '@heroui/react'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { DataProvider } from '@modules/context'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { captureAttribution, refreshAttributionStorage } from '@modules/attribution'
 
 import { fontSans, fontSerif } from '@config/fonts'
 
@@ -76,6 +79,21 @@ storyblokInit({
 })
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter()
+
+  // Provenienza della visita: salvata all'arrivo e a ogni cambio pagina.
+  useEffect(() => {
+    captureAttribution()
+    router.events.on('routeChangeComplete', captureAttribution)
+    // Se il consenso arriva dal banner, la provenienza passa nel cookie
+    // al più tardi quando la persona lascia la pagina.
+    window.addEventListener('pagehide', refreshAttributionStorage)
+    return () => {
+      router.events.off('routeChangeComplete', captureAttribution)
+      window.removeEventListener('pagehide', refreshAttributionStorage)
+    }
+  }, [router.events])
+
   return (
     <>
       <DataProvider data={pageProps.data}>

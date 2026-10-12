@@ -65,6 +65,9 @@ const PROTECTED_ATTRIBUTES = new Set([
   'VALIDATION',
 ])
 
+// Gli attributi di provenienza li scrive solo il server, da sanitizeAttribution.
+const SOURCE_ATTRIBUTE = /^(ORIGINE|ULTIMA)_(SORGENTE|MEZZO|CAMPAGNA|CONTENUTO|TERMINE|CLICK_ID|PAGINA|DATA)$/
+
 const ATTRIBUTE_NAME = /^[A-Z][A-Z0-9_]{0,39}$/
 const EVENT_NAME = /^submit_[a-z_]{1,30}$/
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -128,7 +131,7 @@ export function sanitizeAttributes(
 
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     const name = key.toUpperCase()
-    if (!ATTRIBUTE_NAME.test(name) || PROTECTED_ATTRIBUTES.has(name)) continue
+    if (!ATTRIBUTE_NAME.test(name) || PROTECTED_ATTRIBUTES.has(name) || SOURCE_ATTRIBUTE.test(name)) continue
 
     if (name === 'SMS') {
       const phone = normalizePhone(value)
@@ -183,4 +186,54 @@ export function isBotSubmission(fields: unknown, attributes: unknown): boolean {
   const f = fields && typeof fields === 'object' ? (fields as Record<string, unknown>) : {}
   const a = attributes && typeof attributes === 'object' ? (attributes as Record<string, unknown>) : {}
   return filled(f.validation) || filled(a.VALIDATION)
+}
+
+const TOUCH_FIELDS: Array<[string, string]> = [
+  ['source', 'SORGENTE'],
+  ['medium', 'MEZZO'],
+  ['campaign', 'CAMPAGNA'],
+  ['content', 'CONTENUTO'],
+  ['term', 'TERMINE'],
+  ['click_id', 'CLICK_ID'],
+  ['landing', 'PAGINA'],
+]
+
+function touchAttributes(raw: unknown, prefix: 'ORIGINE' | 'ULTIMA'): Record<string, string> {
+  const result: Record<string, string> = {}
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return result
+  const touch = raw as Record<string, unknown>
+  for (const [key, suffix] of TOUCH_FIELDS) {
+    const value = touch[key]
+    if (typeof value === 'string' && value.trim()) {
+      result[`${prefix}_${suffix}`] = value.trim().slice(0, 150)
+    }
+  }
+  if (typeof touch.date === 'string') {
+    const date = new Date(touch.date)
+    if (!Number.isNaN(date.valueOf())) result[`${prefix}_DATA`] = date.toISOString().slice(0, 10)
+  }
+  return result
+}
+
+/** Gli attributi di provenienza si scrivono solo se sono stati creati in Brevo. */
+export function isSourceTrackingEnabled(): boolean {
+  return process.env.CRM_SOURCE_ATTRIBUTES === 'on'
+}
+
+/**
+ * Provenienza del contatto inviata dal modulo (vedi @modules/attribution).
+ * ORIGINE_* è il primo contatto: si scrive solo se in Brevo è ancora vuoto.
+ * ULTIMA_* è la provenienza di questo invio e si aggiorna ogni volta.
+ */
+export function sanitizeAttribution(
+  raw: unknown,
+  existing: Record<string, unknown> = {}
+): Record<string, string> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const { first, last } = raw as { first?: unknown; last?: unknown }
+  const hasOrigin = Object.keys(existing).some((k) => k.startsWith('ORIGINE_') && !!existing[k])
+  return {
+    ...(hasOrigin ? {} : touchAttributes(first || last, 'ORIGINE')),
+    ...touchAttributes(last || first, 'ULTIMA'),
+  }
 }
