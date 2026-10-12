@@ -561,12 +561,7 @@ export default function Form({
                   onValueChange={setCookieConsent}
                 />
                 <div>
-                  <span>
-                    Accetto anche i cookie facoltativi (funzionalità, esperienza,
-                    misurazione e marketing), per vedere contenuti più utili sul
-                    sito e sui social. Facoltativo: puoi cambiare idea quando vuoi
-                    dalle preferenze cookie.{' '}
-                  </span>
+                  <span>Accetto anche i cookie facoltativi. </span>
                   <Link
                     href={COOKIE_POLICY_URL}
                     target="_blank"
@@ -575,6 +570,10 @@ export default function Form({
                   >
                     Cookie policy
                   </Link>
+                  <p className="mt-0.5 text-xs italic text-neutral-500">
+                    Funzionalità, esperienza, misurazione e marketing, per contenuti più
+                    utili su sito e social. Puoi cambiare idea quando vuoi.
+                  </p>
                 </div>
               </div>
             )}
