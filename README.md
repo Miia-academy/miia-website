@@ -373,7 +373,7 @@ Il progetto è ottimizzato per il rilascio su **[Vercel](https://vercel.com/)**:
 1. Collegare il repository GitHub a un nuovo progetto Vercel.
 2. Configurare tutte le variabili d'ambiente presenti in `.env.local` nelle impostazioni del progetto su Vercel (*Settings &rarr; Environment Variables*).
 3. Verificare che la versione di Node.js nelle impostazioni sia `20.x` o superiore.
-4. Il comando di build predefinito è `next build` e la directory di output è `.next`.
+4. Il comando di build è in `vercel.json` (`scripts/vercel-build.mjs`): sul ramo `develop` esegue prima i test (`npm test`) e, se falliscono, la build si ferma; su `main` e sugli altri rami esegue solo `next build`. La directory di output è `.next`.
 
 ---
 
