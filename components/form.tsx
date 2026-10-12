@@ -23,6 +23,8 @@ import { sendGTMEvent } from '@next/third-parties/google'
 import { isStoryResolved } from '@modules/relations'
 import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
+import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
+import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
 
 export interface FieldData {
   id: string
@@ -284,6 +286,9 @@ export default function Form({
 
   const [data, setData] = useState(() => getData(form.fields))
   const [agreement, setAgreement] = useState(!form.terms)
+  // Casella facoltativa per i cookie: compare solo se non sono già accettati.
+  const [askCookies, setAskCookies] = useState(false)
+  const [cookieConsent, setCookieConsent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [state, setState] = useState<FormStates>('close')
   const [message, setMessage] = useState<{ title: string; body: string } | null>(
@@ -302,6 +307,10 @@ export default function Form({
       setData((prev) => ({ ...prev, openday }))
     }
   }, [openday])
+
+  useEffect(() => {
+    if (state === 'open') setAskCookies(needsCookieConsent())
+  }, [state])
 
   const visibleFields = useMemo(
     () => (form.fields || []).filter((f) => !f.hidden),
@@ -337,6 +346,12 @@ export default function Form({
 
     setState('send')
     setError(null)
+
+    // Consenso dato con la casella del modulo: lo registra Iubenda, come dal banner.
+    if (askCookies && cookieConsent && acceptAllCookies()) {
+      refreshAttributionStorage()
+      window.setTimeout(refreshAttributionStorage, 1000)
+    }
 
     const event = buildEvent(newData, globalEvents, form.tracking)
     const contact = buildContact(newData, form.list)
@@ -375,6 +390,7 @@ export default function Form({
         ? rawFieldValues.area[0]
         : rawFieldValues.area || '',
       email: newData.email?.value,
+      source: getAttribution(),
     }
 
     try {
@@ -415,6 +431,7 @@ export default function Form({
     setMessage(null)
     setError(null)
     setAgreement(!form.terms)
+    setCookieConsent(false)
     setState('close')
   }, [form.terms, handleClear])
 
@@ -532,6 +549,31 @@ export default function Form({
                     l'informativa Privacy
                   </Link>
                   .
+                </div>
+              </div>
+            )}
+
+            {state !== 'done' && askCookies && (
+              <div className="mt-2 flex items-start gap-2 text-sm">
+                <Checkbox
+                  aria-label="Consenso ai cookie facoltativi"
+                  isSelected={cookieConsent}
+                  onValueChange={setCookieConsent}
+                />
+                <div>
+                  <span>Accetto anche i cookie facoltativi. </span>
+                  <Link
+                    href={COOKIE_POLICY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm underline underline-offset-1"
+                  >
+                    Cookie policy
+                  </Link>
+                  <p className="mt-0.5 text-xs italic text-neutral-500">
+                    Funzionalità, esperienza, misurazione e marketing, per contenuti più
+                    utili su sito e social. Puoi cambiare idea quando vuoi.
+                  </p>
                 </div>
               </div>
             )}
