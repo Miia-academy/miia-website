@@ -310,6 +310,8 @@ cp .env.example .env.local
 | `npm run start` | Avvia il server compilato in produzione sulla porta `9090` |
 | `npm run lint` | Esegue il controllo del codice con ESLint 9 |
 | `npm run cms` | Esegue il pull dei componenti da Storyblok e rigenera i tipi TypeScript |
+| `npm run typecheck` | Controlla i tipi TypeScript senza compilare |
+| `npm test` | Esegue i test (cartella `tests/`): moduli verso Brevo, `/api/crm`, provenienza della visita. Brevo è simulato, nessun dato viene inviato |
 
 ### Sviluppo Locale con Proxy SSL (HTTPS)
 
