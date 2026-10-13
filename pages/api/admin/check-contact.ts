@@ -2,8 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { brevoFetch, BrevoError } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -18,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Validazione token
-    jwt.verify(token, JWT_SECRET) as AuthPayload
+    jwt.verify(token, getJwtSecret()) as AuthPayload
 
     // Chiamata all'endpoint Brevo che restituisce lo SCHEMA di tutti gli attributi dell'account
     const schema = await brevoFetch('/contacts/attributes', { method: 'GET' })

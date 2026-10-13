@@ -147,3 +147,51 @@ export async function getAllApplications(): Promise<any[]> {
   `
   return rows
 }
+// 9. Candidatura di un'azienda: decide cosa l'azienda può vedere e scaricare.
+// Vale solo per candidature di suoi annunci già validate dal backoffice (le stesse dell'elenco).
+export async function getCompanyApplication(applicationId: string, companyEmail: string): Promise<Application | null> {
+  const cleanEmail = companyEmail.trim().toLowerCase()
+
+  try {
+    const rows = await sql`
+      SELECT
+        a.id, a.job_id, a.student_email, a.cv_url, a.status,
+        a.applied_at, a.viewed_at, a.cv_downloaded_at
+      FROM applications a
+      JOIN jobs j ON a.job_id = j.id
+      WHERE a.id = ${applicationId}
+        AND LOWER(j.company_email) = ${cleanEmail}
+        AND a.status IN ('validata', 'letta')
+      LIMIT 1
+    `
+    return (rows[0] as Application) || null
+  } catch (error) {
+    // Identificativo non valido o database non raggiungibile: nessun accesso
+    console.warn('[Applications DB] getCompanyApplication:', error)
+    return null
+  }
+}
+
+// 10. Candidatura validata di un'azienda che usa un certo file come CV (link diretti dalle email)
+export async function findCompanyApplicationByCvFile(companyEmail: string, fileReference: string): Promise<Application[]> {
+  const cleanEmail = companyEmail.trim().toLowerCase()
+
+  try {
+    const rows = await sql`
+      SELECT
+        a.id, a.job_id, a.student_email, a.cv_url, a.status,
+        a.applied_at, a.viewed_at, a.cv_downloaded_at
+      FROM applications a
+      JOIN jobs j ON a.job_id = j.id
+      WHERE LOWER(j.company_email) = ${cleanEmail}
+        AND a.status IN ('validata', 'letta')
+        AND strpos(a.cv_url, ${fileReference}) > 0
+      ORDER BY a.applied_at DESC
+      LIMIT 20
+    `
+    return rows as Application[]
+  } catch (error) {
+    console.warn('[Applications DB] findCompanyApplicationByCvFile:', error)
+    return []
+  }
+}

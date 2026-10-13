@@ -2,8 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { sql } from '@modules/db'
 import jwt from 'jsonwebtoken'
 import type { AuthPayload } from '@modules/auth'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // 1. Validazione del Token HttpOnly
@@ -12,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   let authData: AuthPayload
   try {
-    authData = jwt.verify(token, JWT_SECRET) as AuthPayload
+    authData = jwt.verify(token, getJwtSecret()) as AuthPayload
   } catch {
     return res.status(401).json({ message: 'Sessione scaduta o non valida.' })
   }

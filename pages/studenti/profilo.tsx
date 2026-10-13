@@ -8,13 +8,12 @@ import { Button, Chip, Card, CardBody, CardHeader, Divider } from '@heroui/react
 import { useDataContext } from '@modules/context'
 import { StudentProfileModal, StudentProfileData } from '@components/student/StudentProfileModal'
 import { LogoutButton } from '@components/shared/LogoutButton'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 interface StudentProfileProps {
   user: StudentProfileData & { email: string; competenze: string[] }
   applications: any[]
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function StudentProfile({ user, applications }: StudentProfileProps) {
   const { competenze } = useDataContext()
@@ -222,7 +221,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   let decoded: AuthPayload
   try {
-    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
   } catch (err) {
     return { redirect: { destination: '/studenti/login', permanent: false } }
   }

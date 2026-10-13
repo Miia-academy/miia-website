@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken'
 import type { NextApiRequest } from 'next'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export interface AuthPayload {
   email: string
@@ -38,7 +37,7 @@ export function generateMagicLink(
   const protocol = req.headers['x-forwarded-proto'] || (isLocalhost ? 'http' : 'https')
   const origin = `${protocol}://${host}`
 
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' })
+  const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '15m' })
   const encodedRedirect = redirectUrl ? encodeURIComponent(redirectUrl) : ''
 
   return `${origin}/api/auth/verify?token=${token}${encodedRedirect ? `&redirect=${encodedRedirect}` : ''}`
@@ -49,7 +48,7 @@ export function getAuthenticatedEmail(req: NextApiRequest): string | null {
   if (!token) return null
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
     return decoded.email || null
   } catch {
     return null

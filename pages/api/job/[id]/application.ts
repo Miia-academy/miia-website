@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken'
 import { getApplicationsByJobId, markApplicationAsViewed } from '@modules/applications/db'
 import { getContact } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query
@@ -17,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   let decoded: AuthPayload
   try {
-    decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
   } catch {
     return res.status(401).json({ message: 'Sessione scaduta o non valida' })
   }

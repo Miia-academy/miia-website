@@ -2,8 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { BrevoError } from '@modules/brevo'
 import type { AuthPayload } from '@modules/auth'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 type ApiHandlerWithAuth = (
   req: NextApiRequest,
@@ -31,7 +30,7 @@ export function withApiAuth(options: WrapperOptions, handler: ApiHandlerWithAuth
 
     let authData: AuthPayload & { iat?: number; exp?: number }
     try {
-      authData = jwt.verify(token, JWT_SECRET) as any
+      authData = jwt.verify(token, getJwtSecret()) as any
     } catch {
       return res.status(401).json({ message: 'Sessione scaduta o non valida' })
     }

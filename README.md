@@ -254,7 +254,8 @@ cp .env.example .env.local
 | `BREVO_API_KEY` / `BREVO_TOKEN` | Sì | Chiave API REST v3 per Brevo |
 | `BREVO_MANAGEMENT` | Opzionale | Token addizionale per chiamate management Brevo |
 | `BREVO_STUDENT_LIST_ID` | Sì | ID lista Brevo contenente gli studenti diplomati autorizzati (default `42`) |
-| `BREVO_BUSINESS_LIST_ID`| Sì | ID lista Brevo contenente le aziende registrate (default `43`) |
+| `BREVO_BUSINESS_LIST_ID`| Sì | ID lista Brevo delle aziende approvate, l'unica che dà accesso all'area aziende. Si gestisce solo da Brevo (default `30`) |
+| `BREVO_BUSINESS_REQUESTS_LIST_ID`| No | ID lista Brevo delle richieste di accesso delle aziende in attesa di approvazione (default `8`) |
 | `NEXT_PUBLIC_MAPBOX_TOKEN` | Sì | Token pubblico Mapbox GL per il rendering delle mappe |
 | `JWT_SECRET` | Sì | Chiave segreta per la firma e verifica dei token JWT |
 | `NEXT_PUBLIC_BASE_URL` | Sì | URL base dell'applicazione per i Magic Link (es. `http://localhost:8080`) |
@@ -309,6 +310,8 @@ cp .env.example .env.local
 | `npm run start` | Avvia il server compilato in produzione sulla porta `9090` |
 | `npm run lint` | Esegue il controllo del codice con ESLint 9 |
 | `npm run cms` | Esegue il pull dei componenti da Storyblok e rigenera i tipi TypeScript |
+| `npm run typecheck` | Controlla i tipi TypeScript senza compilare |
+| `npm test` | Esegue i test (cartella `tests/`): moduli verso Brevo, `/api/crm`, provenienza della visita. Brevo è simulato, nessun dato viene inviato |
 
 ### Sviluppo Locale con Proxy SSL (HTTPS)
 
@@ -370,7 +373,7 @@ Il progetto è ottimizzato per il rilascio su **[Vercel](https://vercel.com/)**:
 1. Collegare il repository GitHub a un nuovo progetto Vercel.
 2. Configurare tutte le variabili d'ambiente presenti in `.env.local` nelle impostazioni del progetto su Vercel (*Settings &rarr; Environment Variables*).
 3. Verificare che la versione di Node.js nelle impostazioni sia `20.x` o superiore.
-4. Il comando di build predefinito è `next build` e la directory di output è `.next`.
+4. Il comando di build è in `vercel.json` (`scripts/vercel-build.mjs`): sul ramo `develop` esegue prima i test (`npm test`) e, se falliscono, la build si ferma; su `main` e sugli altri rami esegue solo `next build`. La directory di output è `.next`.
 
 ---
 

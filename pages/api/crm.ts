@@ -2,7 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { BrevoError, getContact, upsertContact, trackEvent } from '@modules/brevo'
 import {
   isBotSubmission,
+  isSourceTrackingEnabled,
+  attributionEventProperties,
   normalizeEmail,
+  sanitizeAttribution,
   sanitizeAttributes,
   sanitizeEventName,
   sanitizeEventProperties,
@@ -23,10 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const body = req.body && typeof req.body === 'object' ? req.body : {}
-  const { contact, event, fields } = body as {
+  const { contact, event, fields, source } = body as {
     contact?: { email?: unknown; attributes?: unknown; listIds?: unknown }
     event?: { event_name?: unknown; event_properties?: unknown }
     fields?: unknown
+    source?: unknown
   }
 
   const email = normalizeEmail(contact?.email)
@@ -51,7 +55,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!(error instanceof BrevoError && error.status === 404)) throw error
     }
 
-    const attributes = sanitizeAttributes(contact?.attributes, existing)
+    const attributes: Record<string, unknown> = sanitizeAttributes(contact?.attributes, existing)
+    if (isSourceTrackingEnabled()) {
+      Object.assign(attributes, sanitizeAttribution(source, existing))
+    }
     const listIds = sanitizeLists(contact?.listIds)
 
     try {
@@ -74,7 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await trackEvent({
         eventName,
         email,
-        properties: sanitizeEventProperties(event?.event_properties),
+        properties: {
+          ...sanitizeEventProperties(event?.event_properties),
+          ...(isSourceTrackingEnabled() ? attributionEventProperties(source) : {}),
+        },
       })
     }
 

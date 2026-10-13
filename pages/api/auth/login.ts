@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { generateMagicLink, AuthPayload } from '@modules/auth'
-import { getContact, upsertContact, trackEvent, BrevoError } from '@modules/brevo'
+import { getContact, trackEvent, BrevoError } from '@modules/brevo'
 
 const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || 30
 const BREVO_LIST_STUDENTI = Number(process.env.BREVO_STUDENT_LIST_ID) || 42
@@ -47,10 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
     } else {
+      // Le aziende le approva MIIA spostandole nella lista Aziende da Brevo: il sito non aggiunge nessuno.
       if (!currentListIds.includes(BREVO_LIST_AZIENDE)) {
-        await upsertContact({
-          email: cleanEmail,
-          listIds: [BREVO_LIST_AZIENDE],
+        return res.status(403).json({
+          message: 'Account azienda non ancora approvato. Ti scriveremo non appena la richiesta sarà verificata.',
         })
       }
     }

@@ -7,6 +7,7 @@ import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
 import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 interface StudentDetailProps {
   student: {
@@ -26,8 +27,6 @@ interface StudentDetailProps {
   }
   applications: any[]
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 
 export default function AdminStudentView({ student, applications }: StudentDetailProps) {
   const { competenze: masterCompetenze } = useDataContext()
@@ -331,7 +330,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
 
     if (decoded.tipo_utente !== 'Admin') {
       return { redirect: { destination: '/', permanent: false } }

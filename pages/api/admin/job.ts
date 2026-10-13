@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken'
 import { upsertContact } from '@modules/brevo'
 import { createJob } from '@modules/jobs/db'
 import type { AuthPayload } from '@modules/auth'
+import { getJwtSecret } from '@modules/jwt-secret'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
 const BREVO_LIST_AZIENDE = Number(process.env.BREVO_AZIENDE_LIST_ID) || 43
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!token) return res.status(401).json({ message: 'Autenticazione mancante' })
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
     if (decoded.tipo_utente !== 'Admin') {
       return res.status(403).json({ message: 'Accesso negato: rotta riservata all\'Admin' })
     }

@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-miia-secret-change-in-env'
+import { getJwtSecret } from '@modules/jwt-secret'
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -20,7 +19,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       name: 'Amministratore'
     }
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '8h' })
     const encodedUserData = encodeURIComponent(JSON.stringify(payload))
 
     // 1. Allineamento logica Secure esatta come in verify.ts e logout.ts
