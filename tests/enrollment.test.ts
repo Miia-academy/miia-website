@@ -197,17 +197,22 @@ describe('sezioni 4 e 5', () => {
     expect(validateProfilo({ anno_studi: '14' }).ok).toBe(false)
   })
 
-  it('consensi obbligatori e foto senza risposta preimpostata', () => {
+  it('consensi: obbligatori da dare, Sì / No senza risposta preimpostata, facoltativi liberi', () => {
     const now = new Date('2026-10-13T10:00:00Z')
-    const r = validateConsensi({ contratto: true, clausole: true, recesso: true, privacy: true, foto: 'no' }, '2026-11', now)
+    const voci = [
+      { chiave: 'contratto', titolo: 'Contratto', tipo: 'spunta' as const, obbligatorio: true },
+      { chiave: 'foto', titolo: 'Foto', tipo: 'si_no' as const, obbligatorio: true },
+      { chiave: 'newsletter', titolo: 'Novità', tipo: 'spunta' as const, obbligatorio: false },
+    ]
+    const r = validateConsensi({ contratto: true, foto: 'no' }, voci, 'abc', now)
     expect(r.ok).toBe(true)
     if (r.ok) {
-      expect(r.value.versione).toBe('2026-11')
-      expect(r.value.foto).toEqual({ valore: 'no', ora: '2026-10-13T10:00:00.000Z' })
-      expect(r.value.newsletter.valore).toBe(false)
+      expect(r.value.versione).toBe('abc')
+      expect(r.value.voci.foto).toEqual({ valore: 'no', ora: '2026-10-13T10:00:00.000Z', titolo: 'Foto' })
+      expect(r.value.voci.newsletter.valore).toBe(false)
     }
-    const missing = validateConsensi({ contratto: true, clausole: 'true' }, '2026-11', now)
-    expect(!missing.ok && Object.keys(missing.errors).sort()).toEqual(['clausole', 'foto', 'privacy', 'recesso'])
+    const missing = validateConsensi({ contratto: 'true', foto: 'forse' }, voci, 'abc', now)
+    expect(!missing.ok && Object.keys(missing.errors).sort()).toEqual(['contratto', 'foto'])
   })
 })
 

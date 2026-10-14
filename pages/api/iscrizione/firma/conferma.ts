@@ -101,7 +101,6 @@ export default enrollmentApi(['POST'], async (req, res) => {
       fineRecesso: longDate(fine_recesso),
       pdf: bytes,
       fileName: `Iscrizione ${courseName(corso)}.pdf`,
-      dopo: conditions.dopo_la_firma,
     })
     await logEvent(row.id, 'email_inviata', ip, ua, { pdf_sha256: sha256 })
   } catch (error) {

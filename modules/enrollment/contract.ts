@@ -5,7 +5,7 @@
  */
 import { createHash } from 'node:crypto'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
-import type { Conditions } from './conditions'
+import type { ConditionItem, Conditions } from './conditions'
 import { DOCUMENT_LABELS, MODE_LABELS, SCOPO_LABELS, euro, longDate, romeDateTime } from './labels'
 import { COMPUTER_LABELS, ORE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from './profile'
 import type { Enrollment } from './types'
@@ -147,14 +147,22 @@ class Writer {
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '')
-const yes = (v: unknown) => (v === true ? 'Sì' : 'No')
 
-function consentLine(consensi: Record<string, unknown>, key: string): string {
-  const entry = consensi[key] as { valore?: unknown; ora?: string } | undefined
-  if (!entry) return ''
-  const value = entry.valore === true ? 'accettato' : entry.valore === 'si' ? 'sì' : entry.valore === 'no' ? 'no' : 'no'
-  const at = entry.ora ? romeDateTime(new Date(entry.ora)) : ''
-  return at ? `${value}, il ${at}` : value
+/** Risposta data a una voce, con l'ora: "Sì, il 14 ottobre 2026 alle 10:30". */
+function consentAnswer(voci: Record<string, unknown>, item: ConditionItem): string {
+  const entry = voci[item.chiave] as { valore?: unknown; ora?: string } | undefined
+  if (!entry) return 'nessuna risposta'
+  const value =
+    item.tipo === 'si_no'
+      ? entry.valore === 'si'
+        ? `Sì (${item.etichetta})`
+        : entry.valore === 'no'
+          ? `No (${item.etichetta_no})`
+          : 'nessuna risposta'
+      : entry.valore === true
+        ? 'Sì'
+        : 'No'
+  return entry.ora ? `${value}, il ${romeDateTime(new Date(entry.ora))}` : value
 }
 
 export function courseName(corso: string): string {
@@ -241,16 +249,13 @@ export async function buildContractPdf(input: ContractInput): Promise<{ bytes: U
   }
 
   w.heading('Consensi')
-  w.rows([
-    ['Condizioni generali', consentLine(consensi, 'contratto')],
-    ['Clausole 1341-1342 c.c.', consentLine(consensi, 'clausole')],
-    ['Diritto di recesso', consentLine(consensi, 'recesso')],
-    ['Privacy e proprietà int.', consentLine(consensi, 'privacy')],
-    ['Fotografie e video', consentLine(consensi, 'foto')],
-    ['Novità via email', consentLine(consensi, 'newsletter')],
-    ['Versione dei testi', `${c.versione} (impronta ${c.impronta})`],
-  ])
-  w.text(`Clausole approvate espressamente: ${c.clausole_1341}`, { size: 9, color: GREY })
+  const voci = (consensi.voci && typeof consensi.voci === 'object' ? consensi.voci : {}) as Record<string, unknown>
+  for (const item of c.voci) {
+    w.text(`${item.titolo}${item.obbligatorio ? '' : ' (facoltativo)'}`, { bold: true, gap: 1 })
+    if (item.tipo === 'spunta') w.text(`"${item.etichetta}"`, { size: 9, color: GREY, gap: 1 })
+    w.text(consentAnswer(voci, item), { gap: 6 })
+  }
+  w.text(`Versione dei testi: ${c.versione} (impronta ${c.impronta})`, { size: 9, color: GREY })
 
   w.heading('Firma elettronica')
   w.text(
@@ -259,12 +264,13 @@ export async function buildContractPdf(input: ContractInput): Promise<{ bytes: U
   )
   w.text(`Diritto di recesso: si può annullare l'iscrizione senza costi fino al ${longDate(firma.fine_recesso)} compreso.`, { bold: true })
 
-  w.heading('Diritto di recesso')
-  w.longText(c.recesso_testo)
-  w.heading('Condizioni generali di contratto')
-  w.longText(c.contratto_testo)
-  w.heading('Informativa privacy e proprietà intellettuale')
-  w.longText(c.privacy_testo)
+  // Testi accettati, nella versione mostrata alla persona.
+  for (const item of c.voci) {
+    if (!item.descrizione && !item.testo_completo) continue
+    w.heading(item.riferimento ? `${item.titolo} (${item.riferimento})` : item.titolo)
+    if (item.descrizione) w.longText(item.descrizione)
+    if (item.testo_completo) w.longText(item.testo_completo)
+  }
 
   const bytes = await doc.save()
   return { bytes, sha256: createHash('sha256').update(bytes).digest('hex') }

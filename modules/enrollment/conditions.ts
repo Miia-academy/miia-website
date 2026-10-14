@@ -1,65 +1,92 @@
 /**
- * Testi delle condizioni (passo 5), dalla storia Storyblok "iscrizione/condizioni".
- * Campi di testo semplice, paragrafi separati da una riga vuota, così lo stesso
- * testo va nella pagina e nel PDF. Senza la storia il passo 5 non si completa.
+ * Consensi del passo 5, da Storyblok: una storia "term_condition" per consenso
+ * nella cartella "iscrizione/condizioni", nell'ordine della cartella. Il nome
+ * della storia (slug) è la chiave con cui si salva il consenso.
  *
- * L'impronta (SHA-256 dei testi) si salva con i consensi: alla firma si controlla
- * che il testo non sia cambiato dopo l'accettazione, anche se la versione è la stessa.
+ * L'impronta (SHA-256 di tutti i testi) si salva con i consensi: alla firma si
+ * controlla che nessun testo sia cambiato, aggiunto o tolto dopo l'accettazione.
+ * Testo semplice: paragrafi separati da una riga vuota, così lo stesso testo va
+ * nella pagina e nel PDF.
  */
 import { createHash } from 'node:crypto'
 import { cdn } from './catalog'
 
-export const CONDITIONS_SLUG = 'iscrizione/condizioni'
+export const CONDITIONS_FOLDER = 'iscrizione/condizioni/'
 
-export interface Conditions {
-  versione: string
-  /** Punti chiave del contratto in parole semplici, uno per riga. */
-  contratto_punti: string[]
-  /** Condizioni generali complete (art. a–n). */
-  contratto_testo: string
-  /** Clausole da approvare a parte (artt. 1341–1342 c.c.), es. "e) ritardo nei pagamenti, …". */
-  clausole_1341: string
-  recesso_testo: string
-  privacy_testo: string
-  impronta: string
-  /** Facoltativi, solo informativi (fuori dall'impronta): passo 6 e email. */
-  dopo_la_firma: string[]
-  come_pagare: string
+export type ConsentKind = 'spunta' | 'si_no'
+
+export interface ConditionItem {
+  chiave: string
+  titolo: string
+  riferimento: string
+  descrizione: string
+  testo_completo: string
+  tipo: ConsentKind
+  /** Testo della casella, o della scelta "Sì". */
+  etichetta: string
+  etichetta_no: string
+  nota_no: string
+  obbligatorio: boolean
 }
 
-const field = (content: Record<string, unknown>, key: string) =>
+export interface Conditions {
+  /** Versione leggibile dei testi: le prime cifre dell'impronta. */
+  versione: string
+  impronta: string
+  voci: ConditionItem[]
+}
+
+interface StoryLike {
+  slug?: string
+  position?: number
+  content?: Record<string, unknown>
+}
+
+const text = (content: Record<string, unknown>, key: string) =>
   typeof content[key] === 'string' ? (content[key] as string).replace(/\r\n/g, '\n').trim() : ''
 
-/** Null se manca un testo obbligatorio: meglio non far firmare che far firmare un testo incompleto. */
-export function parseConditions(content: Record<string, unknown> | null | undefined): Conditions | null {
-  if (!content) return null
-  const value = {
-    versione: field(content, 'versione'),
-    contratto_punti: field(content, 'contratto_punti')
-      .split('\n')
-      .map((l) => l.replace(/^[-•*]\s*/, '').trim())
-      .filter(Boolean),
-    contratto_testo: field(content, 'contratto_testo'),
-    clausole_1341: field(content, 'clausole_1341'),
-    recesso_testo: field(content, 'recesso_testo'),
-    privacy_testo: field(content, 'privacy_testo'),
+/** Una voce senza titolo o senza testo della casella non si mostra: non si accetta un consenso vuoto. */
+export function parseConditionItem(story: StoryLike): ConditionItem | null {
+  const c = story.content || {}
+  const chiave = typeof story.slug === 'string' ? story.slug : ''
+  const titolo = text(c, 'titolo')
+  const etichetta = text(c, 'etichetta')
+  if (!/^[a-z0-9-]+$/.test(chiave) || !titolo || !etichetta) return null
+  const tipo: ConsentKind = c.tipo === 'si_no' ? 'si_no' : 'spunta'
+  return {
+    chiave,
+    titolo,
+    riferimento: text(c, 'riferimento'),
+    descrizione: text(c, 'descrizione'),
+    testo_completo: text(c, 'testo_completo'),
+    tipo,
+    etichetta,
+    etichetta_no: tipo === 'si_no' ? text(c, 'etichetta_no') || 'No' : '',
+    nota_no: tipo === 'si_no' ? text(c, 'nota_no') : '',
+    obbligatorio: c.obbligatorio === true,
   }
-  if (!value.versione || !value.contratto_testo || !value.clausole_1341 || !value.recesso_testo || !value.privacy_testo) {
-    return null
-  }
-  const impronta = createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 16)
-  const lines = (key: string) =>
-    field(content, key)
-      .split('\n')
-      .map((l) => l.replace(/^[-•*]\s*/, '').trim())
-      .filter(Boolean)
-  return { ...value, impronta, dopo_la_firma: lines('dopo_la_firma'), come_pagare: field(content, 'come_pagare') }
+}
+
+/** Null se non c'è nessuna voce valida: senza consensi non si firma. */
+export function parseConditions(stories: StoryLike[] | null | undefined): Conditions | null {
+  const voci = [...(stories || [])]
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map(parseConditionItem)
+    .filter((v): v is ConditionItem => !!v)
+  if (!voci.length) return null
+  const impronta = createHash('sha256').update(JSON.stringify(voci)).digest('hex').slice(0, 16)
+  return { versione: impronta.slice(0, 8), impronta, voci }
 }
 
 export async function getConditions(): Promise<Conditions | null> {
   try {
-    const data = await cdn<{ story?: { content?: Record<string, unknown> } }>(`stories/${CONDITIONS_SLUG}`, {})
-    return parseConditions(data.story?.content)
+    const data = await cdn<{ stories?: StoryLike[] }>('stories', {
+      starts_with: CONDITIONS_FOLDER,
+      content_type: 'term_condition',
+      sort_by: 'position:asc',
+      per_page: '100',
+    })
+    return parseConditions(data.stories)
   } catch (error) {
     console.error('[Iscrizione] Condizioni non disponibili da Storyblok:', error)
     return null

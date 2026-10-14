@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Button, InputOtp } from '@heroui/react'
-import type { Conditions } from '@modules/enrollment/conditions'
 import { addDays, romeDate } from '@modules/enrollment/dates'
 import { longDate } from '@modules/enrollment/labels'
 import type { EnrollmentState } from '@modules/enrollment/state'
@@ -21,7 +20,6 @@ async function post(url: string, body: Record<string, unknown>) {
 
 /** Passo 6: cosa si firma, cosa succede dopo, firma con codice SMS. */
 export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
-  const [info, setInfo] = useState<Pick<Conditions, 'dopo_la_firma' | 'come_pagare'> | null>(null)
   const [sentTo, setSentTo] = useState('')
   const [code, setCode] = useState('')
   const [wait, setWait] = useState(0)
@@ -29,13 +27,6 @@ export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
   const [loading, setLoading] = useState<'send' | 'sign' | null>(null)
   // Indicativa: la data vera la scrive il server al momento della firma.
   const recesso = longDate(addDays(romeDate(), 14))
-
-  useEffect(() => {
-    fetch('/api/iscrizione/condizioni')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((c) => c && setInfo({ dopo_la_firma: c.dopo_la_firma || [], come_pagare: c.come_pagare || '' }))
-      .catch(() => {})
-  }, [])
 
   useEffect(() => {
     if (wait <= 0) return
@@ -88,23 +79,6 @@ export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
           <strong>{recesso}</strong> (14 giorni dalla firma). Ti mandiamo il contratto in PDF via email.
         </p>
       </div>
-
-      {info && info.dopo_la_firma.length > 0 && (
-        <section>
-          <h3 className="mb-2 font-semibold">Cosa succede dopo la firma</h3>
-          <ol className="list-decimal pl-5 text-sm text-neutral-700 space-y-1">
-            {info.dopo_la_firma.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ol>
-        </section>
-      )}
-      {info?.come_pagare && (
-        <section>
-          <h3 className="mb-2 font-semibold">Come e quando paghi</h3>
-          <p className="text-sm text-neutral-700 whitespace-pre-line">{info.come_pagare}</p>
-        </section>
-      )}
 
       <section className="flex flex-col gap-4">
         <h3 className="font-semibold">Firma con il codice via SMS</h3>

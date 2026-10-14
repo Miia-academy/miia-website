@@ -33,7 +33,7 @@ export interface EnrollmentState {
   foto_caricate: string[]
   /** Passo 4: risposte salvate; prima del salvataggio, solo le voci suggerite di "Come ci hai conosciuto". */
   profilo: Record<string, unknown>
-  /** Passo 5: le scelte date (senza le ore), per riaprirle con "Modifica". */
+  /** Passo 5: le scelte date per chiave (senza le ore) e l'impronta dei testi accettati. */
   consensi: Record<string, boolean | string>
 }
 
@@ -44,15 +44,14 @@ function profileAnswers(profilo: Record<string, unknown> | null | undefined): Re
   return rest
 }
 
-/** Dal consenso salvato ({ valore, ora }) solo il valore; più la versione accettata. */
+/** Dai consensi salvati ({ voci: { chiave: { valore, ora } } }) solo i valori; più l'impronta accettata. */
 function consentChoices(consensi: Record<string, unknown> | null | undefined): Record<string, boolean | string> {
   const out: Record<string, boolean | string> = {}
-  for (const [key, entry] of Object.entries(consensi || {})) {
-    if (key === 'versione' && typeof entry === 'string') out.versione = entry
-    else if (entry && typeof entry === 'object' && 'valore' in entry) {
-      const v = (entry as { valore: unknown }).valore
-      if (typeof v === 'boolean' || typeof v === 'string') out[key] = v
-    }
+  if (typeof consensi?.impronta === 'string') out.impronta = consensi.impronta
+  const voci = consensi?.voci && typeof consensi.voci === 'object' ? (consensi.voci as Record<string, unknown>) : {}
+  for (const [key, entry] of Object.entries(voci)) {
+    const v = entry && typeof entry === 'object' ? (entry as { valore?: unknown }).valore : undefined
+    if (typeof v === 'boolean' || typeof v === 'string') out[key] = v
   }
   return out
 }

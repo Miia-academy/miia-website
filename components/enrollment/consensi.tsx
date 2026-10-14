@@ -1,9 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Button, Checkbox, Radio, RadioGroup, Spinner } from '@heroui/react'
 import type { Conditions } from '@modules/enrollment/conditions'
+import { descriptionLines } from '@modules/enrollment/consent-text'
 import type { EnrollmentState } from '@modules/enrollment/state'
-
-type Required = 'contratto' | 'clausole' | 'recesso' | 'privacy'
 
 /** Testo integrale apribile: paragrafi separati da una riga vuota. */
 function FullText({ label, text }: { label: string; text: string }) {
@@ -38,20 +37,13 @@ interface ConsensiProps {
   onSaved: (state: EnrollmentState) => void
 }
 
-/** Passo 5: consensi raggruppati per argomento; nessuna casella già spuntata. */
+type Answers = Record<string, boolean | string>
+
+/** Passo 5: una voce per consenso, come in Storyblok; nessuna risposta già data. */
 export function Consensi({ corso, state, onSaved }: ConsensiProps) {
   const [conditions, setConditions] = useState<Conditions | null>(null)
   const [loadError, setLoadError] = useState('')
-  const saved = state.consensi || {}
-  // Le scelte salvate si ripropongono solo se i testi sono ancora quelli accettati.
-  const [checks, setChecks] = useState<Record<Required | 'newsletter', boolean>>({
-    contratto: false,
-    clausole: false,
-    recesso: false,
-    privacy: false,
-    newsletter: saved.newsletter === true,
-  })
-  const [foto, setFoto] = useState(typeof saved.foto === 'string' ? saved.foto : '')
+  const [answers, setAnswers] = useState<Answers>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -64,14 +56,14 @@ export function Consensi({ corso, state, onSaved }: ConsensiProps) {
         if (!res.ok) return setLoadError(data.message || 'Non riusciamo a caricare le condizioni, riprova tra poco.')
         const c = data as Conditions
         setConditions(c)
-        if (saved.versione === c.versione) {
-          setChecks((s) => ({
-            ...s,
-            contratto: saved.contratto === true,
-            clausole: saved.clausole === true,
-            recesso: saved.recesso === true,
-            privacy: saved.privacy === true,
-          }))
+        // Le risposte salvate si ripropongono solo se i testi sono ancora quelli accettati.
+        const saved = state.consensi || {}
+        if (saved.impronta === c.impronta) {
+          const restored: Answers = {}
+          for (const v of c.voci) if (v.chiave in saved) restored[v.chiave] = saved[v.chiave]
+          setAnswers(restored)
+        } else {
+          setAnswers({})
         }
       })
       .catch(() => setLoadError('Errore di connessione. Ricarica la pagina.'))
@@ -79,18 +71,7 @@ export function Consensi({ corso, state, onSaved }: ConsensiProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [])
 
-  const check = (key: keyof typeof checks, label: string, required = true) => (
-    <Checkbox
-      isSelected={checks[key]}
-      onValueChange={(v) => setChecks((s) => ({ ...s, [key]: v }))}
-      isInvalid={!!errors[key]}
-      size="sm"
-      classNames={{ label: 'text-sm' }}
-    >
-      {label}
-      {required && <span className="text-secondary"> *</span>}
-    </Checkbox>
-  )
+  const set = (key: string, value: boolean | string) => setAnswers((a) => ({ ...a, [key]: value }))
 
   const save = async () => {
     if (!conditions) return
@@ -101,20 +82,13 @@ export function Consensi({ corso, state, onSaved }: ConsensiProps) {
       const res = await fetch('/api/iscrizione/bozza', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          corso,
-          sezione: 'consensi',
-          valori: { ...checks, foto, versione: conditions.versione, impronta: conditions.impronta },
-        }),
+        body: JSON.stringify({ corso, sezione: 'consensi', valori: { ...answers, impronta: conditions.impronta } }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setMessage(data.message || 'Servono i consensi con l’asterisco')
+        setMessage(data.message || 'Servono le risposte con l’asterisco')
         setErrors(data.errori || {})
-        if (data.aggiornate) {
-          setChecks((s) => ({ ...s, contratto: false, clausole: false, recesso: false, privacy: false }))
-          load()
-        }
+        if (data.aggiornate) load()
         return
       }
       onSaved(data.iscrizione as EnrollmentState)
@@ -145,57 +119,54 @@ export function Consensi({ corso, state, onSaved }: ConsensiProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <Group title="Contratto" tag="art. a–n">
-        {conditions.contratto_punti.length > 0 && (
-          <ul className="list-disc pl-5 text-sm text-neutral-700 space-y-1">
-            {conditions.contratto_punti.map((p) => (
-              <li key={p}>{p}</li>
-            ))}
-          </ul>
-        )}
-        <FullText label="Leggi le condizioni generali complete" text={conditions.contratto_testo} />
-        {check('contratto', 'Ho letto e accetto le condizioni generali di contratto')}
-      </Group>
+      {conditions.voci.map((v) => {
+        const { elenco, testo } = descriptionLines(v.descrizione)
+        const star = v.obbligatorio ? <span className="text-secondary"> *</span> : null
+        return (
+          <Group key={v.chiave} title={v.titolo} tag={v.riferimento || (v.obbligatorio ? '' : 'facoltativo')}>
+            {testo && <p className="text-sm text-neutral-700 whitespace-pre-line">{testo}</p>}
+            {elenco.length > 0 && (
+              <ul className="list-disc pl-5 text-sm text-neutral-700 space-y-1">
+                {elenco.map((l) => (
+                  <li key={l}>{l}</li>
+                ))}
+              </ul>
+            )}
+            {v.testo_completo && <FullText label="Leggi il testo completo" text={v.testo_completo} />}
+            {v.tipo === 'si_no' ? (
+              <RadioGroup
+                aria-label={v.titolo}
+                value={typeof answers[v.chiave] === 'string' ? (answers[v.chiave] as string) : ''}
+                onValueChange={(value) => set(v.chiave, value)}
+                isInvalid={!!errors[v.chiave]}
+                errorMessage={errors[v.chiave]}
+                classNames={{ wrapper: 'gap-3' }}
+              >
+                <Radio value="si" size="sm" classNames={{ label: 'text-sm' }}>
+                  {v.etichetta}
+                  {star}
+                </Radio>
+                <Radio value="no" size="sm" classNames={{ label: 'text-sm' }} description={v.nota_no || undefined}>
+                  {v.etichetta_no}
+                </Radio>
+              </RadioGroup>
+            ) : (
+              <Checkbox
+                isSelected={answers[v.chiave] === true}
+                onValueChange={(value) => set(v.chiave, value)}
+                isInvalid={!!errors[v.chiave]}
+                size="sm"
+                classNames={{ label: 'text-sm' }}
+              >
+                {v.etichetta}
+                {star}
+              </Checkbox>
+            )}
+          </Group>
+        )
+      })}
 
-      <Group title="Clausole da approvare a parte" tag="artt. 1341–1342 c.c.">
-        <p className="text-sm text-neutral-700">La legge chiede un’approvazione separata per queste clausole.</p>
-        {check('clausole', `Approvo espressamente: ${conditions.clausole_1341}`)}
-      </Group>
-
-      <Group title="Diritto di recesso">
-        <p className="text-sm text-neutral-700 whitespace-pre-line">{conditions.recesso_testo}</p>
-        {check('recesso', 'Ho capito come e fino a quando posso recedere')}
-      </Group>
-
-      <Group title="Privacy e proprietà intellettuale">
-        <p className="text-sm text-neutral-700">Come trattiamo i tuoi dati e chi è titolare dei materiali e dei progetti del corso.</p>
-        <FullText label="Leggi l’informativa completa" text={conditions.privacy_testo} />
-        {check('privacy', 'Ho letto l’informativa privacy e accetto le regole sulla proprietà intellettuale')}
-      </Group>
-
-      <Group title="Fotografie e video" tag="scegli una risposta">
-        <RadioGroup
-          aria-label="Fotografie e video"
-          value={foto}
-          onValueChange={setFoto}
-          isInvalid={!!errors.foto}
-          errorMessage={errors.foto}
-          classNames={{ wrapper: 'gap-3' }}
-        >
-          <Radio value="si" size="sm" classNames={{ label: 'text-sm' }}>
-            Sì, autorizzo l’uso su cataloghi, sito e social di MIIA
-          </Radio>
-          <Radio value="no" size="sm" classNames={{ label: 'text-sm' }} description="In questo caso non potrai partecipare alle visite nelle aziende del settore.">
-            No, non autorizzo
-          </Radio>
-        </RadioGroup>
-      </Group>
-
-      <Group title="Comunicazioni" tag="facoltativo">
-        {check('newsletter', 'Voglio ricevere novità su corsi, open day ed eventi', false)}
-      </Group>
-
-      <p className="text-xs text-neutral-500">Versione delle condizioni: {conditions.versione}</p>
+      <p className="text-xs text-neutral-500">Versione dei testi: {conditions.versione}</p>
       <div className="flex flex-col gap-2">
         <Button color="primary" className="h-12 font-bold self-start px-8" isLoading={loading} onPress={save}>
           Continua

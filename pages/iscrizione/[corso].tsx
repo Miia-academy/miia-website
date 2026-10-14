@@ -187,14 +187,14 @@ export default function Iscrizione({ corso, titolo }: Props) {
     } else if (id === 'consensi' && state) {
       item.content = <Consensi corso={corso} state={state} onSaved={saved} />
       const c = state.consensi
+      const answered = Object.keys(c).filter((k) => k !== 'impronta')
       item.summary = (
         <Summary
           rows={[
-            ['Consensi', c.contratto && c.clausole && c.recesso && c.privacy ? 'Tutti i consensi obbligatori dati' : ''],
+            ['Consensi', answered.length ? 'Risposte date a tutte le voci obbligatorie' : ''],
             ['Fotografie e video', c.foto === 'si' ? 'Autorizzati' : c.foto === 'no' ? 'Non autorizzati' : ''],
-            ['Novità via email', c.newsletter ? 'Sì' : 'No'],
-            ['Versione delle condizioni', typeof c.versione === 'string' ? c.versione : ''],
-          ]}
+            ['Novità via email', c.newsletter === true ? 'Sì' : 'No'],
+          ].filter(([, v]) => v !== '') as Array<[string, string]>}
         />
       )
     } else if (id === 'firma' && state) {

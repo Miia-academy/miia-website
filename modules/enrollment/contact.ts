@@ -118,11 +118,13 @@ export async function sendContractEmail(input: {
   fineRecesso: string
   pdf: Uint8Array
   fileName: string
-  dopo: string[]
+  /** "Cosa succede adesso", un passo per riga; vuoto finché non c'è un testo approvato. */
+  dopo?: string[]
 }) {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const steps = input.dopo.length
-    ? `<p style="margin:0 0 8px;font-size:15px;font-weight:700">Cosa succede adesso</p><ul style="margin:0 0 16px;padding-left:20px;font-size:15px">${input.dopo
+  const dopo = input.dopo || []
+  const steps = dopo.length
+    ? `<p style="margin:0 0 8px;font-size:15px;font-weight:700">Cosa succede adesso</p><ul style="margin:0 0 16px;padding-left:20px;font-size:15px">${dopo
         .map((s) => `<li style="margin:0 0 6px">${esc(s)}</li>`)
         .join('')}</ul>`
     : ''
@@ -138,7 +140,7 @@ ${steps}
   const text =
     `Ciao ${input.nome},\n\nla tua iscrizione a ${input.corso} (${input.edizione}, dal ${input.inizio}) è firmata. ` +
     `In allegato trovi il contratto in PDF.\n\nPuoi ripensarci senza costi fino al ${input.fineRecesso}: basta rispondere a questa email.\n\n` +
-    (input.dopo.length ? `Cosa succede adesso:\n${input.dopo.map((s) => `- ${s}`).join('\n')}\n\n` : '') +
+    (dopo.length ? `Cosa succede adesso:\n${dopo.map((s) => `- ${s}`).join('\n')}\n\n` : '') +
     'Made in Italy Academy'
 
   await brevoFetch('/smtp/email', {

@@ -267,48 +267,56 @@ export function validateProfilo(input: Input): SectionResult<Profilo> {
 
 // --- 5. Consensi ---
 
-export const REQUIRED_CONSENTS = ['contratto', 'clausole', 'recesso', 'privacy'] as const
+/** Le voci dei consensi vengono da Storyblok (vedi conditions.ts). */
+export interface ConsentDefinition {
+  chiave: string
+  titolo: string
+  tipo: 'spunta' | 'si_no'
+  obbligatorio: boolean
+}
 
 export interface Consenso {
+  /** true/false per una casella, "si"/"no" (o "" se non data) per una scelta Sì / No. */
   valore: boolean | string
   ora: string
+  titolo: string
 }
 
 export interface Consensi {
   versione: string
   /** Impronta dei testi accettati (vedi conditions.ts), aggiunta dalla API. */
   impronta?: string
-  contratto: Consenso
-  clausole: Consenso
-  recesso: Consenso
-  privacy: Consenso
-  foto: Consenso
-  newsletter: Consenso
+  voci: Record<string, Consenso>
 }
 
-/** versione: versione dei testi mostrati (da Storyblok), salvata con ogni consenso. */
-export function validateConsensi(input: Input, versione: string, now: Date = new Date()): SectionResult<Consensi> {
+/**
+ * input: { [chiave]: true | "si" | "no" }. Caselle obbligatorie da spuntare,
+ * scelte Sì / No obbligatorie da dare (anche No). Nessuna risposta preimpostata.
+ */
+export function validateConsensi(
+  input: Input,
+  voci: readonly ConsentDefinition[],
+  versione: string,
+  now: Date = new Date()
+): SectionResult<Consensi> {
   const errors: Record<string, string> = {}
   const ora = now.toISOString()
+  const out: Record<string, Consenso> = {}
 
-  for (const key of REQUIRED_CONSENTS) {
-    if (input[key] !== true) errors[key] = 'Questa conferma è obbligatoria'
+  for (const v of voci) {
+    const raw = input[v.chiave]
+    if (v.tipo === 'si_no') {
+      const valore = raw === 'si' || raw === 'no' ? raw : ''
+      if (v.obbligatorio && !valore) errors[v.chiave] = 'Scegli sì o no'
+      out[v.chiave] = { valore, ora, titolo: v.titolo }
+    } else {
+      const valore = raw === true
+      if (v.obbligatorio && !valore) errors[v.chiave] = 'Questa conferma è obbligatoria'
+      out[v.chiave] = { valore, ora, titolo: v.titolo }
+    }
   }
-  const foto = input.foto === 'si' || input.foto === 'no' ? input.foto : null
-  if (!foto) errors.foto = 'Scegli sì o no'
 
-  return result(
-    {
-      versione,
-      contratto: { valore: input.contratto === true, ora },
-      clausole: { valore: input.clausole === true, ora },
-      recesso: { valore: input.recesso === true, ora },
-      privacy: { valore: input.privacy === true, ora },
-      foto: { valore: foto || '', ora },
-      newsletter: { valore: input.newsletter === true, ora },
-    },
-    errors
-  )
+  return result({ versione, voci: out }, errors)
 }
 
 // --- Avanzamento tra le sezioni ---

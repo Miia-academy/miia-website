@@ -22,14 +22,7 @@ const CORSO = 'corso-interior-design-primo-livello'
 const ID = '00000000-0000-4000-8000-000000000001'
 const STEP4 = ['chi_sei', 'corso', 'dati', 'profilo'] as Enrollment['sezioni_complete']
 
-const CONTENT = {
-  versione: '2026-11',
-  contratto_punti: '- La retta è dovuta per intero.\n- Le lezioni perse non si recuperano.\n',
-  contratto_testo: 'a) Oggetto.\n\nb) Durata.',
-  clausole_1341: 'e) ritardo nei pagamenti, k) foro competente di Treviso',
-  recesso_testo: 'Puoi annullare entro 14 giorni dalla firma.',
-  privacy_testo: 'Titolare del trattamento: …',
-}
+import { ANSWERS, STORIES, changed } from './consent-fixtures'
 
 function row(over: Partial<Enrollment> = {}): Enrollment {
   return {
@@ -87,11 +80,8 @@ function call(
 
 const cookie = () => ({ [SESSION_COOKIE]: signSession({ id: ID, email: EMAIL, corso: CORSO }) })
 
-function stubStoryblok(content: Record<string, unknown> | null, status = 200) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => ({ ok: status === 200, status, json: async () => (content ? { story: { content } } : {}) }))
-  )
+function stubStoryblok(stories: unknown[] | null, status = 200) {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: status === 200, status, json: async () => ({ stories: stories || [] }) })))
 }
 
 beforeEach(() => {
@@ -102,61 +92,60 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
-describe('testi delle condizioni da Storyblok', () => {
-  it('legge versione, punti chiave e testi, con un’impronta stabile', () => {
-    const c = parseConditions(CONTENT)
-    expect(c).toMatchObject({ versione: '2026-11', contratto_punti: ['La retta è dovuta per intero.', 'Le lezioni perse non si recuperano.'] })
-    expect(c?.impronta).toMatch(/^[0-9a-f]{16}$/)
-    expect(parseConditions({ ...CONTENT })?.impronta).toBe(c?.impronta)
-    expect(parseConditions({ ...CONTENT, privacy_testo: 'Altro testo' })?.impronta).not.toBe(c?.impronta)
+describe('consensi da Storyblok', () => {
+  it('una voce per storia, nell’ordine della cartella, con un’impronta stabile', () => {
+    const c = parseConditions([...STORIES].reverse())!
+    expect(c.voci.map((v) => v.chiave)).toEqual(['contratto', 'recesso', 'foto', 'newsletter'])
+    expect(c.voci[2]).toMatchObject({ tipo: 'si_no', etichetta_no: 'No, non autorizzo', obbligatorio: true })
+    expect(c.voci[3].obbligatorio).toBe(false)
+    expect(c.impronta).toMatch(/^[0-9a-f]{16}$/)
+    expect(parseConditions(STORIES)!.impronta).toBe(c.impronta)
+    expect(parseConditions(changed('recesso', 'descrizione', 'Altro testo'))!.impronta).not.toBe(c.impronta)
+    expect(parseConditions(STORIES.slice(0, 3))!.impronta).not.toBe(c.impronta)
   })
 
-  it('senza un testo obbligatorio non si può accettare niente', () => {
-    expect(parseConditions({ ...CONTENT, versione: '' })).toBeNull()
-    expect(parseConditions({ ...CONTENT, clausole_1341: undefined })).toBeNull()
+  it('una voce senza titolo o senza testo della casella non si mostra', () => {
+    expect(parseConditions(changed('recesso', 'etichetta', ''))!.voci.map((v) => v.chiave)).not.toContain('recesso')
+    expect(parseConditions([])).toBeNull()
     expect(parseConditions(null)).toBeNull()
   })
 
-  it('GET /api/iscrizione/condizioni: 503 se la storia non c’è', async () => {
+  it('GET /api/iscrizione/condizioni: 503 se non ci sono voci', async () => {
     stubStoryblok(null, 404)
-    const res = await call(condizioni)
-    expect(res.statusCode).toBe(503)
-    stubStoryblok(CONTENT)
+    expect((await call(condizioni)).statusCode).toBe(503)
+    stubStoryblok([])
+    expect((await call(condizioni)).statusCode).toBe(503)
+    stubStoryblok(STORIES)
     const ok = await call(condizioni)
     expect(ok.statusCode).toBe(200)
-    expect(ok.body.versione).toBe('2026-11')
+    expect(ok.body.voci).toHaveLength(4)
   })
 })
 
 describe('PUT /api/iscrizione/bozza, passo 5', () => {
-  const impronta = () => parseConditions(CONTENT)!.impronta
-  const all = () => ({ contratto: true, clausole: true, recesso: true, privacy: true, foto: 'si', newsletter: false, versione: '2026-11', impronta: impronta() })
+  const impronta = () => parseConditions(STORIES)!.impronta
+  const all = () => ({ ...ANSWERS, impronta: impronta() })
   const put = (valori: Record<string, unknown>) =>
     call(bozza, { method: 'PUT', body: { corso: CORSO, sezione: 'consensi', valori }, cookies: cookie() })
 
-  it('salva consensi, versione e impronta dei testi', async () => {
-    stubStoryblok(CONTENT)
+  it('salva le risposte e l’impronta dei testi', async () => {
+    stubStoryblok(STORIES)
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: STEP4 }))
     vi.mocked(db.saveConsensi).mockImplementation(async (_id, _e, value, complete) =>
       row({ sezioni_complete: complete, consensi: value as unknown as Record<string, unknown> })
     )
     const res = await put(all())
     expect(res.statusCode).toBe(200)
-    expect(vi.mocked(db.saveConsensi).mock.calls[0][2]).toMatchObject({ versione: '2026-11', impronta: impronta(), foto: { valore: 'si' } })
-    expect(res.body.iscrizione.consensi).toEqual({
-      versione: '2026-11',
-      contratto: true,
-      clausole: true,
-      recesso: true,
-      privacy: true,
-      foto: 'si',
-      newsletter: false,
+    expect(vi.mocked(db.saveConsensi).mock.calls[0][2]).toMatchObject({
+      impronta: impronta(),
+      voci: { foto: { valore: 'si', titolo: 'Fotografie e video' }, newsletter: { valore: false } },
     })
+    expect(res.body.iscrizione.consensi).toEqual({ impronta: impronta(), contratto: true, recesso: true, foto: 'si', newsletter: false })
     expect(res.body.iscrizione.prossima).toBe('firma')
   })
 
   it('se i testi sono cambiati chiede di rileggerli', async () => {
-    stubStoryblok({ ...CONTENT, recesso_testo: 'Testo nuovo' })
+    stubStoryblok(changed('recesso', 'descrizione', 'Testo nuovo'))
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: STEP4 }))
     const res = await put(all())
     expect(res.statusCode).toBe(409)
@@ -164,29 +153,27 @@ describe('PUT /api/iscrizione/bozza, passo 5', () => {
     expect(db.saveConsensi).not.toHaveBeenCalled()
   })
 
-  it('senza un consenso obbligatorio o la scelta sulle foto non salva', async () => {
-    stubStoryblok(CONTENT)
+  it('senza una risposta obbligatoria non salva', async () => {
+    stubStoryblok(STORIES)
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: STEP4 }))
-    const res = await put({ ...all(), clausole: false, foto: '' })
+    const res = await put({ ...all(), recesso: false, foto: '' })
     expect(res.statusCode).toBe(400)
-    expect(Object.keys(res.body.errori).sort()).toEqual(['clausole', 'foto'])
+    expect(Object.keys(res.body.errori).sort()).toEqual(['foto', 'recesso'])
   })
 
-  it('senza condizioni in Storyblok il passo non si completa', async () => {
+  it('senza voci in Storyblok il passo non si completa', async () => {
     stubStoryblok(null, 404)
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: STEP4 }))
-    const res = await put(all())
-    expect(res.statusCode).toBe(503)
+    expect((await put(all())).statusCode).toBe(503)
   })
 
   it('prima del passo 4 non salva', async () => {
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: ['chi_sei', 'corso', 'dati'] }))
-    const res = await put(all())
-    expect(res.statusCode).toBe(409)
+    expect((await put(all())).statusCode).toBe(409)
   })
 
   it('lo stato non porta le ore dei consensi', () => {
-    const state = publicState(row({ consensi: { versione: 'v1', foto: { valore: 'no', ora: 'x' } } }))
-    expect(state.consensi).toEqual({ versione: 'v1', foto: 'no' })
+    const state = publicState(row({ consensi: { impronta: 'x1', voci: { foto: { valore: 'no', ora: 'x', titolo: 'Foto' } } } }))
+    expect(state.consensi).toEqual({ impronta: 'x1', foto: 'no' })
   })
 })

@@ -92,12 +92,12 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
     if (!conditions) {
       return res.status(503).json({ message: 'Le condizioni non sono disponibili in questo momento, riprova più tardi.' })
     }
-    if (values.versione !== conditions.versione || values.impronta !== conditions.impronta) {
+    if (values.impronta !== conditions.impronta) {
       return res.status(409).json({ message: 'Le condizioni sono state aggiornate: rileggile e conferma di nuovo.', aggiornate: true })
     }
-    const result = validateConsensi(values, conditions.versione)
+    const result = validateConsensi(values, conditions.voci, conditions.versione)
     if (!result.ok) {
-      return res.status(400).json({ message: 'Servono i consensi con l’asterisco', errori: result.errors })
+      return res.status(400).json({ message: 'Servono le risposte con l’asterisco', errori: result.errors })
     }
     const saved = await saveConsensi(row.id, session.email, { ...result.value, impronta: conditions.impronta }, complete)
     if (!saved) return notVerified(res)

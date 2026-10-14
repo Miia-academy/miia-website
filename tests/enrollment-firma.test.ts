@@ -35,16 +35,9 @@ const ID = '00000000-0000-4000-8000-000000000001'
 const KEY = '11111111-2222-4333-8444-555555555555:2026-11-07'
 const STEP5 = ['chi_sei', 'corso', 'dati', 'profilo', 'consensi'] as Enrollment['sezioni_complete']
 
-const CONTENT = {
-  versione: '2026-11',
-  contratto_punti: '- La retta è dovuta per intero.',
-  contratto_testo: 'a) Oggetto del contratto: corso “Interior design”.\n\nb) Durata… fino a € 5.490.',
-  clausole_1341: 'e) ritardo nei pagamenti, k) foro competente di Treviso',
-  recesso_testo: 'Puoi annullare entro 14 giorni dalla firma.',
-  privacy_testo: 'Titolare del trattamento: Made in Italy Academy.',
-  dopo_la_firma: '- Ti chiamiamo per il benvenuto\n- Ricevi il calendario',
-}
-const IMPRONTA = parseConditions(CONTENT)!.impronta
+import { STORIES, changed } from './consent-fixtures'
+
+const IMPRONTA = parseConditions(STORIES)!.impronta
 
 const OFFER = (stato: 'disponibile' | 'completa' = 'disponibile'): CourseOffer => ({
   edizioni: [
@@ -145,17 +138,19 @@ function ready(over: Partial<Enrollment> = {}) {
     },
     profilo: { scopo: 'professione', titolo_studi: 'diploma', saltato: false },
     consensi: {
-      versione: '2026-11',
+      versione: IMPRONTA.slice(0, 8),
       impronta: IMPRONTA,
-      contratto: { valore: true, ora: '2026-10-14T08:00:00Z' },
-      foto: { valore: 'si', ora: '2026-10-14T08:00:00Z' },
+      voci: {
+        contratto: { valore: true, ora: '2026-10-14T08:00:00Z', titolo: 'Contratto' },
+        foto: { valore: 'si', ora: '2026-10-14T08:00:00Z', titolo: 'Fotografie e video' },
+      },
     },
     ...over,
   })
 }
 
-function stubStoryblok(content: Record<string, unknown> | null) {
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: !!content, status: content ? 200 : 404, json: async () => ({ story: { content } }) })))
+function stubStoryblok(stories: unknown[] | null) {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: !!stories, status: stories ? 200 : 404, json: async () => ({ stories: stories || [] }) })))
 }
 
 beforeEach(() => {
@@ -167,7 +162,7 @@ beforeEach(() => {
   vi.mocked(loadOffer).mockReset()
   vi.mocked(db.recentCodeSends).mockResolvedValue({ perEmail: 0, perIp: 0, lastAt: null })
   vi.mocked(loadOffer).mockResolvedValue(OFFER())
-  stubStoryblok(CONTENT)
+  stubStoryblok(STORIES)
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
@@ -183,7 +178,7 @@ describe('PDF del contratto', () => {
       row: ready({ nome: 'Mario', cognome: 'Rossi' }),
       edizione: OFFER().edizioni[0],
       quota_esame: 366,
-      condizioni: parseConditions(CONTENT)!,
+      condizioni: parseConditions(STORIES)!,
       firma: { ora: new Date('2026-10-14T08:30:00Z'), telefono: '+393331234567', ip: '1.2.3.4', fine_recesso: '2026-10-28' },
     })
     expect(Buffer.from(bytes.slice(0, 5)).toString()).toBe('%PDF-')
@@ -215,7 +210,7 @@ describe('POST /api/iscrizione/firma/codice', () => {
   })
 
   it('se i testi sono cambiati riporta ai consensi', async () => {
-    stubStoryblok({ ...CONTENT, privacy_testo: 'Nuovo testo' })
+    stubStoryblok(changed('contratto', 'testo_completo', 'Nuovo testo'))
     vi.mocked(db.getEnrollment).mockResolvedValue(ready())
     const res = await send()
     expect(res.statusCode).toBe(409)
@@ -261,10 +256,8 @@ describe('POST /api/iscrizione/firma/conferma', () => {
     const signed = vi.mocked(db.signEnrollment).mock.calls[0][2]
     expect(signed.pdf_percorso).toBe(`iscrizioni/${ID}/contratto-1.pdf`)
     expect(signed.fine_recesso).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-    expect(signed.edizione).toMatchObject({ chiave: KEY, condizioni: { versione: '2026-11', impronta: IMPRONTA } })
-    expect(contact.sendContractEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ email: EMAIL, dopo: ['Ti chiamiamo per il benvenuto', 'Ricevi il calendario'] })
-    )
+    expect(signed.edizione).toMatchObject({ chiave: KEY, condizioni: { impronta: IMPRONTA } })
+    expect(contact.sendContractEmail).toHaveBeenCalledWith(expect.objectContaining({ email: EMAIL }))
     const events = vi.mocked(db.logEvent).mock.calls.map((c) => c[1])
     expect(events).toEqual(['firmata', 'email_inviata'])
   })
