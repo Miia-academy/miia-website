@@ -12,6 +12,7 @@ import { ChiSei } from '@components/enrollment/chi-sei'
 import { Corso, MODE_LABELS, SCOPO_LABELS, editionLine, euro, type CourseChoice } from '@components/enrollment/corso'
 import { DOCUMENT_LABELS, Dati } from '@components/enrollment/dati'
 import { Profilo } from '@components/enrollment/profilo'
+import { Consensi } from '@components/enrollment/consensi'
 import { EnrollmentStepper, Summary, type StepItem } from '@components/enrollment/stepper'
 import { isEnrollmentEnabled } from '@modules/enrollment/config'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
@@ -172,6 +173,19 @@ export default function Iscrizione({ corso, titolo }: Props) {
             ['Lavoro', p.non_lavoro ? 'Non lavora ancora' : [p.occupazione, p.ruolo].filter(Boolean).join(', ')],
             ['Tempo per esercitarti', label(ORE_LABELS, p.ore_settimana)],
             ['Come ci hai conosciuto', sources.map((s) => label(SOURCE_LABELS, s)).join(', ')],
+          ]}
+        />
+      )
+    } else if (id === 'consensi' && state) {
+      item.content = <Consensi corso={corso} state={state} onSaved={saved} />
+      const c = state.consensi
+      item.summary = (
+        <Summary
+          rows={[
+            ['Consensi', c.contratto && c.clausole && c.recesso && c.privacy ? 'Tutti i consensi obbligatori dati' : ''],
+            ['Fotografie e video', c.foto === 'si' ? 'Autorizzati' : c.foto === 'no' ? 'Non autorizzati' : ''],
+            ['Novità via email', c.newsletter ? 'Sì' : 'No'],
+            ['Versione delle condizioni', typeof c.versione === 'string' ? c.versione : ''],
           ]}
         />
       )

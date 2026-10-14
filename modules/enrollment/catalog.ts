@@ -13,7 +13,7 @@ import type { PriceList } from './types'
 
 const CDN = 'https://api.storyblok.com/v2/cdn'
 
-async function cdn<T>(path: string, params: Record<string, string>): Promise<T> {
+export async function cdn<T>(path: string, params: Record<string, string>): Promise<T> {
   const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW
   if (!token) throw new Error('NEXT_PUBLIC_STORYBLOK_PREVIEW mancante')
   const query = new URLSearchParams({ token, version: getStoryblokVersion(), ...params })

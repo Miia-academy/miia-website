@@ -160,6 +160,7 @@ describe('corsi e stato', () => {
       dati: { codice_fiscale: 'RSSMRA85T10A562S' },
       foto_caricate: [],
       profilo: { come_ci_hai_conosciuto: [] },
+      consensi: {},
     })
   })
 })
@@ -325,9 +326,9 @@ describe('/api/iscrizione/bozza', () => {
     expect(res.body.iscrizione.prossima).toBe('corso')
   })
 
-  it('le altre sezioni non si salvano ancora', async () => {
+  it('la firma non passa da qui', async () => {
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: ['chi_sei'] }))
-    const res = await call(bozza, { method: 'PUT', body: { corso: CORSO, sezione: 'consensi', valori: {} }, cookies: cookieFor() })
+    const res = await call(bozza, { method: 'PUT', body: { corso: CORSO, sezione: 'firma', valori: {} }, cookies: cookieFor() })
     expect(res.statusCode).toBe(400)
   })
 })

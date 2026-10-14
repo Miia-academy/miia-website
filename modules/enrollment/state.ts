@@ -29,6 +29,8 @@ export interface EnrollmentState {
   foto_caricate: string[]
   /** Passo 4: risposte salvate; prima del salvataggio, solo le voci suggerite di "Come ci hai conosciuto". */
   profilo: Record<string, unknown>
+  /** Passo 5: le scelte date (senza le ore), per riaprirle con "Modifica". */
+  consensi: Record<string, boolean | string>
 }
 
 /** Le risposte del passo 4, senza lo scopo (che è del passo 2). */
@@ -36,6 +38,19 @@ function profileAnswers(profilo: Record<string, unknown> | null | undefined): Re
   const { scopo, ...rest } = profilo || {}
   void scopo
   return rest
+}
+
+/** Dal consenso salvato ({ valore, ora }) solo il valore; più la versione accettata. */
+function consentChoices(consensi: Record<string, unknown> | null | undefined): Record<string, boolean | string> {
+  const out: Record<string, boolean | string> = {}
+  for (const [key, entry] of Object.entries(consensi || {})) {
+    if (key === 'versione' && typeof entry === 'string') out.versione = entry
+    else if (entry && typeof entry === 'object' && 'valore' in entry) {
+      const v = (entry as { valore: unknown }).valore
+      if (typeof v === 'boolean' || typeof v === 'string') out[key] = v
+    }
+  }
+  return out
 }
 
 const num = (v: string | number | null) => (v === null || v === '' ? null : Number(v))
@@ -61,6 +76,7 @@ export function publicState(row: Enrollment): EnrollmentState {
     profilo: complete.includes('profilo')
       ? profileAnswers(row.profilo)
       : { come_ci_hai_conosciuto: suggestedSources(row.provenienza) },
+    consensi: consentChoices(row.consensi),
   }
 }
 

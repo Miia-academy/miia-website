@@ -276,6 +276,8 @@ export interface Consenso {
 
 export interface Consensi {
   versione: string
+  /** Impronta dei testi accettati (vedi conditions.ts), aggiunta dalla API. */
+  impronta?: string
   contratto: Consenso
   clausole: Consenso
   recesso: Consenso

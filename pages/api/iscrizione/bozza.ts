@@ -1,21 +1,22 @@
 import type { NextApiResponse } from 'next'
 import { body, enrollmentApi } from '@modules/enrollment/api'
 import { syncContact } from '@modules/enrollment/contact'
-import { getEnrollment, logEvent, saveChiSei, saveCorso, saveDati, saveProfilo } from '@modules/enrollment/db'
+import { getEnrollment, logEvent, saveChiSei, saveCorso, saveConsensi, saveDati, saveProfilo } from '@modules/enrollment/db'
+import { getConditions } from '@modules/enrollment/conditions'
 import { documentsComplete } from '@modules/enrollment/documents'
 import { loadOffer } from '@modules/enrollment/load-offer'
 import { openEditions } from '@modules/enrollment/offer'
 import { readSession } from '@modules/enrollment/session'
 import { clientIp, normalizeCourseSlug, publicState, userAgent } from '@modules/enrollment/state'
 import type { SectionId } from '@modules/enrollment/types'
-import { canSaveSection, completeAfterSave, validateChiSei, validateCorso, validateDati, validateProfilo } from '@modules/enrollment/validation'
+import { canSaveSection, completeAfterSave, validateChiSei, validateCorso, validateConsensi, validateDati, validateProfilo } from '@modules/enrollment/validation'
 
 const notVerified = (res: NextApiResponse) =>
   res.status(401).json({ message: 'Verifica di nuovo la tua email per continuare.' })
 
 /**
  * GET: riprende la bozza di chi ha già verificato l'email (cookie).
- * PUT: salva una sezione; per ora "chi_sei", "corso", "dati" e "profilo", le altre arrivano dopo.
+ * PUT: salva una sezione; da "chi_sei" a "consensi"; la firma ha la sua API.
  */
 export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
   const session = readSession(req)
@@ -32,7 +33,7 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
   const section = data.sezione as SectionId
   const values = data.valori && typeof data.valori === 'object' ? (data.valori as Record<string, unknown>) : {}
 
-  if (section !== 'chi_sei' && section !== 'corso' && section !== 'dati' && section !== 'profilo') {
+  if (section !== 'chi_sei' && section !== 'corso' && section !== 'dati' && section !== 'profilo' && section !== 'consensi') {
     return res.status(400).json({ message: 'Sezione non ancora disponibile' })
   }
   if (!canSaveSection(section, row.sezioni_complete)) {
@@ -81,6 +82,25 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
     const saved = await saveProfilo(row.id, session.email, result.value, complete)
     if (!saved) return notVerified(res)
     await logEvent(row.id, 'sezione_salvata', ip, ua, { sezione: section, saltato: skipped })
+    return res.status(200).json({ ok: true, iscrizione: publicState(saved) })
+  }
+
+  if (section === 'consensi') {
+    // Si accettano solo i testi in vigore: se sono cambiati mentre la pagina era aperta, si rileggono.
+    const conditions = await getConditions()
+    if (!conditions) {
+      return res.status(503).json({ message: 'Le condizioni non sono disponibili in questo momento, riprova più tardi.' })
+    }
+    if (values.versione !== conditions.versione || values.impronta !== conditions.impronta) {
+      return res.status(409).json({ message: 'Le condizioni sono state aggiornate: rileggile e conferma di nuovo.', aggiornate: true })
+    }
+    const result = validateConsensi(values, conditions.versione)
+    if (!result.ok) {
+      return res.status(400).json({ message: 'Servono i consensi con l’asterisco', errori: result.errors })
+    }
+    const saved = await saveConsensi(row.id, session.email, { ...result.value, impronta: conditions.impronta }, complete)
+    if (!saved) return notVerified(res)
+    await logEvent(row.id, 'sezione_salvata', ip, ua, { sezione: section, versione: conditions.versione, impronta: conditions.impronta })
     return res.status(200).json({ ok: true, iscrizione: publicState(saved) })
   }
 
