@@ -75,3 +75,15 @@ export async function sendCodeEmail(email: string, code: string, minutes: number
     },
   })
 }
+
+/** Scadenza dell'offerta open day del contatto (attributo SCADENZA_OFFERTA), o null. */
+export async function offerDeadline(email: string): Promise<string | null> {
+  try {
+    const contact = await getContact({ identifier: email })
+    const value = (contact?.attributes as Record<string, unknown> | undefined)?.SCADENZA_OFFERTA
+    return typeof value === 'string' && value ? value.slice(0, 10) : null
+  } catch (error) {
+    if (error instanceof BrevoError && error.status === 404) return null
+    throw error
+  }
+}

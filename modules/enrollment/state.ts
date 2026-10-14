@@ -3,7 +3,7 @@
  * inserito o verificato, e lo stato di avanzamento delle sezioni.
  */
 import type { IncomingMessage } from 'node:http'
-import type { Enrollment, SectionId } from './types'
+import type { Enrollment, PaymentMode, SectionId } from './types'
 import { SECTIONS } from './types'
 import { nextSection } from './validation'
 
@@ -13,7 +13,17 @@ export interface EnrollmentState {
   sezioni_complete: SectionId[]
   prossima: SectionId | null
   chi_sei: { nome: string; cognome: string; telefono: string }
+  corso_pagamento: {
+    edizione: string | null
+    scopo: string | null
+    modalita: PaymentMode | null
+    rata: number | null
+    totale: number | null
+    offerta: boolean
+  }
 }
+
+const num = (v: string | number | null) => (v === null || v === '' ? null : Number(v))
 
 export function publicState(row: Enrollment): EnrollmentState {
   const complete = (row.sezioni_complete || []).filter((s): s is SectionId => SECTIONS.includes(s as SectionId))
@@ -23,6 +33,14 @@ export function publicState(row: Enrollment): EnrollmentState {
     sezioni_complete: complete,
     prossima: nextSection(complete),
     chi_sei: { nome: row.nome || '', cognome: row.cognome || '', telefono: row.telefono || '' },
+    corso_pagamento: {
+      edizione: row.edizione_chiave,
+      scopo: typeof row.profilo?.scopo === 'string' ? row.profilo.scopo : null,
+      modalita: row.pagamento_modalita,
+      rata: num(row.pagamento_rata),
+      totale: num(row.pagamento_totale),
+      offerta: !!row.offerta_open_day,
+    },
   }
 }
 

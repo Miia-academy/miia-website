@@ -148,7 +148,7 @@ describe('corsi e stato', () => {
     expect(normalizeCourseSlug('a--b')).toBeNull()
   })
 
-  it('al browser manda solo i dati del passo 1 e l’avanzamento', () => {
+  it('al browser manda solo i dati inseriti dalla persona e l’avanzamento', () => {
     const state = publicState(row({ nome: 'Mario', cognome: 'Rossi', telefono: '+393331234567', sezioni_complete: ['chi_sei'] }))
     expect(state).toEqual({
       email: EMAIL,
@@ -156,6 +156,7 @@ describe('corsi e stato', () => {
       sezioni_complete: ['chi_sei'],
       prossima: 'corso',
       chi_sei: { nome: 'Mario', cognome: 'Rossi', telefono: '+393331234567' },
+      corso_pagamento: { edizione: null, scopo: null, modalita: null, rata: null, totale: null, offerta: false },
     })
     expect(JSON.stringify(state)).not.toContain('RSSMRA')
   })

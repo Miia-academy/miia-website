@@ -6,14 +6,17 @@ import { useRouter } from 'next/router'
 import { getStoryblokApi } from '@storyblok/react'
 import { Spinner } from '@heroui/react'
 import { Logo } from '@public/logo'
+import { getLongDate } from '@modules/formats'
 import { getStoryblokVersion } from '@config/version'
 import { ChiSei } from '@components/enrollment/chi-sei'
+import { Corso, MODE_LABELS, SCOPO_LABELS, editionLine, euro, type CourseChoice } from '@components/enrollment/corso'
 import { EnrollmentStepper, Summary, type StepItem } from '@components/enrollment/stepper'
 import { isEnrollmentEnabled } from '@modules/enrollment/config'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
 import type { EnrollmentState } from '@modules/enrollment/state'
+import type { CourseOffer, EditionOption } from '@modules/enrollment/offer'
 import { normalizeCourseSlug } from '@modules/enrollment/state'
-import { SECTIONS, type SectionId } from '@modules/enrollment/types'
+import { SECTIONS, type PaymentMode, type SectionId } from '@modules/enrollment/types'
 
 interface Props {
   corso: string
@@ -25,6 +28,36 @@ export default function Iscrizione({ corso, titolo }: Props) {
   const [state, setState] = useState<EnrollmentState | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<SectionId>('chi_sei')
+  // Passo 2: edizioni e importi, letti una volta verificata l'email e completato il passo 1.
+  const [offer, setOffer] = useState<CourseOffer | null>(null)
+  const [offerError, setOfferError] = useState('')
+  // Scelte in corso nel passo 2, per aggiornare il riepilogo prima di "Continua".
+  const [draft, setDraft] = useState<CourseChoice | null>(null)
+  const step1Done = !!state?.sezioni_complete.includes('chi_sei')
+
+  useEffect(() => {
+    if (!step1Done || offer) return
+    let active = true
+    fetch(`/api/iscrizione/offerta?corso=${encodeURIComponent(corso)}`)
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}))
+        if (!active) return
+        if (!res.ok) return setOfferError(data.message || 'Non riusciamo a caricare le edizioni, riprova tra poco.')
+        setOffer(data as CourseOffer)
+      })
+      .catch(() => active && setOfferError('Errore di connessione. Ricarica la pagina.'))
+    return () => {
+      active = false
+    }
+  }, [step1Done, offer, corso])
+
+  const chosenKey = draft?.edizione || state?.corso_pagamento.edizione || ''
+  const chosenMode = (draft?.modalita || state?.corso_pagamento.modalita || null) as PaymentMode | null
+  const choice = {
+    edizione: offer?.edizioni.find((e) => e.chiave === chosenKey) || null,
+    modalita: chosenMode,
+    offer,
+  }
 
   // Chi ha già verificato l'email (cookie) riprende da dove era.
   useEffect(() => {
@@ -80,6 +113,26 @@ export default function Iscrizione({ corso, titolo }: Props) {
           ]}
         />
       )
+    } else if (id === 'corso' && state) {
+      item.content = (
+        <Corso corso={corso} state={state} offer={offer} loadError={offerError} onSaved={saved} onChange={setDraft} />
+      )
+      const cp = state.corso_pagamento
+      const ed = offer?.edizioni.find((e) => e.chiave === cp.edizione)
+      item.summary = (
+        <Summary
+          rows={[
+            ['Edizione', ed ? `${ed.titolo || ed.sede} · dal ${getLongDate(ed.inizio)}` : ''],
+            ['Cosa ti aspetti', cp.scopo ? SCOPO_LABELS[cp.scopo] || cp.scopo : ''],
+            [
+              'Pagamento',
+              cp.modalita && cp.totale !== null
+                ? `${MODE_LABELS[cp.modalita]}, totale ${euro(cp.totale)}${cp.offerta ? ' (prezzo open day)' : ''}`
+                : '',
+            ],
+          ]}
+        />
+      )
     } else {
       item.content = <p className="text-sm text-neutral-500">Questo passo è in preparazione.</p>
     }
@@ -99,6 +152,7 @@ export default function Iscrizione({ corso, titolo }: Props) {
           </Link>
         </header>
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pb-16">
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione online</p>
             <h1 className="mt-1 mb-2 text-3xl sm:text-4xl font-bold leading-tight">{titolo}</h1>
@@ -113,9 +167,52 @@ export default function Iscrizione({ corso, titolo }: Props) {
               <EnrollmentStepper items={items} onEdit={goTo} />
             )}
           </div>
+          <Riepilogo titolo={titolo} choice={choice} />
+          </div>
         </div>
       </main>
     </>
+  )
+}
+
+/** Riquadro "La tua iscrizione": fisso a destra da computer, in fondo da telefono. */
+function Riepilogo({
+  titolo,
+  choice,
+}: {
+  titolo: string
+  choice: { edizione: EditionOption | null; modalita: PaymentMode | null; offer: CourseOffer | null }
+}) {
+  const q = choice.modalita && choice.offer?.prezzi ? choice.offer.prezzi[choice.modalita] : null
+  return (
+    <aside className="mt-10 lg:mt-0">
+      <div className="lg:sticky lg:top-8 rounded-2xl bg-[#F3F3F2] p-6 text-sm">
+        <h2 className="mb-4 text-lg font-bold">La tua iscrizione</h2>
+        <dl className="space-y-3">
+          <div>
+            <dt className="text-neutral-500">Corso</dt>
+            <dd className="font-medium">{titolo}</dd>
+          </div>
+          {choice.edizione && (
+            <div>
+              <dt className="text-neutral-500">Edizione</dt>
+              <dd className="font-medium">{editionLine(choice.edizione)}</dd>
+              <dd className="text-neutral-600">Dal {getLongDate(choice.edizione.inizio)}</dd>
+            </div>
+          )}
+          {q && (
+            <div>
+              <dt className="text-neutral-500">Pagamento</dt>
+              <dd className="font-medium">
+                {q.rate > 1 ? `${q.rate} rate da ${euro(q.rata)}` : 'Soluzione unica'}, totale {euro(q.totale)}
+              </dd>
+              {q.offerta && <dd className="text-secondary font-semibold">Prezzo open day</dd>}
+            </div>
+          )}
+        </dl>
+        <p className="mt-6 border-t border-neutral-300 pt-4 text-base font-bold">Oggi paghi {euro(0)}</p>
+      </div>
+    </aside>
   )
 }
 

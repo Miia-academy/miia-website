@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader } from '@heroui/react'
 import { getLongDate, getShortDate } from '@modules/formats'
 import { resolveAlias } from '@modules/relations'
 import Link from 'next/link'
+import { editionKey, seatsLabel, useSignedCounts } from '@components/enrollment/use-seats'
 
 interface CourseComponentProps {
   blok: CourseBlok
@@ -20,6 +21,11 @@ export default function Course({ blok, story, parent }: CourseComponentProps) {
     blok,
     story?.full_slug
   )
+
+  // Posti rimasti: posti dell'edizione meno iscritti online (chiave = storia + data di inizio)
+  const aliasStory = blok.alias && typeof blok.alias === 'object' ? (blok.alias as ISbStoryData<CourseBlok>) : null
+  const key = editionKey(aliasStory?.uuid || story?.uuid || '', course.starts)
+  const signed = useSignedCounts([key])
 
   // 2. Early return sui campi obbligatori per il rendering
   if (!course.title || !course.days?.length || !course.hours?.length) {
@@ -88,7 +94,7 @@ export default function Course({ blok, story, parent }: CourseComponentProps) {
                   <li className="space-x-0.5">
                     <i className="iconoir-group pr-1" />
                     <span className="md:max-lg:hidden">posti:</span>
-                    <span>{course.seats}</span>
+                    <span>{seatsLabel(course.seats, key, signed)}</span>
                   </li>
                 )}
               </ul>

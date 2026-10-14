@@ -1,18 +1,20 @@
 import type { NextApiResponse } from 'next'
 import { body, enrollmentApi } from '@modules/enrollment/api'
 import { syncContact } from '@modules/enrollment/contact'
-import { getEnrollment, logEvent, saveChiSei } from '@modules/enrollment/db'
+import { getEnrollment, logEvent, saveChiSei, saveCorso } from '@modules/enrollment/db'
+import { loadOffer } from '@modules/enrollment/load-offer'
+import { openEditions } from '@modules/enrollment/offer'
 import { readSession } from '@modules/enrollment/session'
 import { clientIp, normalizeCourseSlug, publicState, userAgent } from '@modules/enrollment/state'
 import type { SectionId } from '@modules/enrollment/types'
-import { canSaveSection, completeAfterSave, validateChiSei } from '@modules/enrollment/validation'
+import { canSaveSection, completeAfterSave, validateChiSei, validateCorso } from '@modules/enrollment/validation'
 
 const notVerified = (res: NextApiResponse) =>
   res.status(401).json({ message: 'Verifica di nuovo la tua email per continuare.' })
 
 /**
  * GET: riprende la bozza di chi ha già verificato l'email (cookie).
- * PUT: salva una sezione; per ora "chi_sei", le altre arrivano con la pagina completa.
+ * PUT: salva una sezione; per ora "chi_sei" e "corso", le altre arrivano dopo.
  */
 export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
   const session = readSession(req)
@@ -29,9 +31,30 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
   const section = data.sezione as SectionId
   const values = data.valori && typeof data.valori === 'object' ? (data.valori as Record<string, unknown>) : {}
 
-  if (section !== 'chi_sei') return res.status(400).json({ message: 'Sezione non ancora disponibile' })
+  if (section !== 'chi_sei' && section !== 'corso') {
+    return res.status(400).json({ message: 'Sezione non ancora disponibile' })
+  }
   if (!canSaveSection(section, row.sezioni_complete)) {
     return res.status(409).json({ message: 'Completa prima i passi precedenti' })
+  }
+  const complete = completeAfterSave(section, row.sezioni_complete)
+  const ip = clientIp(req)
+  const ua = userAgent(req)
+
+  if (section === 'corso') {
+    // Edizioni, posti e importi si ricalcolano qui: non si usa niente di ciò che manda il browser.
+    const offer = await loadOffer(corso, session.email)
+    const result = validateCorso(values, openEditions(offer))
+    if (!result.ok) {
+      return res.status(400).json({ message: 'Completa le scelte del passo', errori: result.errors })
+    }
+    if (!offer.prezzi) {
+      return res.status(503).json({ message: 'I prezzi non sono disponibili in questo momento, riprova più tardi.' })
+    }
+    const saved = await saveCorso(row.id, session.email, result.value, offer.prezzi[result.value.modalita], complete)
+    if (!saved) return notVerified(res)
+    await logEvent(row.id, 'sezione_salvata', ip, ua, { sezione: section, edizione: result.value.edizione })
+    return res.status(200).json({ ok: true, iscrizione: publicState(saved) })
   }
 
   // L'email è quella verificata: non si cambia da qui.
@@ -40,9 +63,9 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
     return res.status(400).json({ message: 'Completa i campi con l’asterisco', errori: result.errors })
   }
 
-  const saved = await saveChiSei(row.id, session.email, result.value, completeAfterSave(section, row.sezioni_complete))
+  const saved = await saveChiSei(row.id, session.email, result.value, complete)
   if (!saved) return notVerified(res)
-  await logEvent(row.id, 'sezione_salvata', clientIp(req), userAgent(req), { sezione: section })
+  await logEvent(row.id, 'sezione_salvata', ip, ua, { sezione: section })
 
   try {
     await syncContact(session.email, result.value)
