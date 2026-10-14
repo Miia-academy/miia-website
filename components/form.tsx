@@ -25,6 +25,7 @@ import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
 import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
+import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
 
 export interface FieldData {
   id: string
@@ -99,6 +100,8 @@ function buildEvent(
     selectedArea = rawArea.toLowerCase()
   }
 
+  let opendayEvent: ProcessedEvent | undefined
+
   if (data['openday']?.value) {
     const directDate = new Date(data['openday'].value)
     if (!isNaN(directDate.valueOf())) {
@@ -107,6 +110,7 @@ function buildEvent(
         'it-IT',
         dateFormat
       )
+      opendayEvent = findOpendayByDate(globalEvents, directDate.toISOString())
     }
   } else if (selectedArea) {
     const areaKeywordsMap: Record<string, string[]> = {
@@ -138,6 +142,7 @@ function buildEvent(
       .find((ev) => new Date(ev.date!) >= today)
 
     if (matchingEvent?.date) {
+      opendayEvent = matchingEvent
       const nextEventDate = new Date(matchingEvent.date)
       properties['openday'] = nextEventDate.toISOString()
       properties['openday_data'] = nextEventDate.toLocaleDateString(
@@ -146,6 +151,10 @@ function buildEvent(
       )
     }
   }
+
+  // Docenti dell'open day (campo "Docenti" dell'evento in Storyblok), per le email
+  const docenti = joinNames(getDocentiNames(opendayEvent))
+  if (docenti) properties['openday_docenti'] = docenti
 
   Object.entries(data)
     .filter(([name]) => !eventFilterData.includes(name))
