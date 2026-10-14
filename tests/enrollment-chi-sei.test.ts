@@ -159,6 +159,7 @@ describe('corsi e stato', () => {
       corso_pagamento: { edizione: null, scopo: null, modalita: null, rata: null, totale: null, offerta: false },
       dati: { codice_fiscale: 'RSSMRA85T10A562S' },
       foto_caricate: [],
+      profilo: { come_ci_hai_conosciuto: [] },
     })
   })
 })
@@ -326,7 +327,7 @@ describe('/api/iscrizione/bozza', () => {
 
   it('le altre sezioni non si salvano ancora', async () => {
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ sezioni_complete: ['chi_sei'] }))
-    const res = await call(bozza, { method: 'PUT', body: { corso: CORSO, sezione: 'profilo', valori: {} }, cookies: cookieFor() })
+    const res = await call(bozza, { method: 'PUT', body: { corso: CORSO, sezione: 'consensi', valori: {} }, cookies: cookieFor() })
     expect(res.statusCode).toBe(400)
   })
 })

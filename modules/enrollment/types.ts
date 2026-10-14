@@ -50,6 +50,8 @@ export interface Enrollment {
   pagamento_rata: string | null
   pagamento_totale: string | null
   offerta_open_day: boolean
+  /** Provenienza del browser alla verifica dell'email (origine_* / ultima_*). */
+  provenienza?: Record<string, unknown>
   dati: Record<string, unknown>
   profilo: Record<string, unknown>
   consensi: Record<string, unknown>

@@ -212,6 +212,10 @@ export const COME_CI_HAI_CONOSCIUTO = [
   'azienda',
 ] as const
 
+export const TITOLI_STUDIO = ['licenza_media', 'diploma', 'laurea_triennale', 'laurea_magistrale', 'altro'] as const
+export const ORE_SETTIMANA = ['almeno_6', 'tra_6_e_9', 'tutto_il_necessario'] as const
+export const LIVELLI_COMPUTER = ['base', 'buona', 'ottima'] as const
+
 export interface Profilo {
   titolo_studi: string
   anno_studi: string
@@ -233,21 +237,27 @@ export function validateProfilo(input: Input): SectionResult<Profilo> {
     if (value && !/^(19|20)\d{2}$/.test(value)) errors[key] = "Scrivi l'anno con 4 cifre"
     return value
   }
+  const choice = (key: string, allowed: readonly string[]) => {
+    const value = text(input, key, 30)
+    if (value && !allowed.includes(value)) errors[key] = 'Scegli una delle voci'
+    return value
+  }
   const sources = Array.isArray(input.come_ci_hai_conosciuto) ? input.come_ci_hai_conosciuto : []
+  const nonLavoro = input.non_lavoro === true
 
   return result(
     {
-      titolo_studi: text(input, 'titolo_studi', 80),
+      titolo_studi: choice('titolo_studi', TITOLI_STUDIO),
       anno_studi: year('anno_studi'),
       ultima_formazione: text(input, 'ultima_formazione', 120),
       anno_formazione: year('anno_formazione'),
-      non_lavoro: input.non_lavoro === true,
-      occupazione: text(input, 'occupazione', 120),
-      ruolo: text(input, 'ruolo', 80),
-      ore_settimana: text(input, 'ore_settimana', 20),
-      computer: text(input, 'computer', 20),
-      come_ci_hai_conosciuto: sources.filter((s): s is string =>
-        (COME_CI_HAI_CONOSCIUTO as readonly unknown[]).includes(s)
+      non_lavoro: nonLavoro,
+      occupazione: nonLavoro ? '' : text(input, 'occupazione', 120),
+      ruolo: nonLavoro ? '' : text(input, 'ruolo', 80),
+      ore_settimana: choice('ore_settimana', ORE_SETTIMANA),
+      computer: choice('computer', LIVELLI_COMPUTER),
+      come_ci_hai_conosciuto: Array.from(
+        new Set(sources.filter((s): s is string => (COME_CI_HAI_CONOSCIUTO as readonly unknown[]).includes(s)))
       ),
       saltato: input.saltato === true,
     },

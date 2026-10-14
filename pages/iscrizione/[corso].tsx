@@ -11,11 +11,13 @@ import { getStoryblokVersion } from '@config/version'
 import { ChiSei } from '@components/enrollment/chi-sei'
 import { Corso, MODE_LABELS, SCOPO_LABELS, editionLine, euro, type CourseChoice } from '@components/enrollment/corso'
 import { DOCUMENT_LABELS, Dati } from '@components/enrollment/dati'
+import { Profilo } from '@components/enrollment/profilo'
 import { EnrollmentStepper, Summary, type StepItem } from '@components/enrollment/stepper'
 import { isEnrollmentEnabled } from '@modules/enrollment/config'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import type { CourseOffer, EditionOption } from '@modules/enrollment/offer'
+import { ORE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from '@modules/enrollment/profile'
 import { normalizeCourseSlug } from '@modules/enrollment/state'
 import { SECTIONS, type PaymentMode, type SectionId } from '@modules/enrollment/types'
 
@@ -153,6 +155,23 @@ export default function Iscrizione({ corso, titolo }: Props) {
             ],
             ['Foto', d.documenti === 'dopo' ? 'Le carichi dopo' : state.foto_caricate.length ? 'Caricate' : ''],
             ['Fatturazione', az ? `${az.ragione_sociale}, P. IVA ${az.partita_iva}` : 'A tuo nome'],
+          ]}
+        />
+      )
+    } else if (id === 'profilo' && state) {
+      item.content = <Profilo corso={corso} state={state} onSaved={saved} />
+      const p = state.profilo
+      const label = (labels: Record<string, string>, v: unknown) => (typeof v === 'string' ? labels[v] || '' : '')
+      const sources = Array.isArray(p.come_ci_hai_conosciuto) ? (p.come_ci_hai_conosciuto as string[]) : []
+      item.summary = p.saltato ? (
+        <Summary rows={[['Profilo', 'Saltato']]} />
+      ) : (
+        <Summary
+          rows={[
+            ['Studi', label(TITOLO_LABELS, p.titolo_studi)],
+            ['Lavoro', p.non_lavoro ? 'Non lavora ancora' : [p.occupazione, p.ruolo].filter(Boolean).join(', ')],
+            ['Tempo per esercitarti', label(ORE_LABELS, p.ore_settimana)],
+            ['Come ci hai conosciuto', sources.map((s) => label(SOURCE_LABELS, s)).join(', ')],
           ]}
         />
       )

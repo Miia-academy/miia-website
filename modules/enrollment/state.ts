@@ -7,6 +7,7 @@ import type { Enrollment, PaymentMode, SectionId } from './types'
 import { SECTIONS } from './types'
 import { nextSection } from './validation'
 import { uploadedFiles } from './documents'
+import { suggestedSources } from './profile'
 
 export interface EnrollmentState {
   email: string
@@ -26,6 +27,15 @@ export interface EnrollmentState {
   dati: Record<string, unknown>
   /** Foto dei documenti già caricate (solo i nomi, mai i link ai file). */
   foto_caricate: string[]
+  /** Passo 4: risposte salvate; prima del salvataggio, solo le voci suggerite di "Come ci hai conosciuto". */
+  profilo: Record<string, unknown>
+}
+
+/** Le risposte del passo 4, senza lo scopo (che è del passo 2). */
+function profileAnswers(profilo: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  const { scopo, ...rest } = profilo || {}
+  void scopo
+  return rest
 }
 
 const num = (v: string | number | null) => (v === null || v === '' ? null : Number(v))
@@ -48,6 +58,9 @@ export function publicState(row: Enrollment): EnrollmentState {
     },
     dati: row.dati || {},
     foto_caricate: Object.keys(uploadedFiles(row.documenti)),
+    profilo: complete.includes('profilo')
+      ? profileAnswers(row.profilo)
+      : { come_ci_hai_conosciuto: suggestedSources(row.provenienza) },
   }
 }
 
