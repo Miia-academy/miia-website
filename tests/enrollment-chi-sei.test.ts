@@ -32,7 +32,7 @@ import { normalizeCourseSlug, publicState } from '@modules/enrollment/state'
 import type { Enrollment } from '@modules/enrollment/types'
 
 const EMAIL = 'test+iscrizione@miia.it'
-const CORSO = 'interior-design-primo-livello'
+const CORSO = 'corso-interior-design-primo-livello'
 
 function row(overrides: Partial<Enrollment> = {}): Enrollment {
   return {
@@ -139,11 +139,11 @@ describe('corsi e stato', () => {
     expect(courseFromEditionSlug('corsi/interior-design/corso-interior-design-primo-livello/corsi-interni-primo-livello/treviso-sabato')).toBe(CORSO)
     expect(courseFromEditionSlug('corsi/interior-design/corso-interior-design-primo-livello-padova')).toBeNull()
     expect(courseTitle(CORSO)).toBe('Interior design, primo livello')
-    expect(courseTitle('fashion-design-secondo-livello')).toBe('Fashion design, secondo livello')
+    expect(courseTitle('corso-fashion-design-secondo-livello')).toBe('Fashion design, secondo livello')
   })
 
   it('accetta solo nomi di corso semplici', () => {
-    expect(normalizeCourseSlug('Interior-Design-Primo-Livello')).toBe(CORSO)
+    expect(normalizeCourseSlug('Corso-Interior-Design-Primo-Livello')).toBe(CORSO)
     expect(normalizeCourseSlug('../admin')).toBeNull()
     expect(normalizeCourseSlug('a--b')).toBeNull()
   })
@@ -279,7 +279,7 @@ describe('/api/iscrizione/bozza', () => {
   })
 
   it('il cookie vale solo per il corso verificato', async () => {
-    const res = await call(bozza, { method: 'GET', query: { corso: 'fashion-design-primo-livello' }, cookies: cookieFor() })
+    const res = await call(bozza, { method: 'GET', query: { corso: 'corso-fashion-design-primo-livello' }, cookies: cookieFor() })
     expect(res.statusCode).toBe(401)
   })
 

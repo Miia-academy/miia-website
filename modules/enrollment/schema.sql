@@ -10,7 +10,7 @@ CREATE SCHEMA IF NOT EXISTS iscrizioni;
 CREATE TABLE IF NOT EXISTS iscrizioni.iscrizioni (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL,
-  corso text NOT NULL,                          -- es. interior-design-primo-livello
+  corso text NOT NULL,                          -- cartella Storyblok, es. corso-interior-design-primo-livello
   canale text NOT NULL DEFAULT 'sito',          -- sito | sede (aggiunta a mano)
   stato text NOT NULL DEFAULT 'bozza'
     CHECK (stato IN ('bozza', 'firmata', 'recesso', 'definitiva', 'annullata')),

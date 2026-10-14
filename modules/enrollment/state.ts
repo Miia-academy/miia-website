@@ -26,7 +26,7 @@ export function publicState(row: Enrollment): EnrollmentState {
   }
 }
 
-/** Corso nell'indirizzo della pagina, es. "interior-design-primo-livello". */
+/** Corso nell'indirizzo della pagina, es. "corso-interior-design-primo-livello" (nome della cartella in Storyblok). */
 export function normalizeCourseSlug(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const slug = value.trim().toLowerCase()
