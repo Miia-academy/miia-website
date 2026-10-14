@@ -6,6 +6,7 @@
 import { neon } from '@neondatabase/serverless'
 import type { Enrollment, PaymentMode, Quote, SectionId } from './types'
 import type { ChiSei, Consensi, DatiContratto, Profilo } from './validation'
+import type { CodePurpose } from './codes'
 
 let client: ReturnType<typeof neon> | null = null
 
@@ -118,4 +119,83 @@ export async function countSignedByEdition(keys: string[]): Promise<Record<strin
     GROUP BY edizione_chiave
   `) as { edizione_chiave: string; iscritti: number }[]
   return Object.fromEntries(rows.map((r) => [r.edizione_chiave, r.iscritti]))
+}
+
+// --- Codici di verifica ---
+
+/** Codici inviati nell'ultima ora, per email e per IP, e l'ora dell'ultimo invio a quell'email. */
+export async function recentCodeSends(email: string, ip: string, scopo: CodePurpose) {
+  const rows = (await sql()`
+    SELECT
+      count(*) FILTER (WHERE email = ${email})::int AS per_email,
+      count(*) FILTER (WHERE ip = ${ip})::int AS per_ip,
+      max(creato_il) FILTER (WHERE email = ${email}) AS ultimo
+    FROM iscrizioni.codici
+    WHERE scopo = ${scopo} AND creato_il > now() - interval '1 hour'
+      AND (email = ${email} OR ip = ${ip})
+  `) as { per_email: number; per_ip: number; ultimo: string | Date | null }[]
+  const row = rows[0]
+  return {
+    perEmail: row?.per_email ?? 0,
+    perIp: row?.per_ip ?? 0,
+    lastAt: row?.ultimo ? new Date(row.ultimo) : null,
+  }
+}
+
+export async function insertCode(email: string, scopo: CodePurpose, hash: string, minutes: number, ip: string) {
+  await sql()`
+    INSERT INTO iscrizioni.codici (email, scopo, codice_hash, scade_il, ip)
+    VALUES (${email}, ${scopo}, ${hash}, now() + make_interval(mins => ${minutes}), ${ip})
+  `
+}
+
+/** L'ultimo codice inviato, se non è scaduto né già usato: quelli precedenti non valgono più. */
+export async function latestActiveCode(email: string, scopo: CodePurpose) {
+  const rows = (await sql()`
+    SELECT id, codice_hash, tentativi, (usato_il IS NULL AND scade_il > now()) AS attivo
+    FROM iscrizioni.codici
+    WHERE email = ${email} AND scopo = ${scopo}
+    ORDER BY creato_il DESC
+    LIMIT 1
+  `) as { id: string; codice_hash: string; tentativi: number; attivo: boolean }[]
+  const row = rows[0]
+  return row && row.attivo ? row : null
+}
+
+/**
+ * Conta un tentativo prima di confrontare il codice, così più richieste in
+ * parallelo non superano il limite. Restituisce false se i tentativi sono finiti.
+ */
+export async function takeCodeAttempt(id: string, max: number): Promise<boolean> {
+  const rows = (await sql()`
+    UPDATE iscrizioni.codici SET tentativi = tentativi + 1
+    WHERE id = ${id} AND tentativi < ${max} AND usato_il IS NULL
+    RETURNING id
+  `) as { id: string }[]
+  return rows.length > 0
+}
+
+/** Segna il codice come usato; false se un'altra richiesta l'ha già usato. */
+export async function markCodeUsed(id: string): Promise<boolean> {
+  const rows = (await sql()`
+    UPDATE iscrizioni.codici SET usato_il = now()
+    WHERE id = ${id} AND usato_il IS NULL
+    RETURNING id
+  `) as { id: string }[]
+  return rows.length > 0
+}
+
+// --- Registro ---
+
+export async function logEvent(
+  iscrizioneId: string,
+  evento: string,
+  ip: string | null,
+  userAgent: string | null,
+  dettagli: Record<string, unknown> = {}
+) {
+  await sql()`
+    INSERT INTO iscrizioni.registro (iscrizione_id, evento, ip, user_agent, dettagli)
+    VALUES (${iscrizioneId}, ${evento}, ${ip}, ${userAgent}, ${json(dettagli)}::jsonb)
+  `
 }
