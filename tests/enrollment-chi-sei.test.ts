@@ -155,6 +155,9 @@ describe('corsi e stato', () => {
       corso: CORSO,
       sezioni_complete: ['chi_sei'],
       prossima: 'corso',
+      stato: 'bozza',
+      firmata_il: null,
+      fine_recesso: null,
       chi_sei: { nome: 'Mario', cognome: 'Rossi', telefono: '+393331234567' },
       corso_pagamento: { edizione: null, scopo: null, modalita: null, rata: null, totale: null, offerta: false },
       dati: { codice_fiscale: 'RSSMRA85T10A562S' },
@@ -297,8 +300,12 @@ describe('/api/iscrizione/bozza', () => {
 
   it('un’iscrizione già firmata non si modifica da qui', async () => {
     vi.mocked(db.getEnrollment).mockResolvedValue(row({ stato: 'firmata' }))
-    const res = await call(bozza, { method: 'GET', query: { corso: CORSO }, cookies: cookieFor() })
-    expect(res.statusCode).toBe(401)
+    const put = await call(bozza, { method: 'PUT', body: { corso: CORSO, sezione: 'chi_sei', valori: {} }, cookies: cookieFor() })
+    expect(put.statusCode).toBe(401)
+    // La lettura resta possibile per mostrare la conferma.
+    const get = await call(bozza, { method: 'GET', query: { corso: CORSO }, cookies: cookieFor() })
+    expect(get.statusCode).toBe(200)
+    expect(get.body.iscrizione.stato).toBe('firmata')
   })
 
   it('segnala i campi mancanti del passo 1', async () => {

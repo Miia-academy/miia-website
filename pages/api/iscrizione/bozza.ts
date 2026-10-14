@@ -25,9 +25,10 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
   if (!session || !corso || session.corso !== corso) return notVerified(res)
 
   const row = await getEnrollment(session.id, session.email)
-  if (!row || row.stato !== 'bozza') return notVerified(res)
-
+  if (!row) return notVerified(res)
+  // Dopo la firma la pagina mostra la conferma; modificare si può solo in bozza.
   if (req.method === 'GET') return res.status(200).json({ ok: true, iscrizione: publicState(row) })
+  if (row.stato !== 'bozza') return notVerified(res)
 
   const data = body(req)
   const section = data.sezione as SectionId

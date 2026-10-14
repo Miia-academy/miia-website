@@ -22,6 +22,9 @@ export interface Conditions {
   recesso_testo: string
   privacy_testo: string
   impronta: string
+  /** Facoltativi, solo informativi (fuori dall'impronta): passo 6 e email. */
+  dopo_la_firma: string[]
+  come_pagare: string
 }
 
 const field = (content: Record<string, unknown>, key: string) =>
@@ -45,7 +48,12 @@ export function parseConditions(content: Record<string, unknown> | null | undefi
     return null
   }
   const impronta = createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 16)
-  return { ...value, impronta }
+  const lines = (key: string) =>
+    field(content, key)
+      .split('\n')
+      .map((l) => l.replace(/^[-•*]\s*/, '').trim())
+      .filter(Boolean)
+  return { ...value, impronta, dopo_la_firma: lines('dopo_la_firma'), come_pagare: field(content, 'come_pagare') }
 }
 
 export async function getConditions(): Promise<Conditions | null> {

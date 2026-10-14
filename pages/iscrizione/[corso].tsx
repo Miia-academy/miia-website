@@ -13,6 +13,7 @@ import { Corso, MODE_LABELS, SCOPO_LABELS, editionLine, euro, type CourseChoice 
 import { DOCUMENT_LABELS, Dati } from '@components/enrollment/dati'
 import { Profilo } from '@components/enrollment/profilo'
 import { Consensi } from '@components/enrollment/consensi'
+import { Conferma, Firma } from '@components/enrollment/firma'
 import { EnrollmentStepper, Summary, type StepItem } from '@components/enrollment/stepper'
 import { isEnrollmentEnabled } from '@modules/enrollment/config'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
@@ -90,6 +91,13 @@ export default function Iscrizione({ corso, titolo }: Props) {
     // Dopo "Continua" si va al primo passo non ancora completato.
     goTo(next.prossima || 'firma')
   }
+
+  const signedNow = (next: EnrollmentState) => {
+    setState(next)
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+  }
+  const isSigned = !!state && state.stato !== 'bozza'
+  const signedEdition = offer?.edizioni.find((e) => e.chiave === state?.corso_pagamento.edizione)
 
   const complete = state?.sezioni_complete || []
   const firstLocked = SECTIONS.find((s) => s !== open && !complete.includes(s))
@@ -189,8 +197,19 @@ export default function Iscrizione({ corso, titolo }: Props) {
           ]}
         />
       )
-    } else {
-      item.content = <p className="text-sm text-neutral-500">Questo passo è in preparazione.</p>
+    } else if (id === 'firma' && state) {
+      item.content = (
+        <Firma
+          corso={corso}
+          state={state}
+          onSigned={signedNow}
+          onReopen={(passo) => {
+            // Edizione piena o condizioni cambiate: si torna al passo, con i dati aggiornati.
+            if (passo === 'corso') setOffer(null)
+            goTo(passo)
+          }}
+        />
+      )
     }
     return item
   })
@@ -219,6 +238,11 @@ export default function Iscrizione({ corso, titolo }: Props) {
               <div className="flex justify-center py-16">
                 <Spinner color="primary" />
               </div>
+            ) : isSigned && state ? (
+              <Conferma
+                state={state}
+                edizione={signedEdition ? `${editionLine(signedEdition)} · dal ${getLongDate(signedEdition.inizio)}` : ''}
+              />
             ) : (
               <EnrollmentStepper items={items} onEdit={goTo} />
             )}

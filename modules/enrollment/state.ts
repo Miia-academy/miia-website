@@ -10,6 +10,10 @@ import { uploadedFiles } from './documents'
 import { suggestedSources } from './profile'
 
 export interface EnrollmentState {
+  stato: Enrollment['stato']
+  /** Dopo la firma: quando, e fino a quando si può recedere (AAAA-MM-GG). */
+  firmata_il: string | null
+  fine_recesso: string | null
   email: string
   corso: string
   sezioni_complete: SectionId[]
@@ -58,6 +62,9 @@ const num = (v: string | number | null) => (v === null || v === '' ? null : Numb
 export function publicState(row: Enrollment): EnrollmentState {
   const complete = (row.sezioni_complete || []).filter((s): s is SectionId => SECTIONS.includes(s as SectionId))
   return {
+    stato: row.stato,
+    firmata_il: row.firmata_il ? new Date(row.firmata_il).toISOString() : null,
+    fine_recesso: row.fine_recesso ? String(row.fine_recesso).slice(0, 10) : null,
     email: row.email,
     corso: row.corso,
     sezioni_complete: complete,

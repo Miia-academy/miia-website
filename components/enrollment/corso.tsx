@@ -5,22 +5,8 @@ import type { CourseOffer, EditionOption } from '@modules/enrollment/offer'
 import type { PaymentMode } from '@modules/enrollment/types'
 import { getLongDate, getShortDate } from '@modules/formats'
 
-export const SCOPO_LABELS: Record<string, string> = {
-  aggiornare_competenze: 'Aggiornare le mie competenze',
-  cambiare_ruolo: 'Cambiare ruolo nel mio lavoro',
-  cambiare_settore: 'Cambiare settore',
-  professione: 'Farne una professione',
-  curiosita: 'Passione e curiosità',
-}
-
-export const MODE_LABELS: Record<PaymentMode, string> = {
-  unica: 'Soluzione unica',
-  '5_rate': '5 rate',
-  '10_rate': '10 rate',
-}
-
-export const euro = (n: number) =>
-  n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 })
+export { SCOPO_LABELS, MODE_LABELS, euro } from '@modules/enrollment/labels'
+import { SCOPO_LABELS, MODE_LABELS, euro } from '@modules/enrollment/labels'
 
 export function editionLine(e: Pick<EditionOption, 'sede' | 'giorni' | 'orari'>) {
   return [e.sede, e.giorni.join(' e '), e.orari.join(', ')].filter(Boolean).join(' · ')

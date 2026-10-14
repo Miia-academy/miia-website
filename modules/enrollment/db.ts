@@ -215,3 +215,25 @@ export async function saveDocument(id: string, email: string, slot: string, info
   `) as Enrollment[]
   return rows[0] ?? null
 }
+
+/**
+ * Firma: la bozza diventa "firmata" una volta sola (se due richieste arrivano
+ * insieme, la seconda non trova più la bozza). Si congelano edizione e PDF.
+ */
+export async function signEnrollment(
+  id: string,
+  email: string,
+  value: { edizione: Record<string, unknown>; firmata_il: Date; fine_recesso: string; pdf_percorso: string; pdf_sha256: string }
+): Promise<Enrollment | null> {
+  const rows = (await sql()`
+    UPDATE iscrizioni.iscrizioni
+    SET stato = 'firmata', edizione = ${json(value.edizione)}::jsonb,
+        firmata_il = ${value.firmata_il.toISOString()}, fine_recesso = ${value.fine_recesso},
+        pdf_percorso = ${value.pdf_percorso}, pdf_sha256 = ${value.pdf_sha256},
+        sezioni_complete = array_append(array_remove(sezioni_complete, 'firma'), 'firma'),
+        aggiornata_il = now()
+    WHERE id = ${id} AND email = ${email} AND stato = 'bozza'
+    RETURNING *
+  `) as Enrollment[]
+  return rows[0] ?? null
+}

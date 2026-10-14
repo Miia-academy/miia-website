@@ -4,11 +4,8 @@ import type { EnrollmentState } from '@modules/enrollment/state'
 import { SLOT_LABELS, requiredSlots, type DocumentSlot } from '@modules/enrollment/documents'
 import { uploadDocument } from './document-upload'
 
-export const DOCUMENT_LABELS: Record<string, string> = {
-  carta_identita: "Carta d'identità",
-  passaporto: 'Passaporto',
-  patente: 'Patente',
-}
+export { DOCUMENT_LABELS } from '@modules/enrollment/labels'
+import { DOCUMENT_LABELS } from '@modules/enrollment/labels'
 
 const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-[#F3F3F2]' }
 
