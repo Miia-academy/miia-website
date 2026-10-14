@@ -199,3 +199,19 @@ export async function logEvent(
     VALUES (${iscrizioneId}, ${evento}, ${ip}, ${userAgent}, ${json(dettagli)}::jsonb)
   `
 }
+
+// --- Documenti ---
+
+/** Registra una foto caricata (solo percorso e dati tecnici, il file sta nel bucket privato). */
+export async function saveDocument(id: string, email: string, slot: string, info: Record<string, unknown>) {
+  const rows = (await sql()`
+    UPDATE iscrizioni.iscrizioni
+    SET documenti = documenti || jsonb_build_object(
+          'file', coalesce(documenti->'file', '{}'::jsonb) || jsonb_build_object(${slot}::text, ${json(info)}::jsonb)
+        ),
+        aggiornata_il = now()
+    WHERE id = ${id} AND email = ${email} AND stato = 'bozza'
+    RETURNING *
+  `) as Enrollment[]
+  return rows[0] ?? null
+}

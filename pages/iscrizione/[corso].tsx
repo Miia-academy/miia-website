@@ -10,6 +10,7 @@ import { getLongDate } from '@modules/formats'
 import { getStoryblokVersion } from '@config/version'
 import { ChiSei } from '@components/enrollment/chi-sei'
 import { Corso, MODE_LABELS, SCOPO_LABELS, editionLine, euro, type CourseChoice } from '@components/enrollment/corso'
+import { DOCUMENT_LABELS, Dati } from '@components/enrollment/dati'
 import { EnrollmentStepper, Summary, type StepItem } from '@components/enrollment/stepper'
 import { isEnrollmentEnabled } from '@modules/enrollment/config'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
@@ -130,6 +131,28 @@ export default function Iscrizione({ corso, titolo }: Props) {
                 ? `${MODE_LABELS[cp.modalita]}, totale ${euro(cp.totale)}${cp.offerta ? ' (prezzo open day)' : ''}`
                 : '',
             ],
+          ]}
+        />
+      )
+    } else if (id === 'dati' && state) {
+      item.content = <Dati corso={corso} state={state} onSaved={saved} />
+      const d = state.dati as Record<string, string | Record<string, string> | null>
+      const az = d.azienda && typeof d.azienda === 'object' ? d.azienda : null
+      const nascita = typeof d.data_nascita === 'string' && d.data_nascita ? `${getLongDate(d.data_nascita)}, ${d.luogo_nascita}` : ''
+      item.summary = (
+        <Summary
+          rows={[
+            ['Nascita', nascita],
+            ['Codice fiscale', typeof d.codice_fiscale === 'string' ? d.codice_fiscale : ''],
+            ['Residenza', typeof d.via === 'string' && d.via ? `${d.via}, ${d.cap} ${d.comune} (${d.provincia})` : ''],
+            [
+              'Documento',
+              typeof d.documento_tipo === 'string' && d.documento_tipo
+                ? `${DOCUMENT_LABELS[d.documento_tipo] || d.documento_tipo} n. ${d.documento_numero}`
+                : '',
+            ],
+            ['Foto', d.documenti === 'dopo' ? 'Le carichi dopo' : state.foto_caricate.length ? 'Caricate' : ''],
+            ['Fatturazione', az ? `${az.ragione_sociale}, P. IVA ${az.partita_iva}` : 'A tuo nome'],
           ]}
         />
       )

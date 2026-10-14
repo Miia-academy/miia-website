@@ -6,6 +6,7 @@ import type { IncomingMessage } from 'node:http'
 import type { Enrollment, PaymentMode, SectionId } from './types'
 import { SECTIONS } from './types'
 import { nextSection } from './validation'
+import { uploadedFiles } from './documents'
 
 export interface EnrollmentState {
   email: string
@@ -21,6 +22,10 @@ export interface EnrollmentState {
     totale: number | null
     offerta: boolean
   }
+  /** Dati del passo 3 inseriti dalla persona (per riaprirli con "Modifica"). */
+  dati: Record<string, unknown>
+  /** Foto dei documenti già caricate (solo i nomi, mai i link ai file). */
+  foto_caricate: string[]
 }
 
 const num = (v: string | number | null) => (v === null || v === '' ? null : Number(v))
@@ -41,6 +46,8 @@ export function publicState(row: Enrollment): EnrollmentState {
       totale: num(row.pagamento_totale),
       offerta: !!row.offerta_open_day,
     },
+    dati: row.dati || {},
+    foto_caricate: Object.keys(uploadedFiles(row.documenti)),
   }
 }
 

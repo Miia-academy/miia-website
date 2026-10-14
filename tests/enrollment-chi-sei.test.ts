@@ -157,8 +157,9 @@ describe('corsi e stato', () => {
       prossima: 'corso',
       chi_sei: { nome: 'Mario', cognome: 'Rossi', telefono: '+393331234567' },
       corso_pagamento: { edizione: null, scopo: null, modalita: null, rata: null, totale: null, offerta: false },
+      dati: { codice_fiscale: 'RSSMRA85T10A562S' },
+      foto_caricate: [],
     })
-    expect(JSON.stringify(state)).not.toContain('RSSMRA')
   })
 })
 
