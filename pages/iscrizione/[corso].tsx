@@ -10,7 +10,8 @@ import { getLongDate } from '@modules/formats'
 import { getStoryblokVersion } from '@config/version'
 import { ChiSei } from '@components/enrollment/chi-sei'
 import { Corso, MODE_LABELS, SCOPO_LABELS, editionLine, euro, type CourseChoice } from '@components/enrollment/corso'
-import { DOCUMENT_LABELS, Dati } from '@components/enrollment/dati'
+import { Dati } from '@components/enrollment/dati'
+import { documentLabel } from '@modules/enrollment/labels'
 import { Profilo } from '@components/enrollment/profilo'
 import { Consensi } from '@components/enrollment/consensi'
 import { Conferma, Firma } from '@components/enrollment/firma'
@@ -156,12 +157,7 @@ export default function Iscrizione({ corso, titolo }: Props) {
             ['Nascita', nascita],
             ['Codice fiscale', typeof d.codice_fiscale === 'string' ? d.codice_fiscale : ''],
             ['Residenza', typeof d.via === 'string' && d.via ? `${d.via}, ${d.cap} ${d.comune} (${d.provincia})` : ''],
-            [
-              'Documento',
-              typeof d.documento_tipo === 'string' && d.documento_tipo
-                ? `${DOCUMENT_LABELS[d.documento_tipo] || d.documento_tipo} n. ${d.documento_numero}`
-                : '',
-            ],
+            ['Documento', documentLabel(d)],
             ['Foto', d.documenti === 'dopo' ? 'Le carichi dopo' : state.foto_caricate.length ? 'Caricate' : ''],
             ['Fatturazione', az ? `${az.ragione_sociale}, P. IVA ${az.partita_iva}` : 'A tuo nome'],
           ]}

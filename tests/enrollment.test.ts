@@ -154,7 +154,7 @@ describe('sezione 3, dati e documenti', () => {
     comune: 'Treviso',
     provincia: 'tv',
     cap: '31100',
-    documento_tipo: 'carta_identita',
+    documento_tipo: 'carta_identita_elettronica',
     documento_numero: 'ca 12345 ab',
   }
 

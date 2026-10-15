@@ -3,6 +3,8 @@ import { Button, Checkbox, Input, Radio, RadioGroup, Switch, cn } from '@heroui/
 import type { EnrollmentState } from '@modules/enrollment/state'
 import { SLOT_LABELS, requiredSlots, type DocumentSlot } from '@modules/enrollment/documents'
 import { uploadDocument } from './document-upload'
+import { DocumentNumber } from './documento'
+import { documentFormat, partialPattern } from '@modules/enrollment/document-number'
 
 export { DOCUMENT_LABELS } from '@modules/enrollment/labels'
 import { DOCUMENT_LABELS } from '@modules/enrollment/labels'
@@ -83,7 +85,9 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
     cap: str(d.cap),
     documento_tipo: str(d.documento_tipo),
     documento_numero: str(d.documento_numero),
+    documento_paese: str(d.documento_paese),
   })
+  const [estero, setEstero] = useState(d.documento_estero === true)
   const savedCompany = (d.azienda && typeof d.azienda === 'object' ? d.azienda : null) as Company | null
   const [isCompany, setIsCompany] = useState(!!savedCompany)
   const [company, setCompany] = useState<Company>(savedCompany || {})
@@ -133,7 +137,7 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
         body: JSON.stringify({
           corso,
           sezione: 'dati',
-          valori: { ...values, documenti_dopo: later, fatturazione_azienda: isCompany, azienda: isCompany ? company : null },
+          valori: { ...values, documento_estero: estero, documenti_dopo: later, fatturazione_azienda: isCompany, azienda: isCompany ? company : null },
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -152,7 +156,21 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
     }
   }
 
-  const slots = requiredSlots(values.documento_tipo || 'carta_identita')
+  // Cambiando tipo o paese si tiene il numero solo se va bene anche per il nuovo formato.
+  const keepNumber = (tipo: string, foreign: boolean) => {
+    const format = documentFormat(tipo, foreign)
+    if (format && !new RegExp(partialPattern(format)).test(values.documento_numero)) set('documento_numero')('')
+  }
+  const chooseType = (tipo: string) => {
+    set('documento_tipo')(tipo)
+    keepNumber(tipo, estero)
+  }
+  const chooseForeign = (value: boolean) => {
+    setEstero(value)
+    keepNumber(values.documento_tipo, value)
+  }
+
+  const slots = requiredSlots(values.documento_tipo || 'carta_identita_elettronica')
 
   return (
     <form onSubmit={save} className="flex flex-col gap-8" noValidate>
@@ -181,7 +199,7 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
         <RadioGroup
           aria-label="Tipo di documento"
           value={values.documento_tipo}
-          onValueChange={set('documento_tipo')}
+          onValueChange={chooseType}
           isInvalid={!!errors.documento_tipo}
           errorMessage={errors.documento_tipo}
           orientation="horizontal"
@@ -193,7 +211,16 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
             </Radio>
           ))}
         </RadioGroup>
-        <div className="max-w-sm">{field('documento_numero', 'Numero del documento', { autoCapitalize: 'characters' })}</div>
+        <DocumentNumber
+          tipo={values.documento_tipo}
+          numero={values.documento_numero}
+          estero={estero}
+          paese={values.documento_paese}
+          errors={errors}
+          onNumero={set('documento_numero')}
+          onEstero={chooseForeign}
+          onPaese={set('documento_paese')}
+        />
 
         {!later && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

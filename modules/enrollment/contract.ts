@@ -6,7 +6,7 @@
 import { createHash } from 'node:crypto'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 import type { ConditionItem, Conditions } from './conditions'
-import { DOCUMENT_LABELS, MODE_LABELS, SCOPO_LABELS, euro, longDate, romeDateTime } from './labels'
+import { MODE_LABELS, documentLabel, SCOPO_LABELS, euro, longDate, romeDateTime } from './labels'
 import { COMPUTER_LABELS, ORE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from './profile'
 import type { Enrollment } from './types'
 
@@ -198,7 +198,7 @@ export async function buildContractPdf(input: ContractInput): Promise<{ bytes: U
     ['Residenza', str(d.via) ? `${str(d.via)}, ${str(d.cap)} ${str(d.comune)} (${str(d.provincia)})` : ''],
     ['Email', row.email],
     ['Cellulare', row.telefono],
-    ['Documento', str(d.documento_tipo) ? `${DOCUMENT_LABELS[str(d.documento_tipo)] || str(d.documento_tipo)} n. ${str(d.documento_numero)}` : ''],
+    ['Documento', documentLabel(d)],
     ['Foto dei documenti', d.documenti === 'dopo' ? 'da caricare dopo la firma' : 'caricate'],
   ])
   if (az) {

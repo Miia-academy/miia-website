@@ -16,9 +16,9 @@ export const MODE_LABELS: Record<PaymentMode, string> = {
 }
 
 export const DOCUMENT_LABELS: Record<string, string> = {
-  carta_identita: "Carta d'identità",
+  carta_identita_elettronica: "Carta d'identità elettronica",
+  carta_identita: "Carta d'identità cartacea",
   passaporto: 'Passaporto',
-  patente: 'Patente',
 }
 
 export const euro = (n: number) =>
@@ -36,4 +36,12 @@ export function romeDateTime(at: Date): string {
   const date = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(at)
   const time = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }).format(at)
   return `${date} alle ${time}`
+}
+
+/** "Carta d'identità elettronica n. CA12345AB (Francia)": il paese solo per i documenti esteri. */
+export function documentLabel(d: Record<string, unknown>): string {
+  const tipo = typeof d.documento_tipo === 'string' ? d.documento_tipo : ''
+  if (!tipo) return ''
+  const paese = d.documento_estero === true && typeof d.documento_paese === 'string' && d.documento_paese ? ` (${d.documento_paese})` : ''
+  return `${DOCUMENT_LABELS[tipo] || tipo} n. ${typeof d.documento_numero === 'string' ? d.documento_numero : ''}${paese}`
 }

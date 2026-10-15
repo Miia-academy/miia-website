@@ -131,7 +131,7 @@ function ready(over: Partial<Enrollment> = {}) {
       comune: 'Treviso',
       provincia: 'TV',
       cap: '31100',
-      documento_tipo: 'carta_identita',
+      documento_tipo: 'carta_identita_elettronica',
       documento_numero: 'CA12345AB',
       documenti: 'dopo',
       azienda: null,

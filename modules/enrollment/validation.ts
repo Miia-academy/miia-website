@@ -3,6 +3,7 @@
  * Ogni funzione riceve quello che arriva dal browser e restituisce i valori
  * puliti oppure gli errori da mostrare sotto i campi.
  */
+import { canBeForeign, documentNumberError, isDocumentType, normalizeDocumentNumber, type DocumentType } from './document-number'
 import { normalizeEmail, normalizePhone } from '@modules/crm-form'
 import { codiceFiscaleError, normalizeCodiceFiscale } from './codice-fiscale'
 import { romeDate } from './dates'
@@ -92,7 +93,7 @@ export function validateCorso(input: Input, availableEditions: readonly string[]
 
 // --- 3. Dati e documenti ---
 
-export const DOCUMENT_TYPES = ['carta_identita', 'passaporto', 'patente'] as const
+export { DOCUMENT_TYPES } from './document-number'
 
 export interface Azienda {
   ragione_sociale: string
@@ -112,8 +113,11 @@ export interface DatiContratto {
   comune: string
   provincia: string
   cap: string
-  documento_tipo: (typeof DOCUMENT_TYPES)[number]
+  documento_tipo: DocumentType
   documento_numero: string
+  /** Solo per carta elettronica e passaporto: rilasciato da un altro paese. */
+  documento_estero: boolean
+  documento_paese: string
   documenti: 'caricati' | 'dopo'
   azienda: Azienda | null
 }
@@ -136,8 +140,10 @@ export function validateDati(
   const comune = text(input, 'comune', 80)
   const provincia = text(input, 'provincia', 20).toUpperCase()
   const cap = text(input, 'cap', 20)
-  const documento_tipo = text(input, 'documento_tipo', 20) as DatiContratto['documento_tipo']
-  const documento_numero = text(input, 'documento_numero', 40).toUpperCase().replace(/\s/g, '')
+  const documento_tipo = text(input, 'documento_tipo', 40) as DatiContratto['documento_tipo']
+  const documento_numero = normalizeDocumentNumber(input.documento_numero)
+  const documento_estero = input.documento_estero === true && canBeForeign(documento_tipo)
+  const documento_paese = documento_estero ? text(input, 'documento_paese', 60) : ''
   const documenti = input.documenti_dopo === true ? 'dopo' : 'caricati'
 
   const validBirth = /^\d{4}-\d{2}-\d{2}$/.test(data_nascita) && !Number.isNaN(Date.parse(data_nascita))
@@ -152,8 +158,12 @@ export function validateDati(
   if (!comune) errors.comune = REQUIRED
   if (!/^[A-Z]{2}$/.test(provincia)) errors.provincia = 'Scrivi la sigla della provincia (es. TV)'
   if (!/^\d{5}$/.test(cap)) errors.cap = 'Il CAP ha 5 cifre'
-  if (!DOCUMENT_TYPES.includes(documento_tipo)) errors.documento_tipo = 'Scegli il tipo di documento'
-  if (!/^[A-Z0-9]{5,20}$/.test(documento_numero)) errors.documento_numero = 'Il numero del documento non è valido'
+  if (!isDocumentType(documento_tipo)) errors.documento_tipo = 'Scegli il tipo di documento'
+  else {
+    const numberError = documentNumberError(documento_tipo, documento_numero, documento_estero)
+    if (numberError) errors.documento_numero = numberError
+    if (documento_estero && !documento_paese) errors.documento_paese = 'Scrivi il paese che ha rilasciato il documento'
+  }
   if (documenti === 'caricati' && !documentiCaricati) {
     errors.documenti = 'Carica le foto dei documenti, oppure scegli "Li carico dopo"'
   }
@@ -192,6 +202,8 @@ export function validateDati(
       cap,
       documento_tipo,
       documento_numero,
+      documento_estero,
+      documento_paese,
       documenti,
       azienda,
     },
