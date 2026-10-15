@@ -9,6 +9,7 @@ import { requireDraft } from '@modules/enrollment/draft'
 import { longDate } from '@modules/enrollment/labels'
 import { checkReadyToSign } from '@modules/enrollment/sign'
 import { clientIp, publicState, userAgent } from '@modules/enrollment/state'
+import { signedEvent } from '@modules/enrollment/tracking'
 
 const EXPIRED = 'Il codice è scaduto o non è più valido. Chiedine uno nuovo.'
 
@@ -109,5 +110,5 @@ export default enrollmentApi(['POST'], async (req, res) => {
     await logEvent(row.id, 'email_non_inviata', ip, ua, {})
   }
 
-  return res.status(200).json({ ok: true, iscrizione: publicState(signed) })
+  return res.status(200).json({ ok: true, iscrizione: publicState(signed), evento: signedEvent(row, edizione) })
 })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, InputOtp } from '@heroui/react'
+import { sendGTMEvent } from '@next/third-parties/google'
 import { addDays, romeDate } from '@modules/enrollment/dates'
 import { longDate } from '@modules/enrollment/labels'
 import type { EnrollmentState } from '@modules/enrollment/state'
@@ -62,6 +63,8 @@ export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
     try {
       const res = await post('/api/iscrizione/firma/conferma', { corso, codice: value })
       if (!res.ok) return handle(res.data)
+      // Misura della conversione: solo qui, al momento della firma.
+      if (res.data.evento) sendGTMEvent(res.data.evento)
       onSigned(res.data.iscrizione as EnrollmentState)
     } catch {
       setError('Errore di connessione. Riprova.')

@@ -262,6 +262,19 @@ describe('POST /api/iscrizione/firma/conferma', () => {
     expect(events).toEqual(['firmata', 'email_inviata'])
   })
 
+  it('restituisce l’evento della conversione con importo e id', async () => {
+    const res = await sign()
+    expect(res.body.evento).toMatchObject({
+      event: 'iscrizione_firmata',
+      transaction_id: ID,
+      value: 5940,
+      currency: 'EUR',
+      course: CORSO,
+    })
+    // Non deve attivare i tag dei moduli di contatto
+    expect(res.body.evento.event).not.toMatch(/^submit_/)
+  })
+
   it('codice sbagliato: niente firma', async () => {
     const res = await sign('000000')
     expect(res.statusCode).toBe(400)
