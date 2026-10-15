@@ -122,6 +122,7 @@ export interface Event {
     | "moda - secondo livello";
   location?: ISbStoryData<Location> | string;
   date?: string;
+  docenti?: (ISbStoryData<Person> | string)[];
   page?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   form?: ISbStoryData<Form> | string;
   component: "event";

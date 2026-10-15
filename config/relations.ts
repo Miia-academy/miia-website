@@ -11,6 +11,7 @@ export const relations: string[] = [
   'course.alias',
   'event.alias',
   'event.form',
+  'event.docenti',
   'location.alias',
   'map.locations',
   'picture.author',
