@@ -8,6 +8,8 @@ import { compiler } from 'markdown-to-jsx'
 import { Typography } from '../typography'
 import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
+import { useDataContext } from '@modules/context'
+import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
 
 export interface EventBannerProps {
   blok?: EventBlok
@@ -50,10 +52,20 @@ export default function EventBanner({
   const imageFilename = (event as any).image?.filename ?? propImageFilename
   const link = (event as any).page?.cached_url || (event as any).page?.url || propPageUrl
 
+  const { events: globalEvents } = useDataContext()
+
   if (!title || !dateStr) return null
 
   const date = new Date(dateStr)
   const isValidDate = !isNaN(date.getTime())
+
+  // Docenti: dall'evento stesso se risolti, altrimenti dall'open day nella cache globale
+  const docentiNames = getDocentiNames(event as any)
+  const docenti = joinNames(
+    docentiNames.length > 0 || !isValidDate
+      ? docentiNames
+      : getDocentiNames(findOpendayByDate(globalEvents, date.toISOString()))
+  )
 
   // VARIANTE 1: Banner Hero con Immagine / Form (Alias / OpenDay)
   if (imageFilename || submitForms.length > 0) {
@@ -124,6 +136,12 @@ export default function EventBanner({
               forceWrapper: true,
               overrides: Typography({ theme: 'dark' }),
             })}
+
+          {docenti && (
+            <p className="text-sm sm:text-base opacity-80">
+              Interverranno {docenti}
+            </p>
+          )}
 
           {cleanUrl && submitForms.length === 0 && (
             <div className="pt-2">
