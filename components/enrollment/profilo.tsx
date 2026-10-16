@@ -1,7 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import { Button, Checkbox, CheckboxGroup, Input, Select, SelectItem, cn } from '@heroui/react'
 import type { EnrollmentState } from '@modules/enrollment/state'
-import { COMPUTER_LABELS, ORE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from '@modules/enrollment/profile'
+import {
+  AREA_LABELS,
+  COMPUTER_LABELS,
+  ORE_LABELS,
+  SETTORE_LABELS,
+  SITUAZIONE_LABELS,
+  SOURCE_LABELS,
+  TITOLO_LABELS,
+} from '@modules/enrollment/profile'
+import { SENZA_LAVORO } from '@modules/enrollment/validation'
 
 const inputClasses = { inputWrapper: 'bg-[#F3F3F2]' }
 const selectClasses = { trigger: 'bg-[#F3F3F2]' }
@@ -28,20 +37,24 @@ export function Profilo({ corso, state, onSaved }: ProfiloProps) {
   const p = state.profilo || {}
   const [values, setValues] = useState<Record<string, string>>({
     titolo_studi: str(p.titolo_studi),
+    area_studi: str(p.area_studi),
+    istituto: str(p.istituto),
     anno_studi: str(p.anno_studi),
     ultima_formazione: str(p.ultima_formazione),
     anno_formazione: str(p.anno_formazione),
-    occupazione: str(p.occupazione),
+    situazione_lavoro: str(p.situazione_lavoro),
+    settore: str(p.settore),
+    azienda: str(p.azienda),
     ruolo: str(p.ruolo),
     ore_settimana: str(p.ore_settimana),
     computer: str(p.computer),
   })
-  const [noWork, setNoWork] = useState(p.non_lavoro === true)
   const [sources, setSources] = useState<string[]>(Array.isArray(p.come_ci_hai_conosciuto) ? (p.come_ci_hai_conosciuto as string[]) : [])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState<'save' | 'skip' | null>(null)
 
+  const working = !SENZA_LAVORO.includes(values.situazione_lavoro)
   const set = (key: string) => (v: string) => setValues((s) => ({ ...s, [key]: v }))
   const text = (key: string, label: string, extra: Record<string, unknown> = {}) => (
     <Input
@@ -84,7 +97,7 @@ export function Profilo({ corso, state, onSaved }: ProfiloProps) {
         body: JSON.stringify({
           corso,
           sezione: 'profilo',
-          valori: skip ? { saltato: true } : { ...values, non_lavoro: noWork, come_ci_hai_conosciuto: sources },
+          valori: skip ? { saltato: true } : { ...values, come_ci_hai_conosciuto: sources },
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -113,22 +126,19 @@ export function Profilo({ corso, state, onSaved }: ProfiloProps) {
       <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <legend className="mb-3 font-semibold">Studi</legend>
         {select('titolo_studi', 'Titolo di studi', TITOLO_LABELS)}
+        {select('area_studi', 'Area', AREA_LABELS)}
+        {text('istituto', 'Scuola o università')}
         {year('anno_studi', 'Concluso nell’anno')}
-        {text('ultima_formazione', 'Ultima formazione')}
-        {year('anno_formazione', 'Conclusa nell’anno')}
+        {text('ultima_formazione', 'Ultimo corso o formazione')}
+        {year('anno_formazione', 'Concluso nell’anno')}
       </fieldset>
 
-      <fieldset className="flex flex-col gap-4">
+      <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <legend className="mb-3 font-semibold">Lavoro</legend>
-        <Checkbox isSelected={noWork} onValueChange={setNoWork} size="sm">
-          Non lavoro ancora
-        </Checkbox>
-        {!noWork && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {text('occupazione', 'Ultima occupazione')}
-            {text('ruolo', 'Ruolo')}
-          </div>
-        )}
+        {select('situazione_lavoro', 'Oggi', SITUAZIONE_LABELS)}
+        {working && select('settore', 'Settore', SETTORE_LABELS)}
+        {working && text('azienda', 'Azienda')}
+        {working && text('ruolo', 'Ruolo')}
       </fieldset>
 
       <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-5">

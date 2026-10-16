@@ -46,16 +46,23 @@ interface CorsoProps {
   onSaved: (state: EnrollmentState) => void
   /** Aggiorna subito il riepilogo laterale, prima di "Continua". */
   onChange?: (choice: CourseChoice) => void
+  /** Edizione arrivata dal pulsante "Iscriviti online" del sito (?edizione=...), scelta in partenza se è aperta. */
+  preselect?: string
 }
 
 /** Passo 2: edizione, scopo del corso e modalità di pagamento. */
-export function Corso({ corso, state, offer, loadError, onSaved, onChange }: CorsoProps) {
+export function Corso({ corso, state, offer, loadError, onSaved, onChange, preselect }: CorsoProps) {
   const [edizione, setEdizione] = useState(state.corso_pagamento.edizione || '')
   const [scopo, setScopo] = useState(state.corso_pagamento.scopo || '')
   const [modalita, setModalita] = useState<string>(state.corso_pagamento.modalita || '')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (edizione || !preselect || !offer) return
+    if (offer.edizioni.some((e) => e.chiave === preselect && e.stato !== 'completa')) setEdizione(preselect)
+  }, [edizione, preselect, offer])
 
   useEffect(() => {
     onChange?.({ edizione, modalita })

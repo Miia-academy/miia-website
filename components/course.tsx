@@ -7,6 +7,7 @@ import { getLongDate, getShortDate } from '@modules/formats'
 import { resolveAlias } from '@modules/relations'
 import Link from 'next/link'
 import { editionKey, seatsLabel, useSignedCounts } from '@components/enrollment/use-seats'
+import { canEnroll, enrollHref } from '@components/enrollment/enroll-link'
 
 interface CourseComponentProps {
   blok: CourseBlok
@@ -26,6 +27,8 @@ export default function Course({ blok, story, parent }: CourseComponentProps) {
   const aliasStory = blok.alias && typeof blok.alias === 'object' ? (blok.alias as ISbStoryData<CourseBlok>) : null
   const key = editionKey(aliasStory?.uuid || story?.uuid || '', course.starts)
   const signed = useSignedCounts([key])
+  const seats = seatsLabel(course.seats, key, signed)
+  const enrollLink = key && canEnroll(signed, seats) ? enrollHref(aliasStory?.full_slug || story?.full_slug, key) : null
 
   // 2. Early return sui campi obbligatori per il rendering
   if (!course.title || !course.days?.length || !course.hours?.length) {
@@ -94,13 +97,21 @@ export default function Course({ blok, story, parent }: CourseComponentProps) {
                   <li className="space-x-0.5">
                     <i className="iconoir-group pr-1" />
                     <span className="md:max-lg:hidden">posti:</span>
-                    <span>{seatsLabel(course.seats, key, signed)}</span>
+                    <span>{seats}</span>
                   </li>
                 )}
               </ul>
             </CardBody>
           </Card>
         </Wrapper>
+        {enrollLink && (
+          <Link
+            href={enrollLink}
+            className="mt-2 flex h-11 w-full items-center justify-center rounded-medium bg-primary px-4 font-bold text-white"
+          >
+            Iscriviti online
+          </Link>
+        )}
       </div>
     </Container>
   )

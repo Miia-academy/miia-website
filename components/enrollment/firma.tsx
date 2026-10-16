@@ -5,6 +5,7 @@ import { addDays, romeDate } from '@modules/enrollment/dates'
 import { longDate } from '@modules/enrollment/labels'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import type { SectionId } from '@modules/enrollment/types'
+import { ACADEMY, withdrawalSentence } from '@modules/enrollment/withdrawal'
 
 interface FirmaProps {
   corso: string
@@ -131,24 +132,60 @@ export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
 }
 
 /** Dopo la firma: la pagina diventa la conferma. */
-export function Conferma({ state, edizione }: { state: EnrollmentState; edizione: string }) {
+export function Conferma({
+  state,
+  edizione,
+  corso,
+  sede,
+}: {
+  state: EnrollmentState
+  edizione: string
+  /** Nome del corso e sede, per la frase da usare se si cambia idea. */
+  corso: string
+  sede: string
+}) {
+  const sentence = withdrawalSentence(corso, sede)
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(sentence)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
   return (
-    <div className="rounded-2xl bg-[#F3F3F2] p-6 sm:p-8">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione firmata</p>
-      <h2 className="mt-1 text-2xl font-bold">Grazie {state.chi_sei.nome}, ci vediamo in aula.</h2>
-      {edizione && <p className="mt-3 text-neutral-700">{edizione}</p>}
-      {state.fine_recesso && (
+    <div className="flex flex-col gap-6">
+      <div className="rounded-2xl bg-[#F3F3F2] p-6 sm:p-8">
+        <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione firmata</p>
+        <h2 className="mt-1 text-2xl font-bold">Grazie {state.chi_sei.nome}, ci vediamo in aula.</h2>
+        {edizione && <p className="mt-3 text-neutral-700">{edizione}</p>}
         <p className="mt-3 text-neutral-700">
-          Puoi ripensarci senza costi fino al <strong>{longDate(state.fine_recesso)}</strong>.
+          Ti abbiamo mandato il contratto in PDF a <strong>{state.email}</strong>. Per qualsiasi domanda scrivi a{' '}
+          <a className="text-primary underline" href={`mailto:${ACADEMY.email}`}>
+            {ACADEMY.email}
+          </a>
+          .
         </p>
+      </div>
+      {state.fine_recesso && (
+        <section className="border-l-4 border-neutral-300 pl-5" aria-labelledby="recesso-titolo">
+          <h3 id="recesso-titolo" className="font-bold">
+            Se cambi idea
+          </h3>
+          <p className="mt-2 text-neutral-700">
+            Puoi annullare l’iscrizione senza costi fino al <strong>{longDate(state.fine_recesso)}</strong> compreso. Rispondi
+            all’email di conferma, o scrivi a {ACADEMY.email}, con questa frase:
+          </p>
+          <p className="mt-3 select-all rounded-medium bg-[#F3F3F2] px-4 py-3 font-medium">{sentence}</p>
+          <Button size="sm" variant="light" className="mt-1 -ms-3 underline text-neutral-600" onPress={copy}>
+            {copied ? 'Frase copiata' : 'Copia la frase'}
+          </Button>
+          <p className="mt-2 text-sm text-neutral-600">
+            In alternativa puoi usare la PEC ({ACADEMY.pec}) o una raccomandata a {ACADEMY.ragione_sociale}, {ACADEMY.indirizzo}.
+          </p>
+        </section>
       )}
-      <p className="mt-3 text-neutral-700">
-        Ti abbiamo mandato il contratto in PDF a <strong>{state.email}</strong>. Per qualsiasi domanda scrivi a{' '}
-        <a className="text-primary underline" href="mailto:iscrizione@miia.it">
-          iscrizione@miia.it
-        </a>
-        .
-      </p>
     </div>
   )
 }

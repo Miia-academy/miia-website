@@ -227,14 +227,59 @@ export const COME_CI_HAI_CONOSCIUTO = [
 export const TITOLI_STUDIO = ['licenza_media', 'diploma', 'laurea_triennale', 'laurea_magistrale', 'altro'] as const
 export const ORE_SETTIMANA = ['almeno_6', 'tra_6_e_9', 'tutto_il_necessario'] as const
 export const LIVELLI_COMPUTER = ['base', 'buona', 'ottima'] as const
+/** Area del titolo di studio: stessi valori dell'attributo Brevo FORMAZIONE. */
+export const AREE_STUDIO = [
+  'artistica',
+  'linguistica',
+  'umanistica',
+  'economica',
+  'scientifica',
+  'tecnologica',
+  'salute',
+  'agroalimentare',
+  'turismo',
+  'altro',
+] as const
+/** Situazione lavorativa: stessi valori dell'attributo Brevo OCCUPAZIONE. */
+export const SITUAZIONI_LAVORO = [
+  'studente',
+  'disoccupato',
+  'operativo',
+  'tecnico',
+  'impiegato',
+  'freelance',
+  'quadro',
+  'dirigente',
+  'imprenditore',
+  'altro',
+] as const
+/** Chi studia o cerca lavoro non indica settore, azienda e ruolo. */
+export const SENZA_LAVORO: readonly string[] = ['studente', 'disoccupato']
+/** Settore di lavoro (proposta del 14/10, da confermare con Simone; in Brevo servirà l'attributo SETTORE). */
+export const SETTORI_LAVORO = [
+  'arredamento_design',
+  'edilizia_architettura',
+  'moda',
+  'commercio_vendita',
+  'marketing_comunicazione',
+  'industria_produzione',
+  'servizi',
+  'pa_scuola',
+  'sanita',
+  'turismo_ristorazione',
+  'altro',
+] as const
 
 export interface Profilo {
   titolo_studi: string
+  area_studi: string
+  istituto: string
   anno_studi: string
   ultima_formazione: string
   anno_formazione: string
-  non_lavoro: boolean
-  occupazione: string
+  situazione_lavoro: string
+  settore: string
+  azienda: string
   ruolo: string
   ore_settimana: string
   computer: string
@@ -255,17 +300,21 @@ export function validateProfilo(input: Input): SectionResult<Profilo> {
     return value
   }
   const sources = Array.isArray(input.come_ci_hai_conosciuto) ? input.come_ci_hai_conosciuto : []
-  const nonLavoro = input.non_lavoro === true
+  const situazione = choice('situazione_lavoro', SITUAZIONI_LAVORO)
+  const noWork = SENZA_LAVORO.includes(situazione)
 
   return result(
     {
       titolo_studi: choice('titolo_studi', TITOLI_STUDIO),
+      area_studi: choice('area_studi', AREE_STUDIO),
+      istituto: text(input, 'istituto', 120),
       anno_studi: year('anno_studi'),
       ultima_formazione: text(input, 'ultima_formazione', 120),
       anno_formazione: year('anno_formazione'),
-      non_lavoro: nonLavoro,
-      occupazione: nonLavoro ? '' : text(input, 'occupazione', 120),
-      ruolo: nonLavoro ? '' : text(input, 'ruolo', 80),
+      situazione_lavoro: situazione,
+      settore: noWork ? '' : choice('settore', SETTORI_LAVORO),
+      azienda: noWork ? '' : text(input, 'azienda', 120),
+      ruolo: noWork ? '' : text(input, 'ruolo', 80),
       ore_settimana: choice('ore_settimana', ORE_SETTIMANA),
       computer: choice('computer', LIVELLI_COMPUTER),
       come_ci_hai_conosciuto: Array.from(

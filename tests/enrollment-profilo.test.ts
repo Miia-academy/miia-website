@@ -120,9 +120,17 @@ describe('validazione del profilo', () => {
     if (!r.ok) expect(Object.keys(r.errors).sort()).toEqual(['computer', 'titolo_studi'])
   })
 
-  it('con "Non lavoro ancora" occupazione e ruolo restano vuoti', () => {
-    const r = validateProfilo({ non_lavoro: true, occupazione: 'Commessa', ruolo: 'x' })
-    expect(r.ok && r.value).toMatchObject({ non_lavoro: true, occupazione: '', ruolo: '' })
+  it('chi studia o cerca lavoro non indica settore, azienda e ruolo', () => {
+    const r = validateProfilo({ situazione_lavoro: 'studente', settore: 'moda', azienda: 'Negozio', ruolo: 'x' })
+    expect(r.ok && r.value).toMatchObject({ situazione_lavoro: 'studente', settore: '', azienda: '', ruolo: '' })
+  })
+
+  it('area di studio e settore accettano solo le voci della lista', () => {
+    const ok = validateProfilo({ area_studi: 'artistica', situazione_lavoro: 'impiegato', settore: 'arredamento_design', azienda: 'Studio Rossi' })
+    expect(ok.ok && ok.value).toMatchObject({ area_studi: 'artistica', settore: 'arredamento_design', azienda: 'Studio Rossi' })
+    const bad = validateProfilo({ area_studi: 'arte', settore: 'boh' })
+    expect(bad.ok).toBe(false)
+    if (!bad.ok) expect(Object.keys(bad.errors).sort()).toEqual(['area_studi', 'settore'])
   })
 })
 
