@@ -6,6 +6,9 @@ import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
 import { useMemo } from "react";
+import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
+import { canEnroll, enrollHref } from "@components/enrollment/enroll-link";
+import Link from "next/link";
 
 interface ListItemProps {
   label: string;
@@ -120,12 +123,16 @@ export default function Aside({ blok }: AsideComponentProps) {
         starts: content.starts ? getLongDate(content.starts) : "in programmazione",
         ends: content.ends ? getShortDate(content.ends) : null,
         seats: content.seats || null,
+        key: editionKey(courseItem.uuid || "", content.starts),
+        fullSlug: typeof courseItem.full_slug === "string" ? courseItem.full_slug : null,
         location: matchedLocation,
       };
     });
 
     return { courses: crs, formOptions: opts };
   }, [blok.courses, locations]);
+
+  const signed = useSignedCounts(courses.map((c) => c.key));
 
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
   const forms = Array.isArray(blok.forms) ? blok.forms : [];
@@ -182,7 +189,7 @@ export default function Aside({ blok }: AsideComponentProps) {
                               <li>Frequenza: {course.days.join(" e ")}</li>
                             )}
                             {course.seats && (
-                              <li>Posti rimasti: {course.seats}</li>
+                              <li>Posti rimasti: {seatsLabel(course.seats, course.key, signed)}</li>
                             )}
                           </ul>
                         }
@@ -205,6 +212,20 @@ export default function Aside({ blok }: AsideComponentProps) {
                             value={course.ends}
                           />
                         </ul>
+                        {(() => {
+                          const href =
+                            course.key && canEnroll(signed, seatsLabel(course.seats, course.key, signed))
+                              ? enrollHref(course.fullSlug, course.key)
+                              : null;
+                          return href ? (
+                            <Link
+                              href={href}
+                              className="mt-3 mb-1 flex h-11 w-full items-center justify-center rounded-medium bg-primary px-4 font-bold text-white"
+                            >
+                              Iscriviti online a questa edizione
+                            </Link>
+                          ) : null;
+                        })()}
                       </AccordionItem>
                     ))}
                   </Accordion>

@@ -96,7 +96,11 @@ export function normalizePhone(value: unknown): string | null {
   if (phone.startsWith('00')) phone = '+' + phone.slice(2)
   // Prefisso duplicato generato dalla vecchia versione del modulo (+39+39...)
   phone = phone.replace(/^\+39\+39/, '+39')
-  if (!phone.startsWith('+')) phone = '+39' + phone
+  // Senza "+": 39 seguito da 9-10 cifre è già internazionale (così lo restituisce
+  // Brevo, es. 393331234567); un numero italiano nazionale non ha mai 11-12 cifre
+  // che iniziano per 39.
+  if (!phone.startsWith('+')) phone = /^39\d{9,10}$/.test(phone) ? '+' + phone : '+39' + phone
+  if (phone.startsWith('+39') && !/^\+39\d{6,11}$/.test(phone)) return null
   return /^\+\d{8,15}$/.test(phone) ? phone : null
 }
 
