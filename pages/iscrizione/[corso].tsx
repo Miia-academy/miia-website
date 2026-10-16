@@ -20,7 +20,7 @@ import { isEnrollmentEnabled } from '@modules/enrollment/config'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import type { CourseOffer, EditionOption } from '@modules/enrollment/offer'
-import { ORE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from '@modules/enrollment/profile'
+import { AREA_LABELS, ORE_LABELS, SETTORE_LABELS, SITUAZIONE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from '@modules/enrollment/profile'
 import { normalizeCourseSlug } from '@modules/enrollment/state'
 import { SECTIONS, type PaymentMode, type SectionId } from '@modules/enrollment/types'
 
@@ -128,7 +128,15 @@ export default function Iscrizione({ corso, titolo }: Props) {
       )
     } else if (id === 'corso' && state) {
       item.content = (
-        <Corso corso={corso} state={state} offer={offer} loadError={offerError} onSaved={saved} onChange={setDraft} />
+        <Corso
+          corso={corso}
+          state={state}
+          offer={offer}
+          loadError={offerError}
+          onSaved={saved}
+          onChange={setDraft}
+          preselect={typeof router.query.edizione === 'string' ? router.query.edizione : undefined}
+        />
       )
       const cp = state.corso_pagamento
       const ed = offer?.edizioni.find((e) => e.chiave === cp.edizione)
@@ -173,8 +181,13 @@ export default function Iscrizione({ corso, titolo }: Props) {
       ) : (
         <Summary
           rows={[
-            ['Studi', label(TITOLO_LABELS, p.titolo_studi)],
-            ['Lavoro', p.non_lavoro ? 'Non lavora ancora' : [p.occupazione, p.ruolo].filter(Boolean).join(', ')],
+            ['Studi', [label(TITOLO_LABELS, p.titolo_studi), label(AREA_LABELS, p.area_studi)].filter(Boolean).join(', ')],
+            [
+              'Lavoro',
+              [label(SITUAZIONE_LABELS, p.situazione_lavoro), label(SETTORE_LABELS, p.settore), p.azienda, p.ruolo]
+                .filter((v) => typeof v === 'string' && v)
+                .join(', '),
+            ],
             ['Tempo per esercitarti', label(ORE_LABELS, p.ore_settimana)],
             ['Come ci hai conosciuto', sources.map((s) => label(SOURCE_LABELS, s)).join(', ')],
           ]}
@@ -238,6 +251,9 @@ export default function Iscrizione({ corso, titolo }: Props) {
               <Conferma
                 state={state}
                 edizione={signedEdition ? `${editionLine(signedEdition)} · dal ${getLongDate(signedEdition.inizio)}` : ''}
+                corso={titolo}
+                sede={signedEdition?.sede || ''}
+                inizio={signedEdition?.inizio}
               />
             ) : (
               <EnrollmentStepper items={items} onEdit={goTo} />

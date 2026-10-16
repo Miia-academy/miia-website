@@ -5,6 +5,7 @@
 import { BrevoError, brevoFetch, getContact, upsertContact } from '@modules/brevo'
 import { normalizePhone } from '@modules/crm-form'
 import type { ChiSei } from './validation'
+import { contractEmailHtml, contractEmailSubject, contractEmailText, type ContractEmailInput } from './contract-email'
 
 export interface Prefill {
   nome: string
@@ -109,40 +110,7 @@ export async function sendSignatureSms(phone: string, code: string, minutes: num
 const OFFICE_COPY = process.env.ENROLLMENT_OFFICE_EMAIL || 'iscrizione@miia.it'
 
 /** Email con il contratto firmato in allegato, alla persona e in copia nascosta alla segreteria. */
-export async function sendContractEmail(input: {
-  email: string
-  nome: string
-  corso: string
-  edizione: string
-  inizio: string
-  fineRecesso: string
-  pdf: Uint8Array
-  fileName: string
-  /** "Cosa succede adesso", un passo per riga; vuoto finché non c'è un testo approvato. */
-  dopo?: string[]
-}) {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const dopo = input.dopo || []
-  const steps = dopo.length
-    ? `<p style="margin:0 0 8px;font-size:15px;font-weight:700">Cosa succede adesso</p><ul style="margin:0 0 16px;padding-left:20px;font-size:15px">${dopo
-        .map((s) => `<li style="margin:0 0 6px">${esc(s)}</li>`)
-        .join('')}</ul>`
-    : ''
-  const html = `<!doctype html><html lang="it"><body style="margin:0;padding:24px;background:#F3F3F2;font-family:Montserrat,Arial,sans-serif;color:#232325">
-<table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px">
-<tr><td>
-<p style="margin:0 0 16px;font-size:16px">Ciao ${esc(input.nome)},</p>
-<p style="margin:0 0 16px;font-size:16px">la tua iscrizione a <strong>${esc(input.corso)}</strong> (${esc(input.edizione)}, dal ${esc(input.inizio)}) è firmata. In allegato trovi il contratto in PDF.</p>
-<p style="margin:0 0 16px;font-size:16px">Puoi ripensarci senza costi fino al <strong>${esc(input.fineRecesso)}</strong>: basta rispondere a questa email.</p>
-${steps}
-<p style="margin:0;font-size:14px">Made in Italy Academy</p>
-</td></tr></table></body></html>`
-  const text =
-    `Ciao ${input.nome},\n\nla tua iscrizione a ${input.corso} (${input.edizione}, dal ${input.inizio}) è firmata. ` +
-    `In allegato trovi il contratto in PDF.\n\nPuoi ripensarci senza costi fino al ${input.fineRecesso}: basta rispondere a questa email.\n\n` +
-    (dopo.length ? `Cosa succede adesso:\n${dopo.map((s) => `- ${s}`).join('\n')}\n\n` : '') +
-    'Made in Italy Academy'
-
+export async function sendContractEmail(input: ContractEmailInput & { email: string; pdf: Uint8Array; fileName: string }) {
   await brevoFetch('/smtp/email', {
     method: 'POST',
     body: {
@@ -150,9 +118,9 @@ ${steps}
       to: [{ email: input.email, name: input.nome }],
       bcc: [{ email: OFFICE_COPY }],
       replyTo: { email: OFFICE_COPY },
-      subject: `La tua iscrizione a ${input.corso} è firmata`,
-      htmlContent: html,
-      textContent: text,
+      subject: contractEmailSubject(input),
+      htmlContent: contractEmailHtml(input),
+      textContent: contractEmailText(input),
       attachment: [{ name: input.fileName, content: Buffer.from(input.pdf).toString('base64') }],
       tags: ['iscrizione_firmata'],
     },
