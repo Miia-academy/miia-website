@@ -2,12 +2,13 @@ import { uploadFile } from '@modules/google'
 import { body, enrollmentApi } from '@modules/enrollment/api'
 import { CODE_MAX_ATTEMPTS, codeMatches, normalizeCode } from '@modules/enrollment/codes'
 import { sendContractEmail } from '@modules/enrollment/contact'
+import { syncSignedContact } from '@modules/enrollment/brevo-sync'
 import { buildContractPdf } from '@modules/enrollment/contract'
 import { courseTitle } from '@modules/enrollment/courses'
 import { latestActiveCode, logEvent, markCodeUsed, signEnrollment, takeCodeAttempt } from '@modules/enrollment/db'
 import { withdrawalEnd } from '@modules/enrollment/dates'
 import { requireDraft } from '@modules/enrollment/draft'
-import { MODE_LABELS, euro, longDate, romeDateTime } from '@modules/enrollment/labels'
+import { MODE_LABELS, euro, longDate, paymentStart, romeDateTime } from '@modules/enrollment/labels'
 import { checkReadyToSign } from '@modules/enrollment/sign'
 import { clientIp, publicState, userAgent } from '@modules/enrollment/state'
 import { signedEvent } from '@modules/enrollment/tracking'
@@ -95,6 +96,15 @@ export default enrollmentApi(['POST'], async (req, res) => {
   })
 
   try {
+    await syncSignedContact(row, edition, courseTitle(corso), now)
+    await logEvent(row.id, 'brevo_aggiornato', ip, ua, {})
+  } catch (error) {
+    // La firma resta valida: i dati in Brevo si possono ricopiare da Neon.
+    console.error('[Iscrizione] Aggiornamento del contatto Brevo non riuscito:', error)
+    await logEvent(row.id, 'brevo_non_aggiornato', ip, ua, {})
+  }
+
+  try {
     const total = row.pagamento_totale === null ? null : Number(row.pagamento_totale)
     const rata = row.pagamento_rata === null ? null : Number(row.pagamento_rata)
     const mode = row.pagamento_modalita
@@ -114,6 +124,7 @@ export default enrollmentApi(['POST'], async (req, res) => {
       giorniOrari: [edition.giorni.join(' e '), edition.orari.join(', ')].filter(Boolean).join(', '),
       inizio: longDate(edition.inizio),
       pagamento,
+      dopo: [paymentStart(edition.inizio)],
       firmataIl: romeDateTime(now),
       fineRecesso: longDate(fine_recesso),
       pdf: bytes,

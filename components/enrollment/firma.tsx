@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button, InputOtp } from '@heroui/react'
 import { sendGTMEvent } from '@next/third-parties/google'
 import { addDays, romeDate } from '@modules/enrollment/dates'
-import { longDate } from '@modules/enrollment/labels'
+import { longDate, paymentStart } from '@modules/enrollment/labels'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import type { SectionId } from '@modules/enrollment/types'
 import { ACADEMY, withdrawalSentence } from '@modules/enrollment/withdrawal'
@@ -137,12 +137,15 @@ export function Conferma({
   edizione,
   corso,
   sede,
+  inizio,
 }: {
   state: EnrollmentState
   edizione: string
   /** Nome del corso e sede, per la frase da usare se si cambia idea. */
   corso: string
   sede: string
+  /** Data di inizio dell'edizione (AAAA-MM-GG), da cui partono i pagamenti. */
+  inizio?: string
 }) {
   const sentence = withdrawalSentence(corso, sede)
   const [copied, setCopied] = useState(false)
@@ -160,6 +163,7 @@ export function Conferma({
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione firmata</p>
         <h2 className="mt-1 text-2xl font-bold">Grazie {state.chi_sei.nome}, ci vediamo in aula.</h2>
         {edizione && <p className="mt-3 text-neutral-700">{edizione}</p>}
+        {inizio && <p className="mt-3 text-neutral-700">{paymentStart(inizio)}</p>}
         <p className="mt-3 text-neutral-700">
           Ti abbiamo mandato il contratto in PDF a <strong>{state.email}</strong>. Per qualsiasi domanda scrivi a{' '}
           <a className="text-primary underline" href={`mailto:${ACADEMY.email}`}>

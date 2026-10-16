@@ -67,3 +67,42 @@ describe('pulsante "Iscriviti online"', () => {
     expect(canEnroll({ k: 3 }, '9')).toBe(true)
   })
 })
+
+import { frequency, signedContactAttributes } from '@modules/enrollment/brevo-sync'
+
+describe('dati in Brevo alla firma', () => {
+  const row = {
+    email: 'a@b.it',
+    dati: { data_nascita: '1990-05-12', via: 'Via Roma 1', cap: '31100', comune: 'Treviso', provincia: 'TV', codice_fiscale: 'RSSMRA90E12L407X' },
+    profilo: { scopo: 'professione', titolo_studi: 'laurea_magistrale', area_studi: 'artistica', situazione_lavoro: 'impiegato', azienda: 'Studio', ruolo: '' },
+    consensi: { voci: { newsletter: { valore: true } } },
+  } as any
+  const attrs = signedContactAttributes(row, { sede: 'Treviso', giorni: ['Sabato'], orari: ['9:00/12:00'] }, 'Interior design, primo livello', new Date('2026-10-15T10:00:00Z'))
+
+  it('usa i valori delle liste di Brevo', () => {
+    expect(attrs).toMatchObject({
+      COMPLEANNO: '1990-05-12',
+      COMUNE: 'Treviso',
+      PROVINCIA: 'TV',
+      STUDI: ['laure'],
+      FORMAZIONE: ['artistica'],
+      OCCUPAZIONE: ['Impiegato'],
+      SEDE: ['treviso'],
+      FREQUENZA: ['sabato'],
+      ISCRIZIONE: '2026-10-15',
+      ISCRIZIONE_CORSO: 'Interior design, primo livello',
+      ISCRIZIONE_SCOPO: 'Farne una professione',
+      NEWSLETTER: true,
+    })
+  })
+
+  it('non manda codice fiscale né campi vuoti', () => {
+    expect(JSON.stringify(attrs)).not.toContain('RSSMRA')
+    expect(attrs).not.toHaveProperty('RUOLO')
+  })
+
+  it('frequenza serale e diurna', () => {
+    expect(frequency(['Lunedì', 'Mercoledì'], ['20:00/23:00'])).toBe('serale')
+    expect(frequency(['Lunedì'], ['9:00/13:00'])).toBe('diurno')
+  })
+})

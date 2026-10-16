@@ -14,6 +14,7 @@ vi.mock('@modules/enrollment/db', () => ({
 vi.mock('@modules/enrollment/load-offer', () => ({ loadOffer: vi.fn() }))
 vi.mock('@modules/enrollment/contact', () => ({ sendSignatureSms: vi.fn(), sendContractEmail: vi.fn() }))
 vi.mock('@modules/google', () => ({ uploadFile: vi.fn() }))
+vi.mock('@modules/enrollment/brevo-sync', () => ({ syncSignedContact: vi.fn() }))
 
 import codice from '@pages/api/iscrizione/firma/codice'
 import conferma from '@pages/api/iscrizione/firma/conferma'
@@ -259,7 +260,7 @@ describe('POST /api/iscrizione/firma/conferma', () => {
     expect(signed.edizione).toMatchObject({ chiave: KEY, condizioni: { impronta: IMPRONTA } })
     expect(contact.sendContractEmail).toHaveBeenCalledWith(expect.objectContaining({ email: EMAIL }))
     const events = vi.mocked(db.logEvent).mock.calls.map((c) => c[1])
-    expect(events).toEqual(['firmata', 'email_inviata'])
+    expect(events).toEqual(['firmata', 'brevo_aggiornato', 'email_inviata'])
   })
 
   it('restituisce l’evento della conversione con importo e id', async () => {
@@ -286,7 +287,7 @@ describe('POST /api/iscrizione/firma/conferma', () => {
     vi.mocked(contact.sendContractEmail).mockRejectedValue(new Error('Brevo giù'))
     const res = await sign()
     expect(res.statusCode).toBe(200)
-    expect(vi.mocked(db.logEvent).mock.calls.map((c) => c[1])).toEqual(['firmata', 'email_non_inviata'])
+    expect(vi.mocked(db.logEvent).mock.calls.map((c) => c[1])).toEqual(['firmata', 'brevo_aggiornato', 'email_non_inviata'])
   })
 
   it('l’edizione si è riempita nel frattempo: il codice non si consuma', async () => {

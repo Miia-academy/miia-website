@@ -253,6 +253,7 @@ export default function Iscrizione({ corso, titolo }: Props) {
                 edizione={signedEdition ? `${editionLine(signedEdition)} · dal ${getLongDate(signedEdition.inizio)}` : ''}
                 corso={titolo}
                 sede={signedEdition?.sede || ''}
+                inizio={signedEdition?.inizio}
               />
             ) : (
               <EnrollmentStepper items={items} onEdit={goTo} />
