@@ -74,7 +74,7 @@ describe('dati in Brevo alla firma', () => {
   const row = {
     email: 'a@b.it',
     dati: { data_nascita: '1990-05-12', via: 'Via Roma 1', cap: '31100', comune: 'Treviso', provincia: 'TV', codice_fiscale: 'RSSMRA90E12L407X' },
-    profilo: { scopo: 'professione', titolo_studi: 'laurea_magistrale', area_studi: 'artistica', situazione_lavoro: 'impiegato', azienda: 'Studio', ruolo: '' },
+    profilo: { scopo: 'professione', titolo_studi: 'laurea_magistrale', area_studi: 'artistica', situazione_lavoro: 'impiegato', settore: 'arredamento_design', azienda: 'Studio', ruolo: '' },
     consensi: { voci: { newsletter: { valore: true } } },
   } as any
   const attrs = signedContactAttributes(row, { sede: 'Treviso', giorni: ['Sabato'], orari: ['9:00/12:00'] }, 'Interior design, primo livello', new Date('2026-10-15T10:00:00Z'))
@@ -87,6 +87,7 @@ describe('dati in Brevo alla firma', () => {
       STUDI: ['laure'],
       FORMAZIONE: ['artistica'],
       OCCUPAZIONE: ['Impiegato'],
+      SETTORE: ['arredamento_design'],
       SEDE: ['treviso'],
       FREQUENZA: ['sabato'],
       ISCRIZIONE: '2026-10-15',

@@ -2,8 +2,8 @@
  * Come annullare l'iscrizione (recesso): la stessa indicazione nella pagina di
  * conferma, nell'email con il contratto e nel PDF.
  *
- * Da confermare con il consulente legale: il contratto oggi ammette solo
- * raccomandata o PEC; qui si indicano sia la risposta all'email sia PEC e raccomandata.
+ * Tre modalità, tutte valide (decisione di Miia del 16/10): risposta all'email
+ * o email a iscrizione@, PEC, raccomandata.
  */
 
 /** Dati dell'accademia per PEC e raccomandata, gli stessi del footer delle email. */

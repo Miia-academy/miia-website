@@ -53,6 +53,8 @@ export function signedContactAttributes(
     FORMAZIONE: str(p.area_studi) ? [str(p.area_studi)] : null,
     PROFILO_FORMAZIONE: [str(p.ultima_formazione), str(p.anno_formazione)].filter(Boolean).join(', '),
     OCCUPAZIONE: situazione ? [situazione.charAt(0).toUpperCase() + situazione.slice(1)] : null,
+    // Le chiavi di SETTORI_LAVORO sono anche i valori della lista SETTORE in Brevo.
+    SETTORE: str(p.settore) ? [str(p.settore)] : null,
     AZIENDA: str(p.azienda),
     RUOLO: str(p.ruolo),
     ISCRIZIONE_CORSO: corso,
