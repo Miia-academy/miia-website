@@ -6,6 +6,16 @@ import { tv } from 'tailwind-variants'
 import { Link as HeroLink, Button } from '@heroui/react'
 import Link from 'next/link'
 
+// Testi della pagina dopo il clic su una domanda nell'email "Cosa vedrai" dell'open day.
+// Le chiavi sono i valori di OD_DOMANDA in Brevo.
+const DOMANDE_OPENDAY: Record<string, string> = {
+  sbocchi: 'Ti racconteremo dove lavorano oggi i nostri diplomati e come si arriva al primo incarico.',
+  programma: 'Ti mostreremo il programma del corso, materia per materia, con esempi di progetti.',
+  attestato: 'Ti spiegheremo che attestato ottieni alla fine del corso e come si usa nel lavoro.',
+  costi: 'Ti spiegheremo quanto costa il corso e come si può pagare, anche a rate.',
+  orari: 'Ti diremo giorni e orari delle lezioni e come si frequenta mentre si lavora o si studia.',
+}
+
 export default function Feedback() {
   const router = useRouter()
   const params = router.query
@@ -225,6 +235,29 @@ export default function Feedback() {
                   Scopri i corsi
                 </Button>
               )}
+            </Fragment>
+          )}
+
+          {/* Open Day: risposta con un clic dall'email "Cosa vedrai" (la scelta la salva Brevo dal clic) */}
+          {params.type === 'domanda' && (
+            <Fragment>
+              <Head>
+                <title>Grazie per la tua domanda</title>
+                <meta name="robots" content="noindex" />
+              </Head>
+              <h1 className={title()}>
+                <span>Grazie,</span>
+                <br />
+                <span className="text-5xl">all'open day partiamo dalla tua domanda.</span>
+              </h1>
+              <p className={description()}>
+                {DOMANDE_OPENDAY[String(params.d)] ||
+                  'Durante la serata rispondiamo alle domande di chi partecipa.'}{' '}
+                Nei prossimi giorni ti scriviamo ancora per prepararti alla serata.
+              </p>
+              <Button href="/" color="primary" as={HeroLink}>
+                Torna al sito
+              </Button>
             </Fragment>
           )}
 
