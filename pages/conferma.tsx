@@ -5,9 +5,13 @@ import { Fragment, useState } from 'react'
 import { tv } from 'tailwind-variants'
 import { Link as HeroLink, Button } from '@heroui/react'
 import Link from 'next/link'
+import type { GetStaticProps } from 'next'
+import { getStoryblokApi } from '@storyblok/react'
 
 // Testi della pagina dopo il clic su una domanda nell'email "Cosa vedrai" dell'open day.
-// Le chiavi sono i valori di OD_DOMANDA in Brevo.
+// Si cambiano in Storyblok › Datasources › "Domande open day": il nome della voce è il
+// valore di OD_DOMANDA in Brevo (sbocchi, programma, attestato, costi, orari) e non va
+// rinominato; il valore è la frase mostrata. Questi testi servono solo se Storyblok non risponde.
 const DOMANDE_OPENDAY: Record<string, string> = {
   sbocchi: 'Ti racconteremo dove lavorano oggi i nostri diplomati e come si arriva al primo incarico.',
   programma: 'Ti mostreremo il programma del corso, materia per materia, con esempi di progetti.',
@@ -16,7 +20,30 @@ const DOMANDE_OPENDAY: Record<string, string> = {
   orari: 'Ti diremo giorni e orari delle lezioni e come si frequenta mentre si lavora o si studia.',
 }
 
-export default function Feedback() {
+interface Props {
+  domande: Record<string, string>
+}
+
+export const getStaticProps: GetStaticProps<Props> = async () => {
+  const domande = { ...DOMANDE_OPENDAY }
+  try {
+    const { data } = await getStoryblokApi().get('cdn/datasource_entries', {
+      datasource: 'domande-open-day',
+      per_page: 100,
+    })
+    for (const e of (data.datasource_entries || []) as Array<{ name?: string; value?: string }>) {
+      const name = String(e.name || '').trim()
+      const value = String(e.value || '').trim()
+      if (name && value) domande[name] = value
+    }
+  } catch (error) {
+    console.error('[Conferma] Lettura "Domande open day" da Storyblok non riuscita:', error)
+    return { props: { domande }, revalidate: 60 }
+  }
+  return { props: { domande }, revalidate: 300 }
+}
+
+export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
   const router = useRouter()
   const params = router.query
   const [confirming, setConfirming] = useState(false)
@@ -251,7 +278,7 @@ export default function Feedback() {
                 <span className="text-5xl">all'open day partiamo dalla tua domanda.</span>
               </h1>
               <p className={description()}>
-                {DOMANDE_OPENDAY[String(params.d)] ||
+                {domande[String(params.d)] ||
                   'Durante la serata rispondiamo alle domande di chi partecipa.'}{' '}
                 Nei prossimi giorni ti scriviamo ancora per prepararti alla serata.
               </p>
