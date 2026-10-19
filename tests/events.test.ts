@@ -25,6 +25,14 @@ describe('getDocentiStories', () => {
     expect(getDocentiStories({ docenti: [a, 'uuid-non-risolto', b] as any })).toEqual([a, b])
   })
 
+  it("ricostruisce dall'elenco delle persone le schede non risolte", () => {
+    const persons = [{ uuid: 'u-1', title: 'Giuliano Panizzo', role: 'cad', image: { filename: 'g.jpg' } }]
+    const [scheda] = getDocentiStories({ docenti: ['u-1', 'u-sconosciuto'] as any }, persons)
+    expect(scheda.uuid).toBe('u-1')
+    expect(scheda.content).toMatchObject({ component: 'person', title: 'Giuliano Panizzo', role: 'cad' })
+    expect(getDocentiStories({ docenti: ['u-1', 'u-sconosciuto'] as any }, persons)).toHaveLength(1)
+  })
+
   it('restituisce un elenco vuoto senza docenti', () => {
     expect(getDocentiStories({})).toEqual([])
     expect(getDocentiStories(null)).toEqual([])

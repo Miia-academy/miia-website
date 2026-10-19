@@ -23,7 +23,7 @@ const getCleanUrl = (url?: string | null): string | null => {
 }
 
 export default function Alias({ blok }: AliasComponentProps) {
-  const { articles, events } = useDataContext()
+  const { articles, events, persons } = useDataContext()
 
   const isArticle = blok.resource === 'last-article'
   const isEvent = blok.resource === 'next-event'
@@ -89,7 +89,7 @@ export default function Alias({ blok }: AliasComponentProps) {
 
     const cleanUrl = getCleanUrl(pageUrl)
     const submitForms = (blok.submit as FormBlok[]) || []
-    const persone = getDocentiStories(selectedEvent)
+    const persone = getDocentiStories(selectedEvent, persons)
 
     return (
       <div

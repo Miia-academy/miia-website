@@ -16,13 +16,27 @@ export function getDocentiNames(event?: Pick<Event, 'docenti'> | null): string[]
     .filter(Boolean)
 }
 
+/** Dati minimi di una scheda docente presa dall'elenco globale delle persone. */
+type PersonLike = { uuid: string; title?: string; role?: string; image?: any; description?: string; video?: string }
+
 /**
  * Schede dei docenti di un evento, nell'ordine scelto in Storyblok.
- * Solo quelle risolte (con contenuto); gli UUID non risolti vengono ignorati.
+ * Se Storyblok non ha risolto la relazione (resta l'UUID), la scheda si ricostruisce
+ * dall'elenco globale delle persone; gli UUID che non si trovano vengono ignorati.
  */
-export function getDocentiStories(event?: Pick<Event, 'docenti'> | null): ISbStoryData<Person>[] {
+export function getDocentiStories(
+  event?: Pick<Event, 'docenti'> | null,
+  persons: PersonLike[] = []
+): ISbStoryData<Person>[] {
   if (!event?.docenti || !Array.isArray(event.docenti)) return []
-  return event.docenti.filter((docente) => isStoryResolved<Person>(docente))
+  return event.docenti.flatMap((docente) => {
+    if (isStoryResolved<Person>(docente)) return [docente]
+    const person = typeof docente === 'string' ? persons.find((p) => p.uuid === docente) : undefined
+    if (!person) return []
+    const { uuid, title, role, image, description, video } = person
+    const content = { component: 'person', _uid: uuid, title, role, image, description, video } as Person
+    return [{ uuid, content } as ISbStoryData<Person>]
+  })
 }
 
 /** Elenco leggibile: "A", "A e B", "A, B e C". */
