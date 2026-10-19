@@ -1,4 +1,5 @@
 import type { Event, Person } from '@types'
+import type { ISbStoryData } from '@storyblok/react'
 import { isStoryResolved } from '@modules/relations'
 
 type EventLike = Pick<Event, 'date' | 'docenti'> & { isOpenday?: boolean }
@@ -13,6 +14,15 @@ export function getDocentiNames(event?: Pick<Event, 'docenti'> | null): string[]
     .filter((docente) => isStoryResolved<Person>(docente))
     .map((docente) => ((docente as { content: Person }).content.title || '').trim())
     .filter(Boolean)
+}
+
+/**
+ * Schede dei docenti di un evento, nell'ordine scelto in Storyblok.
+ * Solo quelle risolte (con contenuto); gli UUID non risolti vengono ignorati.
+ */
+export function getDocentiStories(event?: Pick<Event, 'docenti'> | null): ISbStoryData<Person>[] {
+  if (!event?.docenti || !Array.isArray(event.docenti)) return []
+  return event.docenti.filter((docente) => isStoryResolved<Person>(docente))
 }
 
 /** Elenco leggibile: "A", "A e B", "A, B e C". */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
+import { findOpendayByDate, getDocentiNames, getDocentiStories, joinNames } from '@modules/events'
 
 const docente = (title: string) => ({ uuid: title, content: { title, component: 'person', _uid: title } })
 
@@ -15,6 +15,19 @@ describe('getDocentiNames', () => {
     expect(getDocentiNames({ docenti: ['uuid-non-risolto', docente('')] as any })).toEqual([])
     expect(getDocentiNames({})).toEqual([])
     expect(getDocentiNames(undefined)).toEqual([])
+  })
+})
+
+describe('getDocentiStories', () => {
+  it("restituisce le schede risolte nell'ordine di Storyblok", () => {
+    const a = docente('Serena Turri')
+    const b = docente('Valentina Pavan')
+    expect(getDocentiStories({ docenti: [a, 'uuid-non-risolto', b] as any })).toEqual([a, b])
+  })
+
+  it('restituisce un elenco vuoto senza docenti', () => {
+    expect(getDocentiStories({})).toEqual([])
+    expect(getDocentiStories(null)).toEqual([])
   })
 })
 

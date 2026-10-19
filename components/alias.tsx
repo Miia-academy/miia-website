@@ -8,6 +8,8 @@ import NextLink from 'next/link'
 import { tv } from 'tailwind-variants'
 import { useDataContext } from '@modules/context'
 import type { ProcessedArticle, ProcessedEvent } from '@modules/cache'
+import Person from './person'
+import { getDocentiStories } from '@modules/events'
 
 interface AliasComponentProps {
   blok: AliasBlok
@@ -87,11 +89,12 @@ export default function Alias({ blok }: AliasComponentProps) {
 
     const cleanUrl = getCleanUrl(pageUrl)
     const submitForms = (blok.submit as FormBlok[]) || []
+    const persone = getDocentiStories(selectedEvent)
 
     return (
       <div
         {...storyblokEditable(blok as any)}
-        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:items-center sm:gap-8"
+        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-8"
       >
         {/* Box Data con Immagine */}
         <div
@@ -166,6 +169,25 @@ export default function Alias({ blok }: AliasComponentProps) {
             </div>
           )}
         </div>
+
+        {/* Persone dell'evento (campo "Docenti"), solo se "Mostra persone" è spuntato */}
+        {blok.persone && persone.length > 0 && (
+          <div className="w-full basis-full space-y-6 pt-6 sm:pt-10">
+            {blok.persone_titolo && (
+              <h3 className="font-serif text-3xl font-bold leading-tight md:text-4xl xl:text-5xl">
+                {blok.persone_titolo}
+              </h3>
+            )}
+            <div className="grid grid-cols-12 gap-6">
+              {persone.map((persona) => (
+                <Person
+                  key={persona.uuid}
+                  blok={{ component: 'person', _uid: persona.uuid, alias: persona }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
