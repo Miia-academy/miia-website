@@ -8,16 +8,21 @@ import Link from 'next/link'
 import type { GetStaticProps } from 'next'
 import { getStoryblokApi } from '@storyblok/react'
 
-// Testi della pagina dopo il clic su una domanda nell'email "Cosa vedrai" dell'open day.
+// Testi della pagina dopo il clic su una scelta nelle email dell'open day: le domande di
+// "Cosa vedrai" (OD_DOMANDA: sbocchi, programma, attestato, costi, orari) e le richieste
+// del giorno dopo (OD_RICHIESTA: dubbi, approfondire, simone).
 // Si cambiano in Storyblok › Datasources › "Domande open day": il nome della voce è il
-// valore di OD_DOMANDA in Brevo (sbocchi, programma, attestato, costi, orari) e non va
-// rinominato; il valore è la frase mostrata. Questi testi servono solo se Storyblok non risponde.
+// valore salvato in Brevo e non va rinominato; il valore è la frase mostrata.
+// Questi testi servono solo se Storyblok non risponde.
 const DOMANDE_OPENDAY: Record<string, string> = {
   sbocchi: 'Ti racconteremo dove lavorano oggi i nostri diplomati e come si arriva al primo incarico.',
   programma: 'Ti mostreremo il programma del corso, materia per materia, con esempi di progetti.',
   attestato: 'Ti spiegheremo che attestato ottieni alla fine del corso e come si usa nel lavoro.',
   costi: 'Ti spiegheremo quanto costa il corso e come si può pagare, anche a rate.',
   orari: 'Ti diremo giorni e orari delle lezioni e come si frequenta mentre si lavora o si studia.',
+  dubbi: 'Tra qualche giorno ti mandiamo le risposte alle domande che ci fanno tutti dopo l’open day.',
+  approfondire: 'Tra qualche giorno ti mandiamo il programma completo e alcuni progetti d’esame dei nostri studenti.',
+  simone: 'Simone ti chiamerà entro due giorni lavorativi.',
 }
 
 interface Props {
@@ -281,6 +286,27 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
                 {domande[String(params.d)] ||
                   'Durante la serata rispondiamo alle domande di chi partecipa.'}{' '}
                 Nei prossimi giorni ti scriviamo ancora per prepararti alla serata.
+              </p>
+              <Button href="/" color="primary" as={HeroLink}>
+                Torna al sito
+              </Button>
+            </Fragment>
+          )}
+
+          {/* Dopo l'open day: scelta con un clic nell'email del giorno dopo (la salva Brevo dal clic) */}
+          {params.type === 'richiesta' && (
+            <Fragment>
+              <Head>
+                <title>Grazie, ci pensiamo noi</title>
+                <meta name="robots" content="noindex" />
+              </Head>
+              <h1 className={title()}>
+                <span>Grazie,</span>
+                <br />
+                <span className="text-5xl">ci pensiamo noi.</span>
+              </h1>
+              <p className={description()}>
+                {domande[String(params.d)] || 'Nei prossimi giorni ti scriviamo per aiutarti a decidere.'}
               </p>
               <Button href="/" color="primary" as={HeroLink}>
                 Torna al sito
