@@ -93,3 +93,15 @@ describe('consenso simulato per le anteprime', () => {
     expect(consensoSimulato()).toBe(false)
   })
 })
+
+describe('riquadro ?debug=profilo', () => {
+  it('resta attivo dopo un ricaricamento senza parametro, finché non si chiude', async () => {
+    const { debugProfiloAttivo, chiudiDebugProfilo } = await import('@modules/tracking')
+    window.history.replaceState(null, '', '/?debug=profilo')
+    expect(debugProfiloAttivo()).toBe(true)
+    window.history.replaceState(null, '', '/corsi')
+    expect(debugProfiloAttivo()).toBe(true)
+    chiudiDebugProfilo()
+    expect(debugProfiloAttivo()).toBe(false)
+  })
+})

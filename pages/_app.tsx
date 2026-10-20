@@ -10,7 +10,7 @@ import { DataProvider } from '@modules/context'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { captureAttribution, refreshAttributionStorage } from '@modules/attribution'
-import { inviaRiassunto, tracciaPagina } from '@modules/tracking'
+import { debugProfiloAttivo, inviaRiassunto, tracciaPagina } from '@modules/tracking'
 import DebugProfilo from '@components/debugProfilo'
 
 import { fontSans, fontSerif } from '@config/fonts'
@@ -105,7 +105,7 @@ export default function App({ Component, pageProps }: AppProps) {
       if (document.visibilityState === 'hidden') inviaRiassunto()
     }
     traccia()
-    setDebugProfilo(new URLSearchParams(window.location.search).get('debug') === 'profilo')
+    setDebugProfilo(debugProfiloAttivo())
     router.events.on('routeChangeComplete', traccia)
     document.addEventListener('visibilitychange', fineVisita)
     window.addEventListener('pagehide', fineVisita)

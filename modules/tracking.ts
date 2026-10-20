@@ -23,8 +23,32 @@ import {
 const STORAGE_KEY = 'miia_profilo_dettaglio'
 const INVIATO_KEY = 'miia_profilo_inviato'
 const SIMULA_KEY = 'miia_debug_consenso'
+const DEBUG_KEY = 'miia_debug_profilo'
 
 let lettura: { path: string; visibile: number; da: number | null; timer: number } | null = null
+
+/**
+ * Il riquadro ?debug=profilo resta aperto per tutta la visita, anche quando il
+ * menu ricarica la pagina e il parametro sparisce. Si chiude con la ✕.
+ */
+export function debugProfiloAttivo(): boolean {
+  try {
+    if (new URLSearchParams(window.location.search).get('debug') === 'profilo') {
+      window.sessionStorage.setItem(DEBUG_KEY, '1')
+    }
+    return window.sessionStorage.getItem(DEBUG_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function chiudiDebugProfilo() {
+  try {
+    window.sessionStorage.removeItem(DEBUG_KEY)
+  } catch {
+    // niente da chiudere
+  }
+}
 
 /**
  * Anteprime Vercel e sviluppo locale: Iubenda lì non conserva il consenso,

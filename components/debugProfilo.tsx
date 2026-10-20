@@ -3,6 +3,7 @@ import { hasConsent, PURPOSE } from '@modules/consent'
 import { riassumi } from '@modules/profilo'
 import {
   cancellaProfilo,
+  chiudiDebugProfilo,
   consensoSimulato,
   inAnteprima,
   leggiDettaglio,
@@ -37,7 +38,10 @@ export default function DebugProfilo() {
     <div className="fixed bottom-4 left-4 z-[9999] max-h-[70vh] w-[min(420px,calc(100vw-32px))] overflow-auto rounded-lg border border-default-300 bg-white p-4 font-mono text-xs text-foreground shadow-xl">
       <div className="mb-2 flex items-center justify-between font-sans text-sm font-semibold">
         Profilo di questo browser
-        <button type="button" className="px-2" onClick={() => setChiuso(true)} aria-label="Chiudi">
+        <button type="button" className="px-2" onClick={() => {
+            chiudiDebugProfilo()
+            setChiuso(true)
+          }} aria-label="Chiudi">
           ✕
         </button>
       </div>
