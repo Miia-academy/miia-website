@@ -178,26 +178,28 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale }:
                   <>Ti aspettiamo. Entrando, scrivi nome e cognome e spegni il microfono.</>
                 )}
               </p>
-              {!emailIniziale && (
-                <Input
-                  type="email"
-                  label="La tua email"
-                  description="Quella con cui ti sei iscritto"
-                  value={email}
-                  onValueChange={setEmail}
-                  className="max-w-sm"
-                />
-              )}
-              <Button
-                color="primary"
-                size="lg"
-                className="self-start"
-                isDisabled={stato !== 'aperto'}
-                isLoading={loading}
-                onPress={entra}
-              >
-                Entra nell&apos;open day
-              </Button>
+              <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
+                {!emailIniziale && (
+                  <Input
+                    type="email"
+                    size="lg"
+                    label="L'email con cui ti sei iscritto"
+                    value={email}
+                    onValueChange={setEmail}
+                    className="sm:flex-1"
+                  />
+                )}
+                <Button
+                  color="primary"
+                  size="lg"
+                  className="h-16 shrink-0 self-start sm:self-auto"
+                  isDisabled={stato !== 'aperto'}
+                  isLoading={loading}
+                  onPress={entra}
+                >
+                  Entra nell&apos;open day
+                </Button>
+              </div>
               {error && <p className="text-danger-500">{error}</p>}
             </>
           )}
