@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { hasConsent, PURPOSE } from '@modules/consent'
 import { riassumi } from '@modules/profilo'
-import { cancellaProfilo, leggiDettaglio, leggiProfilo } from '@modules/tracking'
+import {
+  cancellaProfilo,
+  consensoSimulato,
+  inAnteprima,
+  leggiDettaglio,
+  leggiProfilo,
+  simulaConsenso,
+  tracciaPagina,
+} from '@modules/tracking'
 
 /**
  * Riquadro di controllo del profilo, visibile aggiungendo ?debug=profilo
@@ -19,6 +27,7 @@ export default function DebugProfilo() {
   if (chiuso) return null
 
   const marketing = hasConsent(PURPOSE.marketing)
+  const simulato = consensoSimulato()
   const dettaglio = leggiDettaglio()
   const calcolato = dettaglio ? riassumi(dettaglio) : null
   const cookie = leggiProfilo()
@@ -32,7 +41,23 @@ export default function DebugProfilo() {
           ✕
         </button>
       </div>
-      <p>Consenso marketing: {marketing ? 'sì' : 'no (non si salva nulla)'}</p>
+      <p>
+        Consenso marketing:{' '}
+        {marketing ? 'sì' : simulato ? 'simulato (solo anteprima)' : 'no (non si salva nulla)'}
+      </p>
+      {inAnteprima() && !marketing && (
+        <button
+          type="button"
+          className="mt-1 rounded border border-default-300 px-2 py-1 font-sans"
+          onClick={() => {
+            simulaConsenso(!simulato)
+            if (!simulato) tracciaPagina()
+            setTick((t) => t + 1)
+          }}
+        >
+          {simulato ? 'Smetti di simulare il consenso' : 'Simula il consenso marketing'}
+        </button>
+      )}
       <p className="mt-2 font-semibold">Calcolato ora nel browser</p>
       <pre className="whitespace-pre-wrap">{calcolato ? JSON.stringify(calcolato, null, 1) : 'nessun dato'}</pre>
       <p className="mt-2 font-semibold">Cookie miia_profilo (usato dai banner)</p>

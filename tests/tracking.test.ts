@@ -80,3 +80,16 @@ describe('tracciamento nel browser', () => {
     expect(JSON.parse(String(init.body))).toMatchObject({ c: 1, od: '2026-11-16' })
   })
 })
+
+describe('consenso simulato per le anteprime', () => {
+  it('in anteprima permette di tracciare senza Iubenda', async () => {
+    const { simulaConsenso, consensoSimulato } = await import('@modules/tracking')
+    // jsdom gira su localhost: lì la simulazione è ammessa
+    simulaConsenso(true)
+    expect(consensoSimulato()).toBe(true)
+    tracciaPagina('/corsi/interior-design')
+    expect(leggiDettaglio()).not.toBeNull()
+    simulaConsenso(false)
+    expect(consensoSimulato()).toBe(false)
+  })
+})

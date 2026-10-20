@@ -22,11 +22,40 @@ import {
 
 const STORAGE_KEY = 'miia_profilo_dettaglio'
 const INVIATO_KEY = 'miia_profilo_inviato'
+const SIMULA_KEY = 'miia_debug_consenso'
 
 let lettura: { path: string; visibile: number; da: number | null; timer: number } | null = null
 
+/**
+ * Anteprime Vercel e sviluppo locale: Iubenda lì non conserva il consenso,
+ * quindi il riquadro ?debug=profilo permette di simularlo. Mai su miia.it.
+ */
+export function inAnteprima(): boolean {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host.endsWith('.vercel.app')
+}
+
+export function consensoSimulato(): boolean {
+  try {
+    return inAnteprima() && window.localStorage.getItem(SIMULA_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function simulaConsenso(attivo: boolean) {
+  if (!inAnteprima()) return
+  try {
+    if (attivo) window.localStorage.setItem(SIMULA_KEY, '1')
+    else window.localStorage.removeItem(SIMULA_KEY)
+  } catch {
+    // memoria bloccata: niente simulazione
+  }
+}
+
 function consentito(): boolean {
-  if (hasConsent(PURPOSE.marketing)) return true
+  if (hasConsent(PURPOSE.marketing) || consensoSimulato()) return true
   // Scelta fatta senza marketing: via anche quanto salvato prima.
   if (Object.keys(getConsentPurposes()).length > 0) cancellaProfilo()
   return false
