@@ -4,7 +4,7 @@ import type { Course, Event, Location, Article, Person, Project } from '@types'
 import { relations } from '@config/relations'
 
 export type ProcessedCourse = Course & { uuid: string }
-export type ProcessedEvent = Event & { uuid: string; name: string; isOpenday: boolean }
+export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
 export type ProcessedLocation = Location & { uuid?: string }
 
 // Dati leggeri per le card (minimizza il payload < 128 kB)
@@ -97,6 +97,7 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
     const events: ProcessedEvent[] = eventsRes.data.stories.map((s: any) => ({
       ...(s.content as Event),
       uuid: s.uuid,
+      slug: s.slug,
       name: s.name,
       isOpenday: Boolean(s.name?.startsWith('openday-')),
     }))

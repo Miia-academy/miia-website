@@ -60,6 +60,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       Object.assign(attributes, sanitizeAttribution(source, existing))
     }
     const listIds = sanitizeLists(contact?.listIds)
+    // Nuova iscrizione a un open day: la presenza e il ritardo della volta prima non
+    // valgono più (li segna di nuovo la pagina miia.it/open-day/accedi).
+    if (attributes.OPENDAY) {
+      attributes.PARTECIPAZIONE_OPENDAY = false
+      attributes.OD_RITARDO = false
+    }
 
     try {
       await upsertContact({ email, attributes, listIds })
