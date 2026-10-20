@@ -85,6 +85,7 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
       .filter((story: any) => story.content?.date)
       .map((story: any) => ({
         name: story.name,
+        slug: story.slug,
         date: new Date(story.content.date),
       }))
       .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
@@ -115,12 +116,16 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
       })
     }
 
-    const attributes: Record<string, string> = {
+    const attributes: Record<string, string | boolean> = {
       ULTIMA_AZIONE: 'openday',
     }
 
     if (opendayDateStr) {
       attributes.OPENDAY = opendayDateStr
+      // Codice per miia.it/open-day/accedi; presenza e ritardo dell'open day precedente si azzerano
+      if (targetEvent?.slug) attributes.OD_CODICE = targetEvent.slug
+      attributes.PARTECIPAZIONE_OPENDAY = false
+      attributes.OD_RITARDO = false
     }
 
     await upsertContact({

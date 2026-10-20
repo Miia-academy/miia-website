@@ -125,6 +125,7 @@ export interface Event {
   location?: ISbStoryData<Location> | string;
   date?: string;
   docenti?: (ISbStoryData<Person> | string)[];
+  link_meet?: string;
   page?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   form?: ISbStoryData<Form> | string;
   component: "event";

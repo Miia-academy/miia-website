@@ -152,6 +152,9 @@ function buildEvent(
     }
   }
 
+  // Codice dell'open day per la pagina miia.it/open-day/accedi/<codice>
+  if (opendayEvent?.slug) properties['openday_codice'] = opendayEvent.slug
+
   // Docenti dell'open day (campo "Docenti" dell'evento in Storyblok), per le email
   const docenti = joinNames(getDocentiNames(opendayEvent))
   if (docenti) properties['openday_docenti'] = docenti
@@ -380,6 +383,9 @@ export default function Form({
         ...contact.attributes,
         OPENDAY: opendayVal,
         OPENDAY_DATA: opendayDataVal,
+        ...(event.event_properties['openday_codice']
+          ? { OD_CODICE: String(event.event_properties['openday_codice']) }
+          : {}),
       }
     }
 

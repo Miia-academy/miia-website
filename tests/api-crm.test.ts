@@ -101,6 +101,22 @@ describe('/api/crm', () => {
     })
   })
 
+  it('iscrizione a un open day: salva il codice e azzera presenza e ritardo precedenti', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: { PARTECIPAZIONE_OPENDAY: true } } as never)
+    await call({
+      contact: {
+        email: TEST_EMAIL,
+        attributes: { OPENDAY: '2026-11-16T20:00:00.000Z', OD_CODICE: 'openday-interni-novembre', PARTECIPAZIONE_OPENDAY: true },
+      },
+    })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({
+      OPENDAY: '2026-11-16T20:00:00.000Z',
+      OD_CODICE: 'openday-interni-novembre',
+      PARTECIPAZIONE_OPENDAY: false,
+      OD_RITARDO: false,
+    })
+  })
+
   it('non restituisce mai i dati del contatto al browser', async () => {
     vi.mocked(getContact).mockResolvedValue({
       email: TEST_EMAIL,
