@@ -20,6 +20,8 @@ export interface Alias {
   resource: "next-event" | "last-article";
   filter?: string;
   submit?: Form[];
+  persone?: boolean;
+  persone_titolo?: string;
   component: "alias";
   _uid: string;
   [k: string]: unknown;
