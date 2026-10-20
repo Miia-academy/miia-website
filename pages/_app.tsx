@@ -7,9 +7,11 @@ import { storyblokInit, apiPlugin } from '@storyblok/react'
 import { HeroUIProvider } from '@heroui/react'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { DataProvider } from '@modules/context'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { captureAttribution, refreshAttributionStorage } from '@modules/attribution'
+import { inviaRiassunto, tracciaPagina } from '@modules/tracking'
+import DebugProfilo from '@components/debugProfilo'
 
 import { fontSans, fontSerif } from '@config/fonts'
 
@@ -94,6 +96,26 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, [router.events])
 
+  // Profilo di interesse: pagine viste e lette, solo con il consenso marketing.
+  // Il riassunto parte verso il cookie quando la persona chiude o cambia scheda.
+  const [debugProfilo, setDebugProfilo] = useState(false)
+  useEffect(() => {
+    const traccia = (url?: string) => tracciaPagina(url)
+    const fineVisita = () => {
+      if (document.visibilityState === 'hidden') inviaRiassunto()
+    }
+    traccia()
+    setDebugProfilo(new URLSearchParams(window.location.search).get('debug') === 'profilo')
+    router.events.on('routeChangeComplete', traccia)
+    document.addEventListener('visibilitychange', fineVisita)
+    window.addEventListener('pagehide', fineVisita)
+    return () => {
+      router.events.off('routeChangeComplete', traccia)
+      document.removeEventListener('visibilitychange', fineVisita)
+      window.removeEventListener('pagehide', fineVisita)
+    }
+  }, [router.events])
+
   return (
     <>
       <DataProvider data={pageProps.data}>
@@ -103,6 +125,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </NextThemesProvider>
         </HeroUIProvider>
       </DataProvider>
+      {debugProfilo && <DebugProfilo />}
       <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM || ''} />
     </>
   )

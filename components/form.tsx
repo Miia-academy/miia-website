@@ -24,6 +24,7 @@ import { isStoryResolved } from '@modules/relations'
 import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
 import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
+import { tracciaModulo } from '@modules/tracking'
 import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
 import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
 
@@ -417,6 +418,7 @@ export default function Form({
         })
         setState('done')
         sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
+        tracciaModulo(form.tracking, event.event_properties['openday'] ? String(event.event_properties['openday']) : undefined)
       } else {
         const errRes = await response.json().catch(() => null)
         setState('error')
