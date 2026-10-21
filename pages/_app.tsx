@@ -15,6 +15,7 @@ import DebugProfilo from '@components/debugProfilo'
 import BannerSito from '@components/banners/bannerSito'
 
 import { fontSans, fontSerif } from '@config/fonts'
+import { getGtmId } from '@config/gtm'
 
 import Page from '@components/page'
 import Section from '@components/section'
@@ -87,6 +88,8 @@ function bannerDiPagina(pageProps: any): string[] {
   return Array.isArray(banner) ? banner.filter((b: unknown): b is string => typeof b === 'string') : []
 }
 
+const gtmId = getGtmId()
+
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
 
@@ -134,7 +137,7 @@ export default function App({ Component, pageProps }: AppProps) {
         </HeroUIProvider>
       </DataProvider>
       {debugProfilo && <DebugProfilo />}
-      <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM || ''} />
+      {gtmId && <GoogleTagManager gtmId={gtmId} />}
     </>
   )
 }
