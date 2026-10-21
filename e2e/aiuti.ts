@@ -149,9 +149,12 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
     await expect(voci.first()).toBeVisible()
     const preferita = area ? voci.filter({ hasText: area }) : voci
     await ((await preferita.count()) ? preferita.first() : voci.first()).click()
-    // Scelta multipla: l'elenco resta aperto. Si chiude ricliccando il campo,
-    // non con Esc, che nell'elenco cancella le scelte fatte.
-    if (await elencoAperto.count()) await elenchi.nth(i).click({ force: true })
+    // Scelta multipla: l'elenco resta aperto. Si chiude con un clic fuori, sul titolo
+    // del modulo, come fa una persona (Esc nell'elenco cancella le scelte fatte).
+    if (await elencoAperto.count()) {
+      const titolo = await modulo.locator('header').first().boundingBox()
+      if (titolo) await page.mouse.click(titolo.x + 10, titolo.y + titolo.height / 2)
+    }
   }
   await expect(elencoAperto).toHaveCount(0)
 
