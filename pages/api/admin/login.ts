@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
+import { timingSafeEqual } from 'crypto'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -7,11 +8,16 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const { email, password } = req.body
+  const { email, password } = req.body ?? {}
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env
 
-  // Verifica ferrea contro il file .env
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+  // Without both variables nobody gets in (an empty request must never match two missing values)
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    console.error('[ADMIN] ADMIN_EMAIL or ADMIN_PASSWORD not set: admin login disabled.')
+    return res.status(401).json({ message: 'Credenziali non valide' })
+  }
+
+  if (sameText(email, ADMIN_EMAIL) && sameText(password, ADMIN_PASSWORD)) {
 
     const payload = {
       email,
@@ -39,4 +45,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   return res.status(401).json({ message: 'Credenziali non valide' })
+}
+/** Constant-time comparison, so the response time does not reveal how much of the value is right. */
+function sameText(value: unknown, expected: string): boolean {
+  if (typeof value !== 'string') return false
+  const a = Buffer.from(value)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
 }

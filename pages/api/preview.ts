@@ -22,5 +22,7 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Reindirizza allo slug corretto
-  res.redirect(`/${slug}?${params[1] || ""}`);
+  // Only paths of this site: "//other.site" or "\\other.site" would leave it
+  const path = String(Array.isArray(slug) ? slug.join("/") : slug).replace(/^[/\\]+/, "");
+  res.redirect(`${/^[\w\-./]*$/.test(path) ? `/${path}` : "/"}?${params[1] || ""}`);
 }
