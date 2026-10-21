@@ -7,7 +7,7 @@ import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
 import { useMemo } from "react";
 import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
-import { canEnroll, enrollHref, mainEnrollHref } from "@components/enrollment/enroll-link";
+import { canEnroll, enrollHref, isEnrollForm, mainEnrollHref } from "@components/enrollment/enroll-link";
 import Link from "next/link";
 
 interface ListItemProps {
@@ -236,12 +236,16 @@ export default function Aside({ blok }: AsideComponentProps) {
               )}
 
               {forms.map((form, index) => {
+                // Con l'iscrizione online accesa il modulo di richiesta iscrizione non
+                // si mostra più: al suo posto il pulsante, oppure nulla se i posti sono finiti.
+                const enrollForm = isEnrollForm(form);
+                if (enrollForm && signed !== null && !enrollMain) return null;
                 return (
                   <div
                     key={form._uid}
                     className={index > 0 && isStickyBanner ? "hidden" : "w-full sm:w-auto"}
                   >
-                    {enrollMain && form.tracking === "enroll" ? (
+                    {enrollMain && enrollForm ? (
                       <Button
                         as={Link}
                         href={enrollMain}

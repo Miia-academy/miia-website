@@ -60,7 +60,10 @@ export const MODULI: Record<string, { codice: string; punti: number; etichetta: 
   contact: { codice: 'i', punti: 10, etichetta: 'Richiesta informazioni' },
   open_day: { codice: 'o', punti: 20, etichetta: 'Iscrizione open day' },
   iscrizione: { codice: 'e', punti: 20, etichetta: 'Iscrizione al corso' },
+  // "enroll" è il tracking del modulo di richiesta iscrizione in Storyblok (e in GTM)
+  enroll: { codice: 'e', punti: 20, etichetta: 'Richiesta iscrizione' },
   newsletter: { codice: 'n', punti: 5, etichetta: 'Newsletter' },
+  news: { codice: 'n', punti: 5, etichetta: 'Newsletter' },
 }
 
 /** Punti per un modulo che non è nell'elenco qui sopra. */
