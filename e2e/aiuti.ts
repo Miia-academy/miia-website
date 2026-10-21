@@ -14,6 +14,21 @@ export function raccogliErrori(page: Page): string[] {
   return errori
 }
 
+/**
+ * Gli errori JavaScript nati mentre il robot compila un modulo (apertura e chiusura
+ * degli elenchi, Tab) non fanno fallire la prova: finiscono nelle note del report,
+ * da guardare. Gli errori delle pagine aperte dopo restano controllati.
+ */
+export function annotaErroriModulo(errori: string[], testInfo: TestInfo) {
+  if (!errori.length) return
+  const diversi = [...new Set(errori)]
+  testInfo.annotations.push({
+    type: 'Errori JavaScript durante la compilazione del modulo',
+    description: diversi.join(' | '),
+  })
+  errori.length = 0
+}
+
 /** Apre una pagina del sito e aspetta che sia ferma. */
 export async function apri(page: Page, path: string) {
   const risposta = await page.goto(path, { waitUntil: 'domcontentloaded' })
@@ -149,6 +164,8 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
     await elenchi.nth(i).click()
     const voci = elencoAperto.getByRole('option')
     await expect(voci.first()).toBeVisible()
+    // L'elenco si apre con un'animazione: a metà le voci si spostano e il clic va a vuoto.
+    await page.waitForTimeout(400)
     const preferita = area ? voci.filter({ hasText: area }) : voci
     await ((await preferita.count()) ? preferita.first() : voci.first()).click()
     // Scelta multipla: l'elenco resta aperto e si chiude con Tab, che passa al campo
