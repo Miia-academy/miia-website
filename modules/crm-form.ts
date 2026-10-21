@@ -8,7 +8,7 @@
 // Liste che i moduli pubblici possono assegnare (configurabili da Storyblok).
 // Non includono liste che danno accessi o che gestite voi a mano,
 // come 42 "Studenti - diplomati" (accesso all'area studenti) o 18 "Studenti - Iscritti".
-const DEFAULT_ALLOWED_LISTS = [15, 16, 17, 19, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 35]
+const DEFAULT_ALLOWED_LISTS = [15, 16, 17, 19, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 35, 43]
 
 export function getAllowedLists(): number[] {
   const fromEnv = process.env.CRM_ALLOWED_LISTS
