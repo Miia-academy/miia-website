@@ -1,6 +1,7 @@
 import type { ProcessedArticle } from '@modules/cache'
 import NextLink from 'next/link'
 import { Image, Chip } from '@heroui/react'
+import { CARD_SIZES, responsiveImage } from '@modules/images'
 import { tv } from 'tailwind-variants'
 
 interface ArticleCardProps {
@@ -18,7 +19,8 @@ export default function ArticleCard({ article, isDark }: ArticleCardProps) {
       {imageAsset?.filename && (
         <NextLink href={articleSlug} className="relative block overflow-hidden rounded-xl">
           <Image
-            src={imageAsset.filename}
+            {...responsiveImage(imageAsset.filename, CARD_SIZES)}
+            loading="lazy"
             alt={imageAsset.alt || article.title || ''}
             isZoomed
             classNames={{

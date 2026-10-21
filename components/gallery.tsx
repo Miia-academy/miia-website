@@ -11,6 +11,7 @@ import { default as NextImage } from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
 import { getImageSizes } from '@modules/formats'
+import { gridSizes, responsiveImage } from '@modules/images'
 import { storyblokEditable } from '@storyblok/react'
 
 interface GalleryComponentProps {
@@ -21,13 +22,17 @@ interface GalleryComponentProps {
 type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1'
 type SizeVariant = '1/8' | '1/4' | '1/2'
 
+const THUMB_SIZES = '(min-width: 640px) 33vw, 50vw'
+const THUMB_WIDTHS = [320, 640, 1024]
+
 export default function Gallery({ blok }: GalleryComponentProps) {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [current, setCurrent] = useState(0)
+
   const rawImages = blok.images || []
   if (!rawImages.length) return null
 
   const { containerClasses, wrapperClasses, closeClasses } = modalClasses()
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const [current, setCurrent] = useState(0)
 
   const handleOpen = (index: number) => {
     setCurrent(index)
@@ -44,14 +49,8 @@ export default function Gallery({ blok }: GalleryComponentProps) {
 
   const sizes = [256, 512, 768, 1024, 1280]
 
-  const getSizes = (axis: 'width' | 'height') =>
-    sizes
-      .map((size, i) =>
-        i + 1 !== sizes.length
-          ? `(max-${axis}:${sizes[i + 1]}px):${size}px`
-          : `${size}px`
-      )
-      .join(',')
+  // Slides fill the gallery column, or the screen when they open from the thumbnails
+  const slideSizes = blok.fullScreen ? '100vw' : gridSizes(blok.width)
 
   // Estrazione misure tramite la tua utility
   const images = rawImages.map((image) => getImageSizes(image))
@@ -70,7 +69,7 @@ export default function Gallery({ blok }: GalleryComponentProps) {
           height={
             slide.size.ratio <= 1 ? sizes[2] : sizes[4] / slide.size.ratio
           }
-          sizes={getSizes(slide.size.axis)}
+          sizes={slideSizes}
           className={imageClasses({ class: 'h-auto' })}
         />
       </SwiperSlide>
@@ -102,7 +101,8 @@ export default function Gallery({ blok }: GalleryComponentProps) {
           onClick={() => handleOpen(index)}
         >
           <HeroImage
-            src={image.filename}
+            {...responsiveImage(image.filename, THUMB_SIZES, THUMB_WIDTHS)}
+            loading="lazy"
             alt={image.alt || ''}
             width="100%"
             shadow="md"
