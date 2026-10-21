@@ -17,12 +17,33 @@ permissions:
   contents: read
 
 jobs:
-  prove:
+  # Vercel non dice di quale ramo è l'anteprima: si confronta il commit con l'ultimo di develop.
+  ramo:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.deployment_status.state == 'success' &&
-       !contains(github.event.deployment.environment, 'Production') &&
-       (github.event.deployment.ref == 'develop' || github.event.deployment.ref == 'sito/prove-browser-automatiche'))
+       !contains(github.event.deployment.environment, 'Production'))
+    runs-on: ubuntu-latest
+    outputs:
+      prova: ${{ steps.controllo.outputs.prova }}
+    steps:
+      - id: controllo
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.deployment.sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "prova=si" >> "$GITHUB_OUTPUT"; exit 0; fi
+          for ramo in develop sito/prove-browser-automatiche; do
+            if [ "$(gh api "repos/${{ github.repository }}/branches/$ramo" --jq .commit.sha 2>/dev/null)" = "$SHA" ]; then
+              echo "prova=si" >> "$GITHUB_OUTPUT"; echo "Anteprima del ramo $ramo"; exit 0
+            fi
+          done
+          echo "prova=no" >> "$GITHUB_OUTPUT"
+          echo "Non è l'anteprima di develop: prove saltate (si possono lanciare a mano)."
+
+  prove:
+    needs: ramo
+    if: needs.ramo.outputs.prova == 'si'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
