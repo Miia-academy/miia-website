@@ -1,0 +1,49 @@
+name: Prove nel browser
+
+# Prove su computer e telefono con screenshot, sull'anteprima Vercel appena pubblicata
+# (develop e rami di lavoro, mai la produzione). Si possono lanciare anche a mano
+# da Actions › "Prove nel browser" › "Run workflow", indicando l'indirizzo.
+# Le prove non scrivono in Brevo: gli invii dei moduli vengono fermati nel browser.
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      indirizzo:
+        description: "Indirizzo del sito da provare (es. l'anteprima di develop)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prove:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       !contains(github.event.deployment.environment, 'Production'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: ${{ github.event.inputs.indirizzo || github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Browser per le prove
+        run: npx playwright install --with-deps chromium
+      - name: Prove
+        run: npx playwright test
+      - name: Riepilogo
+        if: always()
+        run: node scripts/e2e-riepilogo.mjs "$BASE_URL"
+      - name: Report con gli screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-prove-browser
+          path: e2e-report/
+          retention-days: 30
