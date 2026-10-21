@@ -91,6 +91,11 @@ export async function getBannerData(version: 'draft' | 'published'): Promise<Ban
       tutti: tuttiRes.data.stories.map((s: any) => ({ uuid: s.uuid, slug: s.full_slug, content: s.content })),
       ordine: Array.isArray(sito.banner) ? sito.banner : [],
       escludi: typeof sito.escludi === 'string' ? sito.escludi : '',
+      posti: {
+        home: Array.isArray(sito.posto_home) ? sito.posto_home : [],
+        articoli: Array.isArray(sito.posto_articoli) ? sito.posto_articoli : [],
+        progetti: Array.isArray(sito.posto_progetti) ? sito.posto_progetti : [],
+      },
     }
   } catch (error) {
     console.error('[Banner] Lista dei banner non disponibile:', error)

@@ -10,6 +10,7 @@ import {
   rapportoBanner,
   riempi,
   scegliBanner,
+  scegliPerPosto,
   variabili,
   type BannerDati,
   type BannerStory,
@@ -217,5 +218,26 @@ describe('banner: persona e modulo', () => {
   it('gli altri moduli restano come in Storyblok', () => {
     const form = moduloPerBanner({ _uid: 'n', component: 'form', tracking: 'news', fields: [{ id: 'email' }, { id: 'area' }] } as any)
     expect(form.fields?.map((f) => f.id)).toEqual(['email', 'area'])
+  })
+})
+
+describe('banner: posti fissi nelle pagine', () => {
+  const contatti = banner('contatti', { pubblico: ['contatto'], modo: 'finestra' })
+  const tutti = banner('tutti', { modo: 'avviso', pausa_giorni: '7', azione: [{ link: { cached_url: 'blog/' } }] })
+  const dati: BannerDati = { tutti: [contatti, tutti], ordine: [], escludi: '', posti: { articoli: ['contatti', 'tutti'] } }
+
+  it('compare il primo valido, qualunque sia il suo Modo', () => {
+    expect(scegliPerPosto(dati, 'articoli', ctx({ path: '/blog/interior-design/focus' }))?.uuid).toBe('tutti')
+    expect(scegliPerPosto(dati, 'articoli', ctx({ persona: persona({ contatto: true }) }))?.uuid).toBe('contatti')
+  })
+
+  it('la sezione non si chiude: conta solo clic o modulo inviato', () => {
+    const memoria = { chiusi: { tutti: '2026-11-09T09:00:00Z' }, usati: {}, vistiInVisita: ['tutti'] }
+    expect(scegliPerPosto(dati, 'articoli', ctx({ memoria }))?.uuid).toBe('tutti')
+    expect(scegliPerPosto(dati, 'articoli', ctx({ memoria: { ...memoria, usati: { tutti: '2026-11-09' } } }))).toBeNull()
+  })
+
+  it('senza lista per quel posto non c\'è niente', () => {
+    expect(scegliPerPosto(dati, 'home', ctx())).toBeNull()
   })
 })

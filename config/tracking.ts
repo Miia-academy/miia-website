@@ -87,6 +87,8 @@ export const BANNER = {
   nienteFinestra: ['/blog/'],
   // Pagine che hanno già una sezione sull'open day: niente banner che portano all'open day.
   conSezioneOpenDay: ['/'],
+  // Posto fisso in home: dopo la sezione con questo ID (in Storyblok, "Cosa offriamo").
+  postoHomeDopoSezione: 'our-values',
   // L'avviso sparisce da solo dopo questi secondi (si ferma se ci passi sopra).
   avvisoSecondi: 15,
   // Sotto questa larghezza (px) la finestra diventa una scheda dal basso.

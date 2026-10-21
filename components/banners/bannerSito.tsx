@@ -26,6 +26,7 @@ import { hasConsent, PURPOSE } from '@modules/consent'
 import { consensoSimulato, inAnteprima, leggiDettaglio, leggiProfilo } from '@modules/tracking'
 import {
   bannerForzato,
+  bannerInPagina,
   EVENTO_FORZA,
   leggiMemoria,
   segnaChiuso,
@@ -46,7 +47,7 @@ interface Scelta {
   dataOpenDay?: string
 }
 
-const colori = {
+export const colori = {
   chiaro: 'bg-white text-neutral-900',
   scuro: 'bg-neutral-900 text-white',
   verde: 'bg-primary text-white',
@@ -65,7 +66,7 @@ function useTelefono(): boolean {
 }
 
 /** Il calendario del sito: open day con i docenti e prossime edizioni con i posti rimasti. */
-function useCalendario(): Calendario {
+export function useCalendario(): Calendario {
   const { events, courses } = useDataContext()
   const oggi = new Date().toISOString().slice(0, 10)
   const future = useMemo(() => courses.filter((c) => c.starts && c.starts.slice(0, 10) >= oggi), [courses, oggi])
@@ -83,7 +84,7 @@ function useCalendario(): Calendario {
   }, [events, future, iscritti, chiavi])
 }
 
-function contesto(path: string, calendario: Calendario, diPagina: string[]): Contesto {
+export function contesto(path: string, calendario: Calendario, diPagina: string[]): Contesto {
   const consenso = hasConsent(PURPOSE.marketing) || consensoSimulato()
   const dettaglio = consenso ? leggiDettaglio() : null
   const riassunto = consenso && !dettaglio ? leggiProfilo() : null
@@ -122,6 +123,8 @@ export default function BannerSito({ diPagina = [] }: { diPagina?: string[] }) {
     const timer = window.setTimeout(() => {
       if (!attivo) return
       const ctx = contesto(path, calendario, paginaKey ? paginaKey.split(',') : [])
+      // Un banner già nella pagina come sezione non compare anche come finestra o pannello.
+      ctx.memoria.vistiInVisita = [...ctx.memoria.vistiInVisita, ...bannerInPagina()]
       ultimoRapporto = rapportoBanner(dati, ctx)
       const forza = inAnteprima() ? bannerForzato() || new URLSearchParams(window.location.search).get('banner') : null
       const forzata = forza ? dati.tutti.find((s) => s.uuid === forza || s.slug.endsWith('/' + forza)) : null
