@@ -12,6 +12,8 @@ import {
   simulaConsenso,
   tracciaPagina,
 } from '@modules/tracking'
+import { leggiRapportoBanner } from '@components/banners/bannerSito'
+import { azzeraMemoria, bannerForzato, forzaBanner } from '@modules/bannerMemoria'
 
 const NOMI_MODULI: Record<string, string> = Object.fromEntries(
   Object.values(MODULI).map(({ codice, etichetta }) => [codice, etichetta])
@@ -156,6 +158,8 @@ export default function DebugProfilo() {
         </>
       )}
 
+      <BannerDebug aggiorna={() => setTick((t) => t + 1)} />
+
       <button
         type="button"
         className="mt-3 rounded border border-default-300 px-2 py-1"
@@ -167,5 +171,51 @@ export default function DebugProfilo() {
         Cancella il mio profilo
       </button>
     </div>
+  )
+}
+
+
+/** Banner di questa pagina, in ordine di priorità, con il motivo per cui non compaiono. */
+function BannerDebug({ aggiorna }: { aggiorna: () => void }) {
+  const rapporto = leggiRapportoBanner()
+  const forzato = bannerForzato()
+  const anteprima = inAnteprima()
+  return (
+    <>
+      <p className="mt-3 font-semibold">Banner su questa pagina</p>
+      {rapporto.length === 0 ? (
+        <p>Nessun banner letto: interruttore spento o lista non pubblicata.</p>
+      ) : (
+        <ol className="list-decimal pl-5">
+          {rapporto.map((r) => (
+            <li key={r.uuid} className={r.motivo ? 'text-default-500' : 'font-semibold text-primary'}>
+              {r.nome}: {r.motivo || 'compare'}
+              {anteprima && (
+                <button type="button" className="ml-1 underline" onClick={() => forzaBanner(r.uuid)}>
+                  mostra
+                </button>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+      <div className="mt-1 flex flex-wrap gap-2">
+        {forzato && (
+          <button type="button" className="rounded border border-default-300 px-2 py-1" onClick={() => forzaBanner(null)}>
+            Torna alle regole normali
+          </button>
+        )}
+        <button
+          type="button"
+          className="rounded border border-default-300 px-2 py-1"
+          onClick={() => {
+            azzeraMemoria()
+            aggiorna()
+          }}
+        >
+          Dimentica banner chiusi e visti
+        </button>
+      </div>
+    </>
   )
 }

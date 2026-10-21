@@ -65,3 +65,37 @@ export const MODULI: Record<string, { codice: string; punti: number; etichetta: 
 
 /** Punti per un modulo che non è nell'elenco qui sopra. */
 export const PUNTI_ALTRO_MODULO = 5
+
+/**
+ * Banner del sito (passo 6 del piano del 19/10, posizioni decise con Miia il 21/10).
+ * Le voci di Pubblico e Momento si scelgono nel blocco Banner in Storyblok;
+ * qui stanno le soglie dei Momenti e le regole per pagina.
+ */
+export const BANNER = {
+  // Momento: quanti giorni prima conta "open day entro…", "corsi in partenza entro…", "prezzo agevolato in chiusura".
+  giorniMomento: {
+    'open-day-30': 30,
+    'open-day-7': 7,
+    'corsi-4-settimane': 28,
+    'prezzo-agevolato-7': 7,
+  } as Record<string, number>,
+  // Pagine senza banner, oltre a quelle scritte in "Banner di tutto il sito": aree riservate e pagine tecniche.
+  pagineEscluse: ['/admin', '/studenti', '/aziende', '/iscrizione', '/conferma', '/open-day/accedi', '/lavoro/inserzioni', '/contatti', '/api'],
+  // Qui solo l'avviso: finestra e pannello coprirebbero il modulo della pagina.
+  soloAvviso: ['/open-day'],
+  // Qui la finestra diventa pannello, per non interrompere la lettura (articoli del blog).
+  nienteFinestra: ['/blog/'],
+  // Pagine che hanno già una sezione sull'open day: niente banner che portano all'open day.
+  conSezioneOpenDay: ['/'],
+  // L'avviso sparisce da solo dopo questi secondi (si ferma se ci passi sopra).
+  avvisoSecondi: 15,
+  // Sotto questa larghezza (px) la finestra diventa una scheda dal basso.
+  larghezzaTelefono: 640,
+  // Moduli con più campi da scrivere o scegliere di questi (email e caselle escluse) si compilano in due passi.
+  campiUnPasso: 3,
+  // Campi tenuti nel banner, per modulo (campo "tracking"); gli altri restano solo nella pagina.
+  // Presentazione: deciso il 20/10 (niente sedi); area e livello arrivano nascosti, come nelle pagine corso.
+  campiNelBanner: {
+    download: ['email', 'nome', 'cognome', 'sms', 'finalita', 'validation'],
+  } as Record<string, string[]>,
+}
