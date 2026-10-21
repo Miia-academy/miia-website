@@ -12,6 +12,7 @@ import { useRouter } from 'next/router'
 import { captureAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { debugProfiloAttivo, inviaRiassunto, tracciaPagina } from '@modules/tracking'
 import DebugProfilo from '@components/debugProfilo'
+import BannerSito from '@components/banners/bannerSito'
 
 import { fontSans, fontSerif } from '@config/fonts'
 
@@ -80,6 +81,12 @@ storyblokInit({
   components,
 })
 
+/** Banner scelti nella pagina (campo "Banner" di Pagina, Articolo e Progetto), prima di quelli di tutto il sito. */
+function bannerDiPagina(pageProps: any): string[] {
+  const banner = pageProps?.story?.content?.banner
+  return Array.isArray(banner) ? banner.filter((b: unknown): b is string => typeof b === 'string') : []
+}
+
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
 
@@ -122,6 +129,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <HeroUIProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">
             <Component {...pageProps} />
+            <BannerSito diPagina={bannerDiPagina(pageProps)} />
           </NextThemesProvider>
         </HeroUIProvider>
       </DataProvider>

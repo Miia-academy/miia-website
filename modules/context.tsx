@@ -74,6 +74,7 @@ export function DataProvider({
   const persons = data?.persons || []
   const projects = data?.projects || []
   const competenze = competenzeState
+  const banner = data?.banner || null
 
   const getLatestItems = useCallback(
     <T,>(items: T[], dateExtractor: (item: T) => string | undefined, limit?: number): T[] => {
@@ -142,6 +143,7 @@ export function DataProvider({
       persons,
       projects,
       competenze,
+      banner,
       loading,
       getLatestItems,
       getEventsByPrefix,
@@ -160,6 +162,7 @@ export function DataProvider({
       persons,
       projects,
       competenze,
+      banner,
       loading,
       getLatestItems,
       getEventsByPrefix,

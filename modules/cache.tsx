@@ -2,6 +2,7 @@
 import { getStoryblokApi } from '@storyblok/react'
 import type { Course, Event, Location, Article, Person, Project } from '@types'
 import { relations } from '@config/relations'
+import type { BannerDati } from '@modules/banner'
 
 export type ProcessedCourse = Course & { uuid: string }
 export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
@@ -58,6 +59,48 @@ export type GlobalData = {
   persons: ProcessedPerson[]
   projects: ProcessedProject[]
   competenze: Competenza[]
+  // Banner del sito; null se l'interruttore è spento o la lista non è pubblicata.
+  banner?: BannerDati | null
+}
+
+/**
+ * Interruttore dei banner: in produzione si accendono con BANNER_SITO=on;
+ * nelle anteprime Vercel e in locale sono sempre accesi, per provarli.
+ */
+export function bannerAttivi(): boolean {
+  return process.env.BANNER_SITO === 'on' || process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV === 'development'
+}
+
+/** Tutti i banner della cartella banner/ con il loro modulo, e la lista "Banner di tutto il sito". */
+export async function getBannerData(version: 'draft' | 'published'): Promise<BannerDati | null> {
+  if (!bannerAttivi()) return null
+  const storyblokApi = getStoryblokApi()
+  try {
+    const [tuttiRes, sitoRes] = await Promise.all([
+      storyblokApi.getStories({
+        version,
+        starts_with: 'banner/',
+        content_type: 'banner',
+        per_page: 100,
+        resolve_relations: 'banner.modulo,form.alias',
+      }),
+      storyblokApi.getStory('banner/tutto-il-sito', { version }),
+    ])
+    const sito = sitoRes.data?.story?.content || {}
+    return {
+      tutti: tuttiRes.data.stories.map((s: any) => ({ uuid: s.uuid, slug: s.full_slug, content: s.content })),
+      ordine: Array.isArray(sito.banner) ? sito.banner : [],
+      escludi: typeof sito.escludi === 'string' ? sito.escludi : '',
+      posti: {
+        home: Array.isArray(sito.posto_home) ? sito.posto_home : [],
+        articoli: Array.isArray(sito.posto_articoli) ? sito.posto_articoli : [],
+        progetti: Array.isArray(sito.posto_progetti) ? sito.posto_progetti : [],
+      },
+    }
+  } catch (error) {
+    console.error('[Banner] Lista dei banner non disponibile:', error)
+    return null
+  }
 }
 
 // Sanitizza gli slug rimuovendo slash duplicati all'inizio ("//")
@@ -86,8 +129,9 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       storyblokApi.getStories({ version, content_type: 'article', per_page: 100, sort_by: 'first_published_at:desc', resolve_relations: resolveRelations }),
       storyblokApi.getStories({ version, content_type: 'person', per_page: 100, sort_by: 'content.title:asc', resolve_relations: resolveRelations }),
       storyblokApi.getStories({ version, content_type: 'project', per_page: 100, sort_by: 'first_published_at:desc', resolve_relations: resolveRelations }),
-      storyblokApi.get('cdn/datasource_entries', { datasource: 'competenze' })
+      storyblokApi.get('cdn/datasource_entries', { datasource: 'competenze' }),
     ])
+    const banner = await getBannerData(version)
 
     const courses: ProcessedCourse[] = coursesRes.data.stories.map((s: any) => ({
       ...(s.content as Course),
@@ -152,7 +196,7 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       value: e.value,
     }))
 
-    return { courses, events, locations, articles, persons, projects, competenze }
+    return { courses, events, locations, articles, persons, projects, competenze, banner }
   } catch (error) {
     console.error('❌ Errore durante il fetching REST in getCachedData:', error)
     return { courses: [], events: [], locations: [], articles: [], persons: [], projects: [], competenze: [] }

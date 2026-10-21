@@ -1,5 +1,6 @@
 import type { Article as ArticleBlok } from '@types'
 import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
+import BannerPosto from '@components/banners/bannerPosto'
 import { compiler } from 'markdown-to-jsx'
 import { Image as HeroImage } from '@heroui/react'
 import NextLink from 'next/link'
@@ -110,6 +111,9 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
             />
           ))}
       </div>
+
+      {/* Posto fisso per un banner, in fondo */}
+      <BannerPosto posto="articoli" />
     </article>
   )
 }
