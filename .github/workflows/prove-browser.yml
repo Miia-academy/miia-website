@@ -1,8 +1,9 @@
 name: Prove nel browser
 
-# Prove su computer e telefono con screenshot, sull'anteprima Vercel appena pubblicata
-# (develop e rami di lavoro, mai la produzione). Si possono lanciare anche a mano
+# Prove su computer e telefono con screenshot, sull'anteprima Vercel di develop appena
+# pubblicata (mai la produzione). Per altri rami o per miia.it si lanciano a mano
 # da Actions › "Prove nel browser" › "Run workflow", indicando l'indirizzo.
+# Report tenuti 7 giorni, per non riempire lo spazio di GitHub (circa 45 MB l'uno).
 # Le prove non scrivono in Brevo: gli invii dei moduli vengono fermati nel browser.
 on:
   deployment_status:
@@ -20,7 +21,8 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.deployment_status.state == 'success' &&
-       !contains(github.event.deployment.environment, 'Production'))
+       !contains(github.event.deployment.environment, 'Production') &&
+       (github.event.deployment.ref == 'develop' || github.event.deployment.ref == 'sito/prove-browser-automatiche'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -46,4 +48,4 @@ jobs:
         with:
           name: report-prove-browser
           path: e2e-report/
-          retention-days: 30
+          retention-days: 7
