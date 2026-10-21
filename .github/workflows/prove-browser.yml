@@ -33,7 +33,7 @@ jobs:
           SHA: ${{ github.event.deployment.sha }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "prova=si" >> "$GITHUB_OUTPUT"; exit 0; fi
-          for ramo in develop sito/prove-browser-automatiche; do
+          for ramo in develop; do
             if [ "$(gh api "repos/${{ github.repository }}/branches/$ramo" --jq .commit.sha 2>/dev/null)" = "$SHA" ]; then
               echo "prova=si" >> "$GITHUB_OUTPUT"; echo "Anteprima del ramo $ramo"; exit 0
             fi
