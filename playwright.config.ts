@@ -31,7 +31,7 @@ export default defineConfig({
     locale: 'it-IT',
     timezoneId: 'Europe/Rome',
     screenshot: 'only-on-failure',
-    trace: 'retain-on-failure',
+    trace: 'retain-on-first-failure',
     extraHTTPHeaders: bypass
       ? { 'x-vercel-protection-bypass': bypass, 'x-vercel-set-bypass-cookie': 'true' }
       : undefined,

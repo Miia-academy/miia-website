@@ -18,6 +18,9 @@ export function raccogliErrori(page: Page): string[] {
 export async function apri(page: Page, path: string) {
   const risposta = await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {})
+  // Il banner dei cookie di Iubenda (caricato da GTM) copre i pulsanti in basso:
+  // nelle prove lo nascondiamo senza dare né negare il consenso.
+  await page.addStyleTag({ content: '#iubenda-cs-banner { display: none !important; }' }).catch(() => {})
   if (risposta?.status() === 401 || risposta?.status() === 403) {
     throw new Error(
       `L'anteprima è protetta (${risposta.status()}): serve VERCEL_AUTOMATION_BYPASS_SECRET nei segreti di GitHub.`
@@ -72,9 +75,10 @@ export async function controlliGrafici(page: Page, testInfo: TestInfo, nome: str
   expect.soft(rotte, `${nome}: immagini che non si caricano`).toEqual([])
   expect.soft(errori, `${nome}: errori JavaScript nella pagina`).toEqual([])
 
+  // JPEG per tenere leggero il report (le pagine intere in PNG pesano diversi MB)
   await testInfo.attach(`${nome} – pagina intera`, {
-    body: await page.screenshot({ fullPage: true }),
-    contentType: 'image/png',
+    body: await page.screenshot({ fullPage: true, type: 'jpeg', quality: 70 }),
+    contentType: 'image/jpeg',
   })
 }
 

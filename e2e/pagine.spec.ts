@@ -24,10 +24,14 @@ test('Pagina corso (interior design primo livello)', async ({ page }, testInfo) 
 
   // Con l'iscrizione online accesa il pulsante "Iscriviti online" sostituisce il modulo
   // di richiesta iscrizione (PR #74); spenta, resta il modulo.
+  // I posti rimasti arrivano dopo il caricamento: si aspetta qualche secondo il pulsante.
   const iscrivitiOnline = page.getByRole('link', { name: /^Iscriviti online/ })
+  const visto = await iscrivitiOnline.first().waitFor({ timeout: 8_000 }).then(() => true, () => false)
   testInfo.annotations.push({
-    type: 'Iscrizione online',
-    description: (await iscrivitiOnline.count()) ? 'accesa: pulsante "Iscriviti online" presente' : 'spenta: resta il modulo di sempre',
+    type: 'Pulsante "Iscriviti online"',
+    description: visto
+      ? `presente (${corso})`
+      : `non presente in ${corso}: iscrizione online spenta o nessuna edizione con posti`,
   })
 })
 
