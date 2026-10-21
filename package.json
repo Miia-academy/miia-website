@@ -39,6 +39,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@mep-agency/next-iubenda": "^1.0.0-alpha5",
+    "@playwright/test": "^1.56.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19.2.17",

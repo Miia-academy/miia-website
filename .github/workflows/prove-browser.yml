@@ -1,0 +1,72 @@
+name: Prove nel browser
+
+# Prove su computer e telefono con screenshot, sull'anteprima Vercel di develop appena
+# pubblicata (mai la produzione). Per altri rami o per miia.it si lanciano a mano
+# da Actions › "Prove nel browser" › "Run workflow", indicando l'indirizzo.
+# Report tenuti 7 giorni, per non riempire lo spazio di GitHub (circa 45 MB l'uno).
+# Le prove non scrivono in Brevo: gli invii dei moduli vengono fermati nel browser.
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      indirizzo:
+        description: "Indirizzo del sito da provare (es. l'anteprima di develop)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Vercel non dice di quale ramo è l'anteprima: si confronta il commit con l'ultimo di develop.
+  ramo:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       !contains(github.event.deployment.environment, 'Production'))
+    runs-on: ubuntu-latest
+    outputs:
+      prova: ${{ steps.controllo.outputs.prova }}
+    steps:
+      - id: controllo
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.deployment.sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "prova=si" >> "$GITHUB_OUTPUT"; exit 0; fi
+          for ramo in develop; do
+            if [ "$(gh api "repos/${{ github.repository }}/branches/$ramo" --jq .commit.sha 2>/dev/null)" = "$SHA" ]; then
+              echo "prova=si" >> "$GITHUB_OUTPUT"; echo "Anteprima del ramo $ramo"; exit 0
+            fi
+          done
+          echo "prova=no" >> "$GITHUB_OUTPUT"
+          echo "Non è l'anteprima di develop: prove saltate (si possono lanciare a mano)."
+
+  prove:
+    needs: ramo
+    if: needs.ramo.outputs.prova == 'si'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: ${{ github.event.inputs.indirizzo || github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Browser per le prove
+        run: npx playwright install --with-deps chromium
+      - name: Prove
+        run: npx playwright test
+      - name: Riepilogo
+        if: always()
+        run: node scripts/e2e-riepilogo.mjs "$BASE_URL"
+      - name: Report con gli screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-prove-browser
+          path: e2e-report/
+          retention-days: 7
