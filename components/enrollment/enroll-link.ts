@@ -1,4 +1,5 @@
 import { courseFromEditionSlug } from '@modules/enrollment/courses'
+import { seatsLabel } from '@components/enrollment/use-seats'
 
 /**
  * Link alla pagina di iscrizione online per un'edizione mostrata sul sito,
@@ -18,4 +19,17 @@ export function enrollHref(fullSlug: string | undefined | null, key: string | nu
  */
 export function canEnroll(counts: Record<string, number> | null, seatsText: string | null): boolean {
   return counts !== null && seatsText !== 'completo'
+}
+
+/**
+ * Pulsante principale della pagina corso: porta all'iscrizione online del corso
+ * (edizione da scegliere al passo 2) se l'iscrizione è accesa e almeno una
+ * delle edizioni mostrate ha posti. null altrimenti: resta il modulo di sempre.
+ */
+export function mainEnrollHref(
+  editions: Array<{ key: string | null; seats: unknown; fullSlug: string | null }>,
+  counts: Record<string, number> | null
+): string | null {
+  const open = editions.find((e) => e.key && canEnroll(counts, seatsLabel(e.seats, e.key, counts)))
+  return open ? enrollHref(open.fullSlug, null) : null
 }
