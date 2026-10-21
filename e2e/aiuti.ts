@@ -140,14 +140,19 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
 
   // Scelte (area, scopo, corso…): apre ciascun elenco vuoto e sceglie una voce.
   const elenchi = modulo.locator('button[aria-haspopup="listbox"]')
+  // Si aspetta che l'elenco precedente sia chiuso, altrimenti si sceglie una voce di quello.
+  const elencoAperto = page.getByRole('listbox')
   for (let i = 0; i < (await elenchi.count()); i++) {
+    await expect(elencoAperto).toHaveCount(0)
     await elenchi.nth(i).click()
-    const voci = page.getByRole('option')
+    const voci = elencoAperto.getByRole('option')
     await expect(voci.first()).toBeVisible()
     const preferita = area ? voci.filter({ hasText: area }) : voci
     await ((await preferita.count()) ? preferita.first() : voci.first()).click()
-    await page.keyboard.press('Escape').catch(() => {})
+    // Scelta multipla: l'elenco resta aperto e si chiude con Esc
+    if (await elencoAperto.count()) await page.keyboard.press('Escape')
   }
+  await expect(elencoAperto).toHaveCount(0)
 
   // Caselle (privacy e scelte del modulo): tutte spuntate tranne quella dei cookie,
   // che deve restare facoltativa. Le caselle nascoste (antispam) non si toccano.
