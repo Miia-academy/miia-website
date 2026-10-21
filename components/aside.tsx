@@ -1,13 +1,13 @@
 import type { Aside as AsideBlok } from "@types";
 import { StoryblokComponent, storyblokEditable } from "@storyblok/react";
-import { Accordion, AccordionItem } from "@heroui/react";
+import { Accordion, AccordionItem, Button } from "@heroui/react";
 import { tv } from "tailwind-variants";
 import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
 import { useMemo } from "react";
 import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
-import { canEnroll, enrollHref } from "@components/enrollment/enroll-link";
+import { canEnroll, enrollHref, mainEnrollHref } from "@components/enrollment/enroll-link";
 import Link from "next/link";
 
 interface ListItemProps {
@@ -133,6 +133,9 @@ export default function Aside({ blok }: AsideComponentProps) {
   }, [blok.courses, locations]);
 
   const signed = useSignedCounts(courses.map((c) => c.key));
+  // Con l'iscrizione online accesa e posti liberi, il pulsante "Iscriviti online"
+  // prende il posto del modulo di richiesta iscrizione (tracking "enroll").
+  const enrollMain = mainEnrollHref(courses, signed);
 
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
   const forms = Array.isArray(blok.forms) ? blok.forms : [];
@@ -238,11 +241,24 @@ export default function Aside({ blok }: AsideComponentProps) {
                     key={form._uid}
                     className={index > 0 && isStickyBanner ? "hidden" : "w-full sm:w-auto"}
                   >
-                    <StoryblokComponent
-                      blok={form}
-                      variant={index === 0 ? "solid" : "ghost"}
-                      courses={formOptions}
-                    />
+                    {enrollMain && form.tracking === "enroll" ? (
+                      <Button
+                        as={Link}
+                        href={enrollMain}
+                        size="md"
+                        color="primary"
+                        variant={index === 0 ? "solid" : "ghost"}
+                        className="w-full font-medium text-medium"
+                      >
+                        Iscriviti online
+                      </Button>
+                    ) : (
+                      <StoryblokComponent
+                        blok={form}
+                        variant={index === 0 ? "solid" : "ghost"}
+                        courses={formOptions}
+                      />
+                    )}
                   </div>
                 );
               })}

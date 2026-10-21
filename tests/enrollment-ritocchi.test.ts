@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { contractEmailHtml, contractEmailSubject, contractEmailText } from '@modules/enrollment/contract-email'
 import { contractNumber, withdrawalSentence } from '@modules/enrollment/withdrawal'
-import { canEnroll, enrollHref } from '@components/enrollment/enroll-link'
+import { canEnroll, enrollHref, mainEnrollHref } from '@components/enrollment/enroll-link'
 
 const EMAIL = {
   nome: 'Mirco',
@@ -65,6 +65,19 @@ describe('pulsante "Iscriviti online"', () => {
     expect(canEnroll(null, '12')).toBe(false)
     expect(canEnroll({}, 'completo')).toBe(false)
     expect(canEnroll({ k: 3 }, '9')).toBe(true)
+  })
+
+  it('il pulsante principale della pagina corso compare se almeno un’edizione ha posti', () => {
+    const piena = { key: 'a:2026-10-17', seats: '12', fullSlug: SLUG }
+    const libera = { key: 'b:2026-10-24', seats: '12', fullSlug: SLUG }
+    // Iscrizione spenta: resta il modulo di sempre.
+    expect(mainEnrollHref([piena, libera], null)).toBeNull()
+    // Tutte piene: resta il modulo di sempre.
+    expect(mainEnrollHref([piena], { 'a:2026-10-17': 12 })).toBeNull()
+    // Una con posti: pulsante al corso, edizione da scegliere al passo 2.
+    expect(mainEnrollHref([piena, libera], { 'a:2026-10-17': 12, 'b:2026-10-24': 3 })).toBe(
+      '/iscrizione/corso-interior-design-primo-livello'
+    )
   })
 })
 
