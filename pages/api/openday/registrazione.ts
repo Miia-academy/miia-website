@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { upsertContact, trackEvent } from '@modules/brevo'
 import { getJwtSecret } from '@modules/jwt-secret'
+import { loadOpendayDetails } from '@modules/openday-details'
 
 const COOKIE_NAME = 'miia_openday_richiesta'
 const COOKIE_MAX_AGE = 30 * 60 // 30 minuti per confermare
@@ -126,6 +127,8 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
       if (targetEvent?.slug) attributes.OD_CODICE = targetEvent.slug
       attributes.PARTECIPAZIONE_OPENDAY = false
       attributes.OD_RITARDO = false
+      // Date, start, teachers and prices of that open day, for the emails
+      if (targetEvent?.slug) Object.assign(attributes, await loadOpendayDetails(targetEvent.slug))
     }
 
     await upsertContact({

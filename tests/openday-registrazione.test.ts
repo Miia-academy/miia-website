@@ -14,8 +14,12 @@ vi.mock('@modules/brevo', async (importOriginal) => {
   }
 })
 
+// Open day details (OD_*, PREZZO_*) are tested in openday-details.test.ts
+vi.mock('@modules/openday-details', () => ({ loadOpendayDetails: vi.fn() }))
+
 import handler from '@pages/api/openday/registrazione'
 import { trackEvent, upsertContact } from '@modules/brevo'
+import { loadOpendayDetails } from '@modules/openday-details'
 
 const SECRET = 'segreto-di-prova'
 const COOKIE = 'miia_openday_richiesta'
@@ -71,6 +75,7 @@ beforeEach(() => {
   vi.useFakeTimers({ now: new Date('2026-10-21T10:00:00Z'), toFake: ['Date'] })
   vi.mocked(upsertContact).mockReset().mockResolvedValue(undefined as never)
   vi.mocked(trackEvent).mockReset().mockResolvedValue(undefined as never)
+  vi.mocked(loadOpendayDetails).mockReset().mockResolvedValue({})
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 afterEach(() => {
@@ -99,6 +104,16 @@ describe('GET /api/openday/registrazione (link nelle email)', () => {
 })
 
 describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione")', () => {
+  it('adds the open day details (OD_*, PREZZO_*) to the contact', async () => {
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OD_VALIDO: true, PREZZO_OD: '4.990 €' })
+    await call({ cookies: { [COOKIE]: richiesta('test@miia.it', 'interni') } })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({
+      OD_CODICE: 'openday-interni-novembre',
+      OD_VALIDO: true,
+      PREZZO_OD: '4.990 €',
+    })
+  })
+
   it('senza la richiesta firmata non iscrive', async () => {
     expect((await call({})).statusCode).toBe(400)
     expect((await call({ cookies: { [COOKIE]: jwt.sign({ purpose: 'login', email: 'a@b.it' }, SECRET) } })).statusCode).toBe(400)
@@ -121,6 +136,7 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
         OD_RITARDO: false,
       },
     })
+    expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
     expect(trackEvent).toHaveBeenCalledWith({ eventName: 'submit_open_day', email: 'test@miia.it' })
     // La richiesta è usata: il cookie si cancella
     expect(res.headers['Set-Cookie']).toMatch(new RegExp(`^${COOKIE}=; .*Max-Age=0`))
