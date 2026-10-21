@@ -142,7 +142,9 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
   const elenchi = modulo.locator('button[aria-haspopup="listbox"]')
   // Si aspetta che l'elenco precedente sia chiuso, altrimenti si sceglie una voce di quello.
   const elencoAperto = page.getByRole('listbox')
-  for (let i = 0; i < (await elenchi.count()); i++) {
+  // Contati una volta sola: con un elenco aperto il resto del modulo è nascosto ai lettori di schermo.
+  const quanti = await elenchi.count()
+  for (let i = 0; i < quanti; i++) {
     await expect(elencoAperto).toHaveCount(0)
     await elenchi.nth(i).click()
     const voci = elencoAperto.getByRole('option')
@@ -151,7 +153,8 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
     await ((await preferita.count()) ? preferita.first() : voci.first()).click()
     // Scelta multipla: l'elenco resta aperto e si chiude con Tab, che passa al campo
     // successivo tenendo la scelta (Esc invece la cancella). Provato su HeroUI Select.
-    if (await elencoAperto.count()) await page.keyboard.press('Tab')
+    const chiuso = await elencoAperto.waitFor({ state: 'detached', timeout: 1_000 }).then(() => true, () => false)
+    if (!chiuso) await page.keyboard.press('Tab')
   }
   await expect(elencoAperto).toHaveCount(0)
 
