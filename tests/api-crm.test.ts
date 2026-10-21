@@ -12,8 +12,12 @@ vi.mock('@modules/brevo', async (importOriginal) => {
   }
 })
 
+// Open day details (OD_*, PREZZO_*) are tested in openday-details.test.ts
+vi.mock('@modules/openday-details', () => ({ loadOpendayDetails: vi.fn(async () => ({})) }))
+
 import handler from '@pages/api/crm'
 import { BrevoError, getContact, trackEvent, upsertContact } from '@modules/brevo'
+import { loadOpendayDetails } from '@modules/openday-details'
 
 const TEST_EMAIL = 'test+gtm@miia.it'
 
@@ -115,6 +119,26 @@ describe('/api/crm', () => {
       PARTECIPAZIONE_OPENDAY: false,
       OD_RITARDO: false,
     })
+  })
+
+  it('open day sign-up: adds the details of that open day from Storyblok', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OD_VALIDO: true, OD_PARTENZA: 'marzo 2027' })
+    await call({
+      contact: {
+        email: TEST_EMAIL,
+        attributes: { OPENDAY: '2026-11-16T20:00:00.000Z', OD_CODICE: 'openday-interni-novembre', OD_VALIDO: false },
+      },
+    })
+    expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({ OD_VALIDO: true, OD_PARTENZA: 'marzo 2027' })
+  })
+
+  it('other forms do not load open day details', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockClear()
+    await call({ contact: { email: TEST_EMAIL, attributes: { NOME: 'Anna' } } })
+    expect(loadOpendayDetails).not.toHaveBeenCalled()
   })
 
   it('non restituisce mai i dati del contatto al browser', async () => {

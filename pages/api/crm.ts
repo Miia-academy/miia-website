@@ -11,6 +11,7 @@ import {
   sanitizeEventProperties,
   sanitizeLists,
 } from '@modules/crm-form'
+import { loadOpendayDetails } from '@modules/openday-details'
 
 /**
  * Invio dei moduli pubblici del sito verso Brevo.
@@ -65,6 +66,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (attributes.OPENDAY) {
       attributes.PARTECIPAZIONE_OPENDAY = false
       attributes.OD_RITARDO = false
+      // Date, start, teachers and prices of that open day, for the emails
+      if (attributes.OD_CODICE) Object.assign(attributes, await loadOpendayDetails(attributes.OD_CODICE))
     }
 
     try {

@@ -63,11 +63,24 @@ const PROTECTED_ATTRIBUTES = new Set([
   'ISCRIZIONI_OPENDAY',
   'OPENDAY_REMINDER',
   'VALIDATION',
+  // Open day: presence, reserved price and texts are written only by the server
+  'OD_RITARDO',
+  'OD_VALIDO',
+  'SCADENZA_OFFERTA',
+  'DATA_PRESENZA',
+  'OD_SCADENZA_TESTO',
+  'OD_DATA_TESTO',
+  'OD_PARTENZA',
+  'OD_CALENDARIO',
+  'OD_DOCENTI',
+  'PROSSIMO_OD_TESTO',
 ])
 
 // Gli attributi di provenienza li scrive solo il server, da sanitizeAttribution.
 const SOURCE_ATTRIBUTE = /^(ORIGINE|ULTIMA)_(SORGENTE|MEZZO|CAMPAGNA|CONTENUTO|TERMINE|CLICK_ID|PAGINA|DATA)$/
 
+// Prices come from the Storyblok price list, never from a form.
+const PRICE_ATTRIBUTE = /^PREZZO_/
 const ATTRIBUTE_NAME = /^[A-Z][A-Z0-9_]{0,39}$/
 const EVENT_NAME = /^submit_[a-z_]{1,30}$/
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -135,7 +148,7 @@ export function sanitizeAttributes(
 
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     const name = key.toUpperCase()
-    if (!ATTRIBUTE_NAME.test(name) || PROTECTED_ATTRIBUTES.has(name) || SOURCE_ATTRIBUTE.test(name)) continue
+    if (!ATTRIBUTE_NAME.test(name) || PROTECTED_ATTRIBUTES.has(name) || SOURCE_ATTRIBUTE.test(name) || PRICE_ATTRIBUTE.test(name)) continue
 
     if (name === 'SMS') {
       const phone = normalizePhone(value)
