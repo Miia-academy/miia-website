@@ -220,5 +220,27 @@ describe('/api/crm', () => {
       const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
       expect(attributes).not.toHaveProperty('ORIGINE_SORGENTE')
     })
+
+    it('accesa: la provenienza va anche nell’evento Brevo che avvia le automazioni', async () => {
+      vi.stubEnv('CRM_SOURCE_ATTRIBUTES', 'on')
+      newContact()
+      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_open_day' }, source })
+      expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({
+        origine_sorgente: 'google',
+        ultima_campagna: 'reminder',
+      })
+    })
+
+    it('spenta: l’evento parte senza provenienza', async () => {
+      newContact()
+      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_open_day' }, source })
+      expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toEqual({})
+    })
+  })
+
+  it('modulo newsletter: la lista 43 "Studenti - newsletter" è ammessa, la 42 no', async () => {
+    newContact()
+    await call({ contact: { email: TEST_EMAIL, listIds: [43, 42, 18] } })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].listIds).toEqual([43])
   })
 })

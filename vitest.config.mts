@@ -11,6 +11,8 @@ export default defineConfig({
       '@components': dir('./components'),
       '@config': dir('./config'),
       '@pages': dir('./pages'),
+      '@public': dir('./public'),
+      '@styles': dir('./styles'),
     },
   },
   test: {

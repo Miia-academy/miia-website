@@ -71,7 +71,7 @@ function validateFields(data: FormData) {
   return updated
 }
 
-function buildEvent(
+export function buildEvent(
   data: FormData,
   globalEvents: ProcessedEvent[],
   tracking?: string
@@ -195,7 +195,7 @@ function buildEvent(
 
 // Il contatto viene identificato solo dall'email. Prefisso del telefono e unione
 // dei valori già presenti in Brevo vengono gestiti dal server (/api/crm).
-function buildContact(data: FormData, list?: any[]) {
+export function buildContact(data: FormData, list?: any[]) {
   const contactFilterData = ['email']
   return {
     email: data.email?.value,
