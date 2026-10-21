@@ -31,7 +31,7 @@ export default function Page({ blok, locations = [] }: PageComponentProps) {
 
   return (
     <div {...storyblokEditable(blok as any)}>
-      <Meta {...(blok as any)} />
+      <Meta {...(blok as any)} noindex={!!blok.auth} />
 
       {headerContent && <Nav parent="header" blok={headerContent} />}
 

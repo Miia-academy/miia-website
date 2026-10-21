@@ -1,6 +1,7 @@
 import type { Article as ArticleBlok } from '@types'
 import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
 import BannerPosto from '@components/banners/bannerPosto'
+import Meta from '@components/meta'
 import { compiler } from 'markdown-to-jsx'
 import { Image as HeroImage } from '@heroui/react'
 import NextLink from 'next/link'
@@ -28,6 +29,7 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
 
   return (
     <article {...storyblokEditable(blok as any)} className="w-full">
+      <Meta title={blok.title} description={blok.description} image={blok.image} type="article" />
       {/* 1. HERO SECTION */}
       <section className="relative flex min-h-[70vh] w-full flex-col justify-between overflow-hidden bg-neutral-950 text-white">
         {/* Immagine di Copertina */}
