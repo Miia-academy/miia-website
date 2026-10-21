@@ -52,14 +52,15 @@ export const AREE: Record<string, string[]> = {
 
 /**
  * Moduli inviati, dal campo "tracking" del modulo in Storyblok.
- * `codice` è la lettera salvata nel riassunto, `punti` quanto vale l'invio.
+ * `codice` è la lettera salvata nel riassunto, `punti` quanto vale l'invio,
+ * `etichetta` il nome mostrato nel riquadro ?debug=profilo.
  */
-export const MODULI: Record<string, { codice: string; punti: number }> = {
-  download: { codice: 'b', punti: 10 },
-  contact: { codice: 'i', punti: 10 },
-  open_day: { codice: 'o', punti: 20 },
-  iscrizione: { codice: 'e', punti: 20 },
-  newsletter: { codice: 'n', punti: 5 },
+export const MODULI: Record<string, { codice: string; punti: number; etichetta: string }> = {
+  download: { codice: 'b', punti: 10, etichetta: 'Presentazione scaricata' },
+  contact: { codice: 'i', punti: 10, etichetta: 'Richiesta informazioni' },
+  open_day: { codice: 'o', punti: 20, etichetta: 'Iscrizione open day' },
+  iscrizione: { codice: 'e', punti: 20, etichetta: 'Iscrizione al corso' },
+  newsletter: { codice: 'n', punti: 5, etichetta: 'Newsletter' },
 }
 
 /** Punti per un modulo che non è nell'elenco qui sopra. */
