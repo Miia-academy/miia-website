@@ -129,6 +129,14 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
     const campo = modulo.locator(selettore)
     if (await campo.isVisible().catch(() => false)) await campo.fill(valore)
   }
+  // Altri campi di testo obbligatori rimasti vuoti (città, messaggio…): un testo di prova.
+  const altri = modulo.locator('input[required]:not([type=checkbox]):not([type=hidden]):not([type=file]), textarea[required]')
+  for (let i = 0; i < (await altri.count()); i++) {
+    const campo = altri.nth(i)
+    if (!(await campo.isVisible().catch(() => false)) || (await campo.inputValue())) continue
+    const tipo = await campo.getAttribute('type')
+    await campo.fill(tipo === 'number' ? '1' : tipo === 'tel' ? '3331234567' : 'Prova automatica')
+  }
 
   // Scelte (area, scopo, corso…): apre ciascun elenco vuoto e sceglie una voce.
   const elenchi = modulo.locator('button[aria-haspopup="listbox"]')
@@ -147,8 +155,9 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
   for (let i = 0; i < (await caselle.count()); i++) {
     const casella = caselle.nth(i)
     if (!(await casella.isVisible())) continue
-    if (/cookie/i.test(await casella.innerText())) continue
     const input = casella.locator('input')
+    const etichetta = `${await casella.innerText()} ${(await input.getAttribute('aria-label')) || ''}`
+    if (/cookie/i.test(etichetta)) continue
     if (!(await input.isChecked())) await casella.click()
   }
 
@@ -166,12 +175,14 @@ export async function aspettaInvio(page: Page, inviati: unknown[]) {
     .toBe(1)
     .then(() => true, () => false)
   if (partito) return
-  const avvisi = await page
-    .getByRole('dialog')
+  const modulo = page.getByRole('dialog')
+  const avvisi = await modulo
     .locator('[data-slot="error-message"], [role="alert"], .text-danger')
-    .allInnerTexts()
-    .catch(() => [])
+    .allTextContents()
+    .catch(() => [] as string[])
+  const testo = ((await modulo.textContent().catch(() => '')) || '').replace(/\s+/g, ' ').slice(0, 600)
   throw new Error(
-    `Il modulo non è partito. Avvisi nel modulo: ${avvisi.map((t) => t.trim()).filter(Boolean).join(' | ') || 'nessuno'}`
+    `Il modulo non è partito. Avvisi nel modulo: ${avvisi.map((t) => String(t ?? '').trim()).filter(Boolean).join(' | ') || 'nessuno'}. ` +
+      `Testo del modulo: ${testo}`
   )
 }
