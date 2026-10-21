@@ -91,3 +91,18 @@ export function bannerForzato(): string | null {
     return null
   }
 }
+
+// Banner mostrati in questa pagina come sezione: non si ripetono come finestra o pannello.
+const inPagina = new Set<string>()
+
+export function segnaInPagina(uuid: string) {
+  inPagina.add(uuid)
+}
+
+export function togliDaPagina(uuid: string) {
+  inPagina.delete(uuid)
+}
+
+export function bannerInPagina(): string[] {
+  return Array.from(inPagina)
+}

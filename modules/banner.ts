@@ -53,7 +53,11 @@ export interface BannerDati {
   tutti: BannerStory[]
   ordine: string[]
   escludi: string
+  // Posti fissi nelle pagine (scheda "Posti fissi nelle pagine" di "Banner di tutto il sito").
+  posti?: Partial<Record<Posto, string[]>>
 }
+
+export type Posto = 'home' | 'articoli' | 'progetti'
 
 /** Quello che il sito sa della persona, ricavato dal profilo nel browser o dal cookie. */
 export interface Persona {
@@ -280,33 +284,37 @@ export function riempi(testo: string | undefined, valori: Record<string, string>
 /** Il modo con cui il banner si mostra su questa pagina, o null se qui non può comparire. */
 export function modoSuPagina(b: BannerContent, path: string): ModoBanner | null {
   const modo = b.modo || 'pannello'
-  if (modo === 'sezione') return null // i posti fissi nelle pagine arrivano dopo
+  if (modo === 'sezione') return null // la sezione compare solo nei posti fissi delle pagine
   if (BANNER.soloAvviso.some((r) => corrisponde(path, r))) return modo === 'avviso' ? 'avviso' : null
   if (modo === 'finestra' && BANNER.nienteFinestra.some((r) => corrisponde(path, r))) return 'pannello'
   return modo
 }
 
 /** Perché un banner non compare; null se può comparire. Serve anche al riquadro ?debug=profilo. */
-export function motivoEsclusione(story: BannerStory, ctx: Contesto): string | null {
+export function motivoEsclusione(story: BannerStory, ctx: Contesto, sezione = false): string | null {
   const b = story.content
   const now = ctx.now
   const oggi = now.toISOString().slice(0, 10)
   if (b.pubblica_dal && b.pubblica_dal.slice(0, 10) > oggi) return 'non ancora iniziato (Mostra dal)'
   if (b.pubblica_al && b.pubblica_al.slice(0, 10) < oggi) return 'finito (Mostra fino al)'
-  if (!modoSuPagina(b, ctx.path)) return b.modo === 'sezione' ? 'modo Sezione: arriva con i posti fissi' : 'su questa pagina solo avvisi'
+  if (!sezione && !modoSuPagina(b, ctx.path))
+    return b.modo === 'sezione' ? 'modo Sezione: compare solo nei posti fissi' : 'su questa pagina solo avvisi'
 
   const link = linkBanner(b)
   if (link && !/^https?:/.test(link) && percorso(link) === percorso(ctx.path)) return 'porta a questa pagina'
   if (link && link.startsWith('/open-day') && BANNER.conSezioneOpenDay.some((r) => corrisponde(ctx.path, r)))
     return "la pagina ha già la sezione dell'open day"
   if (!link && !b.modulo) return 'senza pulsante né modulo'
-  if (b.modo === 'avviso' && b.modulo && !link) return 'avviso con modulo ma senza pagina a cui portare'
+  if (!sezione && b.modo === 'avviso' && b.modulo && !link) return 'avviso con modulo ma senza pagina a cui portare'
 
   if (b.nascondi_dopo_azione !== false && ctx.memoria.usati[story.uuid]) return 'già cliccato o modulo inviato'
-  const chiuso = ctx.memoria.chiusi[story.uuid]
-  const pausa = Number(b.pausa_giorni ?? 7) || 0
-  if (chiuso && now.getTime() - new Date(chiuso).getTime() < pausa * GIORNO) return `chiuso da meno di ${pausa} giorni`
-  if (b.una_volta_per_visita !== false && ctx.memoria.vistiInVisita.includes(story.uuid)) return 'già visto in questa visita'
+  // La sezione nella pagina non si chiude e può tornare a ogni visita.
+  if (!sezione) {
+    const chiuso = ctx.memoria.chiusi[story.uuid]
+    const pausa = Number(b.pausa_giorni ?? 7) || 0
+    if (chiuso && now.getTime() - new Date(chiuso).getTime() < pausa * GIORNO) return `chiuso da meno di ${pausa} giorni`
+    if (b.una_volta_per_visita !== false && ctx.memoria.vistiInVisita.includes(story.uuid)) return 'già visto in questa visita'
+  }
 
   const pubblico = b.pubblico || []
   const nonVisitato = (b.non_visitato || '').split(',').map((s) => s.trim()).filter(Boolean)
@@ -347,6 +355,16 @@ export function scegliBanner(dati: BannerDati, ctx: Contesto): { story: BannerSt
   for (const story of ordineBanner(dati, ctx.diPagina)) {
     if (motivoEsclusione(story, ctx)) continue
     return { story, modo: modoSuPagina(story.content, ctx.path) as ModoBanner }
+  }
+  return null
+}
+
+/** Il banner da mostrare come sezione in un posto fisso della pagina, o null (la sezione non c'è). */
+export function scegliPerPosto(dati: BannerDati, posto: Posto, ctx: Contesto): BannerStory | null {
+  const perUuid = new Map(dati.tutti.map((s) => [s.uuid, s]))
+  for (const uuid of dati.posti?.[posto] || []) {
+    const story = perUuid.get(uuid)
+    if (story && !motivoEsclusione(story, ctx, true)) return story
   }
   return null
 }
