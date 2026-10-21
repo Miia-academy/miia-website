@@ -33,3 +33,14 @@ export function mainEnrollHref(
   const open = editions.find((e) => e.key && canEnroll(counts, seatsLabel(e.seats, e.key, counts)))
   return open ? enrollHref(open.fullSlug, null) : null
 }
+
+/**
+ * Il modulo di richiesta iscrizione (tracking "enroll"). Il tracking può stare nel
+ * modulo collegato (alias) o nel blocco della pagina, e in alcune pagine è salvato
+ * come elenco (["enroll"]).
+ */
+export function isEnrollForm(form: { tracking?: unknown; alias?: unknown }): boolean {
+  const alias = form.alias as { content?: { tracking?: unknown } } | null | undefined
+  const tracking = alias?.content?.tracking || form.tracking
+  return (Array.isArray(tracking) ? tracking[0] : tracking) === 'enroll'
+}

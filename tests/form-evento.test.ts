@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Dati che i moduli del sito mandano a /api/crm (PR #66, #72): l'evento Brevo porta
 // la data dell'open day, il codice per la pagina accedi e i docenti per le email.
-import { buildContact, buildEvent, type FormData } from '@components/form'
+import { buildContact, buildEvent, opendayAttributes, type FormData } from '@components/form'
 import type { ProcessedEvent } from '@modules/cache'
 
 const docente = (title: string) => ({ uuid: title, content: { component: 'person', title } })
@@ -66,5 +66,27 @@ describe('contatto del modulo', () => {
   it('nomi degli attributi in maiuscolo, liste del modulo, email a parte', () => {
     const contact = buildContact({ email: campo('test@miia.it'), nome: campo('Anna') }, [16, 25])
     expect(contact).toEqual({ email: 'test@miia.it', listIds: [16, 25], attributes: { NOME: 'Anna' } })
+  })
+})
+
+// Verifica moduli 21/10: brochure e richiesta iscrizione scrivevano OPENDAY sul contatto
+// e le automazioni dell'open day trattavano la persona come iscritta.
+describe('data dell’open day sul contatto', () => {
+  const data: FormData = { email: campo('test@miia.it'), area: campo(['interior']) }
+
+  it('il modulo open day salva data e codice', () => {
+    const event = buildEvent(data, EVENTI, 'open_day')
+    expect(opendayAttributes(event.event_properties, 'open_day')).toEqual({
+      OPENDAY: '2026-11-16T20:00:00.000Z',
+      OD_CODICE: 'openday-interni-novembre',
+    })
+  })
+
+  it('brochure e richiesta iscrizione non la salvano, ma l’evento la porta per l’invito', () => {
+    for (const tracking of ['download', 'enroll', undefined]) {
+      const event = buildEvent(data, EVENTI, tracking)
+      expect(event.event_properties.openday_data).toBe('16/11/2026')
+      expect(opendayAttributes(event.event_properties, tracking)).toEqual({})
+    }
   })
 })

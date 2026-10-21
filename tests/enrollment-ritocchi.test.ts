@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { contractEmailHtml, contractEmailSubject, contractEmailText } from '@modules/enrollment/contract-email'
 import { contractNumber, withdrawalSentence } from '@modules/enrollment/withdrawal'
-import { canEnroll, enrollHref, mainEnrollHref } from '@components/enrollment/enroll-link'
+import { canEnroll, enrollHref, isEnrollForm, mainEnrollHref } from '@components/enrollment/enroll-link'
 
 const EMAIL = {
   nome: 'Mirco',
@@ -118,5 +118,17 @@ describe('dati in Brevo alla firma', () => {
   it('frequenza serale e diurna', () => {
     expect(frequency(['Lunedì', 'Mercoledì'], ['20:00/23:00'])).toBe('serale')
     expect(frequency(['Lunedì'], ['9:00/13:00'])).toBe('diurno')
+  })
+})
+
+// Verifica moduli 21/10: a Padova il tracking sta solo nel modulo collegato,
+// a Bassano e Treviso il blocco della pagina lo salva come elenco.
+describe('modulo di richiesta iscrizione', () => {
+  it('lo riconosce dal modulo collegato, dalla pagina o da un elenco', () => {
+    expect(isEnrollForm({ tracking: 'enroll' })).toBe(true)
+    expect(isEnrollForm({ tracking: ['enroll'] })).toBe(true)
+    expect(isEnrollForm({ alias: { content: { tracking: 'enroll' } } })).toBe(true)
+    expect(isEnrollForm({ alias: 'uuid-non-risolto', tracking: '' })).toBe(false)
+    expect(isEnrollForm({ alias: { content: { tracking: 'download' } } })).toBe(false)
   })
 })

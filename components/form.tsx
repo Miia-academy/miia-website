@@ -244,6 +244,24 @@ export function buildContact(data: FormData, list?: any[]) {
 }
 
 /**
+ * Data e codice dell'open day da salvare sul contatto: solo dal modulo di
+ * iscrizione all'open day. Gli altri moduli (brochure, richiesta iscrizione)
+ * calcolano il prossimo open day solo per l'evento Brevo, che lo usa nelle email
+ * come invito (proprietà openday_data): se finisse nel contatto, le automazioni
+ * dell'open day tratterebbero la persona come iscritta.
+ */
+export function opendayAttributes(
+  properties: Record<string, string | number | boolean>,
+  tracking?: string
+): Record<string, string> {
+  if (tracking !== 'open_day' || !properties['openday']) return {}
+  return {
+    OPENDAY: String(properties['openday']),
+    ...(properties['openday_codice'] ? { OD_CODICE: String(properties['openday_codice']) } : {}),
+  }
+}
+
+/**
  * Invia un modulo già controllato: Brevo (tramite /api/crm), evento GTM e profilo.
  * Usata dal modulo nella pagina e da quello dentro i banner.
  */
@@ -267,20 +285,12 @@ export async function inviaModulo(
   )
 
   if (event.event_properties['openday']) {
-    const opendayVal = String(event.event_properties['openday'])
-    const opendayDataVal = String(event.event_properties['openday_data'])
-
-    rawFieldValues.openday = opendayVal
-    rawFieldValues.openday_data = opendayDataVal
-
-    contact.attributes = {
-      ...contact.attributes,
-      OPENDAY: opendayVal,
-      OPENDAY_DATA: opendayDataVal,
-      ...(event.event_properties['openday_codice']
-        ? { OD_CODICE: String(event.event_properties['openday_codice']) }
-        : {}),
-    }
+    rawFieldValues.openday = String(event.event_properties['openday'])
+    rawFieldValues.openday_data = String(event.event_properties['openday_data'])
+  }
+  contact.attributes = {
+    ...contact.attributes,
+    ...opendayAttributes(event.event_properties, form.tracking),
   }
 
   const payload = {
