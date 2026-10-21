@@ -2,6 +2,7 @@ import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import type { Person as PersonBlok, Action as ActionBlok } from '@types'
 import type { StoryblokAsset } from '@commonTypes'
 import { Image, Modal, ModalContent, useDisclosure } from '@heroui/react'
+import { PORTRAIT_SIZES, PORTRAIT_WIDTHS, responsiveImage } from '@modules/images'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
 import { tv } from 'tailwind-variants'
@@ -133,7 +134,8 @@ const Person = ({ blok }: PersonComponentProps) => {
             classNames={{
               wrapper: thumbClasses(),
             }}
-            src={person.image.filename}
+            {...responsiveImage(person.image.filename, PORTRAIT_SIZES, PORTRAIT_WIDTHS)}
+            loading="lazy"
             alt={person.image.alt || person.title || ''}
             width={'100%'}
             isZoomed={true}

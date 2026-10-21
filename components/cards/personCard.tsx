@@ -1,5 +1,6 @@
 import type { ProcessedPerson } from '@modules/cache'
 import { Image, Modal, ModalContent, useDisclosure } from '@heroui/react'
+import { PORTRAIT_SIZES, PORTRAIT_WIDTHS, responsiveImage } from '@modules/images'
 import { YouTubeEmbed } from '@next/third-parties/google'
 import Markdown from 'markdown-to-jsx'
 import { Typography } from '@components/typography'
@@ -63,7 +64,8 @@ export default function PersonCard({ person, isDark }: PersonCardProps) {
             )}
             <Image
               classNames={{ wrapper: thumbClasses() }}
-              src={imageUrl}
+              {...responsiveImage(imageUrl, PORTRAIT_SIZES, PORTRAIT_WIDTHS)}
+              loading="lazy"
               alt={person.image?.alt || displayTitle || ''}
               width="100%"
               isZoomed={true}

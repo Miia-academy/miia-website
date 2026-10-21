@@ -4,6 +4,7 @@ import BannerPosto from '@components/banners/bannerPosto'
 import Meta from '@components/meta'
 import { compiler } from 'markdown-to-jsx'
 import { Image as HeroImage } from '@heroui/react'
+import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
 import { Typography } from './typography'
 
@@ -42,7 +43,8 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
           <div className="absolute inset-0 z-0 h-full w-full">
             <HeroImage
               removeWrapper
-              src={blok.cover.filename}
+              {...responsiveImage(blok.cover.filename, '100vw')}
+              fetchPriority="high"
               alt={blok.cover.alt || blok.title || ''}
               className="h-full w-full object-cover opacity-60"
               radius="none"

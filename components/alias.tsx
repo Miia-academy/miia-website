@@ -4,6 +4,7 @@ import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
 import { Image } from '@heroui/react'
+import { responsiveImage, storyblokImageUrl } from '@modules/images'
 import NextLink from 'next/link'
 import { tv } from 'tailwind-variants'
 import { useDataContext } from '@modules/context'
@@ -101,7 +102,7 @@ export default function Alias({ blok }: AliasComponentProps) {
           className="relative flex aspect-[4/3] min-h-48 w-full min-w-56 flex-none overflow-hidden rounded-xl bg-cover bg-center sm:w-64"
           style={{
             backgroundImage: blok.image?.filename
-              ? `url(${blok.image.filename})`
+              ? `url(${storyblokImageUrl(blok.image.filename, 640)})`
               : 'none',
           }}
         >
@@ -208,7 +209,8 @@ export default function Alias({ blok }: AliasComponentProps) {
                   wrapper: 'w-full aspect-[16/10] overflow-hidden rounded-xl',
                   img: 'w-full h-full object-cover',
                 }}
-                src={selectedArticle.image.filename}
+                {...responsiveImage(selectedArticle.image.filename, '(min-width: 768px) 58vw, 100vw')}
+                loading="lazy"
                 alt={selectedArticle.image.alt || selectedArticle.title || ''}
                 radius="lg"
               />
