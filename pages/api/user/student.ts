@@ -6,6 +6,7 @@ import { withApiAuth } from '@modules/api-wrapper'
 import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 import type { AuthPayload } from '@modules/auth'
 import { getJwtSecret } from '@modules/jwt-secret'
+import { InvalidUpload, parseUpload, safeFileName } from '@modules/uploads'
 
 export const config = {
   api: {
@@ -16,6 +17,8 @@ export const config = {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+const MAX_CV_BYTES = 5_000_000
+const MAX_PORTFOLIO_BYTES = 15_000_000
 const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
 const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
@@ -28,36 +31,45 @@ async function studentHandler(req: NextApiRequest, res: NextApiResponse, authDat
   const {
     cvBase64,
     cvFileName,
-    cvMimeType,
     portfolioBase64,
     portfolioFileName,
-    portfolioMimeType,
     attributes,
   } = req.body
 
   let cvDownloadUrl = authData.cv_url || ''
   let portfolioDownloadUrl = authData.portfolio_url || ''
 
-  if (cvBase64 && cvFileName) {
-    const buffer = Buffer.from(cvBase64.replace(/^data:.*;base64,/, ''), 'base64')
-    const sanitizedFileName = `${Date.now()}-cv-${cvFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
+  // CV and portfolio go to the private bucket; the type is decided from the content
+  let cv, portfolio
+  try {
+    cv = parseUpload(cvBase64, { kinds: ['pdf'], maxBytes: MAX_CV_BYTES, label: 'CV', formats: 'un PDF' })
+    portfolio = parseUpload(portfolioBase64, {
+      kinds: ['pdf', 'zip'],
+      maxBytes: MAX_PORTFOLIO_BYTES,
+      label: 'portfolio',
+      formats: 'un PDF o uno ZIP',
+    })
+  } catch (error) {
+    if (error instanceof InvalidUpload) return res.status(400).json({ message: error.message })
+    throw error
+  }
+
+  if (cv) {
     const uploadResult = await uploadFile({
-      fileBuffer: buffer,
-      fileName: sanitizedFileName,
-      mimeType: cvMimeType || 'application/pdf',
+      fileBuffer: cv.buffer,
+      fileName: `${Date.now()}-cv-${safeFileName(cvFileName, cv.ext)}`,
+      mimeType: cv.mime,
       folderPath: 'cv',
       isPublic: false,
     })
     cvDownloadUrl = `${BASE_URL}/api/job/download?file=${encodeURIComponent(uploadResult.id)}`
   }
 
-  if (portfolioBase64 && portfolioFileName) {
-    const buffer = Buffer.from(portfolioBase64.replace(/^data:.*;base64,/, ''), 'base64')
-    const sanitizedName = `${Date.now()}-portfolio-${portfolioFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
+  if (portfolio) {
     const uploadResult = await uploadFile({
-      fileBuffer: buffer,
-      fileName: sanitizedName,
-      mimeType: portfolioMimeType || 'application/pdf',
+      fileBuffer: portfolio.buffer,
+      fileName: `${Date.now()}-portfolio-${safeFileName(portfolioFileName, portfolio.ext)}`,
+      mimeType: portfolio.mime,
       folderPath: 'portfolio',
       isPublic: false,
     })

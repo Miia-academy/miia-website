@@ -7,6 +7,7 @@ import { withApiAuth } from '@modules/api-wrapper'
 import { AUTH_COOKIE_MAX_AGE, AUTH_JWT_EXPIRES_IN } from '@config/auth'
 import type { AuthPayload } from '@modules/auth'
 import { getJwtSecret } from '@modules/jwt-secret'
+import { IMAGE_KINDS, InvalidUpload, parseUpload, safeFileName } from '@modules/uploads'
 
 export const config = {
   api: {
@@ -16,28 +17,36 @@ export const config = {
   },
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://miia.it'
+const MAX_LOGO_BYTES = 3_000_000
 const SAFE_MAX_AGE = AUTH_COOKIE_MAX_AGE || 604800
 const SAFE_EXPIRES_IN = AUTH_JWT_EXPIRES_IN || '7d'
 
 async function businessHandler(req: NextApiRequest, res: NextApiResponse, authData: AuthPayload & { iat?: number; exp?: number }) {
   const { email } = authData
-  const { azienda, referente, sms, indirizzo, sito_web, descrizione, logoBase64, logoFileName, logoMimeType } = req.body
+  const { azienda, referente, sms, indirizzo, sito_web, descrizione, logoBase64, logoFileName } = req.body
 
   let logoUrl = authData.logo_url || ''
 
-  // Upload Logo su Google Cloud Storage se fornito un nuovo file
-  if (logoBase64 && logoFileName) {
-    const buffer = Buffer.from(logoBase64.replace(/^data:.*;base64,/, ''), 'base64')
-    const sanitizedFileName = `${Date.now()}-logo-${logoFileName.toLowerCase().replace(/[^a-z0-9.]/g, '-')}`
-    const uploadResult = await uploadFile({
-      fileBuffer: buffer,
-      fileName: sanitizedFileName,
-      mimeType: logoMimeType || 'image/png',
-      folderPath: 'logos',
-      isPublic: true,
-    })
-    logoUrl = uploadResult.publicUrl || `${BASE_URL}/api/job/download?file=${encodeURIComponent(uploadResult.id)}`
+  // Upload Logo su Google Cloud Storage se fornito un nuovo file.
+  // The logo goes to the public bucket: only real images, type decided from the content.
+  if (logoBase64) {
+    let logo
+    try {
+      logo = parseUpload(logoBase64, { kinds: IMAGE_KINDS, maxBytes: MAX_LOGO_BYTES, label: 'logo', formats: 'PNG, JPG o WebP' })
+    } catch (error) {
+      if (error instanceof InvalidUpload) return res.status(400).json({ message: error.message })
+      throw error
+    }
+    if (logo) {
+      const uploadResult = await uploadFile({
+        fileBuffer: logo.buffer,
+        fileName: `${Date.now()}-logo-${safeFileName(logoFileName, logo.ext)}`,
+        mimeType: logo.mime,
+        folderPath: 'logos',
+        isPublic: true,
+      })
+      logoUrl = uploadResult.publicUrl
+    }
   }
 
   // Sincronizzazione CRM Brevo con attributi standardizzati

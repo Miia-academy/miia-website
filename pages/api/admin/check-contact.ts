@@ -16,8 +16,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Validazione token
-    jwt.verify(token, getJwtSecret()) as AuthPayload
+    // Validazione token: the Brevo attribute list is for the admin only
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthPayload
+    if (decoded.tipo_utente !== 'Admin') {
+      return res.status(403).json({ message: 'Accesso negato' })
+    }
 
     // Chiamata all'endpoint Brevo che restituisce lo SCHEMA di tutti gli attributi dell'account
     const schema = await brevoFetch('/contacts/attributes', { method: 'GET' })
@@ -31,12 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error: any) {
     console.error('[API Brevo Attributes Error]', error)
     if (error instanceof BrevoError) {
-      return res.status(error.status).json({
-        message: error.message,
-        brevo_error_data: error.data
-      })
+      return res.status(error.status).json({ message: error.message })
     }
 
-    return res.status(500).json({ message: 'Errore interno del server', error: String(error) })
+    return res.status(500).json({ message: 'Errore interno del server' })
   }
 }
