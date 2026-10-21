@@ -141,13 +141,37 @@ export async function compilaEInvia(page: Page, testInfo: TestInfo, nome: string
     await page.keyboard.press('Escape').catch(() => {})
   }
 
-  // Caselle obbligatorie (privacy e simili). La casella dei cookie resta vuota.
-  const obbligatorie = modulo.locator('label:has(input[type="checkbox"][required])')
-  for (let i = 0; i < (await obbligatorie.count()); i++) {
-    const casella = obbligatorie.nth(i).locator('input')
-    if (!(await casella.isChecked())) await obbligatorie.nth(i).click()
+  // Caselle (privacy e scelte del modulo): tutte spuntate tranne quella dei cookie,
+  // che deve restare facoltativa. Le caselle nascoste (antispam) non si toccano.
+  const caselle = modulo.locator('label:has(input[type="checkbox"])')
+  for (let i = 0; i < (await caselle.count()); i++) {
+    const casella = caselle.nth(i)
+    if (!(await casella.isVisible())) continue
+    if (/cookie/i.test(await casella.innerText())) continue
+    const input = casella.locator('input')
+    if (!(await input.isChecked())) await casella.click()
   }
 
   await scatta(page, testInfo, `${nome} – modulo compilato`)
   await modulo.getByRole('button', { name: 'Invia', exact: true }).click()
+}
+
+/**
+ * Aspetta che il modulo parta. Se non parte, il messaggio d'errore della prova
+ * riporta gli avvisi mostrati nel modulo (campo obbligatorio, privacy…).
+ */
+export async function aspettaInvio(page: Page, inviati: unknown[]) {
+  const partito = await expect
+    .poll(() => inviati.length, { timeout: 10_000 })
+    .toBe(1)
+    .then(() => true, () => false)
+  if (partito) return
+  const avvisi = await page
+    .getByRole('dialog')
+    .locator('[data-slot="error-message"], [role="alert"], .text-danger')
+    .allInnerTexts()
+    .catch(() => [])
+  throw new Error(
+    `Il modulo non è partito. Avvisi nel modulo: ${avvisi.map((t) => t.trim()).filter(Boolean).join(' | ') || 'nessuno'}`
+  )
 }

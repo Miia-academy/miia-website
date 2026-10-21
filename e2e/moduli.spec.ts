@@ -5,6 +5,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
   apri,
+  aspettaInvio,
   compilaEInvia,
   controlliGrafici,
   EMAIL_PROVA,
@@ -44,7 +45,7 @@ test('Modulo di una pagina corso: provenienza della visita e casella cookie', as
   await expect(page.getByRole('dialog').getByText('Accetto anche i cookie facoltativi')).toBeVisible()
 
   await compilaEInvia(page, testInfo, 'Modulo pagina corso')
-  await expect.poll(() => inviati.length).toBe(1)
+  await aspettaInvio(page, inviati)
   const invio = inviati[0]
   expect(invio.contact.email).toBe(EMAIL_PROVA)
   expect(invio.source.first).toMatchObject({ source: 'prova', medium: 'browser', campaign: 'prove-automatiche' })
@@ -68,7 +69,7 @@ test('Modulo open day: codice per la pagina "Entra" e pagina accedi', async ({ p
   test.skip(!aperto, 'Nessun modulo di iscrizione nella pagina open day')
   await compilaEInvia(page, testInfo, 'Modulo open day', /interni|interior/i)
 
-  await expect.poll(() => inviati.length).toBe(1)
+  await aspettaInvio(page, inviati)
   const invio = inviati[0]
   expect(invio.event.event_name).toBe('submit_open_day')
   const codice = invio.event.event_properties.openday_codice
