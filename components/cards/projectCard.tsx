@@ -43,7 +43,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           <Image
             removeWrapper
             {...responsiveImage(coverAsset.filename, CARD_SIZES)}
-            loading="lazy"
             alt={coverAsset.alt || project.title || project.name || ''}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             radius="none"

@@ -210,7 +210,6 @@ export default function Alias({ blok }: AliasComponentProps) {
                   img: 'w-full h-full object-cover',
                 }}
                 {...responsiveImage(selectedArticle.image.filename, '(min-width: 768px) 58vw, 100vw')}
-                loading="lazy"
                 alt={selectedArticle.image.alt || selectedArticle.title || ''}
                 radius="lg"
               />

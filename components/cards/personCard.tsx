@@ -65,7 +65,6 @@ export default function PersonCard({ person, isDark }: PersonCardProps) {
             <Image
               classNames={{ wrapper: thumbClasses() }}
               {...responsiveImage(imageUrl, PORTRAIT_SIZES, PORTRAIT_WIDTHS)}
-              loading="lazy"
               alt={person.image?.alt || displayTitle || ''}
               width="100%"
               isZoomed={true}

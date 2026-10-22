@@ -20,7 +20,6 @@ export default function ArticleCard({ article, isDark }: ArticleCardProps) {
         <NextLink href={articleSlug} className="relative block overflow-hidden rounded-xl">
           <Image
             {...responsiveImage(imageAsset.filename, CARD_SIZES)}
-            loading="lazy"
             alt={imageAsset.alt || article.title || ''}
             isZoomed
             classNames={{

@@ -135,7 +135,6 @@ const Person = ({ blok }: PersonComponentProps) => {
               wrapper: thumbClasses(),
             }}
             {...responsiveImage(person.image.filename, PORTRAIT_SIZES, PORTRAIT_WIDTHS)}
-            loading="lazy"
             alt={person.image.alt || person.title || ''}
             width={'100%'}
             isZoomed={true}
