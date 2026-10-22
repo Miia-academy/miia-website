@@ -8,7 +8,7 @@ import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
 import { useMemo } from "react";
 import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
-import { canEnroll, enrollHref, isEnrollForm, mainEnrollHref } from "@components/enrollment/enroll-link";
+import { actionHref, canEnroll, enrollHref, isEnrollAction, isEnrollForm, mainEnrollHref } from "@components/enrollment/enroll-link";
 import Link from "next/link";
 
 interface ListItemProps {
@@ -237,8 +237,32 @@ export default function Aside({ blok }: AsideComponentProps) {
               )}
 
               {forms.map((form, index) => {
-                // Con l'iscrizione online accesa il modulo di richiesta iscrizione non
-                // si mostra più: al suo posto il pulsante, oppure nulla se i posti sono finiti.
+                // Buttons in the aside are Storyblok actions. The enrollment one
+                // (/iscrizione/<course>) shows only with online enrollment on and seats left.
+                if (form.component === "action") {
+                  const href = actionHref(form);
+                  if (!href || (isEnrollAction(form) && !enrollMain)) return null;
+                  return (
+                    <div
+                      key={form._uid}
+                      className={!isStickyBanner ? "w-full" : index > 0 ? "hidden" : "w-full sm:w-auto"}
+                      {...storyblokEditable(form as any)}
+                    >
+                      <Button
+                        as={Link}
+                        href={href}
+                        size="md"
+                        color="primary"
+                        variant={index === 0 ? "solid" : "ghost"}
+                        className="w-full text-medium"
+                      >
+                        {form.label || "Iscriviti online"}
+                      </Button>
+                    </div>
+                  );
+                }
+                // Before the Storyblok migration: with online enrollment on the enrollment
+                // request form is replaced by the button, or hidden when seats are over.
                 const enrollForm = isEnrollForm(form);
                 if (enrollForm && signed !== null && !enrollMain) return null;
                 return (
