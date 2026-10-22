@@ -22,17 +22,19 @@
    --swiper-navigation-size: 2rem;
  }
 
+ /* Swiper 12 draws the arrows as SVG, so the shadow is a filter, not text-shadow */
  .swiper-button-prev {
-   text-shadow:
-     0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25),
-     2px 0rem 1px rgba(0, 0, 0, 0.125);
+   filter:
+     drop-shadow(0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25))
+     drop-shadow(2px 0rem 1px rgba(0, 0, 0, 0.125));
  }
 
  .swiper-button-next {
-   text-shadow:
-     -0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25),
-     -2px 0rem 1px rgba(0, 0, 0, 0.125);
+   filter:
+     drop-shadow(-0.25rem 0rem 0.25rem rgba(0, 0, 0, 0.25))
+     drop-shadow(-2px 0rem 1px rgba(0, 0, 0, 0.125));
  }
+
 /*
  * Text scale: one class per role (size, line height, weight).
  * Titles grow with the screen between 480px and 1280px wide (clamp), instead
