@@ -12,8 +12,8 @@ import {
   simulaConsenso,
   tracciaPagina,
 } from '@modules/tracking'
-import { leggiRapportoBanner } from '@components/banners/bannerSito'
-import { azzeraMemoria, bannerForzato, forzaBanner } from '@modules/bannerMemoria'
+import { readBannerReport } from '@components/banners/siteBanner'
+import { clearMemory, forceBanner, forcedBanner } from '@modules/bannerMemory'
 
 const NOMI_MODULI: Record<string, string> = Object.fromEntries(
   Object.values(MODULI).map(({ codice, etichetta }) => [codice, etichetta])
@@ -158,7 +158,7 @@ export default function DebugProfilo() {
         </>
       )}
 
-      <BannerDebug aggiorna={() => setTick((t) => t + 1)} />
+      <BannerDebug refresh={() => setTick((t) => t + 1)} />
 
       <button
         type="button"
@@ -175,23 +175,23 @@ export default function DebugProfilo() {
 }
 
 
-/** Banner di questa pagina, in ordine di priorità, con il motivo per cui non compaiono. */
-function BannerDebug({ aggiorna }: { aggiorna: () => void }) {
-  const rapporto = leggiRapportoBanner()
-  const forzato = bannerForzato()
-  const anteprima = inAnteprima()
+/** Banners of this page, in priority order, with the reason they do not appear. */
+function BannerDebug({ refresh }: { refresh: () => void }) {
+  const report = readBannerReport()
+  const forced = forcedBanner()
+  const preview = inAnteprima()
   return (
     <>
       <p className="mt-3 font-semibold">Banner su questa pagina</p>
-      {rapporto.length === 0 ? (
+      {report.length === 0 ? (
         <p>Nessun banner letto: interruttore spento o lista non pubblicata.</p>
       ) : (
         <ol className="list-decimal pl-5">
-          {rapporto.map((r) => (
-            <li key={r.uuid} className={r.motivo ? 'text-default-500' : 'font-semibold text-primary'}>
-              {r.nome}: {r.motivo || 'compare'}
-              {anteprima && (
-                <button type="button" className="ml-1 underline" onClick={() => forzaBanner(r.uuid)}>
+          {report.map((r) => (
+            <li key={r.uuid} className={r.reason ? 'text-default-500' : 'font-semibold text-primary'}>
+              {r.name}: {r.reason || 'compare'}
+              {preview && (
+                <button type="button" className="ml-1 underline" onClick={() => forceBanner(r.uuid)}>
                   mostra
                 </button>
               )}
@@ -200,8 +200,8 @@ function BannerDebug({ aggiorna }: { aggiorna: () => void }) {
         </ol>
       )}
       <div className="mt-1 flex flex-wrap gap-2">
-        {forzato && (
-          <button type="button" className="rounded border border-default-300 px-2 py-1" onClick={() => forzaBanner(null)}>
+        {forced && (
+          <button type="button" className="rounded border border-default-300 px-2 py-1" onClick={() => forceBanner(null)}>
             Torna alle regole normali
           </button>
         )}
@@ -209,8 +209,8 @@ function BannerDebug({ aggiorna }: { aggiorna: () => void }) {
           type="button"
           className="rounded border border-default-300 px-2 py-1"
           onClick={() => {
-            azzeraMemoria()
-            aggiorna()
+            clearMemory()
+            refresh()
           }}
         >
           Dimentica banner chiusi e visti

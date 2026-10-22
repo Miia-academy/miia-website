@@ -1,10 +1,14 @@
 /**
- * Banner del sito: quale mostrare, a chi e con quali testi.
+ * Site banners: which one to show, to whom and with which texts.
  *
- * Solo funzioni pure, così si provano nei test. Il componente
- * `components/banners/bannerSito.tsx` le usa nel browser.
- * Regole decise con Miia il 19, 20 e 21/10/2026
+ * Pure functions only, so they can be tested. The component
+ * `components/banners/siteBanner.tsx` uses them in the browser.
+ * Rules agreed with Miia on 19, 20 and 21/10/2026
  * (funnel/sito/2026-10-19_Banner_dinamico_proposta.md, 2026-10-21_Banner_dove_nelle_pagine.html).
+ *
+ * Storyblok field keys moved from Italian to English on 22/10/2026: until the content
+ * is migrated, `normalizeBanner` and `normalizeSiteBanners` read the old key when the new one is missing.
+ * Option values (mode, color, audience, timing...) are content and stay as they are.
  */
 import { BANNER, MODULI } from '@config/tracking'
 import {
@@ -17,29 +21,29 @@ import {
   type Riassunto,
 } from '@modules/profilo'
 
-export type ModoBanner = 'finestra' | 'pannello' | 'sezione' | 'avviso'
+export type BannerMode = 'finestra' | 'pannello' | 'sezione' | 'avviso'
 
-/** Il blocco "banner" di Storyblok. */
+/** The Storyblok "banner" block, with English keys. */
 export interface BannerContent {
-  nome?: string
-  titolo?: string
-  testo?: string
-  immagine?: { filename?: string; alt?: string; focus?: string }
-  azione?: Array<{ label?: string; link?: { cached_url?: string; url?: string; linktype?: string } }>
-  modulo?: any
-  chiudi_testo?: string
-  modo?: ModoBanner
-  colore?: 'chiaro' | 'scuro' | 'verde'
-  comparsa?: 'subito' | 'secondi' | 'scroll'
-  comparsa_valore?: string | number
-  pubblico?: string[]
-  non_visitato?: string
-  momento?: string[]
-  pubblica_dal?: string
-  pubblica_al?: string
-  pausa_giorni?: string | number
-  nascondi_dopo_azione?: boolean
-  una_volta_per_visita?: boolean
+  name?: string
+  title?: string
+  text?: string
+  image?: { filename?: string; alt?: string; focus?: string }
+  action?: Array<{ label?: string; link?: { cached_url?: string; url?: string; linktype?: string } }>
+  form?: any
+  close_text?: string
+  mode?: BannerMode
+  color?: 'chiaro' | 'scuro' | 'verde'
+  trigger?: 'subito' | 'secondi' | 'scroll'
+  trigger_value?: string | number
+  audience?: string[]
+  not_visited?: string
+  timing?: string[]
+  publish_from?: string
+  publish_until?: string
+  pause_days?: string | number
+  hide_after_action?: boolean
+  once_per_visit?: boolean
 }
 
 export interface BannerStory {
@@ -48,355 +52,418 @@ export interface BannerStory {
   content: BannerContent
 }
 
-/** Banner letti da Storyblok per il sito: tutti, e l'ordine di "Banner di tutto il sito". */
-export interface BannerDati {
-  tutti: BannerStory[]
-  ordine: string[]
-  escludi: string
-  // Posti fissi nelle pagine (scheda "Posti fissi nelle pagine" di "Banner di tutto il sito").
-  posti?: Partial<Record<Posto, string[]>>
+/** Banners read from Storyblok for the site: all of them, and the order of "Banner di tutto il sito". */
+export interface BannerData {
+  all: BannerStory[]
+  order: string[]
+  exclude: string
+  // Fixed places in the pages (tab "Posti fissi nelle pagine" of "Banner di tutto il sito").
+  slots?: Partial<Record<Slot, string[]>>
 }
 
-export type Posto = 'home' | 'articoli' | 'progetti'
+export type Slot = 'home' | 'articles' | 'projects'
 
-/** Quello che il sito sa della persona, ricavato dal profilo nel browser o dal cookie. */
-export interface Persona {
-  visite: number
-  contatto: boolean
-  moduli: string[]
+/** What the site knows about the visitor, from the browser profile or from the cookie. */
+export interface Visitor {
+  visits: number
+  contact: boolean
+  forms: string[]
   openDay?: string
-  fascia: 'freddo' | 'tiepido' | 'caldo'
+  band: 'freddo' | 'tiepido' | 'caldo'
   area?: string
-  temi: string[]
-  pagine: Record<string, number>
+  topics: string[]
+  pages: Record<string, number>
 }
 
-/** Date e dati del sito che servono a Momento e variabili. */
-export interface Calendario {
-  openDay: Array<{ data: string; area?: string; docenti?: string }>
-  corsi: Array<{ inizio: string; area?: string; posti?: number }>
+/** Site dates and data used by timing rules and text variables. */
+export interface Calendar {
+  openDays: Array<{ date: string; area?: string; teachers?: string }>
+  courses: Array<{ start: string; area?: string; seats?: number }>
 }
 
-/** Memoria dei banner in questo browser: chiusi, usati, già visti in questa visita. */
-export interface Memoria {
-  chiusi: Record<string, string>
-  usati: Record<string, string>
-  vistiInVisita: string[]
+/** Banner memory in this browser: closed, used, already seen in this visit. */
+export interface BannerMemory {
+  closed: Record<string, string>
+  used: Record<string, string>
+  seenThisVisit: string[]
 }
 
-export interface Contesto {
+export interface BannerContext {
   path: string
   now: Date
-  consenso: boolean
-  persona: Persona | null
-  calendario: Calendario
-  memoria: Memoria
-  /** Banner scelti nella pagina (campo "Banner"), prima di quelli di tutto il sito. */
-  diPagina?: string[]
+  consent: boolean
+  visitor: Visitor | null
+  calendar: Calendar
+  memory: BannerMemory
+  /** Banners chosen in the page (field "Banner"), before the ones of the whole site. */
+  pageBanners?: string[]
 }
 
-const GIORNO = 86400000
+const DAY = 86400000
 
-const codiceModulo = (tracking: string) => MODULI[tracking]?.codice
+// New Storyblok key → old Italian key, for content not migrated yet.
+const BANNER_KEYS: Record<keyof BannerContent, string> = {
+  name: 'nome',
+  title: 'titolo',
+  text: 'testo',
+  image: 'immagine',
+  action: 'azione',
+  form: 'modulo',
+  close_text: 'chiudi_testo',
+  mode: 'modo',
+  color: 'colore',
+  trigger: 'comparsa',
+  trigger_value: 'comparsa_valore',
+  audience: 'pubblico',
+  not_visited: 'non_visitato',
+  timing: 'momento',
+  publish_from: 'pubblica_dal',
+  publish_until: 'pubblica_al',
+  pause_days: 'pausa_giorni',
+  hide_after_action: 'nascondi_dopo_azione',
+  once_per_visit: 'una_volta_per_visita',
+}
 
-export function personaDaDettaglio(d: Dettaglio): Persona {
-  const pagine: Record<string, number> = {}
-  for (const [path, p] of Object.entries(d.pagine)) pagine[path] = p.viste
-  const moduli = Object.keys(d.moduli)
+/** The new key's value, or the old key's when the new one is not in the content yet. */
+function field(raw: Record<string, unknown>, key: string, oldKey: string): any {
+  return raw[key] !== undefined ? raw[key] : raw[oldKey]
+}
+
+/** A banner block from Storyblok with English keys, whether its content is migrated or not. */
+export function normalizeBanner(raw: Record<string, unknown> | null | undefined): BannerContent {
+  const content: Record<string, unknown> = {}
+  for (const [key, oldKey] of Object.entries(BANNER_KEYS)) {
+    const value = field(raw || {}, key, oldKey)
+    if (value !== undefined) content[key] = value
+  }
+  return content as BannerContent
+}
+
+/** The "Banner di tutto il sito" story, with English keys. */
+export function normalizeSiteBanners(raw: Record<string, unknown> | null | undefined) {
+  const r = raw || {}
+  const list = (key: string, oldKey: string): string[] => {
+    const value = field(r, key, oldKey)
+    return Array.isArray(value) ? value : []
+  }
+  const exclude = field(r, 'exclude', 'escludi')
   return {
-    visite: d.visite.numero,
-    contatto: moduli.length > 0,
-    moduli,
+    order: list('banner', 'banner'),
+    exclude: typeof exclude === 'string' ? exclude : '',
+    slots: {
+      home: list('slot_home', 'posto_home'),
+      articles: list('slot_articles', 'posto_articoli'),
+      projects: list('slot_projects', 'posto_progetti'),
+    },
+  }
+}
+
+const formCode = (tracking: string) => MODULI[tracking]?.codice
+
+export function visitorFromDetail(d: Dettaglio): Visitor {
+  const pages: Record<string, number> = {}
+  for (const [path, p] of Object.entries(d.pagine)) pages[path] = p.viste
+  const forms = Object.keys(d.moduli)
+  return {
+    visits: d.visite.numero,
+    contact: forms.length > 0,
+    forms,
     openDay: d.openDay,
-    fascia: fascia(punteggio(d)),
+    band: fascia(punteggio(d)),
     area: areaPrevalente(d),
-    temi: [],
-    pagine,
+    topics: [],
+    pages,
   }
 }
 
-export function personaDaRiassunto(r: Riassunto): Persona {
+export function visitorFromSummary(r: Riassunto): Visitor {
   return {
-    visite: r.v,
-    contatto: r.c === 1,
-    moduli: r.m ? r.m.split(',').map((voce) => voce.split(':')[0]) : [],
+    visits: r.v,
+    contact: r.c === 1,
+    forms: r.m ? r.m.split(',').map((item) => item.split(':')[0]) : [],
     openDay: r.od,
-    fascia: r.fx,
+    band: r.fx,
     area: r.a,
-    temi: r.t ? r.t.split(',') : [],
-    pagine: {},
+    topics: r.t ? r.t.split(',') : [],
+    pages: {},
   }
 }
 
-/** Una pagina corrisponde a una regola: "/" solo la home, "/blog/" quello che c'è dentro, "/lavoro" anche le sottopagine. */
-export function corrisponde(path: string, regola: string): boolean {
+/** A page matches a rule: "/" only the home, "/blog/" what is inside, "/lavoro" also its subpages. */
+export function matchesPath(path: string, rule: string): boolean {
   const p = percorso(path)
-  const r = regola.trim().toLowerCase()
+  const r = rule.trim().toLowerCase()
   if (!r) return false
   if (r === '/') return p === '/'
   if (r.endsWith('/')) return (p + '/').startsWith(r) && p + '/' !== r
   return p === r || p.startsWith(r + '/')
 }
 
-export function paginaSenzaBanner(path: string, escludi = ''): boolean {
-  const regole = [...BANNER.pagineEscluse, ...escludi.split(',')]
-  return regole.some((r) => corrisponde(path, r))
+export function isPageWithoutBanners(path: string, exclude = ''): boolean {
+  const rules = [...BANNER.excludedPages, ...exclude.split(',')]
+  return rules.some((r) => matchesPath(path, r))
 }
 
-/** Indirizzo del pulsante del banner, pulito, oppure null. */
-export function linkBanner(b: BannerContent): string | null {
-  const link = b.azione?.[0]?.link
+/** Clean address of the banner button, or null. */
+export function bannerLink(b: BannerContent): string | null {
+  const link = b.action?.[0]?.link
   const url = link?.cached_url || link?.url
   if (!url) return null
   if (/^https?:\/\//.test(url)) return url
   return '/' + url.replace(/^\/+/, '')
 }
 
-/** Area del banner, dal Pubblico (interni / moda). */
-function areaBanner(b: BannerContent): string | undefined {
-  return (b.pubblico || []).find((v) => v === 'interni' || v === 'moda')
+/** Area of the banner, from its audience (interni / moda). */
+export function bannerArea(b: BannerContent): string | undefined {
+  return (b.audience || []).find((v) => v === 'interni' || v === 'moda')
 }
 
-function giorniA(data: string, now: Date): number {
-  const giorno = new Date(data.slice(0, 10) + 'T00:00:00')
-  const oggi = new Date(now.toISOString().slice(0, 10) + 'T00:00:00')
-  return Math.round((giorno.getTime() - oggi.getTime()) / GIORNO)
+function daysUntil(date: string, now: Date): number {
+  const day = new Date(date.slice(0, 10) + 'T00:00:00')
+  const today = new Date(now.toISOString().slice(0, 10) + 'T00:00:00')
+  return Math.round((day.getTime() - today.getTime()) / DAY)
 }
 
-export function prossimoOpenDay(cal: Calendario, now: Date, area?: string) {
-  return cal.openDay
-    .filter((o) => new Date(o.data).getTime() >= now.getTime() && (!area || o.area === area))
-    .sort((a, b) => a.data.localeCompare(b.data))[0]
+export function nextOpenDay(cal: Calendar, now: Date, area?: string) {
+  return cal.openDays
+    .filter((o) => new Date(o.date).getTime() >= now.getTime() && (!area || o.area === area))
+    .sort((a, b) => a.date.localeCompare(b.date))[0]
 }
 
-export function prossimiCorsi(cal: Calendario, now: Date, area?: string) {
-  const futuri = cal.corsi
-    .filter((c) => giorniA(c.inizio, now) >= 0 && (!area || c.area === area))
-    .sort((a, b) => a.inizio.localeCompare(b.inizio))
-  if (!futuri.length) return null
-  const inizio = futuri[0].inizio.slice(0, 10)
-  const stessi = futuri.filter((c) => c.inizio.slice(0, 10) === inizio)
-  const posti = stessi.every((c) => typeof c.posti === 'number')
-    ? stessi.reduce((tot, c) => tot + (c.posti as number), 0)
+export function nextCourses(cal: Calendar, now: Date, area?: string) {
+  const future = cal.courses
+    .filter((c) => daysUntil(c.start, now) >= 0 && (!area || c.area === area))
+    .sort((a, b) => a.start.localeCompare(b.start))
+  if (!future.length) return null
+  const start = future[0].start.slice(0, 10)
+  const sameDay = future.filter((c) => c.start.slice(0, 10) === start)
+  const seats = sameDay.every((c) => typeof c.seats === 'number')
+    ? sameDay.reduce((total, c) => total + (c.seats as number), 0)
     : undefined
-  return { inizio, posti }
+  return { start, seats }
 }
 
 /**
- * Una voce di Pubblico è vera per questa persona?
- * Le voci che il sito non può ancora sapere (dato da Brevo, temi) sono false.
+ * Is an audience item true for this visitor?
+ * Items the site cannot know yet (data from Brevo, topics) are false.
  */
-export function vocePubblico(voce: string, p: Persona, ctx: Pick<Contesto, 'path' | 'now'>): boolean {
-  const iscrittoOpenDay = !!p.openDay && giorniA(p.openDay, ctx.now) >= 0
-  switch (voce) {
+export function matchesAudience(item: string, v: Visitor, ctx: Pick<BannerContext, 'path' | 'now'>): boolean {
+  const openDaySignedUp = !!v.openDay && daysUntil(v.openDay, ctx.now) >= 0
+  switch (item) {
     case 'prima-visita':
-      return p.visite <= 1
+      return v.visits <= 1
     case 'tornato':
-      return p.visite >= 2
+      return v.visits >= 2
     case 'pagina-rivista':
-      return (p.pagine[percorso(ctx.path)] || 0) >= 2
+      return (v.pages[percorso(ctx.path)] || 0) >= 2
     case 'contatto':
-      return p.contatto
+      return v.contact
     case 'non-contatto':
-      return !p.contatto
+      return !v.contact
     case 'iscritto-open-day':
-      return iscrittoOpenDay
+      return openDaySignedUp
     case 'non-iscritto-open-day':
-      return !iscrittoOpenDay
+      return !openDaySignedUp
     case 'presentazione':
-      return p.moduli.includes(codiceModulo('download'))
+      return v.forms.includes(formCode('download'))
     case 'non-presentazione':
-      return !p.moduli.includes(codiceModulo('download'))
+      return !v.forms.includes(formCode('download'))
     case 'non-iscrizione':
-      return !p.moduli.includes(codiceModulo('iscrizione'))
+      return !v.forms.includes(formCode('iscrizione'))
     case 'freddo':
     case 'tiepido':
     case 'caldo':
-      return p.fascia === voce
+      return v.band === item
     case 'interni':
     case 'moda':
-      return p.area === voce
+      return v.area === item
     case 'creativo':
     case 'tecnico':
-      return p.temi.includes(voce)
-    // 'partecipato-open-day' arriva da Brevo (passo 4): finché non c'è, il banner non si mostra.
+      return v.topics.includes(item)
+    // 'partecipato-open-day' comes from Brevo (step 4): until then the banner does not show.
     default:
       return false
   }
 }
 
-export function voceMomento(voce: string, b: BannerContent, ctx: Pick<Contesto, 'now' | 'calendario' | 'persona'>): boolean {
-  const giorni = BANNER.giorniMomento[voce]
-  if (giorni === undefined) return false
-  const area = areaBanner(b)
-  if (voce.startsWith('open-day')) {
-    const od = prossimoOpenDay(ctx.calendario, ctx.now, area)
-    return !!od && giorniA(od.data, ctx.now) <= giorni
+export function matchesTiming(item: string, b: BannerContent, ctx: Pick<BannerContext, 'now' | 'calendar' | 'visitor'>): boolean {
+  const days = BANNER.timingDays[item]
+  if (days === undefined) return false
+  const area = bannerArea(b)
+  if (item.startsWith('open-day')) {
+    const od = nextOpenDay(ctx.calendar, ctx.now, area)
+    return !!od && daysUntil(od.date, ctx.now) <= days
   }
-  if (voce === 'corsi-4-settimane') {
-    const corsi = prossimiCorsi(ctx.calendario, ctx.now, area)
-    return !!corsi && giorniA(corsi.inizio, ctx.now) <= giorni
+  if (item === 'corsi-4-settimane') {
+    const courses = nextCourses(ctx.calendar, ctx.now, area)
+    return !!courses && daysUntil(courses.start, ctx.now) <= days
   }
-  // 'prezzo-agevolato-7': la scadenza personale arriva da Brevo (passo 4).
+  // 'prezzo-agevolato-7': the personal deadline comes from Brevo (step 4).
   return false
 }
 
-const dataLunga = (iso: string) =>
+const longDate = (iso: string) =>
   new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('it-IT', {
     day: 'numeric',
     month: 'long',
   })
 
-/** Valori delle variabili dei testi, solo quelli che il sito conosce. */
-export function variabili(b: BannerContent, ctx: Pick<Contesto, 'now' | 'calendario' | 'persona'>): Record<string, string> {
-  const v: Record<string, string> = {}
-  const area = areaBanner(b) || ctx.persona?.area
-  const iscritto = ctx.persona?.openDay && giorniA(ctx.persona.openDay, ctx.now) >= 0 ? ctx.persona.openDay : null
+/**
+ * Values of the text variables, only the ones the site knows.
+ * The variable names ({data_open_day}...) are what editors write in Storyblok.
+ */
+export function textVariables(b: BannerContent, ctx: Pick<BannerContext, 'now' | 'calendar' | 'visitor'>): Record<string, string> {
+  const values: Record<string, string> = {}
+  const area = bannerArea(b) || ctx.visitor?.area
+  const signedUp = ctx.visitor?.openDay && daysUntil(ctx.visitor.openDay, ctx.now) >= 0 ? ctx.visitor.openDay : null
   const od =
-    (iscritto && ctx.calendario.openDay.find((o) => o.data.slice(0, 10) === iscritto)) ||
-    prossimoOpenDay(ctx.calendario, ctx.now, area) ||
-    prossimoOpenDay(ctx.calendario, ctx.now)
+    (signedUp && ctx.calendar.openDays.find((o) => o.date.slice(0, 10) === signedUp)) ||
+    nextOpenDay(ctx.calendar, ctx.now, area) ||
+    nextOpenDay(ctx.calendar, ctx.now)
   if (od) {
-    v.data_open_day = dataLunga(od.data)
-    v.giorni_open_day = String(Math.max(0, giorniA(od.data, ctx.now)))
-    if (od.docenti) v.docenti_open_day = od.docenti
+    values.data_open_day = longDate(od.date)
+    values.giorni_open_day = String(Math.max(0, daysUntil(od.date, ctx.now)))
+    if (od.teachers) values.docenti_open_day = od.teachers
   }
-  const corsi = prossimiCorsi(ctx.calendario, ctx.now, area) || prossimiCorsi(ctx.calendario, ctx.now)
-  if (corsi) {
-    v.inizio_corsi = dataLunga(corsi.inizio)
-    v.settimane_inizio_corsi = String(Math.max(1, Math.ceil(giorniA(corsi.inizio, ctx.now) / 7)))
-    if (typeof corsi.posti === 'number' && corsi.posti > 0) v.posti_rimasti = String(corsi.posti)
+  const courses = nextCourses(ctx.calendar, ctx.now, area) || nextCourses(ctx.calendar, ctx.now)
+  if (courses) {
+    values.inizio_corsi = longDate(courses.start)
+    values.settimane_inizio_corsi = String(Math.max(1, Math.ceil(daysUntil(courses.start, ctx.now) / 7)))
+    if (typeof courses.seats === 'number' && courses.seats > 0) values.posti_rimasti = String(courses.seats)
   }
-  return v
+  return values
 }
 
-/** Sostituisce le variabili; null se ne manca qualcuna (meglio niente banner che un testo a metà). */
-export function riempi(testo: string | undefined, valori: Record<string, string>): string | null {
-  if (!testo) return ''
-  let mancante = false
-  const out = testo.replace(/\{([a-z_]+)\}/g, (_, nome: string) => {
-    if (valori[nome] === undefined) mancante = true
-    return valori[nome] ?? ''
+/** Replaces the variables; null if one is missing (better no banner than half a text). */
+export function fillText(text: string | undefined, values: Record<string, string>): string | null {
+  if (!text) return ''
+  let missing = false
+  const out = text.replace(/\{([a-z_]+)\}/g, (_, name: string) => {
+    if (values[name] === undefined) missing = true
+    return values[name] ?? ''
   })
-  return mancante ? null : out
+  return missing ? null : out
 }
 
-/** Il modo con cui il banner si mostra su questa pagina, o null se qui non può comparire. */
-export function modoSuPagina(b: BannerContent, path: string): ModoBanner | null {
-  const modo = b.modo || 'pannello'
-  if (modo === 'sezione') return null // la sezione compare solo nei posti fissi delle pagine
-  if (BANNER.soloAvviso.some((r) => corrisponde(path, r))) return modo === 'avviso' ? 'avviso' : null
-  if (modo === 'finestra' && BANNER.nienteFinestra.some((r) => corrisponde(path, r))) return 'pannello'
-  return modo
+/** How the banner shows on this page, or null if it cannot appear here. */
+export function modeOnPage(b: BannerContent, path: string): BannerMode | null {
+  const mode = b.mode || 'pannello'
+  if (mode === 'sezione') return null // sections only appear in the fixed places of the pages
+  if (BANNER.noticeOnly.some((r) => matchesPath(path, r))) return mode === 'avviso' ? 'avviso' : null
+  if (mode === 'finestra' && BANNER.noWindow.some((r) => matchesPath(path, r))) return 'pannello'
+  return mode
 }
 
-/** Perché un banner non compare; null se può comparire. Serve anche al riquadro ?debug=profilo. */
-export function motivoEsclusione(story: BannerStory, ctx: Contesto, sezione = false): string | null {
+/**
+ * Why a banner does not appear; null if it can. Also used by the ?debug=profilo box,
+ * so the reasons are in Italian for whoever reads them.
+ */
+export function exclusionReason(story: BannerStory, ctx: BannerContext, inSlot = false): string | null {
   const b = story.content
   const now = ctx.now
-  const oggi = now.toISOString().slice(0, 10)
-  if (b.pubblica_dal && b.pubblica_dal.slice(0, 10) > oggi) return 'non ancora iniziato (Mostra dal)'
-  if (b.pubblica_al && b.pubblica_al.slice(0, 10) < oggi) return 'finito (Mostra fino al)'
-  if (!sezione && !modoSuPagina(b, ctx.path))
-    return b.modo === 'sezione' ? 'modo Sezione: compare solo nei posti fissi' : 'su questa pagina solo avvisi'
+  const today = now.toISOString().slice(0, 10)
+  if (b.publish_from && b.publish_from.slice(0, 10) > today) return 'non ancora iniziato (Mostra dal)'
+  if (b.publish_until && b.publish_until.slice(0, 10) < today) return 'finito (Mostra fino al)'
+  if (!inSlot && !modeOnPage(b, ctx.path))
+    return b.mode === 'sezione' ? 'modo Sezione: compare solo nei posti fissi' : 'su questa pagina solo avvisi'
 
-  const link = linkBanner(b)
+  const link = bannerLink(b)
   if (link && !/^https?:/.test(link) && percorso(link) === percorso(ctx.path)) return 'porta a questa pagina'
-  if (link && link.startsWith('/open-day') && BANNER.conSezioneOpenDay.some((r) => corrisponde(ctx.path, r)))
+  if (link && link.startsWith('/open-day') && BANNER.withOpenDaySection.some((r) => matchesPath(ctx.path, r)))
     return "la pagina ha già la sezione dell'open day"
-  if (!link && !b.modulo) return 'senza pulsante né modulo'
-  if (!sezione && b.modo === 'avviso' && b.modulo && !link) return 'avviso con modulo ma senza pagina a cui portare'
+  if (!link && !b.form) return 'senza pulsante né modulo'
+  if (!inSlot && b.mode === 'avviso' && b.form && !link) return 'avviso con modulo ma senza pagina a cui portare'
 
-  if (b.nascondi_dopo_azione !== false && ctx.memoria.usati[story.uuid]) return 'già cliccato o modulo inviato'
-  // La sezione nella pagina non si chiude e può tornare a ogni visita.
-  if (!sezione) {
-    const chiuso = ctx.memoria.chiusi[story.uuid]
-    const pausa = Number(b.pausa_giorni ?? 7) || 0
-    if (chiuso && now.getTime() - new Date(chiuso).getTime() < pausa * GIORNO) return `chiuso da meno di ${pausa} giorni`
-    if (b.una_volta_per_visita !== false && ctx.memoria.vistiInVisita.includes(story.uuid)) return 'già visto in questa visita'
+  if (b.hide_after_action !== false && ctx.memory.used[story.uuid]) return 'già cliccato o modulo inviato'
+  // The section in the page cannot be closed and may come back at every visit.
+  if (!inSlot) {
+    const closed = ctx.memory.closed[story.uuid]
+    const pause = Number(b.pause_days ?? 7) || 0
+    if (closed && now.getTime() - new Date(closed).getTime() < pause * DAY) return `chiuso da meno di ${pause} giorni`
+    if (b.once_per_visit !== false && ctx.memory.seenThisVisit.includes(story.uuid)) return 'già visto in questa visita'
   }
 
-  const pubblico = b.pubblico || []
-  const nonVisitato = (b.non_visitato || '').split(',').map((s) => s.trim()).filter(Boolean)
-  if (pubblico.length || nonVisitato.length) {
-    if (!ctx.consenso) return 'serve il consenso marketing (Pubblico pieno)'
-    if (!ctx.persona) return 'nessun dato sulla persona'
-    const falsa = pubblico.find((voce) => !vocePubblico(voce, ctx.persona as Persona, ctx))
-    if (falsa) return `Pubblico non vero: ${falsa}`
-    const visti = Object.keys(ctx.persona.pagine)
-    if (nonVisitato.some((pezzo) => visti.some((p) => p.includes(pezzo.toLowerCase()))))
+  const audience = b.audience || []
+  const notVisited = (b.not_visited || '').split(',').map((s) => s.trim()).filter(Boolean)
+  if (audience.length || notVisited.length) {
+    if (!ctx.consent) return 'serve il consenso marketing (Pubblico pieno)'
+    if (!ctx.visitor) return 'nessun dato sulla persona'
+    const failing = audience.find((item) => !matchesAudience(item, ctx.visitor as Visitor, ctx))
+    if (failing) return `Pubblico non vero: ${failing}`
+    const seen = Object.keys(ctx.visitor.pages)
+    if (notVisited.some((part) => seen.some((p) => p.includes(part.toLowerCase()))))
       return 'ha già visto la pagina indicata'
   }
-  const momento = (b.momento || []).find((voce) => !voceMomento(voce, b, ctx))
-  if (momento) return `Momento non vero: ${momento}`
+  const timing = (b.timing || []).find((item) => !matchesTiming(item, b, ctx))
+  if (timing) return `Momento non vero: ${timing}`
 
-  const valori = variabili(b, ctx)
-  if (riempi(b.titolo, valori) === null || riempi(b.testo, valori) === null) return 'manca il valore di una variabile'
+  const values = textVariables(b, ctx)
+  if (fillText(b.title, values) === null || fillText(b.text, values) === null) return 'manca il valore di una variabile'
   return null
 }
 
-/** Ordine di priorità: prima i banner della pagina, poi quelli di tutto il sito, senza doppioni. */
-export function ordineBanner(dati: BannerDati, diPagina: string[] = []): BannerStory[] {
-  const perUuid = new Map(dati.tutti.map((s) => [s.uuid, s]))
-  const visti = new Set<string>()
+/** Priority order: first the page's banners, then the whole site's, without duplicates. */
+export function bannerOrder(data: BannerData, pageBanners: string[] = []): BannerStory[] {
+  const byUuid = new Map(data.all.map((s) => [s.uuid, s]))
+  const seen = new Set<string>()
   const out: BannerStory[] = []
-  for (const uuid of [...diPagina, ...dati.ordine]) {
-    const s = perUuid.get(uuid)
-    if (!s || visti.has(uuid)) continue
-    visti.add(uuid)
+  for (const uuid of [...pageBanners, ...data.order]) {
+    const s = byUuid.get(uuid)
+    if (!s || seen.has(uuid)) continue
+    seen.add(uuid)
     out.push(s)
   }
   return out
 }
 
-/** Il primo banner che può comparire, con il modo per questa pagina. */
-export function scegliBanner(dati: BannerDati, ctx: Contesto): { story: BannerStory; modo: ModoBanner } | null {
-  if (paginaSenzaBanner(ctx.path, dati.escludi)) return null
-  for (const story of ordineBanner(dati, ctx.diPagina)) {
-    if (motivoEsclusione(story, ctx)) continue
-    return { story, modo: modoSuPagina(story.content, ctx.path) as ModoBanner }
+/** The first banner that can appear, with its mode for this page. */
+export function pickBanner(data: BannerData, ctx: BannerContext): { story: BannerStory; mode: BannerMode } | null {
+  if (isPageWithoutBanners(ctx.path, data.exclude)) return null
+  for (const story of bannerOrder(data, ctx.pageBanners)) {
+    if (exclusionReason(story, ctx)) continue
+    return { story, mode: modeOnPage(story.content, ctx.path) as BannerMode }
   }
   return null
 }
 
-/** Il banner da mostrare come sezione in un posto fisso della pagina, o null (la sezione non c'è). */
-export function scegliPerPosto(dati: BannerDati, posto: Posto, ctx: Contesto): BannerStory | null {
-  const perUuid = new Map(dati.tutti.map((s) => [s.uuid, s]))
-  for (const uuid of dati.posti?.[posto] || []) {
-    const story = perUuid.get(uuid)
-    if (story && !motivoEsclusione(story, ctx, true)) return story
+/** The banner to show as a section in a fixed place of the page, or null (no section). */
+export function pickForSlot(data: BannerData, slot: Slot, ctx: BannerContext): BannerStory | null {
+  const byUuid = new Map(data.all.map((s) => [s.uuid, s]))
+  for (const uuid of data.slots?.[slot] || []) {
+    const story = byUuid.get(uuid)
+    if (story && !exclusionReason(story, ctx, true)) return story
   }
   return null
 }
 
-/** Calendario dai dati globali del sito (eventi e corsi di Storyblok). */
-export function calendarioDa(
-  events: Array<{ date?: string; isOpenday?: boolean; openday?: string; name?: string; page?: any; docentiNomi?: string }>,
-  corsi: Array<{ starts?: string; page?: any; posti?: number }>
-): Calendario {
-  const area = (testo: string) => areaPagina('/' + testo.toLowerCase().replace(/\s+/g, '-'))
+/** Calendar from the site's global data (Storyblok events and courses). */
+export function calendarFrom(
+  events: Array<{ date?: string; isOpenday?: boolean; openday?: string; name?: string; page?: any; teacherNames?: string }>,
+  courses: Array<{ starts?: string; page?: any; seats?: number }>
+): Calendar {
+  const area = (text: string) => areaPagina('/' + text.toLowerCase().replace(/\s+/g, '-'))
   return {
-    openDay: events
+    openDays: events
       .filter((e) => e.isOpenday && e.date)
       .map((e) => ({
-        data: e.date as string,
+        date: e.date as string,
         area: area(`${e.openday || ''} ${e.name || ''} ${e.page?.cached_url || ''}`),
-        docenti: e.docentiNomi || undefined,
+        teachers: e.teacherNames || undefined,
       })),
-    corsi: corsi
+    courses: courses
       .filter((c) => c.starts)
-      .map((c) => ({ inizio: c.starts as string, area: area(c.page?.cached_url || ''), posti: c.posti })),
+      .map((c) => ({ start: c.starts as string, area: area(c.page?.cached_url || ''), seats: c.seats })),
   }
 }
 
-/** Per il riquadro ?debug=profilo: ogni banner, in ordine, con il motivo per cui non compare. */
-export function rapportoBanner(dati: BannerDati, ctx: Contesto): Array<{ uuid: string; nome: string; motivo: string | null }> {
-  const esclusa = paginaSenzaBanner(ctx.path, dati.escludi)
-  let scelto = false
-  return ordineBanner(dati, ctx.diPagina).map((s) => {
-    let motivo = esclusa ? 'pagina senza banner' : motivoEsclusione(s, ctx)
-    if (!motivo && scelto) motivo = 'ne compare già uno con priorità più alta'
-    if (!motivo) scelto = true
-    return { uuid: s.uuid, nome: s.content.nome || s.slug, motivo }
+/** For the ?debug=profilo box: every banner, in order, with the reason it does not appear. */
+export function bannerReport(data: BannerData, ctx: BannerContext): Array<{ uuid: string; name: string; reason: string | null }> {
+  const excluded = isPageWithoutBanners(ctx.path, data.exclude)
+  let picked = false
+  return bannerOrder(data, ctx.pageBanners).map((s) => {
+    let reason = excluded ? 'pagina senza banner' : exclusionReason(s, ctx)
+    if (!reason && picked) reason = 'ne compare già uno con priorità più alta'
+    if (!reason) picked = true
+    return { uuid: s.uuid, name: s.content.name || s.slug, reason }
   })
 }

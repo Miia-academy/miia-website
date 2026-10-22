@@ -3,7 +3,7 @@ import type { ISbStoryData } from '@storyblok/react'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import Meta from '@components/meta'
 import Nav from '@components/nav'
-import BannerPosto from '@components/banners/bannerPosto'
+import SlotBanner from '@components/banners/slotBanner'
 import { BANNER } from '@config/tracking'
 import { useRouter } from 'next/router'
 import { Fragment } from 'react'
@@ -44,8 +44,8 @@ export default function Page({ blok, locations = [] }: PageComponentProps) {
               locations={locations}
               singleSection={singleSection}
             />
-            {/* Posto fisso per un banner in home, dopo "Cosa offriamo" */}
-            {home && bodyBlok.id === BANNER.postoHomeDopoSezione && <BannerPosto posto="home" />}
+            {/* Fixed banner place in the home, after "Cosa offriamo" */}
+            {home && bodyBlok.id === BANNER.homeSlotAfterSection && <SlotBanner slot="home" />}
           </Fragment>
         ))}
       </main>

@@ -2,7 +2,7 @@
 import { getStoryblokApi } from '@storyblok/react'
 import type { Course, Event, Location } from '@types'
 import { relations } from '@config/relations'
-import type { BannerDati } from '@modules/banner'
+import { normalizeBanner, normalizeSiteBanners, type BannerData } from '@modules/banner'
 
 export type ProcessedCourse = Course & { uuid: string }
 export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
@@ -59,46 +59,40 @@ export type GlobalData = {
   persons: ProcessedPerson[]
   projects: ProcessedProject[]
   competenze: Competenza[]
-  // Banner del sito; null se l'interruttore è spento o la lista non è pubblicata.
-  banner?: BannerDati | null
+  // Site banners; null if the switch is off or the list is not published.
+  banner?: BannerData | null
 }
 
 /**
- * Interruttore dei banner: in produzione si accendono con BANNER_SITO=on;
- * nelle anteprime Vercel e in locale sono sempre accesi, per provarli.
+ * Banner switch: in production they turn on with BANNER_SITO=on;
+ * in Vercel previews and locally they are always on, to try them.
  */
 export function bannerAttivi(): boolean {
   return process.env.BANNER_SITO === 'on' || process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV === 'development'
 }
 
-/** Tutti i banner della cartella banner/ con il loro modulo, e la lista "Banner di tutto il sito". */
-export async function getBannerData(version: 'draft' | 'published'): Promise<BannerDati | null> {
+/** All banners of the banner/ folder with their form, and the "Banner di tutto il sito" list. */
+export async function getBannerData(version: 'draft' | 'published'): Promise<BannerData | null> {
   if (!bannerAttivi()) return null
   const storyblokApi = getStoryblokApi()
   try {
-    const [tuttiRes, sitoRes] = await Promise.all([
+    const [allRes, siteRes] = await Promise.all([
       storyblokApi.getStories({
         version,
         starts_with: 'banner/',
         content_type: 'banner',
         per_page: 100,
-        resolve_relations: 'banner.modulo,form.alias',
+        // "modulo" is the field's name before 22/10/2026, until the content is migrated
+        resolve_relations: 'banner.form,banner.modulo,form.alias',
       }),
       storyblokApi.getStory('banner/tutto-il-sito', { version }),
     ])
-    const sito = sitoRes.data?.story?.content || {}
     return {
-      tutti: tuttiRes.data.stories.map((s: any) => ({ uuid: s.uuid, slug: s.full_slug, content: s.content })),
-      ordine: Array.isArray(sito.banner) ? sito.banner : [],
-      escludi: typeof sito.escludi === 'string' ? sito.escludi : '',
-      posti: {
-        home: Array.isArray(sito.posto_home) ? sito.posto_home : [],
-        articoli: Array.isArray(sito.posto_articoli) ? sito.posto_articoli : [],
-        progetti: Array.isArray(sito.posto_progetti) ? sito.posto_progetti : [],
-      },
+      all: allRes.data.stories.map((s: any) => ({ uuid: s.uuid, slug: s.full_slug, content: normalizeBanner(s.content) })),
+      ...normalizeSiteBanners(siteRes.data?.story?.content),
     }
   } catch (error) {
-    console.error('[Banner] Lista dei banner non disponibile:', error)
+    console.error('[Banner] Banner list not available:', error)
     return null
   }
 }

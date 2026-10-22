@@ -1,6 +1,6 @@
 import type { Article as ArticleBlok } from '@types'
 import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
-import BannerPosto from '@components/banners/bannerPosto'
+import SlotBanner from '@components/banners/slotBanner'
 import Meta from '@components/meta'
 import { compiler } from 'markdown-to-jsx'
 import { Image as HeroImage } from '@heroui/react'
@@ -116,8 +116,8 @@ export default function Article({ blok }: ArticleProps) {
           ))}
       </div>
 
-      {/* Posto fisso per un banner, in fondo */}
-      <BannerPosto posto="articoli" />
+      {/* Fixed banner place, at the end */}
+      <SlotBanner slot="articles" />
     </article>
   )
 }

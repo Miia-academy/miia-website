@@ -12,7 +12,7 @@ import { useRouter } from 'next/router'
 import { captureAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { debugProfiloAttivo, inviaRiassunto, tracciaPagina } from '@modules/tracking'
 import DebugProfilo from '@components/debugProfilo'
-import BannerSito from '@components/banners/bannerSito'
+import SiteBanner from '@components/banners/siteBanner'
 
 import { getGtmId } from '@config/gtm'
 
@@ -81,8 +81,8 @@ storyblokInit({
   components,
 })
 
-/** Banner scelti nella pagina (campo "Banner" di Pagina, Articolo e Progetto), prima di quelli di tutto il sito. */
-function bannerDiPagina(pageProps: any): string[] {
+/** Banners chosen in the page ("Banner" field of Page, Article and Project), before the whole site's. */
+function pageBanners(pageProps: any): string[] {
   const banner = pageProps?.story?.content?.banner
   return Array.isArray(banner) ? banner.filter((b: unknown): b is string => typeof b === 'string') : []
 }
@@ -131,7 +131,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <HeroUIProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">
             <Component {...pageProps} />
-            <BannerSito diPagina={bannerDiPagina(pageProps)} />
+            <SiteBanner pageBanners={pageBanners(pageProps)} />
           </NextThemesProvider>
         </HeroUIProvider>
       </DataProvider>
