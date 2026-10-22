@@ -60,7 +60,7 @@ export function actionHref(action: { link?: unknown }): string | null {
  * The enrollment button in the aside: a Storyblok action with link
  * /iscrizione/<course> (it replaces the enrollment request form).
  */
-export function isEnrollAction(blok: { component?: unknown; link?: unknown }): boolean {
+export function isEnrollAction(blok: { component?: unknown; link?: unknown; [k: string]: unknown }): boolean {
   if (blok.component !== 'action') return false
   const href = actionHref(blok)
   return !!href && /^\/iscrizione\/[a-z0-9-]+\/?(\?.*)?$/.test(href)
