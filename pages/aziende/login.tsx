@@ -185,7 +185,7 @@ export default function CompanyLogin() {
 
                   <div className="flex flex-col gap-2 border-t border-neutral-100">
                     <label className="text-xs font-medium text-neutral-500">
-                      Logo Aziendale<span className="text-red-500">*</span>
+                      Logo Aziendale<span className="text-danger">*</span>
                     </label>
                     <input
                       type="file"

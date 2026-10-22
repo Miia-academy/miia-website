@@ -98,7 +98,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                 </div>
                 <div>
                   <h2 className="type-subtitle text-neutral-900">
-                    {profileData.nome ? `${profileData.nome} ${profileData.cognome}` : <span className="text-red-500 italic text-sm">Nome mancante</span>}
+                    {profileData.nome ? `${profileData.nome} ${profileData.cognome}` : <span className="text-danger italic text-sm">Nome mancante</span>}
                   </h2>
                   <p className="text-xs text-neutral-500 font-mono mt-0.5 break-all">{user.email}</p>
                 </div>
@@ -107,16 +107,16 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="block type-label text-neutral-400 mb-1">Telefono</span>
-                    <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                    <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-danger italic text-xs">Mancante</span>}</p>
                   </div>
                   <div>
                     <span className="block type-label text-neutral-400 mb-1">Provincia</span>
-                    <p className="font-medium text-neutral-800 uppercase">{profileData.provincia || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                    <p className="font-medium text-neutral-800 uppercase">{profileData.provincia || <span className="text-danger italic text-xs">Mancante</span>}</p>
                   </div>
                 </div>
                 <div>
                   <span className="block type-label text-neutral-400 mb-1">Indirizzo</span>
-                  <p className="font-medium text-neutral-800 line-clamp-1">{profileData.indirizzo || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                  <p className="font-medium text-neutral-800 line-clamp-1">{profileData.indirizzo || <span className="text-danger italic text-xs">Mancante</span>}</p>
                 </div>
                 <div>
                   <span className="block type-label text-neutral-400 mb-2">Disponibilità</span>
@@ -154,15 +154,15 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   <div className="space-y-2">
                     {profileData.cv_url ? (
                       <a href={profileData.cv_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">📄 Vedi Curriculum</a>
-                    ) : <p className="text-xs text-red-500 font-semibold italic">Nessun CV caricato</p>}
+                    ) : <p className="text-xs text-danger font-semibold italic">Nessun CV caricato</p>}
                     {profileData.portfolio_url && <a href={profileData.portfolio_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-neutral-700 hover:underline">🔗 Vedi Portfolio</a>}
                   </div>
                 </div>
               </div>
               {isCvMissing && (
-                <div className="bg-red-50 border border-red-100 p-4 rounded-xl mt-4">
-                  <h4 className="text-red-800 font-bold text-sm mb-1">Curriculum Mancante!</h4>
-                  <p className="text-xs text-red-600 leading-relaxed">Per poter esplorare le offerte di lavoro e candidarti, è necessario caricare il tuo CV in formato PDF.</p>
+                <div className="bg-danger-50 border border-danger-100 p-4 rounded-xl mt-4">
+                  <h4 className="text-danger-800 font-bold text-sm mb-1">Curriculum Mancante!</h4>
+                  <p className="text-xs text-danger-600 leading-relaxed">Per poter esplorare le offerte di lavoro e candidarti, è necessario caricare il tuo CV in formato PDF.</p>
                 </div>
               )}
               <Button color="dark" onPress={() => setIsProfileModalOpen(true)} className="w-full h-11">
@@ -203,7 +203,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                       {app.status ? app.status.replace('_', ' ') : 'in valutazione'}
                     </Chip>
                     {app.job_status && app.job_status !== 'attiva' && (
-                      <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-1">Annuncio chiuso</span>
+                      <span className="text-[10px] text-danger font-bold uppercase tracking-wider mt-1">Annuncio chiuso</span>
                     )}
                   </div>
                 </div>

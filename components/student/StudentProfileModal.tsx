@@ -219,7 +219,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                 <span className="type-label text-neutral-400">Documenti</span>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Curriculum Vitae (PDF max 5MB) <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Curriculum Vitae (PDF max 5MB) <span className="text-danger">*</span></label>
 
                   <div className="flex items-center gap-3 mb-3 bg-neutral-50 p-2.5 rounded-xl border border-neutral-200">
                     {editForm.cv_url ? (
@@ -227,7 +227,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                         📄 CV Caricato
                       </a>
                     ) : (
-                      <span className="text-xs text-red-500 font-medium italic">Nessun CV caricato</span>
+                      <span className="text-xs text-danger font-medium italic">Nessun CV caricato</span>
                     )}
                     <span className="text-[11px] text-neutral-500">
                       {editForm.cv_url ? 'File salvato su Storage. Carica un nuovo PDF solo se desideri sostituirlo.' : 'File obbligatorio per accedere alle candidature.'}

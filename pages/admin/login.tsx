@@ -55,7 +55,7 @@ export default function AdminLogin() {
 
             {/* Banner di errore */}
             {error && (
-              <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm font-medium border border-red-100 text-center">
+              <div className="bg-danger-50 text-danger-700 p-3 rounded-xl text-sm font-medium border border-danger-100 text-center">
                 {error}
               </div>
             )}

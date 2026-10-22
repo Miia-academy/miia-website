@@ -38,7 +38,7 @@ export const DeleteJobModal: React.FC<DeleteJobModalProps> = ({ isOpen, onOpenCh
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="text-xl font-bold text-red-600">Conferma Eliminazione</ModalHeader>
+            <ModalHeader className="text-xl font-bold text-danger-600">Conferma Eliminazione</ModalHeader>
             <ModalBody>
               <p>Sei sicuro di voler eliminare l'inserzione <strong>{jobData?.title}</strong>?</p>
               <p className="text-sm text-neutral-500">Questa operazione rimuoverà l'annuncio e le relative candidature dal database. Non può essere annullata.</p>

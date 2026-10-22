@@ -143,21 +143,21 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               <div>
                 <span className="block type-label text-neutral-400">Telefono / SMS</span>
                 <span className="text-base font-semibold text-neutral-800">
-                  {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.sms || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
                 <span className="block type-label text-neutral-400">Provincia</span>
                 <span className="text-base font-semibold text-neutral-800 uppercase">
-                  {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.provincia || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
                 <span className="block type-label text-neutral-400">Indirizzo</span>
                 <span className="text-base font-medium text-neutral-800">
-                  {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.indirizzo || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     📄 Download Curriculum (PDF)
                   </Button>
                 ) : (
-                  <span className="text-sm text-red-500 italic font-semibold">Curriculum: Mancante</span>
+                  <span className="text-sm text-danger italic font-semibold">Curriculum: Mancante</span>
                 )}
 
                 {student.portfolio_url ? (

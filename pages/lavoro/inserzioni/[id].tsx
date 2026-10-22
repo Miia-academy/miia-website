@@ -340,7 +340,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
           <ModalContent>
             {(onClose) => (
               <>
-                <ModalHeader className={`text-xl font-bold ${alertInfo.isError ? 'text-red-600' : 'text-primary'}`}>
+                <ModalHeader className={`text-xl font-bold ${alertInfo.isError ? 'text-danger-600' : 'text-primary'}`}>
                   {alertInfo.title}
                 </ModalHeader>
                 <ModalBody>

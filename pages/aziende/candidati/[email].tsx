@@ -119,19 +119,19 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                 <div>
                   <span className="block type-label text-neutral-400">Telefono / SMS</span>
                   <a href={`tel:${student.sms}`} className="text-base font-semibold text-neutral-800 hover:underline">
-                    {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
+                    {student.sms || <span className="text-danger italic text-sm">Mancante</span>}
                   </a>
                 </div>
                 <div>
                   <span className="block type-label text-neutral-400">Provincia</span>
                   <span className="text-base font-semibold text-neutral-800 uppercase">
-                    {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
+                    {student.provincia || <span className="text-danger italic text-sm">Mancante</span>}
                   </span>
                 </div>
                 <div>
                   <span className="block type-label text-neutral-400">Indirizzo Sede / Residenza</span>
                   <span className="text-base font-medium text-neutral-800">
-                    {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
+                    {student.indirizzo || <span className="text-danger italic text-sm">Mancante</span>}
                   </span>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                     📄 Scarica Curriculum Vitae (PDF)
                   </Button>
                 ) : (
-                  <span className="text-sm text-red-500 italic font-semibold">Curriculum Vitae: Mancante</span>
+                  <span className="text-sm text-danger italic font-semibold">Curriculum Vitae: Mancante</span>
                 )}
 
                 {student.portfolio_url && (

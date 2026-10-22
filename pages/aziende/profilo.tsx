@@ -90,19 +90,19 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                   </div>
                 )}
                 <div>
-                  <h2 className="type-subtitle text-neutral-900">{profileData.azienda || <span className="text-red-500 italic text-sm">Nome mancante</span>}</h2>
+                  <h2 className="type-subtitle text-neutral-900">{profileData.azienda || <span className="text-danger italic text-sm">Nome mancante</span>}</h2>
                   <p className="text-xs text-neutral-500 font-mono mt-0.5">{user.email}</p>
                 </div>
               </div>
               <div className="space-y-4 text-sm">
                 <div>
                   <span className="block type-label text-neutral-400 mb-1">Referente</span>
-                  <p className="font-medium text-neutral-800">{profileData.referente || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                  <p className="font-medium text-neutral-800">{profileData.referente || <span className="text-danger italic text-xs">Mancante</span>}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="block type-label text-neutral-400 mb-1">Telefono</span>
-                    <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                    <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-danger italic text-xs">Mancante</span>}</p>
                   </div>
                   <div>
                     <span className="block type-label text-neutral-400 mb-1">Sito Web</span>
@@ -111,20 +111,20 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                         {profileData.sito_web.replace(/^https?:\/\//, '')}
                       </a>
                     ) : (
-                      <span className="text-red-500 italic text-xs">Mancante</span>
+                      <span className="text-danger italic text-xs">Mancante</span>
                     )}
                   </div>
                 </div>
                 <div>
                   <span className="block type-label text-neutral-400 mb-1">Indirizzo Sede</span>
-                  <p className="font-medium text-neutral-800">{profileData.indirizzo || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                  <p className="font-medium text-neutral-800">{profileData.indirizzo || <span className="text-danger italic text-xs">Mancante</span>}</p>
                 </div>
                 <div>
                   <span className="block type-label text-neutral-400 mb-1">Chi Siamo</span>
                   {profileData.descrizione ? (
                     <p className="text-neutral-600 leading-relaxed line-clamp-4">{profileData.descrizione}</p>
                   ) : (
-                    <span className="text-red-500 italic text-xs">Descrizione mancante. I candidati non sapranno di cosa vi occupate.</span>
+                    <span className="text-danger italic text-xs">Descrizione mancante. I candidati non sapranno di cosa vi occupate.</span>
                   )}
                 </div>
               </div>
