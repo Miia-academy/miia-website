@@ -126,7 +126,7 @@ export default function Alias({ blok }: AliasComponentProps) {
         {/* Dettagli Evento */}
         <div className="flex flex-1 flex-col justify-center space-y-4 py-2">
           {selectedEvent.title && (!cleanUrl || submitForms.length > 0) ? (
-            <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
+            <h3 className="font-sans type-title-3">
               {selectedEvent.title}
             </h3>
           ) : (
@@ -134,7 +134,7 @@ export default function Alias({ blok }: AliasComponentProps) {
               href={cleanUrl || '#'}
               className="inline-block transition-opacity hover:opacity-85"
             >
-              <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
+              <h3 className="font-sans type-title-3">
                 {selectedEvent.title}
               </h3>
             </NextLink>
@@ -175,7 +175,7 @@ export default function Alias({ blok }: AliasComponentProps) {
         {blok.persone && persone.length > 0 && (
           <div className="w-full basis-full space-y-6 pt-6 sm:pt-10">
             {blok.persone_titolo && (
-              <h3 className="font-serif text-3xl font-bold leading-tight md:text-4xl xl:text-5xl">
+              <h3 className="font-serif type-title-2">
                 {blok.persone_titolo}
               </h3>
             )}
@@ -225,7 +225,7 @@ export default function Alias({ blok }: AliasComponentProps) {
             href={articleSlug}
             className="inline-block space-y-3 transition-opacity hover:opacity-85"
           >
-            <h4 className="font-serif text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
+            <h4 className="font-serif type-title-3">
               {selectedArticle.title}
             </h4>
           </NextLink>

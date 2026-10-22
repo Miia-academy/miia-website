@@ -239,7 +239,7 @@ export default function Iscrizione({ corso, titolo }: Props) {
           <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione online</p>
-            <h1 className="mt-1 mb-2 text-3xl sm:text-4xl font-bold leading-tight">{titolo}</h1>
+            <h1 className="mt-1 mb-2 type-title-3">{titolo}</h1>
             <p className="mb-10 text-neutral-600">
               Oggi non paghi nulla. Puoi ripensarci entro 14 giorni dalla firma.
             </p>
@@ -279,7 +279,7 @@ function Riepilogo({
   return (
     <aside className="mt-10 lg:mt-0">
       <div className="lg:sticky lg:top-8 rounded-2xl bg-surface p-6 text-sm">
-        <h2 className="mb-4 text-lg font-bold">La tua iscrizione</h2>
+        <h2 className="mb-4 type-subtitle">La tua iscrizione</h2>
         <dl className="space-y-3">
           <div>
             <dt className="text-neutral-500">Corso</dt>

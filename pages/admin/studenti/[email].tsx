@@ -122,7 +122,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               )}
             </div>
 
-            <h1 className="text-3xl font-extrabold text-neutral-900 mt-2">
+            <h1 className="type-title-3 text-neutral-900 mt-2">
               {fullName || student.email}
             </h1>
             <p className="text-sm text-neutral-500">{student.email}</p>
@@ -134,26 +134,26 @@ export default function AdminStudentView({ student, applications }: StudentDetai
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Email</span>
+                <span className="block type-label text-neutral-400">Email</span>
                 <span className="text-base font-semibold text-neutral-800 break-all">{student.email}</span>
               </div>
 
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Telefono / SMS</span>
+                <span className="block type-label text-neutral-400">Telefono / SMS</span>
                 <span className="text-base font-semibold text-neutral-800">
                   {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Provincia</span>
+                <span className="block type-label text-neutral-400">Provincia</span>
                 <span className="text-base font-semibold text-neutral-800 uppercase">
                   {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Indirizzo</span>
+                <span className="block type-label text-neutral-400">Indirizzo</span>
                 <span className="text-base font-medium text-neutral-800">
                   {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
                 </span>
@@ -163,7 +163,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Mobilità e Disponibilità
               </span>
               <div className="flex flex-wrap gap-2">
@@ -176,7 +176,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Competenze
               </span>
               {detailedSkills.length > 0 ? (
@@ -205,7 +205,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Allegati Candidato
               </span>
               <div className="flex flex-wrap gap-3 items-center">
@@ -245,7 +245,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
 
         <Card shadow="sm" className="border border-neutral-200">
           <CardHeader className="pt-6 px-6 pb-2 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-neutral-900">
+            <h2 className="type-subtitle text-neutral-900">
               Candidature Inviate ({applications.length})
             </h2>
           </CardHeader>

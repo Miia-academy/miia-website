@@ -54,7 +54,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
       <div className="mx-auto max-w-6xl mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6 border-b border-neutral-200 pb-6">
         <div className="flex items-center gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 truncate">Area Azienda</h1>
+            <h1 className="type-title-3 tracking-tight text-neutral-900 truncate">Area Azienda</h1>
             <p className="mt-0.5 text-sm text-neutral-500 truncate">Gestisci le tue inserzioni e le candidature</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
       <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
           <Card shadow="sm" className="border border-neutral-200">
-            <CardHeader className="pt-6 px-5 sm:px-6 font-bold text-xl text-neutral-900 flex justify-between items-center">
+            <CardHeader className="pt-6 px-5 sm:px-6 type-subtitle text-neutral-900 flex justify-between items-center">
               <span>Profilo Operativo</span>
             </CardHeader>
             <Divider className="my-2" />
@@ -88,22 +88,22 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                   </div>
                 )}
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-900 leading-tight">{profileData.azienda || <span className="text-red-500 italic text-sm">Nome mancante</span>}</h2>
+                  <h2 className="type-subtitle text-neutral-900">{profileData.azienda || <span className="text-red-500 italic text-sm">Nome mancante</span>}</h2>
                   <p className="text-xs text-neutral-500 font-mono mt-0.5">{user.email}</p>
                 </div>
               </div>
               <div className="space-y-4 text-sm">
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Referente</span>
+                  <span className="block type-label text-neutral-400 mb-1">Referente</span>
                   <p className="font-medium text-neutral-800">{profileData.referente || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Telefono</span>
+                    <span className="block type-label text-neutral-400 mb-1">Telefono</span>
                     <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Sito Web</span>
+                    <span className="block type-label text-neutral-400 mb-1">Sito Web</span>
                     {profileData.sito_web ? (
                       <a href={profileData.sito_web.startsWith('http') ? profileData.sito_web : `https://${profileData.sito_web}`} target="_blank" rel="noreferrer" className="font-medium text-emerald-600 hover:underline truncate block">
                         {profileData.sito_web.replace(/^https?:\/\//, '')}
@@ -114,11 +114,11 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                   </div>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Indirizzo Sede</span>
+                  <span className="block type-label text-neutral-400 mb-1">Indirizzo Sede</span>
                   <p className="font-medium text-neutral-800">{profileData.indirizzo || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Chi Siamo</span>
+                  <span className="block type-label text-neutral-400 mb-1">Chi Siamo</span>
                   {profileData.descrizione ? (
                     <p className="text-neutral-600 leading-relaxed line-clamp-4">{profileData.descrizione}</p>
                   ) : (
@@ -135,7 +135,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
 
         <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
           <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
-            <h2 className="font-bold text-xl text-neutral-900">Le Tue Inserzioni</h2>
+            <h2 className="type-subtitle text-neutral-900">Le Tue Inserzioni</h2>
             <span className="text-sm text-neutral-500 font-medium">{initialJobs.length} {initialJobs.length === 1 ? 'Annuncio' : 'Annunci'}</span>
           </div>
           {initialJobs.length === 0 ? (

@@ -278,7 +278,7 @@ export function JobFormModal({
 
               {/* SEZIONE 1: Informazioni & Requisiti Inserzione */}
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">
+                <span className="type-label text-neutral-400">
                   Informazioni & Requisiti Inserzione
                 </span>
 
@@ -367,7 +367,7 @@ export function JobFormModal({
 
               {/* SEZIONE 2: Dettagli Operativi & Sede */}
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">
+                <span className="type-label text-neutral-400">
                   Dettagli Operativi & Sede
                 </span>
 

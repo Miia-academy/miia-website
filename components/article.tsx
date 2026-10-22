@@ -86,7 +86,7 @@ export default function Article({ blok }: ArticleProps) {
 
             {/* Titolo Principale: Blur Rimosso */}
             {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
-              <h1 className="w-fit inline-block font-serif break-words text-3xl md:text-6xl xl:text-7xl font-black leading-tight md:leading-tight xl:leading-none">
+              <h1 className="w-fit inline-block font-serif break-words type-display">
                 {blok.title}
               </h1>
             ) : null}

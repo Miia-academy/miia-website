@@ -161,7 +161,7 @@ export function Conferma({
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl bg-surface p-6 sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione firmata</p>
-        <h2 className="mt-1 text-2xl font-bold">Grazie {state.chi_sei.nome}, ci vediamo in aula.</h2>
+        <h2 className="mt-1 type-title-4">Grazie {state.chi_sei.nome}, ci vediamo in aula.</h2>
         {edizione && <p className="mt-3 text-neutral-700">{edizione}</p>}
         {inizio && <p className="mt-3 text-neutral-700">{paymentStart(inizio)}</p>}
         <p className="mt-3 text-neutral-700">

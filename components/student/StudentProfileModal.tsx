@@ -157,7 +157,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
 
             <ModalBody className="py-6 px-4 sm:px-6 space-y-6">
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Dati Anagrafici & Contatti</span>
+                <span className="type-label text-neutral-400">Dati Anagrafici & Contatti</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Nome" isRequired value={editForm.nome} onValueChange={(v) => setEditForm({ ...editForm, nome: v })} variant="flat" />
                   <Input label="Cognome" isRequired value={editForm.cognome} onValueChange={(v) => setEditForm({ ...editForm, cognome: v })} variant="flat" />
@@ -172,7 +172,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Le tue Competenze</span>
+                <span className="type-label text-neutral-400">Le tue Competenze</span>
                 <Select
                   label="Seleziona competenze"
                   selectionMode="multiple"
@@ -195,7 +195,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Stato e Disponibilità</span>
+                <span className="type-label text-neutral-400">Stato e Disponibilità</span>
                 <div className="flex flex-col gap-3">
                   <Checkbox isSelected={editForm.ricerca_attiva} onValueChange={(v) => setEditForm({ ...editForm, ricerca_attiva: v })}>
                     <span className="text-sm font-medium text-neutral-700">In ricerca attiva di lavoro</span>
@@ -215,7 +215,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Documenti</span>
+                <span className="type-label text-neutral-400">Documenti</span>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">Curriculum Vitae (PDF max 5MB) <span className="text-red-500">*</span></label>

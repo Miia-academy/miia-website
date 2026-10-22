@@ -52,7 +52,7 @@ export default function StudentLogin() {
       <Card className="w-full max-w-lg rounded-3xl shadow-sm border border-neutral-200 relative z-20" shadow="none">
         <CardBody className="p-5 sm:p-8 space-y-6 sm:space-y-8">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Area Studenti</h1>
+            <h1 className="type-title-3 tracking-tight text-neutral-900">Area Studenti</h1>
             <p className="text-sm text-neutral-500 mt-2">
               {router.query.redirectUrl
                 ? 'Accedi per visualizzare i dettagli di questa inserzione.'

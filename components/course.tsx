@@ -55,7 +55,7 @@ export default function Course({ blok, story, parent }: CourseComponentProps) {
         <Wrapper>
           <Card>
             <CardHeader className="flex-col items-start">
-              <h4 className="font-bold leading-snug text-2xl">{course.title}</h4>
+              <h4 className="type-title-4">{course.title}</h4>
               <small>
                 {course.hours.includes('20:00/23:00')
                   ? 'Frequenza serale'
