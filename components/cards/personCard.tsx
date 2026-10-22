@@ -1,5 +1,6 @@
 import type { ProcessedPerson } from '@modules/cache'
-import { Image, Modal, ModalContent, useDisclosure } from '@heroui/react'
+import { Modal, ModalContent, useDisclosure } from '@heroui/react'
+import { Image } from '@components/ui/image'
 import { PORTRAIT_SIZES, PORTRAIT_WIDTHS, responsiveImage } from '@modules/images'
 import { YouTubeEmbed } from '@next/third-parties/google'
 import Markdown from 'markdown-to-jsx'

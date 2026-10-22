@@ -1,11 +1,11 @@
 import type { Gallery as GalleryBlok } from '@types'
 import { Fragment, useState } from 'react'
 import {
-  Image as HeroImage,
   Modal,
   ModalContent,
   useDisclosure,
 } from '@heroui/react'
+import { Image as HeroImage } from '@components/ui/image'
 import { tv } from 'tailwind-variants'
 import { default as NextImage } from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'

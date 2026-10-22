@@ -1,10 +1,10 @@
 import type { Image as ImageBlok } from '@types'
 import {
-  Image as HeroImage,
   Modal,
   ModalContent,
   useDisclosure,
 } from '@heroui/react'
+import { Image as HeroImage } from '@components/ui/image'
 import { tv } from 'tailwind-variants'
 import { gridSizes, responsiveImage } from '@modules/images'
 import { storyblokEditable } from '@storyblok/react'
@@ -132,7 +132,7 @@ const wrapperClasses = tv({
 })
 
 const imageClasses = tv({
-  base: 'h-auto max-h-lg opacity-100',
+  base: 'h-auto max-h-lg',
   variants: {
     size: {
       sm: 'max-w-32',

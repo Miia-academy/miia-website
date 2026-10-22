@@ -1,5 +1,6 @@
 import type { ProcessedProject } from '@modules/cache'
-import { Image, Chip } from '@heroui/react'
+import { Chip } from '@heroui/react'
+import { Image } from '@components/ui/image'
 import { Card } from '@components/ui/card'
 import { CARD_SIZES, responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
