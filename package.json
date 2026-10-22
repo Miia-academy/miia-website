@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "icons": "node scripts/icons.mjs",
     "cms": "storyblok components pull --space 311109 && storyblok types generate --space 311109"
   },
   "dependencies": {

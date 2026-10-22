@@ -1,7 +1,7 @@
 // Library styles first, so globals.css can override them
 import 'swiper/css'
 import 'swiper/css/navigation'
-import 'iconoir/css/iconoir.css'
+import '@styles/iconoir.css'
 import '@styles/globals.css'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import type { AppProps } from 'next/app'
