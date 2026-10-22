@@ -36,7 +36,7 @@ export const ApplicationsModal: React.FC<ApplicationsModalProps> = ({ isOpen, on
         {() => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              <h3 className="text-xl font-bold">Candidati per: {job?.title}</h3>
+              <h3 className="type-subtitle">Candidati per: {job?.title}</h3>
               <p className="text-sm font-normal text-neutral-500">Totale candidature valide: {applications.length}</p>
             </ModalHeader>
             <ModalBody>

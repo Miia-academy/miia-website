@@ -41,7 +41,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
 
         {/* Header Bacheca */}
         <div className="mb-8 sm:mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">
+          <h1 className="type-title-3 tracking-tight text-neutral-900">
             Bacheca Opportunità
           </h1>
           <p className="mt-2 text-base sm:text-lg text-neutral-500">

@@ -165,7 +165,7 @@ export function Corso({ corso, state, offer, loadError, onSaved, onChange, prese
               <Radio key={mode} value={mode} classNames={cardRadio}>
                 <span className="flex flex-col gap-0.5 text-sm">
                   <span className="font-bold text-base text-neutral-900">{MODE_LABELS[mode]}</span>
-                  <span className="text-lg font-bold text-neutral-900">
+                  <span className="type-subtitle text-neutral-900">
                     {q.rate > 1 ? `${q.rate} × ${euro(q.rata)}` : euro(q.totale)}
                   </span>
                   <span className="text-neutral-600">

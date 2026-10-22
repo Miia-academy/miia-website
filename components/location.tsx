@@ -28,7 +28,7 @@ export default function Location({ blok, story }: LocationComponentProps) {
   // 2. Isoliamo il contenuto interno per il principio DRY (Don't Repeat Yourself)
   const innerContent = (
     <>
-      <h5 className="font-semibold leading-snug text-xl">{location.title}</h5>
+      <h5 className="type-subtitle">{location.title}</h5>
       <p className="text-sm">{location.address}</p>
     </>
   )

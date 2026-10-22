@@ -158,7 +158,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-                <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight break-words">
+                <h1 className="type-title-3 tracking-tight text-neutral-900 break-words">
                   {job.title}
                 </h1>
 
@@ -189,7 +189,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
 
             {/* Condizioni Operative */}
             <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              <h2 className="type-label text-neutral-400">
                 Condizioni & Inquadramento
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
@@ -249,7 +249,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
 
             {/* Descrizione del Ruolo */}
             <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              <h2 className="type-label text-neutral-400">
                 Descrizione del Ruolo
               </h2>
               <p className="text-neutral-700 whitespace-pre-line text-sm leading-relaxed">
@@ -262,7 +262,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
               <>
                 <Divider />
                 <div className="space-y-4">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                  <h2 className="type-label text-neutral-400">
                     Competenze Richieste
                   </h2>
                   <div className="space-y-4">

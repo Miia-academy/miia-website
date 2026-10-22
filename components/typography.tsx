@@ -18,7 +18,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h1
           className={title({
             class:
-              'text-5xl md:text-6xl xl:text-7xl font-black leading-tight md:leading-tight xl:leading-none',
+              'type-display',
             theme: theme,
           })}
         >
@@ -31,7 +31,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h2
           className={title({
             class:
-              'text-4xl md:text-5xl xl:text-6xl font-extrabold leading-tight md:leading-tight xl:leading-none',
+              'type-title-1',
             theme: theme,
           })}
         >
@@ -44,7 +44,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h3
           className={title({
             class:
-              'text-3xl md:text-4xl xl:text-5xl font-bold leading-tight md:leading-tight xl:leading-none',
+              'type-title-2',
             theme: theme,
           })}
         >
@@ -57,7 +57,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h4
           className={subtitle({
             class:
-              'text-xl md:text-2xl xl:text-3xl font-bold leading-snug md:leading-snug xl:leading-snug',
+              'type-title-4',
             theme: theme,
           })}
         >
@@ -70,7 +70,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h5
           className={subtitle({
             class:
-              'font-semibold text-lg md:text-xl leading-snug md:leading-snug xl:leading-snug',
+              'type-subtitle',
             theme: theme,
           })}
         >
@@ -83,7 +83,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h6
           className={subtitle({
             class:
-              'text-lg font-semibold leading-snug md:leading-snug xl:leading-snug',
+              'type-subtitle',
             theme: theme,
           })}
         >
@@ -196,10 +196,10 @@ const classes = tv({
     },
     size: {
       small: {
-        text: 'text-sm',
+        text: 'type-body-sm',
       },
       large: {
-        text: 'text-xl',
+        text: 'type-body-lg',
       },
     },
   },

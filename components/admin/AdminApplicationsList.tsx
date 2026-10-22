@@ -59,7 +59,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
     <>
       <Card shadow="sm" className="border border-neutral-200">
         <CardHeader className="py-4 px-6 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-neutral-900">Gestione Candidature</h2>
+          <h2 className="type-subtitle text-neutral-900">Gestione Candidature</h2>
           <span className="text-xs font-semibold text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-full">
             Totale: {applications.length}
           </span>

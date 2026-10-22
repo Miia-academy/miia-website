@@ -94,7 +94,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
               Scheda Dettaglio Candidato
             </span>
-            <h1 className="text-3xl font-extrabold text-neutral-900 mt-2">
+            <h1 className="type-title-3 text-neutral-900 mt-2">
               {fullName}
             </h1>
           </CardHeader>
@@ -104,30 +104,30 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
           <CardBody className="p-6 space-y-6">
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Recapiti & Informazioni di Contatto
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-neutral-50 p-4 rounded-xl border border-neutral-200">
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Email</span>
+                  <span className="block type-label text-neutral-400">Email</span>
                   <a href={`mailto:${student.email}`} className="text-base font-semibold text-emerald-700 hover:underline break-all">
                     {student.email}
                   </a>
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Telefono / SMS</span>
+                  <span className="block type-label text-neutral-400">Telefono / SMS</span>
                   <a href={`tel:${student.sms}`} className="text-base font-semibold text-neutral-800 hover:underline">
                     {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
                   </a>
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Provincia</span>
+                  <span className="block type-label text-neutral-400">Provincia</span>
                   <span className="text-base font-semibold text-neutral-800 uppercase">
                     {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Indirizzo Sede / Residenza</span>
+                  <span className="block type-label text-neutral-400">Indirizzo Sede / Residenza</span>
                   <span className="text-base font-medium text-neutral-800">
                     {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
                   </span>
@@ -138,7 +138,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Mobilità e Disponibilità
               </span>
               <div className="flex flex-wrap gap-2">
@@ -151,7 +151,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Competenze
               </span>
               {detailedSkills.length > 0 ? (
@@ -180,7 +180,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Documenti Candidato
               </span>
               <div className="flex flex-wrap gap-3 items-center">

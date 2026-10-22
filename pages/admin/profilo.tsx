@@ -38,7 +38,7 @@ export default function AdminProfile({ user, initialApplications }: AdminProfile
         {/* Header Admin */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h1 className="type-title-3 tracking-tight text-neutral-900">
               Pannello Operativo
             </h1>
             <p className="mt-1 text-sm text-neutral-500">

@@ -17,7 +17,7 @@ export default function NotFound() {
         <Logo classes="" primary="#262C2A" secondary="#262C2A" />
       </Link>
       <div className="md:max-w-2/3">
-        <h1 className="mb-6 font-serif text-4xl font-black leading-none md:text-6xl">Pagina non trovata</h1>
+        <h1 className="mb-6 font-serif type-display">Pagina non trovata</h1>
         <p className="mb-12 font-sans text-lg">
           La pagina che cerchi non esiste più o ha cambiato indirizzo. Puoi ripartire da qui:
         </p>

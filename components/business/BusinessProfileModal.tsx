@@ -102,7 +102,7 @@ export function BusinessProfileModal({ isOpen, onClose, initialData, onSuccess, 
 
             <ModalBody className="py-6 px-4 sm:px-6 space-y-6">
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Identità Aziendale</span>
+                <span className="type-label text-neutral-400">Identità Aziendale</span>
                 <Input label="Nome Azienda" isRequired value={editForm.azienda} onValueChange={(v) => setEditForm({ ...editForm, azienda: v })} variant="flat" />
 
                 <div className="pt-2">
@@ -138,7 +138,7 @@ export function BusinessProfileModal({ isOpen, onClose, initialData, onSuccess, 
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Contatti & Sede</span>
+                <span className="type-label text-neutral-400">Contatti & Sede</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Referente / Contatto" isRequired value={editForm.referente} onValueChange={(v) => setEditForm({ ...editForm, referente: v })} variant="flat" />
                   <Input type="tel" label="Telefono (es. +39...)" value={editForm.sms} onValueChange={(v) => setEditForm({ ...editForm, sms: v })} variant="flat" />
@@ -149,7 +149,7 @@ export function BusinessProfileModal({ isOpen, onClose, initialData, onSuccess, 
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Presentazione</span>
+                <span className="type-label text-neutral-400">Presentazione</span>
                 <Input type="url" label="Sito Web" placeholder="https://..." value={editForm.sito_web} onValueChange={(v) => setEditForm({ ...editForm, sito_web: v })} variant="flat" />
                 <Textarea label="Chi Siamo" placeholder="Descrivi brevemente l'azienda per i candidati..." value={editForm.descrizione} onValueChange={(v) => setEditForm({ ...editForm, descrizione: v })} variant="flat" minRows={4} />
               </div>

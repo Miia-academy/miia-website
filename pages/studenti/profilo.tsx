@@ -60,7 +60,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
     <div className="min-h-screen bg-neutral-50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Area Studente</h1>
+          <h1 className="type-title-3 tracking-tight text-neutral-900">Area Studente</h1>
           <p className="mt-1 text-sm text-neutral-500">Benvenuto, <span className="font-semibold text-neutral-800">{profileData.nome ? `${profileData.nome} ${profileData.cognome}` : user.email}</span></p>
         </div>
         <div>
@@ -85,7 +85,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
       <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
           <Card shadow="sm" className="border border-neutral-200">
-            <CardHeader className="pt-6 px-5 sm:px-6 font-bold text-xl text-neutral-900 flex justify-between items-center">
+            <CardHeader className="pt-6 px-5 sm:px-6 type-subtitle text-neutral-900 flex justify-between items-center">
               Il Tuo Profilo
             </CardHeader>
             <Divider className="my-2" />
@@ -95,7 +95,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   {profileData.nome ? profileData.nome.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-900 leading-tight">
+                  <h2 className="type-subtitle text-neutral-900">
                     {profileData.nome ? `${profileData.nome} ${profileData.cognome}` : <span className="text-red-500 italic text-sm">Nome mancante</span>}
                   </h2>
                   <p className="text-xs text-neutral-500 font-mono mt-0.5 break-all">{user.email}</p>
@@ -104,20 +104,20 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
               <div className="space-y-4 text-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Telefono</span>
+                    <span className="block type-label text-neutral-400 mb-1">Telefono</span>
                     <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Provincia</span>
+                    <span className="block type-label text-neutral-400 mb-1">Provincia</span>
                     <p className="font-medium text-neutral-800 uppercase">{profileData.provincia || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                   </div>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Indirizzo</span>
+                  <span className="block type-label text-neutral-400 mb-1">Indirizzo</span>
                   <p className="font-medium text-neutral-800 line-clamp-1">{profileData.indirizzo || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-2">Disponibilità</span>
+                  <span className="block type-label text-neutral-400 mb-2">Disponibilità</span>
                   <div className="flex flex-wrap gap-2">
                     {profileData.ricerca_attiva ? <Chip size="sm" color="success" variant="flat">Ricerca Attiva</Chip> : <Chip size="sm" color="default" variant="flat">Non in ricerca</Chip>}
                     {profileData.automunito && <Chip size="sm" color="success" variant="flat">Automunito</Chip>}
@@ -126,7 +126,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   </div>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-3">Le Mie Competenze</span>
+                  <span className="block type-label text-neutral-400 mb-3">Le Mie Competenze</span>
                   {detailedSkills.length > 0 ? (
                     <div className="space-y-4 mt-2">
                       {detailedSkills.map((skill) => (
@@ -148,7 +148,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   ) : <span className="text-neutral-400 italic text-xs">Nessuna competenza aggiunta</span>}
                 </div>
                 <div className="pt-2">
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-2">Allegati</span>
+                  <span className="block type-label text-neutral-400 mb-2">Allegati</span>
                   <div className="space-y-2">
                     {profileData.cv_url ? (
                       <a href={profileData.cv_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">📄 Vedi Curriculum</a>
@@ -172,7 +172,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
 
         <div className="lg:col-span-2 order-1 lg:order-2 space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
-            <h2 className="font-bold text-xl text-neutral-900">Le Mie Candidature</h2>
+            <h2 className="type-subtitle text-neutral-900">Le Mie Candidature</h2>
             <span className="text-sm text-neutral-500 font-medium">{applications.length} Inviate</span>
           </div>
           {applications.length === 0 ? (

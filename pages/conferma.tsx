@@ -342,7 +342,7 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
 
 const classes = tv({
   slots: {
-    title: 'font-serif font-black text-4xl md:text-6xl leading-none mb-6',
+    title: 'font-serif type-display mb-6',
     description: 'font-sans text-lg mb-12',
     wrapper: 'md:max-w-2/3',
   },
