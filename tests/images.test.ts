@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { gridSizes, responsiveImage, storyblokImageUrl } from '@modules/images'
 
 const photo = 'https://a.storyblok.com/f/311109/1920x1081/89c123c0de/cucina.jpg'
@@ -40,5 +42,19 @@ describe('sizes in the grid', () => {
 
   it('full width when nothing is set', () => {
     expect(gridSizes(undefined)).toBe('100vw')
+  })
+})
+
+// HeroUI Image preloads the picture with a detached new Image(): with loading="lazy"
+// that copy is never in view, never loads, and the <img> stays at opacity 0.
+describe('HeroUI images', () => {
+  const files = readdirSync('components', { recursive: true, encoding: 'utf8' })
+    .filter((f) => f.endsWith('.tsx'))
+    .map((f) => join('components', f))
+
+  it.each(files)('%s does not lazy load a HeroUI Image', (file) => {
+    const source = readFileSync(file, 'utf8')
+    const tags = source.match(/<(Image|HeroImage)\b[^>]*>/g) ?? []
+    for (const tag of tags) expect(tag).not.toMatch(/loading=/)
   })
 })

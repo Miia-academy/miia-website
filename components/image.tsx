@@ -36,7 +36,6 @@ export default function Image({ blok, parent }: ImageComponentProps) {
         src={image.src}
         srcSet={image.srcSet}
         sizes={image.sizes}
-        loading="lazy"
         alt={blok.image.alt || ''}
         onClick={onOpen}
         width="100%"

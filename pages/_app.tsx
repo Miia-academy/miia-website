@@ -14,6 +14,7 @@ import { debugProfiloAttivo, inviaRiassunto, tracciaPagina } from '@modules/trac
 import DebugProfilo from '@components/debugProfilo'
 import SiteBanner from '@components/banners/siteBanner'
 
+import { fontSans, fontSerif } from '@config/fonts'
 import { getGtmId } from '@config/gtm'
 
 import Page from '@components/page'
@@ -127,6 +128,13 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
+      {/* Fonts for the whole page, modals included: next/font CSS is loaded only from _app */}
+      <style jsx global>{`
+        :root {
+          --font-sans: ${fontSans.style.fontFamily};
+          --font-serif: ${fontSerif.style.fontFamily};
+        }
+      `}</style>
       <DataProvider data={pageProps.data}>
         <HeroUIProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">

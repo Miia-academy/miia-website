@@ -102,7 +102,6 @@ export default function Gallery({ blok }: GalleryComponentProps) {
         >
           <HeroImage
             {...responsiveImage(image.filename, THUMB_SIZES, THUMB_WIDTHS)}
-            loading="lazy"
             alt={image.alt || ''}
             width="100%"
             shadow="md"
