@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { Card, CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { AlertModal } from '@components/shared/AlertModal'
 
 interface AdminApplicationsListProps {
@@ -161,7 +162,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                         href={`/admin/studenti/${encodeURIComponent(app.student_email)}`}
                         variant="flat"
                         size="sm"
-                        className="font-semibold text-xs h-8"
+                        className="text-xs h-8"
                       >
                         Vedi Profilo
                       </Button>
@@ -174,16 +175,16 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                             size="sm"
                             isLoading={loadingId === app.application_id}
                             onPress={() => handleUpdateStatus(app.application_id, 'rifiutata')}
-                            className="font-bold text-xs h-8"
+                            className="text-xs h-8"
                           >
                             Rifiuta
                           </Button>
                           <Button
-                            color="success"
+                            color="primary"
                             size="sm"
                             isLoading={loadingId === app.application_id}
                             onPress={() => handleUpdateStatus(app.application_id, 'validata')}
-                            className="text-white font-bold text-xs h-8 bg-primary"
+                            className="text-xs h-8"
                           >
                             Valida
                           </Button>
@@ -192,12 +193,12 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
 
                       {isRifiutata && (
                         <Button
-                          color="success"
+                          color="primary"
                           variant="solid"
                           size="sm"
                           isLoading={loadingId === app.application_id}
                           onPress={() => handleUpdateStatus(app.application_id, 'validata')}
-                          className="font-bold text-xs h-8 text-white bg-primary"
+                          className="text-xs h-8"
                         >
                           Rivalida Candidatura
                         </Button>

@@ -15,7 +15,8 @@ import {
 } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface CompanyDetails {
@@ -167,16 +168,16 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
                   hasAppliedState ? (
                     <Button
                       isDisabled
-                      className="bg-primary/10 text-primary font-bold border border-primary/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
+                      className="bg-primary/10 text-primary border border-primary/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
                     >
                       ✓ Già candidato
                     </Button>
                   ) : (
-                    <Button
+                    <Button color="primary"
                       onPress={handleApply}
                       isLoading={loading}
                       isDisabled={job.status !== 'attiva'}
-                      className="bg-primary text-white font-bold shrink-0 h-11 px-6 shadow-sm"
+                      className="shrink-0 h-11 px-6 shadow-sm"
                     >
                       Candidati Ora
                     </Button>

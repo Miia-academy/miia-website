@@ -6,7 +6,8 @@ import { getActiveJobs } from '@modules/jobs/db'
 import type { Job } from '@modules/jobs/types'
 import { TIPO_CONTRATTO_LABELS, GRADO_ESPERIENZA_LABELS } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Divider } from '@heroui/react'
+import { Card, CardHeader, CardBody, CardFooter, Chip, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface JobWithStats extends Job {
@@ -130,7 +131,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                       href={`/lavoro/inserzioni/${job.id}`}
                       variant="ghost"
                       color="primary"
-                      className="w-full font-bold"
+                      className="w-full"
                     >
                       Vedi Dettagli
                     </Button>

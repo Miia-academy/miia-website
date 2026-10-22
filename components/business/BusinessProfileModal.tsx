@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Divider, Textarea } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Divider, Textarea } from '@heroui/react'
+import { Button } from '@components/ui/button'
 
 export interface BusinessProfileData {
   azienda: string
@@ -159,7 +160,7 @@ export function BusinessProfileModal({ isOpen, onClose, initialData, onSuccess, 
               <Button variant="flat" onPress={onClose} disabled={loading} className="w-full sm:w-auto">
                 Annulla
               </Button>
-              <Button type="submit" isLoading={loading} className="w-full sm:w-auto bg-black text-white font-bold shadow-sm">
+              <Button color="dark" type="submit" isLoading={loading} className="w-full sm:w-auto shadow-sm">
                 Salva Modifiche
               </Button>
             </ModalFooter>

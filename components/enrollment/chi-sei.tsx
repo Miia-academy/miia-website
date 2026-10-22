@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Button, Input, InputOtp } from '@heroui/react'
+import { Input, InputOtp } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getAttribution } from '@modules/attribution'
 import type { EnrollmentState } from '@modules/enrollment/state'
 
@@ -127,7 +128,7 @@ export function ChiSei({ corso, initialEmail = '', state, onVerified, onSaved }:
 
   const footer = (label: string) => (
     <div className="flex flex-col gap-2">
-      <Button type="submit" color="primary" className="h-12 font-bold self-start px-8" isLoading={loading}>
+      <Button size="lg" type="submit" color="primary" className="self-start" isLoading={loading}>
         {label}
       </Button>
       {message && <p role="alert" className="text-sm text-secondary">{message}</p>}

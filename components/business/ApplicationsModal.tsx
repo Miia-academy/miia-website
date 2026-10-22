@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react'
+import { Button } from '@components/ui/button'
 
 export interface ApplicationsModalProps {
   isOpen: boolean
@@ -79,11 +80,11 @@ export const ApplicationsModal: React.FC<ApplicationsModalProps> = ({ isOpen, on
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <Button
+                          <Button color="dark"
                             as={Link}
                             href={`/aziende/candidati/${encodeURIComponent(app.student_email)}?jobId=${job.id}&appId=${app.id}`}
                             size="sm"
-                            className="bg-black text-white font-semibold px-4"
+                            className="px-4"
                           >
                             Vedi Dettaglio Candidato &rarr;
                           </Button>

@@ -1,5 +1,6 @@
 import type { Field as FieldBlok } from '@types'
-import { Alert, Button, Checkbox, Link } from '@heroui/react'
+import { Alert, Checkbox, Link } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { StoryblokComponent } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { useCallback, useEffect, useMemo, useState } from 'react'

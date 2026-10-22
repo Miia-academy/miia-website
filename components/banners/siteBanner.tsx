@@ -1,6 +1,6 @@
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { Button } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BANNER } from '@config/tracking'
 import { useDataContext } from '@modules/context'

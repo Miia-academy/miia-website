@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Button, Checkbox, CheckboxGroup, Input, Select, SelectItem, cn } from '@heroui/react'
+import { Checkbox, CheckboxGroup, Input, Select, SelectItem, cn } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import {
   AREA_LABELS,
@@ -160,7 +161,7 @@ export function Profilo({ corso, state, onSaved }: ProfiloProps) {
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-4">
-          <Button type="submit" color="primary" className="h-12 font-bold px-8" isLoading={loading === 'save'} isDisabled={!!loading}>
+          <Button size="lg" type="submit" color="primary" isLoading={loading === 'save'} isDisabled={!!loading}>
             Continua
           </Button>
           <Button variant="light" className="underline text-neutral-600" isLoading={loading === 'skip'} isDisabled={!!loading} onPress={() => send(true)}>

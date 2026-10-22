@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Button, Checkbox, Radio, RadioGroup, Spinner } from '@heroui/react'
+import { Checkbox, Radio, RadioGroup, Spinner } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import type { Conditions } from '@modules/enrollment/conditions'
 import { descriptionLines } from '@modules/enrollment/consent-text'
 import type { EnrollmentState } from '@modules/enrollment/state'
@@ -168,7 +169,7 @@ export function Consensi({ corso, state, onSaved }: ConsensiProps) {
 
       <p className="text-xs text-neutral-500">Versione dei testi: {conditions.versione}</p>
       <div className="flex flex-col gap-2">
-        <Button color="primary" className="h-12 font-bold self-start px-8" isLoading={loading} onPress={save}>
+        <Button size="lg" color="primary" className="self-start" isLoading={loading} onPress={save}>
           Continua
         </Button>
         {message && <p role="alert" className="text-sm text-secondary">{message}</p>}

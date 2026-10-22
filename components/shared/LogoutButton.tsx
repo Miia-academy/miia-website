@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, ButtonProps } from '@heroui/react'
+import { Button, type ButtonProps } from '@components/ui/button'
 
 interface LogoutButtonProps extends Omit<ButtonProps, 'onPress'> {
   redirectTo?: string
@@ -43,7 +43,7 @@ export function LogoutButton({
       variant={variant}
       isLoading={isLoading}
       onPress={handleLogout}
-      className={`font-semibold ${className || ''}`}
+      className={className}
       {...props}
     >
       {label}

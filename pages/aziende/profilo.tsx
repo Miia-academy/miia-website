@@ -6,7 +6,8 @@ import jwt from 'jsonwebtoken'
 import { getBusinessJobs } from '@modules/jobs/db'
 import type { Job, JobWithApplicantsCount } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Button, Card, CardBody, CardHeader, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from '@heroui/react'
+import { Card, CardBody, CardHeader, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { JobFormModal } from '@components/business/JobFormModal'
 import { DeleteJobModal } from '@components/business/DeleteJobModal'
 import { ApplicationsModal } from '@components/business/ApplicationsModal'
@@ -65,7 +66,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
             color="default"
             label="Esci"
           />
-          <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} className="w-full md:w-auto bg-primary text-white font-bold shadow-sm shrink-0 h-11">
+          <Button color="primary" onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} className="w-full md:w-auto shadow-sm shrink-0 h-11">
             + Nuova Inserzione
           </Button>
         </div>
@@ -126,7 +127,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                   )}
                 </div>
               </div>
-              <Button onPress={() => setIsProfileFormOpen(true)} className="w-full bg-neutral-900 text-white font-bold h-11">
+              <Button color="dark" onPress={() => setIsProfileFormOpen(true)} className="w-full h-11">
                 Modifica Profilo
               </Button>
             </CardBody>
@@ -141,7 +142,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
           {initialJobs.length === 0 ? (
             <div className="p-10 text-center border border-dashed border-neutral-300 rounded-2xl bg-white mt-4">
               <p className="mb-4 text-neutral-500">Nessun annuncio creato finora.</p>
-              <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} variant="flat" color="primary" className="font-semibold">
+              <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} variant="flat" color="primary">
                 Pubblica la prima inserzione
               </Button>
             </div>
@@ -166,7 +167,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                     </Chip>
                     <Dropdown placement="bottom-end">
                       <DropdownTrigger>
-                        <Button isIconOnly size="sm" variant="light" className="text-neutral-500 hover:text-neutral-900 text-2xl font-bold min-w-8 w-8 h-8">&#8942;</Button>
+                        <Button isIconOnly size="sm" variant="light" className="text-neutral-500 hover:text-neutral-900 text-2xl min-w-8 w-8 h-8">&#8942;</Button>
                       </DropdownTrigger>
                       <DropdownMenu aria-label="Azioni Inserzione">
                         <DropdownItem key="status" onPress={() => handleToggleStatus(job.id, job.status)}>

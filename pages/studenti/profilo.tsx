@@ -4,7 +4,8 @@ import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
-import { Button, Chip, Card, CardBody, CardHeader, Divider } from '@heroui/react'
+import { Chip, Card, CardBody, CardHeader, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useDataContext } from '@modules/context'
 import { StudentProfileModal, StudentProfileData } from '@components/student/StudentProfileModal'
 import { LogoutButton } from '@components/shared/LogoutButton'
@@ -71,11 +72,11 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
             label="Esci"
           />
           {isCvMissing ? (
-            <Button isDisabled className="w-full md:w-auto bg-neutral-200 text-neutral-500 font-bold shadow-sm h-11 shrink-0 opacity-100 cursor-not-allowed">
+            <Button isDisabled className="w-full md:w-auto bg-neutral-200 text-neutral-500 shadow-sm h-11 shrink-0 opacity-100 cursor-not-allowed">
               Carica il CV per accedere
             </Button>
           ) : (
-            <Button as={Link} href="/lavoro/inserzioni" className="w-full md:w-auto bg-primary text-white font-bold shadow-sm h-11 shrink-0">
+            <Button color="primary" as={Link} href="/lavoro/inserzioni" className="w-full md:w-auto shadow-sm h-11 shrink-0">
               Vai alla Bacheca Inserzioni &rarr;
             </Button>
           )}
@@ -163,7 +164,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   <p className="text-xs text-red-600 leading-relaxed">Per poter esplorare le offerte di lavoro e candidarti, è necessario caricare il tuo CV in formato PDF.</p>
                 </div>
               )}
-              <Button onPress={() => setIsProfileModalOpen(true)} className="w-full bg-neutral-900 text-white font-bold h-11">
+              <Button color="dark" onPress={() => setIsProfileModalOpen(true)} className="w-full h-11">
                 Modifica Profilo
               </Button>
             </CardBody>
@@ -178,7 +179,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
           {applications.length === 0 ? (
             <div className="p-10 text-center border border-dashed border-neutral-300 rounded-2xl bg-white mt-4">
               <p className="text-neutral-500 mb-4">Non ti sei ancora candidato a nessuna offerta.</p>
-              <Button as={Link} href={isCvMissing ? "#" : "/lavoro/inserzioni"} isDisabled={isCvMissing} variant="flat" color="primary" className="font-semibold">
+              <Button as={Link} href={isCvMissing ? "#" : "/lavoro/inserzioni"} isDisabled={isCvMissing} variant="flat" color="primary">
                 Esplora le Opportunità
               </Button>
             </div>
