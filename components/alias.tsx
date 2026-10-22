@@ -102,7 +102,8 @@ export default function Alias({ blok }: AliasComponentProps) {
           className="relative flex aspect-[4/3] min-h-48 w-full min-w-56 flex-none overflow-hidden rounded-xl bg-cover bg-center sm:w-64"
           style={{
             backgroundImage: blok.image?.filename
-              ? `url(${storyblokImageUrl(blok.image.filename, 640)})`
+              ? // Quoted: the resized address contains "quality(70)", whose ")" ends an unquoted url()
+                `url("${storyblokImageUrl(blok.image.filename, 640)}")`
               : 'none',
           }}
         >
