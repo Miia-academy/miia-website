@@ -30,7 +30,7 @@ export function getImageSizes(image: any) {
     ratio: 1.333,
     axis: 'width',
   }
-  let sizes = image.filename
+  const sizes = image.filename
     .match(/\/(\d+)x(\d+)\//)
     ?.filter((s: string, i: number) => !!i)
     ?.map((s: string) => Number(s))
@@ -45,7 +45,7 @@ export function getImageSizes(image: any) {
   return { ...image, size }
 }
 
-export const getCapitalize = (string: String) =>
+export const getCapitalize = (string: string) =>
   string
     .split(' ')
     .map((s: string) =>

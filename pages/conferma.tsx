@@ -93,7 +93,7 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
     collegamentoCorso = `corsi/${paths[0]}/corso-${paths[0]}-${paths[1]}-livello`
   }
 
-  const { title, subtitle, description, wrapper } = classes()
+  const { title, description, wrapper } = classes()
 
   const areaFormatted = params.area
     ? String(params.area).charAt(0).toUpperCase() + String(params.area).slice(1)
@@ -343,7 +343,6 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
 const classes = tv({
   slots: {
     title: 'font-serif font-black text-4xl md:text-6xl leading-none mb-6',
-    subtitle: 'font-sans font-medium text-2xl md:text-3xl leading-none mb-3',
     description: 'font-sans text-lg mb-12',
     wrapper: 'md:max-w-2/3',
   },

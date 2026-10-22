@@ -1,6 +1,6 @@
 // @modules/cache.ts
 import { getStoryblokApi } from '@storyblok/react'
-import type { Course, Event, Location, Article, Person, Project } from '@types'
+import type { Course, Event, Location } from '@types'
 import { relations } from '@config/relations'
 import type { BannerDati } from '@modules/banner'
 

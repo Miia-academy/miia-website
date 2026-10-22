@@ -1,7 +1,7 @@
 name: Controlli
 
 # Gira su ogni PR verso develop e main. La build del sito la fa già Vercel
-# (anteprima su ogni PR), qui controlliamo tipi e test del codice dei moduli.
+# (anteprima su ogni PR), qui controlliamo tipi, lint e test del codice dei moduli.
 on:
   pull_request:
     branches: [develop, main]
@@ -24,5 +24,7 @@ jobs:
       - run: npm ci
       - name: Controllo dei tipi
         run: npm run typecheck
+      - name: Controllo dello stile del codice
+        run: npm run lint
       - name: Test
         run: npm test

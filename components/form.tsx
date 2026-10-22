@@ -518,7 +518,7 @@ export default function Form({
   }, [form.terms, handleClear])
 
 
-  const { button, close, spinner, label, clear } = classes()
+  const { button, close, spinner, label } = classes()
 
   return (
     <>

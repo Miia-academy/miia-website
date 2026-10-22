@@ -78,8 +78,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sessionPayload.indirizzo = decoded.indirizzo || ''
         sessionPayload.provincia = decoded.provincia || ''
         sessionPayload.ricerca_attiva = decoded.ricerca_attiva ?? true
-        sessionPayload.automunito = decoded.automunito ?? false,
-          sessionPayload.trasferte = decoded.trasferte ?? false
+        sessionPayload.automunito = decoded.automunito ?? false
+        sessionPayload.trasferte = decoded.trasferte ?? false
         sessionPayload.cv_url = decoded.cv_url || ''
         sessionPayload.portfolio_url = decoded.portfolio_url || ''
         sessionPayload.competenze = decoded.competenze || []

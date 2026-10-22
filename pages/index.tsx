@@ -19,7 +19,7 @@ type HomeProps = {
   draft: boolean
 }
 
-export default function Home({ story, data, draft }: HomeProps) {
+export default function Home({ story }: HomeProps) {
   const page = useStoryblokState(story, {
     resolveRelations: relations.join(','),
     preventClicks: true,

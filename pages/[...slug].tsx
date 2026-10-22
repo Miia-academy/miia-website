@@ -21,7 +21,7 @@ interface PageStoryProps {
   draft: boolean
 }
 
-export default function PageStory({ story, data, draft }: PageStoryProps) {
+export default function PageStory({ story }: PageStoryProps) {
   const page = useStoryblokState(story, {
     resolveRelations: relations.join(','),
     preventClicks: true,
@@ -94,7 +94,7 @@ export const getStaticPaths = async () => {
       per_page: 100,
       filter_query: {
         component: {
-          in: 'page,enroll,project,article',
+          in: 'page,project,article',
         },
       },
     })
