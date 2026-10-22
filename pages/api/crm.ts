@@ -11,6 +11,7 @@ import {
   sanitizeEventProperties,
   sanitizeLists,
 } from '@modules/crm-form'
+import { pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
 import { loadOpendayDetails } from '@modules/openday-details'
 
 /**
@@ -90,10 +91,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await trackEvent({
         eventName,
         email,
-        properties: {
+        // Light event: only the fixed list of properties (see @modules/brevo-events)
+        properties: pickEventProperties(eventName, {
           ...sanitizeEventProperties(event?.event_properties),
-          ...(isSourceTrackingEnabled() ? attributionEventProperties(source) : {}),
-        },
+          ...(isSourceTrackingEnabled() ? sourceEventProperties(attributionEventProperties(source)) : {}),
+        }),
       })
     }
 

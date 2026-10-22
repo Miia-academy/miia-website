@@ -56,9 +56,10 @@ export const AREE: Record<string, string[]> = {
  * `etichetta` il nome mostrato nel riquadro ?debug=profilo.
  */
 export const MODULI: Record<string, { codice: string; punti: number; etichetta: string }> = {
-  download: { codice: 'b', punti: 10, etichetta: 'Presentazione scaricata' },
-  contact: { codice: 'i', punti: 10, etichetta: 'Richiesta informazioni' },
-  open_day: { codice: 'o', punti: 20, etichetta: 'Iscrizione open day' },
+  // Keys are the form tracking values with the new names (see @modules/brevo-events)
+  brochure: { codice: 'b', punti: 10, etichetta: 'Presentazione scaricata' },
+  info: { codice: 'i', punti: 10, etichetta: 'Richiesta informazioni' },
+  openday: { codice: 'o', punti: 20, etichetta: 'Iscrizione open day' },
   iscrizione: { codice: 'e', punti: 20, etichetta: 'Iscrizione al corso' },
   // "enroll" è il tracking del modulo di richiesta iscrizione in Storyblok (e in GTM)
   enroll: { codice: 'e', punti: 20, etichetta: 'Richiesta iscrizione' },
@@ -101,6 +102,6 @@ export const BANNER = {
   // Fields kept in the banner, per form ("tracking" field); the others stay only in the page.
   // Presentation: agreed on 20/10 (no locations); area and level are sent hidden, as in the course pages.
   bannerFields: {
-    download: ['email', 'nome', 'cognome', 'sms', 'finalita', 'validation'],
+    brochure: ['email', 'nome', 'cognome', 'sms', 'finalita', 'validation'],
   } as Record<string, string[]>,
 }

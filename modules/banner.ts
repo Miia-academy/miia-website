@@ -265,9 +265,9 @@ export function matchesAudience(item: string, v: Visitor, ctx: Pick<BannerContex
     case 'non-iscritto-open-day':
       return !openDaySignedUp
     case 'presentazione':
-      return v.forms.includes(formCode('download'))
+      return v.forms.includes(formCode('brochure'))
     case 'non-presentazione':
-      return !v.forms.includes(formCode('download'))
+      return !v.forms.includes(formCode('brochure'))
     case 'non-iscrizione':
       return !v.forms.includes(formCode('iscrizione'))
     case 'freddo':

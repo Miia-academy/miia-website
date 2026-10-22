@@ -196,7 +196,7 @@ describe('banner: visitor and form', () => {
     const d = nuovoDettaglio(new Date('2026-11-10T08:00:00Z'))
     registraPagina(d, '/corsi/interior-design', new Date('2026-11-10T08:00:00Z'))
     registraPagina(d, '/corsi/interior-design', new Date('2026-11-10T08:01:00Z'))
-    registraModulo(d, 'download', undefined, new Date('2026-11-10T08:02:00Z'))
+    registraModulo(d, 'brochure', undefined, new Date('2026-11-10T08:02:00Z'))
     const p = visitorFromDetail(d)
     expect(p).toMatchObject({ visits: 1, contact: true, forms: ['b'], area: 'interni' })
     expect(p.pages['/corsi/interior-design']).toBe(2)
@@ -208,7 +208,7 @@ describe('banner: visitor and form', () => {
       {
         _uid: 'f',
         component: 'form',
-        tracking: 'download',
+        tracking: 'brochure',
         fields: ['email', 'nome', 'cognome', 'sms', 'finalita', 'design', 'sede', 'newsletter'].map((id) => field(id)),
       } as any,
       'interni'

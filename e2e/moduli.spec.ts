@@ -51,7 +51,7 @@ test('Modulo di una pagina corso: provenienza della visita e casella cookie', as
   const invio = inviati[0]
   expect(invio.contact.email).toBe(EMAIL_PROVA)
   expect(invio.source.first).toMatchObject({ source: 'prova', medium: 'browser', campaign: 'prove-automatiche' })
-  expect(invio.event.event_name).toMatch(/^submit_/)
+  expect(invio.event.event_name).toMatch(/^submit_[a-z]+_form$/)
   testInfo.annotations.push({ type: 'Evento Brevo', description: invio.event.event_name })
 
   await scatta(page, testInfo, 'Modulo pagina corso – dopo l’invio')
@@ -74,7 +74,7 @@ test('Modulo open day: codice per la pagina "Entra" e pagina accedi', async ({ p
   await aspettaInvio(page, inviati)
   annotaErroriModulo(errori, testInfo)
   const invio = inviati[0]
-  expect(invio.event.event_name).toBe('submit_open_day')
+  expect(invio.event.event_name).toBe('submit_openday_form')
   const codice = invio.event.event_properties.openday_codice
   expect(codice, 'codice dell’open day (slug della storia evento)').toMatch(/^openday-/)
   expect(invio.contact.attributes.OD_CODICE).toBe(codice)

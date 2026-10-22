@@ -82,7 +82,8 @@ const SOURCE_ATTRIBUTE = /^(ORIGINE|ULTIMA)_(SORGENTE|MEZZO|CAMPAGNA|CONTENUTO|T
 // Prices come from the Storyblok price list, never from a form.
 const PRICE_ATTRIBUTE = /^PREZZO_/
 const ATTRIBUTE_NAME = /^[A-Z][A-Z0-9_]{0,39}$/
-const EVENT_NAME = /^submit_[a-z_]{1,30}$/
+// Same name in GTM and Brevo: submit_{event}_form (see @modules/brevo-events)
+const EVENT_NAME = /^submit_[a-z]{1,30}_form$/
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MAX_TEXT = 2000
 const MAX_ARRAY = 20
@@ -135,6 +136,11 @@ function sanitizeValue(value: unknown): Primitive | Primitive[] | null {
   return null
 }
 
+/** False for attributes a public form can never write (protected, source, prices). */
+export function isFormWritableAttribute(name: string): boolean {
+  return ATTRIBUTE_NAME.test(name) && !PROTECTED_ATTRIBUTES.has(name) && !SOURCE_ATTRIBUTE.test(name) && !PRICE_ATTRIBUTE.test(name)
+}
+
 /**
  * Tiene solo gli attributi ammessi, con valori semplici e di dimensione limitata.
  * I valori a scelta multipla vengono uniti a quelli già presenti nel contatto.
@@ -148,7 +154,7 @@ export function sanitizeAttributes(
 
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     const name = key.toUpperCase()
-    if (!ATTRIBUTE_NAME.test(name) || PROTECTED_ATTRIBUTES.has(name) || SOURCE_ATTRIBUTE.test(name) || PRICE_ATTRIBUTE.test(name)) continue
+    if (!isFormWritableAttribute(name)) continue
 
     if (name === 'SMS') {
       const phone = normalizePhone(value)

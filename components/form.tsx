@@ -17,6 +17,7 @@ import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { tracciaModulo } from '@modules/tracking'
 import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
 import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
+import { formEventName, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
 
 export interface FieldData {
   id: string
@@ -101,14 +102,6 @@ export function buildEvent(
   globalEvents: ProcessedEvent[],
   tracking?: string
 ) {
-  const eventFilterData = [
-    'email',
-    'nome',
-    'cognome',
-    'sms',
-    'newsletter',
-    'validation',
-  ]
   const properties: Record<string, string | number | boolean> = {}
   const today = new Date()
 
@@ -185,37 +178,32 @@ export function buildEvent(
   const docenti = joinNames(getDocentiNames(opendayEvent))
   if (docenti) properties['openday_docenti'] = docenti
 
-  Object.entries(data)
-    .filter(([name]) => !eventFilterData.includes(name))
-    .forEach(([name, field]) => {
-      if (!field) return
-      const value = field.value
+  // Light event: only the data of this action (area, level, course); the rest of
+  // the form goes to the contact attributes.
+  for (const [property, ids] of Object.entries(EVENT_FIELDS)) {
+    const value = ids.map((id) => data[id]?.value).find((v) => fieldText(v))
+    if (value !== undefined) properties[property] = fieldText(value)
+  }
 
-      if (typeof value === 'number') {
-        properties[name] = value.toString()
-      } else if (Array.isArray(value)) {
-        properties[name] = value.join(', ')
-      } else if (typeof value === 'string' && value.trim() !== '') {
-        const dateValue = new Date(value)
-        if (!isNaN(dateValue.valueOf()) && value.includes('-')) {
-          properties[name] = dateValue.toISOString()
-          properties[name + '_data'] = dateValue.toLocaleDateString(
-            'it-IT',
-            dateFormat
-          )
-        } else {
-          properties[name] = value
-        }
-      } else if (typeof value === 'boolean') {
-        properties[name] = value ? 'Si' : 'No'
-      }
-    })
-
+  const name = formEventName(tracking)
   return {
     identifiers: { email_id: data.email?.value },
-    event_name: `submit_${tracking || 'form'}`,
-    event_properties: properties,
+    event_name: name,
+    event_properties: pickEventProperties(name, properties),
   }
+}
+
+// Form fields that fill the event properties, in order of preference.
+const EVENT_FIELDS: Record<string, string[]> = {
+  area: ['area', 'area_disciplinare'],
+  programma: ['programma'],
+  corso: ['corso', 'enroll'],
+}
+
+function fieldText(value: unknown): string {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean).join(', ')
+  if (typeof value === 'number') return String(value)
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 // Il contatto viene identificato solo dall'email. Prefisso del telefono e unione
@@ -244,7 +232,7 @@ export function opendayAttributes(
   properties: Record<string, string | number | boolean>,
   tracking?: string
 ): Record<string, string> {
-  if (tracking !== 'open_day' || !properties['openday']) return {}
+  if (normalizeTracking(tracking) !== 'openday' || !properties['openday']) return {}
   return {
     OPENDAY: String(properties['openday']),
     ...(properties['openday_codice'] ? { OD_CODICE: String(properties['openday_codice']) } : {}),
@@ -311,8 +299,8 @@ export async function inviaModulo(
 
     if (response.ok) {
       const result = await response.json().catch(() => null)
-      sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
-      tracciaModulo(form.tracking, event.event_properties['openday'] ? String(event.event_properties['openday']) : undefined)
+      sendGTMEvent({ event: event.event_name })
+      tracciaModulo(normalizeTracking(form.tracking), event.event_properties['openday'] ? String(event.event_properties['openday']) : undefined)
       return { ok: true, returning: !!result?.returning }
     }
     const errRes = await response.json().catch(() => null)

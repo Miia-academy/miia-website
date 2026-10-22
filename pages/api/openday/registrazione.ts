@@ -3,10 +3,13 @@ import jwt from 'jsonwebtoken'
 import { upsertContact, trackEvent } from '@modules/brevo'
 import { getJwtSecret } from '@modules/jwt-secret'
 import { loadOpendayDetails } from '@modules/openday-details'
+import { EVENTS, pickEventProperties } from '@modules/brevo-events'
 
 const COOKIE_NAME = 'miia_openday_richiesta'
 const COOKIE_MAX_AGE = 30 * 60 // 30 minuti per confermare
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Area in the email links (interni, moda) → option of the Brevo AREA attribute
+const AREA_OPTIONS: Record<string, string> = { interni: 'interior', interior: 'interior', moda: 'fashion', fashion: 'fashion' }
 
 interface RichiestaOpenday {
   email: string
@@ -131,15 +134,27 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
       if (targetEvent?.slug) Object.assign(attributes, await loadOpendayDetails(targetEvent.slug))
     }
 
+    // Event data is also kept on the contact, with the Brevo AREA options
+    const area = AREA_OPTIONS[areaQuery.toLowerCase()]
+    if (area) attributes.AREA = [area] as never
+
     await upsertContact({
       email,
       listIds: [16],
       attributes,
     })
 
+    // Same event as the open day form on the site: light, with the data of this open day
     await trackEvent({
-      eventName: 'submit_open_day',
+      eventName: EVENTS.openday,
       email,
+      properties: pickEventProperties(EVENTS.openday, {
+        area: area || areaQuery,
+        openday: opendayDateStr,
+        openday_data: opendayDataLocale,
+        openday_codice: targetEvent?.slug,
+        openday_docenti: attributes.OD_DOCENTI,
+      }),
     })
 
     // La richiesta è usata: il cookie non serve più

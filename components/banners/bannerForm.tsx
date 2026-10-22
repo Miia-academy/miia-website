@@ -1,3 +1,4 @@
+import { normalizeTracking } from '@modules/brevo-events'
 import type { Field as FieldBlok } from '@types'
 import { Alert, Checkbox, Link } from '@heroui/react'
 import { Button } from '@components/ui/button'
@@ -40,7 +41,7 @@ type Status = 'filling' | 'sending' | 'error' | 'done'
  */
 export function formForBanner(blok: ExtendedFormBlok, area?: string): ExtendedFormBlok {
   const form = mergeForm(blok)
-  const kept = BANNER.bannerFields[form.tracking || '']
+  const kept = BANNER.bannerFields[normalizeTracking(form.tracking) || '']
   if (!kept) return form
   const fields = (form.fields || []).filter((f) => kept.includes(f.id))
   const value = area === 'moda' ? 'fashion' : area === 'interni' ? 'interior' : null
