@@ -1,5 +1,4 @@
 import { Html, Head, Main, NextScript } from 'next/document'
-import { fontSans, fontSerif } from '@config/fonts'
 
 export default function Document() {
   return (
@@ -15,7 +14,7 @@ export default function Document() {
         />
       </Head>
       <body
-        className={`font-sans light text-foreground bg-background min-h-screen ${fontSans.variable} ${fontSerif.variable}`}
+        className='font-sans light text-foreground bg-background min-h-screen'
       >
         <Main />
         <NextScript />
