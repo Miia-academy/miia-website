@@ -12,9 +12,8 @@ import {
   TITOLO_LABELS,
 } from '@modules/enrollment/profile'
 import { SENZA_LAVORO } from '@modules/enrollment/validation'
+import { surfaceInput, surfaceSelect } from '@components/ui/fields'
 
-const inputClasses = { inputWrapper: 'bg-surface' }
-const selectClasses = { trigger: 'bg-surface' }
 
 const pillCheckbox = {
   base: cn(
@@ -65,7 +64,7 @@ export function Profilo({ corso, state, onSaved }: ProfiloProps) {
       onValueChange={set(key)}
       isInvalid={!!errors[key]}
       errorMessage={errors[key]}
-      classNames={inputClasses}
+      classNames={surfaceInput}
       {...extra}
     />
   )
@@ -79,7 +78,7 @@ export function Profilo({ corso, state, onSaved }: ProfiloProps) {
       onSelectionChange={(keys) => set(key)(String(Array.from(keys)[0] ?? ''))}
       isInvalid={!!errors[key]}
       errorMessage={errors[key]}
-      classNames={selectClasses}
+      classNames={surfaceSelect}
     >
       {Object.entries(options).map(([value, label]) => (
         <SelectItem key={value}>{label}</SelectItem>

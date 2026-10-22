@@ -3,6 +3,7 @@ import { Input, InputOtp } from '@heroui/react'
 import { Button } from '@components/ui/button'
 import { getAttribution } from '@modules/attribution'
 import type { EnrollmentState } from '@modules/enrollment/state'
+import { surfaceInput } from '@components/ui/fields'
 
 type Phase = 'email' | 'codice' | 'dati'
 
@@ -21,7 +22,6 @@ async function post(url: string, data: unknown, method = 'POST') {
   return { ok: res.ok, status: res.status, data: json as Record<string, any> }
 }
 
-const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-surface' }
 
 /** Passo 1: email, codice di verifica, poi nome, cognome e cellulare. */
 export function ChiSei({ corso, initialEmail = '', state, onVerified, onSaved }: ChiSeiProps) {
@@ -149,7 +149,7 @@ export function ChiSei({ corso, initialEmail = '', state, onVerified, onSaved }:
           onValueChange={setEmail}
           isInvalid={!!errors.email}
           errorMessage={errors.email}
-          classNames={inputClasses}
+          classNames={surfaceInput}
         />
         {/* Campo trappola per i bot, invisibile alle persone */}
         <input ref={honeypot} name="validation" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />
@@ -198,12 +198,12 @@ export function ChiSei({ corso, initialEmail = '', state, onVerified, onSaved }:
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <Input name="nome" label="Nome" autoComplete="given-name" isRequired value={values.nome}
-          onValueChange={(v) => setValues((s) => ({ ...s, nome: v }))} isInvalid={!!errors.nome} errorMessage={errors.nome} classNames={inputClasses} />
+          onValueChange={(v) => setValues((s) => ({ ...s, nome: v }))} isInvalid={!!errors.nome} errorMessage={errors.nome} classNames={surfaceInput} />
         <Input name="cognome" label="Cognome" autoComplete="family-name" isRequired value={values.cognome}
-          onValueChange={(v) => setValues((s) => ({ ...s, cognome: v }))} isInvalid={!!errors.cognome} errorMessage={errors.cognome} classNames={inputClasses} />
+          onValueChange={(v) => setValues((s) => ({ ...s, cognome: v }))} isInvalid={!!errors.cognome} errorMessage={errors.cognome} classNames={surfaceInput} />
         <Input name="telefono" type="tel" label="Cellulare" autoComplete="tel" isRequired value={values.telefono}
           onValueChange={(v) => setValues((s) => ({ ...s, telefono: v }))} isInvalid={!!errors.telefono} errorMessage={errors.telefono}
-          description="Serve per il codice di firma via SMS." classNames={inputClasses} />
+          description="Serve per il codice di firma via SMS." classNames={surfaceInput} />
       </div>
       {footer('Continua')}
     </form>

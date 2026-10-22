@@ -149,6 +149,8 @@ export default {
             },
             primary,
             secondary,
+            // Errors and required-field asterisks in the brand red
+            danger: secondary,
           },
         },
         dark: {
@@ -158,6 +160,8 @@ export default {
             },
             primary,
             secondary,
+            // Errors and required-field asterisks in the brand red
+            danger: secondary,
           },
         },
       },

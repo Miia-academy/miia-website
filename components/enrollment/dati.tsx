@@ -9,8 +9,8 @@ import { documentFormat, partialPattern } from '@modules/enrollment/document-num
 
 export { DOCUMENT_LABELS } from '@modules/enrollment/labels'
 import { DOCUMENT_LABELS } from '@modules/enrollment/labels'
+import { surfaceInput } from '@components/ui/fields'
 
-const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-surface' }
 
 const pillRadio = {
   base: cn(
@@ -109,7 +109,7 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
       onValueChange={set(key)}
       isInvalid={!!errors[key]}
       errorMessage={errors[key]}
-      classNames={inputClasses}
+      classNames={surfaceInput}
       {...extra}
     />
   )
@@ -122,7 +122,7 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
       onValueChange={setC(key)}
       isInvalid={!!errors[`azienda.${key}`]}
       errorMessage={errors[`azienda.${key}`]}
-      classNames={inputClasses}
+      classNames={surfaceInput}
     />
   )
 

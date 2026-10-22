@@ -1,8 +1,8 @@
 import { Checkbox, Input, InputOtp, Popover, PopoverContent, PopoverTrigger, cn } from '@heroui/react'
 import { Button } from '@components/ui/button'
 import { canBeForeign, documentFormat, partialPattern } from '@modules/enrollment/document-number'
+import { surfaceInput } from '@components/ui/fields'
 
-const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-surface' }
 
 /** Spazio tra i gruppi di caselle (lettere | cifre | lettere). Classi scritte per intero per Tailwind. */
 const GROUP_GAPS: Record<string, string> = {
@@ -175,7 +175,7 @@ export function DocumentNumber({ tipo, numero, estero, paese, errors, onNumero, 
             onValueChange={onPaese}
             isInvalid={!!errors.documento_paese}
             errorMessage={errors.documento_paese}
-            classNames={inputClasses}
+            classNames={surfaceInput}
           />
           <Input
             name="documento_numero"
@@ -188,7 +188,7 @@ export function DocumentNumber({ tipo, numero, estero, paese, errors, onNumero, 
             description="Solo lettere e cifre, come sul documento"
             isInvalid={!!errors.documento_numero}
             errorMessage={errors.documento_numero}
-            classNames={inputClasses}
+            classNames={surfaceInput}
           />
         </div>
       )}
