@@ -24,7 +24,7 @@ const cardRadio = {
 
 const pillRadio = {
   base: cn(
-    'inline-flex m-0 rounded-full border-2 border-neutral-200 bg-[#F3F3F2] px-4 py-2',
+    'inline-flex m-0 rounded-full border-2 border-neutral-200 bg-surface px-4 py-2',
     'data-[selected=true]:border-primary data-[selected=true]:bg-white cursor-pointer'
   ),
   wrapper: 'hidden',

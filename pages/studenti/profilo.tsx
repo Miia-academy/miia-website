@@ -75,7 +75,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
               Carica il CV per accedere
             </Button>
           ) : (
-            <Button as={Link} href="/lavoro/inserzioni" className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-sm h-11 shrink-0">
+            <Button as={Link} href="/lavoro/inserzioni" className="w-full md:w-auto bg-primary text-white font-bold shadow-sm h-11 shrink-0">
               Vai alla Bacheca Inserzioni &rarr;
             </Button>
           )}
@@ -91,7 +91,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
             <Divider className="my-2" />
             <CardBody className="px-5 sm:px-6 pb-6 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-[#009245]/10 text-[#009245] flex items-center justify-center font-bold text-2xl shrink-0">
+                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-2xl shrink-0">
                   {profileData.nome ? profileData.nome.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -131,7 +131,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                     <div className="space-y-4 mt-2">
                       {detailedSkills.map((skill) => (
                         <div key={skill.key} className="flex items-start gap-3">
-                          <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                           <div className="space-y-0.5">
                             <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                               {skill.title}
@@ -151,7 +151,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
                   <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-2">Allegati</span>
                   <div className="space-y-2">
                     {profileData.cv_url ? (
-                      <a href={profileData.cv_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-[#009245] hover:underline">📄 Vedi Curriculum</a>
+                      <a href={profileData.cv_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">📄 Vedi Curriculum</a>
                     ) : <p className="text-xs text-red-500 font-semibold italic">Nessun CV caricato</p>}
                     {profileData.portfolio_url && <a href={profileData.portfolio_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-neutral-700 hover:underline">🔗 Vedi Portfolio</a>}
                   </div>
@@ -187,7 +187,7 @@ export default function StudentProfile({ user, applications }: StudentProfilePro
               {applications.map((app) => (
                 <div key={app.application_id} className="bg-white border border-neutral-200 rounded-xl p-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-neutral-300 transition-all">
                   <div className="flex-1 min-w-0">
-                    <Link href={`/lavoro/inserzioni/${app.job_id}`} className="text-[17px] font-bold text-neutral-900 hover:text-[#009245] transition-colors leading-tight line-clamp-1 block">
+                    <Link href={`/lavoro/inserzioni/${app.job_id}`} className="text-[17px] font-bold text-neutral-900 hover:text-primary transition-colors leading-tight line-clamp-1 block">
                       {app.title}
                     </Link>
                     <p className="text-[11px] font-bold text-neutral-400 tracking-wider mt-1.5 flex items-center gap-2">

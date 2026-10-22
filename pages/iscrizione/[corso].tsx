@@ -229,10 +229,10 @@ export default function Iscrizione({ corso, titolo }: Props) {
         <title>{`Iscrizione: ${titolo} | MIIA`}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      <main className="min-h-screen bg-white text-[#232325]">
+      <main className="min-h-screen bg-white text-foreground">
         <header className="mx-auto flex max-w-[1280px] items-center p-6">
           <Link href="/" aria-label="Made in Italy Academy">
-            <Logo classes="h-8 sm:h-10" primary="#171717" secondary="#008C45" />
+            <Logo classes="h-8 sm:h-10" primary="#171717" secondary="#008a45" />
           </Link>
         </header>
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 pb-16">
@@ -278,7 +278,7 @@ function Riepilogo({
   const q = choice.modalita && choice.offer?.prezzi ? choice.offer.prezzi[choice.modalita] : null
   return (
     <aside className="mt-10 lg:mt-0">
-      <div className="lg:sticky lg:top-8 rounded-2xl bg-[#F3F3F2] p-6 text-sm">
+      <div className="lg:sticky lg:top-8 rounded-2xl bg-surface p-6 text-sm">
         <h2 className="mb-4 text-lg font-bold">La tua iscrizione</h2>
         <dl className="space-y-3">
           <div>

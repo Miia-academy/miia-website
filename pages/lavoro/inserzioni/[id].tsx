@@ -167,7 +167,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
                   hasAppliedState ? (
                     <Button
                       isDisabled
-                      className="bg-[#009245]/10 text-[#009245] font-bold border border-[#009245]/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
+                      className="bg-primary/10 text-primary font-bold border border-primary/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
                     >
                       ✓ Già candidato
                     </Button>
@@ -176,7 +176,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
                       onPress={handleApply}
                       isLoading={loading}
                       isDisabled={job.status !== 'attiva'}
-                      className="bg-[#009245] text-white font-bold shrink-0 h-11 px-6 shadow-sm"
+                      className="bg-primary text-white font-bold shrink-0 h-11 px-6 shadow-sm"
                     >
                       Candidati Ora
                     </Button>
@@ -268,7 +268,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
                   <div className="space-y-4">
                     {detailedSkills.map((skill) => (
                       <div key={skill.key} className="flex items-start gap-3">
-                        <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                         <div className="space-y-0.5">
                           <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                             {skill.title}
@@ -339,7 +339,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
           <ModalContent>
             {(onClose) => (
               <>
-                <ModalHeader className={`text-xl font-bold ${alertInfo.isError ? 'text-red-600' : 'text-[#009245]'}`}>
+                <ModalHeader className={`text-xl font-bold ${alertInfo.isError ? 'text-red-600' : 'text-primary'}`}>
                   {alertInfo.title}
                 </ModalHeader>
                 <ModalBody>

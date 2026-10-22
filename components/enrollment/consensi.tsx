@@ -22,7 +22,7 @@ function FullText({ label, text }: { label: string; text: string }) {
 
 function Group({ title, tag, children }: { title: string; tag?: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-xl bg-[#F3F3F2] p-4 sm:p-5">
+    <section className="flex flex-col gap-3 rounded-xl bg-surface p-4 sm:p-5">
       <h3 className="font-semibold">
         {title} {tag && <span className="ml-1 text-xs font-normal text-neutral-500">{tag}</span>}
       </h3>

@@ -158,7 +158,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                 <div className="space-y-4 mt-2">
                   {detailedSkills.map((skill, idx) => (
                     <div key={idx} className="flex items-start gap-3">
-                      <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                       <div className="space-y-0.5">
                         <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                           {skill.title}
@@ -190,7 +190,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                     href={getCvDownloadUrl()}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-white bg-[#009245]"
+                    className="font-bold text-white bg-primary"
                   >
                     📄 Scarica Curriculum Vitae (PDF)
                   </Button>

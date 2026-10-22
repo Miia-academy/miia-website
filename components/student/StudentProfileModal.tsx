@@ -222,7 +222,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
 
                   <div className="flex items-center gap-3 mb-3 bg-neutral-50 p-2.5 rounded-xl border border-neutral-200">
                     {editForm.cv_url ? (
-                      <a href={editForm.cv_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#009245] hover:underline flex items-center gap-1.5 shrink-0">
+                      <a href={editForm.cv_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 shrink-0">
                         📄 CV Caricato
                       </a>
                     ) : (
@@ -237,7 +237,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                     type="file"
                     accept="application/pdf"
                     onChange={(e) => setCvFile(e.target.files?.[0] || null)}
-                    className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#009245]/10 file:text-[#009245] hover:file:bg-[#009245]/20 transition-colors"
+                    className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"
                   />
                 </div>
 
