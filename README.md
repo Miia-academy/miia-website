@@ -1,6 +1,6 @@
 # MIIA Website & Career Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -10,7 +10,7 @@
 [![Brevo](https://img.shields.io/badge/Brevo-CRM_%26_Email-0B996F?style=for-the-badge)](https://www.brevo.com/)
 [![Google Cloud](https://img.shields.io/badge/Google_Cloud-Storage-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com/storage)
 
-Piattaforma web istituzionale e Career Board di **[Made in Italy Academy](https://www.madeinitalyacademy.it)** (MIIA), scuola di alta formazione specializzata in corsi per Interior Design, Arredatori, Stilisti e Modellisti.
+Piattaforma web istituzionale e Career Board di **[Made in Italy Academy](https://miia.it)** (MIIA), scuola di alta formazione specializzata in corsi per Interior Design, Arredatori, Stilisti e Modellisti.
 
 L'applicazione integra un **Headless CMS (Storyblok)** per la gestione dinamica dei contenuti con un portale applicativo completo (**Bacheca Lavoro Triveneto**) che connette gli studenti diplomati dell'accademia con le aziende del settore.
 
@@ -243,24 +243,29 @@ cp .env.example .env.local
 
 | Variabile | Obbligatoria | Descrizione |
 | :--- | :---: | :--- |
-| `STORYBLOK_SPACE_ID` | Sì | ID numerico dello Space Storyblok |
-| `NEXT_PUBLIC_IS_PREVIEW` | Sì | Abilita la modalità preview Storyblok (`true` o `false`) |
 | `NEXT_PUBLIC_STORYBLOK_PREVIEW`| Sì | Token API Preview di Storyblok |
 | `STORYBLOK_MANAGEMENT` | Opzionale | Token Management API Storyblok (necessario per sync CLI) |
-| `STORYBLOK_LOGOS_FOLDER_ID` | Opzionale | ID cartella Storyblok per i loghi aziendali |
-| `STORYBLOK_BUSINESS_FOLDER_ID`| Opzionale | ID cartella Storyblok per le storie azienda |
-| `STORYBLOK_STUDENT_FOLDER_ID` | Opzionale | ID cartella Storyblok per le storie studente |
-| `STORYBLOK_JOBS_FOLDER_ID` | Opzionale | ID cartella Storyblok per le storie offerte |
-| `BREVO_API_KEY` / `BREVO_TOKEN` | Sì | Chiave API REST v3 per Brevo |
+| `STORYBLOK_TOKEN` | Opzionale | Token per `/api/config/skills` (se manca usa il token preview) |
+| `STORYBLOK_FORCE_DRAFT` | Opzionale | `true` mostra le bozze anche in produzione |
+| `BREVO_TOKEN` | Sì | Chiave API REST v3 per Brevo |
 | `BREVO_MANAGEMENT` | Opzionale | Token addizionale per chiamate management Brevo |
 | `BREVO_STUDENT_LIST_ID` | Sì | ID lista Brevo contenente gli studenti diplomati autorizzati (default `42`) |
 | `BREVO_BUSINESS_LIST_ID`| Sì | ID lista Brevo delle aziende approvate, l'unica che dà accesso all'area aziende. Si gestisce solo da Brevo (default `30`) |
 | `BREVO_BUSINESS_REQUESTS_LIST_ID`| No | ID lista Brevo delle richieste di accesso delle aziende in attesa di approvazione (default `8`) |
+| `BREVO_AZIENDE_LIST_ID` | No | Lista aziende usata dalla pagina admin delle inserzioni (default `43`) |
+| `CRM_ALLOWED_LISTS` | No | Liste Brevo in cui i moduli del sito possono scrivere, separate da virgola |
+| `CRM_SOURCE_ATTRIBUTES` | No | `on` salva la provenienza della visita (ORIGINE_* e ULTIMA_*) su Brevo |
+| `ENROLLMENT_ONLINE` | No | `on` attiva l'iscrizione online |
+| `ENROLLMENT_SENDER_EMAIL` / `ENROLLMENT_OFFICE_EMAIL` | No | Mittente e copia della segreteria per l'iscrizione (default `iscrizione@miia.it`) |
+| `ENROLLMENT_SMS_SENDER` | No | Mittente degli SMS dell'iscrizione (default `MIIA`) |
+| `BANNER_SITO` | No | `on` mostra i banner in produzione (sempre attivi in anteprima e in locale) |
+| `NEXT_PUBLIC_GTM` | No | Contenitore Tag Manager, caricato solo in produzione |
+| `NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID` | No | ID della cookie policy Iubenda |
 | `NEXT_PUBLIC_MAPBOX_TOKEN` | Sì | Token pubblico Mapbox GL per il rendering delle mappe |
 | `JWT_SECRET` | Sì | Chiave segreta per la firma e verifica dei token JWT |
 | `NEXT_PUBLIC_BASE_URL` | Sì | URL base dell'applicazione per i Magic Link (es. `http://localhost:8080`) |
 | `DATABASE_URL` | Sì | Stringa di connessione a Neon Postgres (`postgresql://...`) |
-| `ADMIN_EMAIL` | Sì | Email di accesso per il backoffice amministratore (`/admin/login`) |
+| `ADMIN_EMAIL` | Sì | Email di accesso per il backoffice amministratore (`/admin/login`); senza email e password l'accesso è disattivato |
 | `ADMIN_PASSWORD` | Sì | Password di accesso per il backoffice amministratore |
 | `GCS_BUCKET_PUBLIC` | Sì | Nome bucket Google Cloud Storage per gli asset pubblici |
 | `GCS_BUCKET_PRIVATE` | Sì | Nome bucket Google Cloud Storage per i CV privati |

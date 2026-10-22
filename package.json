@@ -7,12 +7,11 @@
     "dev": "next dev -p 8080",
     "build": "next build",
     "start": "next start -p 9090",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cms": "storyblok components pull --space 311109 && storyblok types generate --space 311109",
-    "crm": "tsx ./crm/index.ts"
+    "cms": "storyblok components pull --space 311109 && storyblok types generate --space 311109"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.21.0",
@@ -21,7 +20,6 @@
     "@next/third-parties": "^15.1.7",
     "@storyblok/react": "^4.2.1",
     "@types/mapbox-gl": "^3.4.1",
-    "fast-csv": "^4.3.1",
     "framer-motion": "^11.18.2",
     "jsonwebtoken": "^9.0.3",
     "mapbox-gl": "^2.15.0",

@@ -14,7 +14,7 @@ interface ArticleProps {
   fullSlug?: string
 }
 
-export default function Article({ blok, fullSlug }: ArticleProps) {
+export default function Article({ blok }: ArticleProps) {
   // Tema 'light' per garantire il contrasto sul background scuro dell'Hero
   const heroTypography = Typography({ theme: 'light' })
 

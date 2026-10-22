@@ -14,7 +14,6 @@ import { debugProfiloAttivo, inviaRiassunto, tracciaPagina } from '@modules/trac
 import DebugProfilo from '@components/debugProfilo'
 import BannerSito from '@components/banners/bannerSito'
 
-import { fontSans, fontSerif } from '@config/fonts'
 import { getGtmId } from '@config/gtm'
 
 import Page from '@components/page'
@@ -140,9 +139,4 @@ export default function App({ Component, pageProps }: AppProps) {
       {gtmId && <GoogleTagManager gtmId={gtmId} />}
     </>
   )
-}
-
-export const fonts = {
-  sans: fontSans.style.fontFamily,
-  serif: fontSerif.style.fontStyle,
 }

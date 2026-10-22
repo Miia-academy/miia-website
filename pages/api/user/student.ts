@@ -109,6 +109,7 @@ async function studentHandler(req: NextApiRequest, res: NextApiResponse, authDat
     PORTFOLIO_URL: portfolioDownloadUrl,
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- iat and exp are dropped so the new token gets fresh ones
   const { iat, exp, ...cleanAuthData } = authData
   const updatedSessionPayload = {
     ...cleanAuthData,

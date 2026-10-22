@@ -63,6 +63,7 @@ async function businessHandler(req: NextApiRequest, res: NextApiResponse, authDa
   })
 
   // Rigenerazione Sessione con payload tipizzato e allineato
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- iat and exp are dropped so the new token gets fresh ones
   const { iat, exp, ...cleanAuthData } = authData
   const updatedSessionPayload: AuthPayload = {
     ...cleanAuthData,
