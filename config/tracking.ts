@@ -70,37 +70,37 @@ export const MODULI: Record<string, { codice: string; punti: number; etichetta: 
 export const PUNTI_ALTRO_MODULO = 5
 
 /**
- * Banner del sito (passo 6 del piano del 19/10, posizioni decise con Miia il 21/10).
- * Le voci di Pubblico e Momento si scelgono nel blocco Banner in Storyblok;
- * qui stanno le soglie dei Momenti e le regole per pagina.
+ * Site banners (step 6 of the 19/10 plan, positions agreed with Miia on 21/10).
+ * Audience and timing items are chosen in the Banner block in Storyblok;
+ * here are the timing thresholds and the per-page rules.
  */
 export const BANNER = {
-  // Momento: quanti giorni prima conta "open day entro…", "corsi in partenza entro…", "prezzo agevolato in chiusura".
-  giorniMomento: {
+  // Timing: how many days before counts as "open day within…", "courses starting within…", "reduced price ending".
+  timingDays: {
     'open-day-30': 30,
     'open-day-7': 7,
     'corsi-4-settimane': 28,
     'prezzo-agevolato-7': 7,
   } as Record<string, number>,
-  // Pagine senza banner, oltre a quelle scritte in "Banner di tutto il sito": aree riservate e pagine tecniche.
-  pagineEscluse: ['/admin', '/studenti', '/aziende', '/iscrizione', '/conferma', '/open-day/accedi', '/lavoro/inserzioni', '/contatti', '/api'],
-  // Qui solo l'avviso: finestra e pannello coprirebbero il modulo della pagina.
-  soloAvviso: ['/open-day'],
-  // Qui la finestra diventa pannello, per non interrompere la lettura (articoli del blog).
-  nienteFinestra: ['/blog/'],
-  // Pagine che hanno già una sezione sull'open day: niente banner che portano all'open day.
-  conSezioneOpenDay: ['/'],
-  // Posto fisso in home: dopo la sezione con questo ID (in Storyblok, "Cosa offriamo").
-  postoHomeDopoSezione: 'our-values',
-  // L'avviso sparisce da solo dopo questi secondi (si ferma se ci passi sopra).
-  avvisoSecondi: 15,
-  // Sotto questa larghezza (px) la finestra diventa una scheda dal basso.
-  larghezzaTelefono: 640,
-  // Moduli con più campi da scrivere o scegliere di questi (email e caselle escluse) si compilano in due passi.
-  campiUnPasso: 3,
-  // Campi tenuti nel banner, per modulo (campo "tracking"); gli altri restano solo nella pagina.
-  // Presentazione: deciso il 20/10 (niente sedi); area e livello arrivano nascosti, come nelle pagine corso.
-  campiNelBanner: {
+  // Pages without banners, besides the ones written in "Banner di tutto il sito": private areas and technical pages.
+  excludedPages: ['/admin', '/studenti', '/aziende', '/iscrizione', '/conferma', '/open-day/accedi', '/lavoro/inserzioni', '/contatti', '/api'],
+  // Only the notice here: window and panel would cover the page form.
+  noticeOnly: ['/open-day'],
+  // Here the window becomes a panel, so reading is not interrupted (blog articles).
+  noWindow: ['/blog/'],
+  // Pages that already have an open day section: no banners leading to the open day.
+  withOpenDaySection: ['/'],
+  // Fixed place in the home: after the section with this ID (in Storyblok, "Cosa offriamo").
+  homeSlotAfterSection: 'our-values',
+  // The notice disappears by itself after these seconds (it stops while hovered).
+  noticeSeconds: 15,
+  // Below this width (px) the window becomes a bottom sheet.
+  phoneWidth: 640,
+  // Forms with more fields to type or choose than this (email and checkboxes excluded) take two steps.
+  oneStepFields: 3,
+  // Fields kept in the banner, per form ("tracking" field); the others stay only in the page.
+  // Presentation: agreed on 20/10 (no locations); area and level are sent hidden, as in the course pages.
+  bannerFields: {
     download: ['email', 'nome', 'cognome', 'sms', 'finalita', 'validation'],
   } as Record<string, string[]>,
 }
