@@ -1,3 +1,4 @@
+import 'mapbox-gl/dist/mapbox-gl.css'
 import type { Map as MapBlok, Location as LocationBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
 import { Map as MapGl, Marker, NavigationControl } from 'react-map-gl'
