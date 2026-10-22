@@ -1,13 +1,15 @@
 import { Logo } from '@public/logo'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { tv } from 'tailwind-variants'
 import { Link as HeroLink } from '@heroui/react'
 import { Button } from '@components/ui/button'
 import Link from 'next/link'
 import type { GetStaticProps } from 'next'
 import { getStoryblokApi } from '@storyblok/react'
+import { sendGTMEvent } from '@next/third-parties/google'
+import { EVENTS } from '@modules/brevo-events'
 
 // Testi della pagina dopo il clic su una scelta nelle email dell'open day: le domande di
 // "Cosa vedrai" (OD_DOMANDA: sbocchi, programma, attestato, costi, orari) e le richieste
@@ -55,6 +57,18 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
   const [confirming, setConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
 
+  // One-click choice from the open day emails: saved once the page is open
+  // (the link only left a signed cookie, see /api/openday/risposta)
+  const answerType = router.isReady ? String(router.query.type || '') : ''
+  useEffect(() => {
+    if (answerType !== 'domanda' && answerType !== 'richiesta') return
+    fetch('/api/openday/risposta', { method: 'POST' })
+      .then((res) => {
+        if (res.ok) sendGTMEvent({ event: EVENTS.answer })
+      })
+      .catch(() => {})
+  }, [answerType])
+
   // Open Day: l'iscrizione avviene solo dopo il click sul pulsante
   const confirmOpenday = async () => {
     setConfirming(true)
@@ -70,6 +84,7 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
         )
         return
       }
+      sendGTMEvent({ event: EVENTS.openday })
       const next = new URLSearchParams({ type: 'openday', status: 'success' })
       if (params.area) next.set('area', String(params.area))
       if (data.openday_data) next.set('openday_data', data.openday_data)

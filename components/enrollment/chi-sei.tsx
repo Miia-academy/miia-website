@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Input, InputOtp } from '@heroui/react'
 import { Button } from '@components/ui/button'
+import { sendGTMEvent } from '@next/third-parties/google'
 import { getAttribution } from '@modules/attribution'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import { surfaceInput } from '@components/ui/fields'
@@ -89,6 +90,7 @@ export function ChiSei({ corso, initialEmail = '', state, onVerified, onSaved }:
         return fail(res.data.message || 'Il codice non è corretto.', 'codice')
       }
       const next = res.data.iscrizione as EnrollmentState
+      if (res.data.evento) sendGTMEvent(res.data.evento)
       setValues(next.chi_sei)
       setGreeting(res.data.trovato && next.chi_sei.nome ? `Ciao ${next.chi_sei.nome}, abbiamo già i tuoi dati.` : '')
       setPhase('dati')

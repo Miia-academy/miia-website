@@ -19,12 +19,14 @@ vi.mock('@modules/enrollment/contact', () => ({
   contactPrefill: vi.fn(),
   syncContact: vi.fn(),
 }))
+vi.mock('@modules/brevo', () => ({ upsertContact: vi.fn(), trackEvent: vi.fn() }))
 
 import codice from '@pages/api/iscrizione/codice'
 import verifica from '@pages/api/iscrizione/verifica'
 import bozza from '@pages/api/iscrizione/bozza'
 import * as db from '@modules/enrollment/db'
 import * as contact from '@modules/enrollment/contact'
+import { trackEvent, upsertContact } from '@modules/brevo'
 import { codeMatches, generateCode, hashCode, normalizeCode, sendWaitSeconds } from '@modules/enrollment/codes'
 import { SESSION_COOKIE, signSession, verifySession } from '@modules/enrollment/session'
 import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
@@ -95,6 +97,8 @@ beforeEach(() => {
   vi.stubEnv('JWT_SECRET', 'segreto-di-prova')
   for (const fn of Object.values(db)) vi.mocked(fn as any).mockReset()
   for (const fn of Object.values(contact)) vi.mocked(fn as any).mockReset()
+  vi.mocked(upsertContact).mockReset()
+  vi.mocked(trackEvent).mockReset()
   vi.mocked(db.recentCodeSends).mockResolvedValue({ perEmail: 0, perIp: 0, lastAt: null })
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
@@ -254,6 +258,53 @@ describe('POST /api/iscrizione/verifica', () => {
     expect(cookie).toContain('HttpOnly')
     expect(verifySession(cookie.split(';')[0].split('=')[1])).toEqual({ id: row().id, email: EMAIL, corso: CORSO })
     expect(db.logEvent).toHaveBeenCalledWith(row().id, 'email_verificata', '203.0.113.7', null, { corso: CORSO })
+  })
+
+  it('prima verifica per il corso: data su INVIO_ISCRIZIONE, evento submit_enrollment_form in Brevo e per GTM', async () => {
+    vi.mocked(db.latestActiveCode).mockResolvedValue(active())
+    vi.mocked(db.takeCodeAttempt).mockResolvedValue(true)
+    vi.mocked(db.markCodeUsed).mockResolvedValue(true)
+    vi.mocked(db.openDraft).mockResolvedValue(row({ provenienza: { ultima_sorgente: 'google', ultima_click_id: 'abc' } }))
+    vi.mocked(contact.contactPrefill).mockResolvedValue({ trovato: false, nome: '', cognome: '', telefono: '' })
+
+    const res = await call(verifica, { body: { email: EMAIL, corso: CORSO, codice: '123456' } })
+
+    expect(upsertContact).toHaveBeenCalledWith({
+      email: EMAIL,
+      attributes: { INVIO_ISCRIZIONE: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), CORSO: 'Interior design, primo livello' },
+    })
+    expect(trackEvent).toHaveBeenCalledWith({
+      eventName: 'submit_enrollment_form',
+      email: EMAIL,
+      properties: { corso: 'Interior design, primo livello', ultima_sorgente: 'google' },
+    })
+    expect(res.body.evento).toEqual({ event: 'submit_enrollment_form', course: CORSO })
+  })
+
+  it('verifica successiva della stessa bozza: nessun evento di inizio', async () => {
+    vi.mocked(db.latestActiveCode).mockResolvedValue(active())
+    vi.mocked(db.takeCodeAttempt).mockResolvedValue(true)
+    vi.mocked(db.markCodeUsed).mockResolvedValue(true)
+    vi.mocked(db.openDraft).mockResolvedValue(row({ aggiornata_il: '2026-10-15T09:00:00Z' }))
+    vi.mocked(contact.contactPrefill).mockResolvedValue({ trovato: false, nome: '', cognome: '', telefono: '' })
+
+    const res = await call(verifica, { body: { email: EMAIL, corso: CORSO, codice: '123456' } })
+
+    expect(res.statusCode).toBe(200)
+    expect(trackEvent).not.toHaveBeenCalled()
+    expect(res.body.evento).toBeUndefined()
+  })
+
+  it('se Brevo rifiuta l’inizio iscrizione la verifica va avanti', async () => {
+    vi.mocked(db.latestActiveCode).mockResolvedValue(active())
+    vi.mocked(db.takeCodeAttempt).mockResolvedValue(true)
+    vi.mocked(db.markCodeUsed).mockResolvedValue(true)
+    vi.mocked(db.openDraft).mockResolvedValue(row())
+    vi.mocked(upsertContact).mockRejectedValue(new Error('Brevo giù'))
+    vi.mocked(contact.contactPrefill).mockResolvedValue({ trovato: false, nome: '', cognome: '', telefono: '' })
+
+    const res = await call(verifica, { body: { email: EMAIL, corso: CORSO, codice: '123456' } })
+    expect(res.statusCode).toBe(200)
   })
 
   it('chi ha già completato il passo 1 ritrova i propri dati, non quelli di Brevo', async () => {

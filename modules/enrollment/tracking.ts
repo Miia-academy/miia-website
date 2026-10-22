@@ -1,13 +1,14 @@
 /**
- * Evento per GTM quando un'iscrizione viene firmata. Il nome non inizia per
- * "submit_", quindi non attiva i tag dei moduli (contatto/Lead): GA4, Google Ads
- * e Meta lo ricevono solo con i tag dedicati (pacchetto GTM B).
- * Si manda una volta sola, dalla risposta della firma: ricaricando la pagina
- * di conferma non riparte.
+ * GTM event when an enrollment is signed: submit_signature_form, the same name
+ * as the Brevo event. The GTM triggers of the forms list their events one by one
+ * (container file of 22/10), so this one fires only the purchase tags
+ * (GA4, Google Ads, Meta) and is not counted twice by the generic GA4 tag.
+ * Sent once, from the signing response: reloading the confirmation page does not resend it.
  */
+import { EVENTS } from '@modules/brevo-events'
 import type { Enrollment } from './types'
 
-export const SIGNED_EVENT = 'iscrizione_firmata'
+export const SIGNED_EVENT = EVENTS.signature
 
 export interface SignedEvent {
   event: typeof SIGNED_EVENT

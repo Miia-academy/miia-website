@@ -12,7 +12,7 @@ vi.mock('@modules/brevo', async (importOriginal) => {
 })
 
 import handler from '@pages/api/openday/accedi'
-import { BrevoError, getContact, upsertContact } from '@modules/brevo'
+import { BrevoError, getContact, trackEvent, upsertContact } from '@modules/brevo'
 import {
   fase,
   inRitardo,
@@ -120,6 +120,7 @@ describe('/api/openday/accedi', () => {
       vi.fn(async () => new Response(JSON.stringify({ stories: [NOVEMBRE] })))
     )
     vi.mocked(getContact).mockReset()
+    vi.mocked(trackEvent).mockReset()
     vi.mocked(upsertContact)
       .mockReset()
       .mockResolvedValue(undefined as never)
@@ -179,6 +180,11 @@ describe('/api/openday/accedi', () => {
     const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
     expect(attributes.OD_RITARDO).toBe(true)
     expect(attributes.SCADENZA_OFFERTA).toBeUndefined()
+    expect(trackEvent).toHaveBeenCalledWith({
+      eventName: 'submit_presence_form',
+      email: 'test@miia.it',
+      properties: { openday: '2026-11-16', openday_codice: 'openday-interni-novembre', ritardo: true },
+    })
   })
 
   it('un’email sconosciuta entra lo stesso ma non crea contatti', async () => {
@@ -190,6 +196,7 @@ describe('/api/openday/accedi', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(upsertContact).not.toHaveBeenCalled()
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 
   it('rifiuta codici sconosciuti e richieste non POST', async () => {

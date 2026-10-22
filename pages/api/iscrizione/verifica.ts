@@ -2,6 +2,9 @@ import { attributionEventProperties, normalizeEmail } from '@modules/crm-form'
 import { body, enrollmentApi } from '@modules/enrollment/api'
 import { CODE_MAX_ATTEMPTS, codeMatches, normalizeCode } from '@modules/enrollment/codes'
 import { contactPrefill } from '@modules/enrollment/contact'
+import { isNewDraft, syncEnrollmentStart } from '@modules/enrollment/brevo-sync'
+import { courseTitle } from '@modules/enrollment/courses'
+import { EVENTS } from '@modules/brevo-events'
 import { latestActiveCode, logEvent, markCodeUsed, openDraft, takeCodeAttempt } from '@modules/enrollment/db'
 import { sessionCookie, signSession } from '@modules/enrollment/session'
 import { clientIp, normalizeCourseSlug, publicState, userAgent } from '@modules/enrollment/state'
@@ -38,6 +41,17 @@ export default enrollmentApi(['POST'], async (req, res) => {
   await logEvent(draft.id, 'email_verificata', clientIp(req), userAgent(req), { corso })
   res.setHeader('Set-Cookie', sessionCookie(signSession({ id: draft.id, email, corso }), req))
 
+  // First verification for this course: the online enrollment has started
+  const started = isNewDraft(draft)
+  if (started) {
+    try {
+      await syncEnrollmentStart(draft, courseTitle(corso), new Date())
+    } catch (error) {
+      // The enrollment goes on: Brevo only misses the start date and the event.
+      console.error('[Iscrizione] Brevo enrollment start not saved:', error)
+    }
+  }
+
   const state = publicState(draft)
   // Prima volta: proponiamo i dati che Brevo conosce già. Poi valgono quelli salvati nella bozza.
   let trovato = false
@@ -56,5 +70,11 @@ export default enrollmentApi(['POST'], async (req, res) => {
     }
   }
 
-  return res.status(200).json({ ok: true, trovato, iscrizione: state })
+  // The page sends the GTM event only for a new enrollment, like Brevo
+  return res.status(200).json({
+    ok: true,
+    trovato,
+    iscrizione: state,
+    ...(started ? { evento: { event: EVENTS.enrollment, course: corso } } : {}),
+  })
 })
