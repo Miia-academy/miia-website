@@ -52,7 +52,7 @@ describe('profilo: punteggio, fascia e area', () => {
     registraPagina(d, '/corsi/interior-design') // peso 2: 1 vista = 2
     registraLettura(d, '/corsi/interior-design') // peso 2: 1 lettura = 4
     registraPagina(d, '/blog/colori') // peso 1: 1
-    registraModulo(d, 'download') // 10
+    registraModulo(d, 'brochure') // 10
     // 1 visita = 3
     expect(punteggio(d)).toBe(2 + 4 + 1 + 10 + 3)
   })
@@ -77,8 +77,8 @@ describe('profilo: riassunto per il cookie', () => {
   it('segna contatto, moduli inviati e open day', () => {
     const d = nuovoDettaglio(at('2026-10-20T10:00:00Z'))
     registraPagina(d, '/open-day/interior-design', at('2026-10-20T10:00:00Z'))
-    registraModulo(d, 'open_day', '2026-11-16T19:00:00.000Z', at('2026-10-20T10:05:00Z'))
-    registraModulo(d, 'download', undefined, at('2026-10-21T10:05:00Z'))
+    registraModulo(d, 'openday', '2026-11-16T19:00:00.000Z', at('2026-10-20T10:05:00Z'))
+    registraModulo(d, 'brochure', undefined, at('2026-10-21T10:05:00Z'))
     const r = riassumi(d)
     expect(r).toMatchObject({ c: 1, m: 'o:2026-10-20,b:2026-10-21', od: '2026-11-16', a: 'interni', v: 1 })
   })

@@ -49,7 +49,7 @@ export interface Aside {
   discount?: string;
   due_date?: string;
   courses?: (ISbStoryData<Course> | string)[];
-  forms: Form[];
+  forms: (Form | Action)[];
   contents: (Process | Text | Action | Wrapper | Alias)[];
   theme?: "" | "dark";
   component: "aside";
@@ -150,7 +150,7 @@ export interface Form {
   alias?: ISbStoryData<Form> | string;
   action?: "" | "/api/jobs" | "/api/company";
   list?: ("" | 31 | 32 | 25 | 26 | 35 | 16 | 15 | 17 | 28 | 19 | 30 | 33 | 24 | 29 | "23")[];
-  tracking?: "" | "enroll" | "open_day" | "download" | "project" | "recruit" | "partnership";
+  tracking?: "" | "news" | "brochure" | "info" | "openday" | "enroll" | "open_day" | "download" | "contact" | "project" | "recruit" | "partnership";
   new?: unknown;
   title?: string;
   label?: string;

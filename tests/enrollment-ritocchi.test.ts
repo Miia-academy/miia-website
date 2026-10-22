@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { contractEmailHtml, contractEmailSubject, contractEmailText } from '@modules/enrollment/contract-email'
 import { contractNumber, withdrawalSentence } from '@modules/enrollment/withdrawal'
-import { canEnroll, enrollHref, isEnrollForm, mainEnrollHref } from '@components/enrollment/enroll-link'
+import { actionHref, canEnroll, enrollHref, isEnrollAction, isEnrollForm, mainEnrollHref } from '@components/enrollment/enroll-link'
 
 const EMAIL = {
   nome: 'Mirco',
@@ -81,7 +81,9 @@ describe('pulsante "Iscriviti online"', () => {
   })
 })
 
-import { frequency, signedContactAttributes } from '@modules/enrollment/brevo-sync'
+vi.mock('@modules/brevo', () => ({ upsertContact: vi.fn(), trackEvent: vi.fn() }))
+import { upsertContact, trackEvent } from '@modules/brevo'
+import { frequency, isNewDraft, signedContactAttributes, syncSignedContact } from '@modules/enrollment/brevo-sync'
 
 describe('dati in Brevo alla firma', () => {
   const row = {
@@ -97,7 +99,7 @@ describe('dati in Brevo alla firma', () => {
       COMPLEANNO: '1990-05-12',
       COMUNE: 'Treviso',
       PROVINCIA: 'TV',
-      STUDI: ['laure'],
+      STUDI: ['laurea'],
       FORMAZIONE: ['artistica'],
       OCCUPAZIONE: ['Impiegato'],
       SETTORE: ['arredamento_design'],
@@ -105,6 +107,7 @@ describe('dati in Brevo alla firma', () => {
       FREQUENZA: ['sabato'],
       ISCRIZIONE: '2026-10-15',
       ISCRIZIONE_CORSO: 'Interior design, primo livello',
+      CORSO: 'Interior design, primo livello',
       ISCRIZIONE_SCOPO: 'Farne una professione',
       NEWSLETTER: true,
     })
@@ -113,6 +116,40 @@ describe('dati in Brevo alla firma', () => {
   it('non manda codice fiscale né campi vuoti', () => {
     expect(JSON.stringify(attrs)).not.toContain('RSSMRA')
     expect(attrs).not.toHaveProperty('RUOLO')
+  })
+
+  it('alla firma: contatto nella lista 18 ed evento submit_signature_form leggero', async () => {
+    const signed = {
+      ...row,
+      pagamento_modalita: 'rate5',
+      pagamento_totale: '5700',
+      offerta_open_day: true,
+      provenienza: { ultima_campagna: 'autunno', origine_sorgente: 'meta' },
+    }
+    await syncSignedContact(
+      signed,
+      { sede: 'Treviso', giorni: ['Sabato'], orari: ['9:00/12:00'], inizio: '2026-11-07' },
+      'Interior design, primo livello',
+      new Date('2026-10-15T10:00:00Z')
+    )
+    expect(vi.mocked(upsertContact).mock.calls[0][0]).toMatchObject({ email: 'a@b.it', listIds: [18] })
+    expect(trackEvent).toHaveBeenCalledWith({
+      eventName: 'submit_signature_form',
+      email: 'a@b.it',
+      properties: {
+        corso: 'Interior design, primo livello',
+        sede: 'treviso',
+        inizio: '2026-11-07',
+        modalita: 'rate5',
+        offerta_open_day: true,
+        ultima_campagna: 'autunno',
+      },
+    })
+  })
+
+  it('una bozza è nuova solo appena creata', () => {
+    expect(isNewDraft({ creata_il: '2026-10-14T08:00:00Z', aggiornata_il: '2026-10-14T08:00:00Z' })).toBe(true)
+    expect(isNewDraft({ creata_il: '2026-10-14T08:00:00Z', aggiornata_il: '2026-10-14T08:05:00Z' })).toBe(false)
   })
 
   it('frequenza serale e diurna', () => {
@@ -130,5 +167,23 @@ describe('modulo di richiesta iscrizione', () => {
     expect(isEnrollForm({ alias: { content: { tracking: 'enroll' } } })).toBe(true)
     expect(isEnrollForm({ alias: 'uuid-non-risolto', tracking: '' })).toBe(false)
     expect(isEnrollForm({ alias: { content: { tracking: 'download' } } })).toBe(false)
+  })
+})
+
+// Ambito 3 (22/10): il pulsante di iscrizione nella sidebar è un'action Storyblok
+describe('pulsante di iscrizione nella sidebar', () => {
+  const action = (url: string, linktype = 'url') => ({ component: 'action', link: { url, cached_url: url, linktype } })
+
+  it('riconosce solo le action verso /iscrizione/<corso>', () => {
+    expect(isEnrollAction(action('/iscrizione/corso-interior-design-primo-livello'))).toBe(true)
+    expect(isEnrollAction(action('/iscrizione/corso-interior-design-primo-livello?edizione=x'))).toBe(true)
+    expect(isEnrollAction(action('/corsi/interior-design'))).toBe(false)
+    expect(isEnrollAction({ component: 'form', tracking: 'enroll' })).toBe(false)
+  })
+
+  it('link di una storia o esterno', () => {
+    expect(actionHref({ link: { url: '', cached_url: 'open-day/interior-design', linktype: 'story' } })).toBe('/open-day/interior-design')
+    expect(actionHref(action('https://wa.me/39'))).toBe('https://wa.me/39')
+    expect(actionHref({ link: { url: '', cached_url: '' } })).toBeNull()
   })
 })

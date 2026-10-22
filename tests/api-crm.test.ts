@@ -93,6 +93,24 @@ describe('/api/crm', () => {
     })
   })
 
+  it('evento leggero: solo le proprietà dell’elenco fisso', async () => {
+    newContact()
+    await call({
+      contact: { email: TEST_EMAIL },
+      event: {
+        event_name: 'submit_brochure_form',
+        event_properties: { area: 'interior', programma: 'primo', finalita: 'lavoro', sede: 'treviso', messaggio: 'ciao' },
+      },
+    })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toEqual({ area: 'interior', programma: 'primo' })
+  })
+
+  it('nomi vecchi senza _form non partono più', async () => {
+    newContact()
+    await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_download' } })
+    expect(trackEvent).not.toHaveBeenCalled()
+  })
+
   it('contatto già in Brevo: unisce le scelte multiple e risponde returning', async () => {
     vi.mocked(getContact).mockResolvedValue({ attributes: { CORSI: ['Moda'] } } as never)
     const res = await call({
@@ -248,16 +266,16 @@ describe('/api/crm', () => {
     it('accesa: la provenienza va anche nell’evento Brevo che avvia le automazioni', async () => {
       vi.stubEnv('CRM_SOURCE_ATTRIBUTES', 'on')
       newContact()
-      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_open_day' }, source })
-      expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({
-        origine_sorgente: 'google',
-        ultima_campagna: 'reminder',
-      })
+      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_openday_form' }, source })
+      const properties = vi.mocked(trackEvent).mock.calls[0][0].properties
+      expect(properties).toMatchObject({ ultima_campagna: 'reminder' })
+      // Evento leggero: la prima provenienza resta solo sul contatto
+      expect(properties).not.toHaveProperty('origine_sorgente')
     })
 
     it('spenta: l’evento parte senza provenienza', async () => {
       newContact()
-      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_open_day' }, source })
+      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_openday_form' }, source })
       expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toEqual({})
     })
   })

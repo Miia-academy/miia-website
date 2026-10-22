@@ -121,7 +121,7 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
     expect(upsertContact).not.toHaveBeenCalled()
   })
 
-  it('iscrive al prossimo open day dell’area: lista 16, OD_CODICE, presenza e ritardo azzerati, evento submit_open_day', async () => {
+  it('iscrive al prossimo open day dell’area: lista 16, OD_CODICE, presenza e ritardo azzerati, evento submit_openday_form', async () => {
     const res = await call({ cookies: { [COOKIE]: richiesta('test@miia.it', 'interni') } })
     expect(res.statusCode).toBe(200)
     expect(res.body).toEqual({ ok: true, openday_data: '16/11/2026' })
@@ -134,10 +134,20 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
         OD_CODICE: 'openday-interni-novembre',
         PARTECIPAZIONE_OPENDAY: false,
         OD_RITARDO: false,
+        AREA: ['interior'],
       },
     })
     expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
-    expect(trackEvent).toHaveBeenCalledWith({ eventName: 'submit_open_day', email: 'test@miia.it' })
+    expect(trackEvent).toHaveBeenCalledWith({
+      eventName: 'submit_openday_form',
+      email: 'test@miia.it',
+      properties: {
+        area: 'interior',
+        openday: '2026-11-16',
+        openday_data: '16/11/2026',
+        openday_codice: 'openday-interni-novembre',
+      },
+    })
     // La richiesta è usata: il cookie si cancella
     expect(res.headers['Set-Cookie']).toMatch(new RegExp(`^${COOKIE}=; .*Max-Age=0`))
   })

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { BrevoError, getContact, upsertContact } from '@modules/brevo'
+import { BrevoError, getContact, trackEvent, upsertContact } from '@modules/brevo'
+import { EVENTS, pickEventProperties } from '@modules/brevo-events'
 import { normalizeEmail } from '@modules/crm-form'
 import {
   fase,
@@ -68,6 +69,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       attributes.SCADENZA_OFFERTA = scadenzaOfferta(evento.inizio)
     }
     await upsertContact({ email, attributes })
+    // Event for the automations: who entered which open day, and whether late
+    await trackEvent({
+      eventName: EVENTS.presence,
+      email,
+      properties: pickEventProperties(EVENTS.presence, {
+        openday: romeDay(evento.inizio),
+        openday_codice: codice,
+        ritardo: ritardo,
+      }),
+    })
   } catch (error) {
     // Email sconosciuta o Brevo non raggiungibile: la persona entra lo stesso.
     if (!(error instanceof BrevoError && error.status === 404)) {

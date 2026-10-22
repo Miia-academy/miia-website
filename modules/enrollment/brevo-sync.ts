@@ -7,17 +7,22 @@
  * Restano fuori da Brevo: codice fiscale, documento, fatturazione e contratto
  * (dati da contratto, solo in Neon e nel bucket privato).
  */
-import { upsertContact } from '@modules/brevo'
+import { trackEvent, upsertContact } from '@modules/brevo'
+import { EVENTS, pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
 import { SCOPO_LABELS } from './labels'
 import { romeDate } from './dates'
 import type { Enrollment } from './types'
 
+// Options of the Brevo STUDI attribute ("laure" was corrected to "laurea" in Brevo on 22/10)
 const STUDI: Record<string, string> = {
   licenza_media: 'media',
   diploma: 'superiore',
-  laurea_triennale: 'laure',
-  laurea_magistrale: 'laure',
+  laurea_triennale: 'laurea',
+  laurea_magistrale: 'laurea',
 }
+
+/** Brevo list 18 "Studenti - Iscritti": the contact joins it when signing. */
+export const ENROLLED_LIST_ID = 18
 
 const SEDI = ['treviso', 'padova', 'bassano']
 
@@ -58,6 +63,7 @@ export function signedContactAttributes(
     AZIENDA: str(p.azienda),
     RUOLO: str(p.ruolo),
     ISCRIZIONE_CORSO: corso,
+    CORSO: corso,
     SEDE: SEDI.includes(sede) ? [sede] : null,
     FREQUENZA: frequency(edition.giorni, edition.orari) ? [frequency(edition.giorni, edition.orari)] : null,
     ISCRIZIONE: romeDate(signedAt),
@@ -69,6 +75,58 @@ export function signedContactAttributes(
   return Object.fromEntries(Object.entries(attrs).filter(([, v]) => v !== '' && v !== null))
 }
 
-export async function syncSignedContact(...args: Parameters<typeof signedContactAttributes>) {
-  await upsertContact({ email: args[0].email, attributes: signedContactAttributes(...args) })
+/** Properties of the submit_signature_form event: the course and edition just signed, no amounts. */
+export function signedEventProperties(
+  row: Enrollment,
+  edition: { sede: string; inizio?: string | null },
+  corso: string
+) {
+  return pickEventProperties(EVENTS.signature, {
+    corso,
+    sede: edition.sede.toLowerCase(),
+    inizio: edition.inizio || '',
+    modalita: row.pagamento_modalita || '',
+    offerta_open_day: row.offerta_open_day,
+    ...sourceEventProperties(row.provenienza || {}),
+  })
+}
+
+/**
+ * At signing: contact data, list 18 and the submit_signature_form event that
+ * starts the Brevo automations.
+ */
+export async function syncSignedContact(
+  row: Enrollment,
+  edition: { sede: string; giorni: string[]; orari: string[]; inizio?: string | null },
+  corso: string,
+  signedAt: Date
+) {
+  await upsertContact({
+    email: row.email,
+    attributes: signedContactAttributes(row, edition, corso, signedAt),
+    listIds: [ENROLLED_LIST_ID],
+  })
+  await trackEvent({ eventName: EVENTS.signature, email: row.email, properties: signedEventProperties(row, edition, corso) })
+}
+
+/**
+ * A draft is new when it was just created: the first verification of the email
+ * for that course. Later verifications (another device, a day after) only update it.
+ */
+export function isNewDraft(row: Pick<Enrollment, 'creata_il' | 'aggiornata_il'>): boolean {
+  return new Date(row.creata_il).getTime() === new Date(row.aggiornata_il).getTime()
+}
+
+/**
+ * Online enrollment started (email code confirmed): date on INVIO_ISCRIZIONE,
+ * course on CORSO and the submit_enrollment_form event, for the
+ * abandoned-enrollment automation.
+ */
+export async function syncEnrollmentStart(row: Enrollment, corso: string, startedAt: Date) {
+  await upsertContact({ email: row.email, attributes: { INVIO_ISCRIZIONE: romeDate(startedAt), CORSO: corso } })
+  await trackEvent({
+    eventName: EVENTS.enrollment,
+    email: row.email,
+    properties: pickEventProperties(EVENTS.enrollment, { corso, ...sourceEventProperties(row.provenienza || {}) }),
+  })
 }

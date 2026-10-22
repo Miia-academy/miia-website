@@ -7,6 +7,8 @@ import { Button } from '@components/ui/button'
 import { tv } from 'tailwind-variants'
 import { Logo } from '@public/logo'
 import { normalizeEmail } from '@modules/crm-form'
+import { sendGTMEvent } from '@next/third-parties/google'
+import { EVENTS } from '@modules/brevo-events'
 import {
   APRE_PRIMA_MINUTI,
   fase,
@@ -108,6 +110,7 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale }:
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.link) {
+        sendGTMEvent({ event: EVENTS.presence })
         window.location.href = data.link
         return
       }

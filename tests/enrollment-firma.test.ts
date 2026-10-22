@@ -266,14 +266,15 @@ describe('POST /api/iscrizione/firma/conferma', () => {
   it('restituisce l’evento della conversione con importo e id', async () => {
     const res = await sign()
     expect(res.body.evento).toMatchObject({
-      event: 'iscrizione_firmata',
+      event: 'submit_signature_form',
       transaction_id: ID,
       value: 5940,
       currency: 'EUR',
       course: CORSO,
     })
-    // Non deve attivare i tag dei moduli di contatto
-    expect(res.body.evento.event).not.toMatch(/^submit_/)
+    // Non deve attivare i tag dei moduli di contatto né il tag GA4 generico (file GTM del 22/10)
+    expect(res.body.evento.event).not.toMatch(/^submit_(brochure|info|openday)_form$/)
+    expect(res.body.evento.event).not.toMatch(/^submit_(brochure|news|info|openday|presence|answer|enrollment)_form$/)
   })
 
   it('codice sbagliato: niente firma', async () => {
