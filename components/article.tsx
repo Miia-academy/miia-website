@@ -105,7 +105,8 @@ export default function Article({ blok }: ArticleProps) {
       </section>
 
       {/* 2. DYNAMIC BODY BLOCKS */}
-      <div className="w-full">
+      {/* Bottom space so the text ends clear of the page edge and the WhatsApp button */}
+      <div className="w-full pb-20 md:pb-24">
         {blok.body &&
           blok.body.map((nestedBlok) => (
             <StoryblokComponent
