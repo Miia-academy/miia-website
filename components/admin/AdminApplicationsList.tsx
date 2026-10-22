@@ -99,7 +99,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                           <Link
                             href={`/lavoro/inserzioni/${app.job_id}`}
                             target="_blank"
-                            className="font-bold text-neutral-900 hover:text-[#009245] hover:underline transition-colors truncate max-w-[280px]"
+                            className="font-bold text-neutral-900 hover:text-primary hover:underline transition-colors truncate max-w-[280px]"
                           >
                             {app.job_title}
                           </Link>
@@ -183,7 +183,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                             size="sm"
                             isLoading={loadingId === app.application_id}
                             onPress={() => handleUpdateStatus(app.application_id, 'validata')}
-                            className="text-white font-bold text-xs h-8 bg-[#009245]"
+                            className="text-white font-bold text-xs h-8 bg-primary"
                           >
                             Valida
                           </Button>
@@ -197,7 +197,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                           size="sm"
                           isLoading={loadingId === app.application_id}
                           onPress={() => handleUpdateStatus(app.application_id, 'validata')}
-                          className="font-bold text-xs h-8 text-white bg-[#009245]"
+                          className="font-bold text-xs h-8 text-white bg-primary"
                         >
                           Rivalida Candidatura
                         </Button>

@@ -183,7 +183,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                 <div className="space-y-4 mt-2">
                   {detailedSkills.map((skill, idx) => (
                     <div key={idx} className="flex items-start gap-3">
-                      <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                       <div className="space-y-0.5">
                         <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                           {skill.title}
@@ -215,7 +215,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     href={student.cv_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-white bg-[#009245]"
+                    className="font-bold text-white bg-primary"
                   >
                     📄 Download Curriculum (PDF)
                   </Button>
@@ -267,7 +267,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     <div className="space-y-1">
                       <Link
                         href={`/lavoro/inserzioni/${app.job_id}`}
-                        className="text-base font-bold text-neutral-900 hover:text-[#009245] transition-colors"
+                        className="text-base font-bold text-neutral-900 hover:text-primary transition-colors"
                       >
                         {app.title}
                       </Link>

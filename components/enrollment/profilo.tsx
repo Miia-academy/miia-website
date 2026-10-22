@@ -12,12 +12,12 @@ import {
 } from '@modules/enrollment/profile'
 import { SENZA_LAVORO } from '@modules/enrollment/validation'
 
-const inputClasses = { inputWrapper: 'bg-[#F3F3F2]' }
-const selectClasses = { trigger: 'bg-[#F3F3F2]' }
+const inputClasses = { inputWrapper: 'bg-surface' }
+const selectClasses = { trigger: 'bg-surface' }
 
 const pillCheckbox = {
   base: cn(
-    'inline-flex m-0 max-w-none rounded-full border-2 border-neutral-200 bg-[#F3F3F2] px-4 py-2',
+    'inline-flex m-0 max-w-none rounded-full border-2 border-neutral-200 bg-surface px-4 py-2',
     'data-[selected=true]:border-primary data-[selected=true]:bg-white cursor-pointer'
   ),
   wrapper: 'hidden',

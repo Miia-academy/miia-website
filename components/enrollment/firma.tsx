@@ -159,7 +159,7 @@ export function Conferma({
   }
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-2xl bg-[#F3F3F2] p-6 sm:p-8">
+      <div className="rounded-2xl bg-surface p-6 sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Iscrizione firmata</p>
         <h2 className="mt-1 text-2xl font-bold">Grazie {state.chi_sei.nome}, ci vediamo in aula.</h2>
         {edizione && <p className="mt-3 text-neutral-700">{edizione}</p>}
@@ -181,7 +181,7 @@ export function Conferma({
             Puoi annullare l’iscrizione senza costi fino al <strong>{longDate(state.fine_recesso)}</strong> compreso. Rispondi
             all’email di conferma, o scrivi a {ACADEMY.email}, con questa frase:
           </p>
-          <p className="mt-3 select-all rounded-medium bg-[#F3F3F2] px-4 py-3 font-medium">{sentence}</p>
+          <p className="mt-3 select-all rounded-medium bg-surface px-4 py-3 font-medium">{sentence}</p>
           <Button size="sm" variant="light" className="mt-1 -ms-3 underline text-neutral-600" onPress={copy}>
             {copied ? 'Frase copiata' : 'Copia la frase'}
           </Button>

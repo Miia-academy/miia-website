@@ -456,7 +456,7 @@ export function JobFormModal({
               <Button
                 type="submit"
                 isLoading={loading}
-                className={`w-full sm:w-auto font-bold px-6 shadow-sm text-white ${isEdit ? 'bg-black' : 'bg-[#009245]'
+                className={`w-full sm:w-auto font-bold px-6 shadow-sm text-white ${isEdit ? 'bg-black' : 'bg-primary'
                   }`}
               >
                 {isEdit ? 'Salva Modifiche' : 'Pubblica Inserzione'}

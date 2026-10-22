@@ -45,7 +45,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
             Bacheca Opportunità
           </h1>
           <p className="mt-2 text-base sm:text-lg text-neutral-500">
-            Ciao <span className="font-semibold text-[#009245]">{user.name || user.email}</span>, scopri le posizioni aperte nel Triveneto e candidati.
+            Ciao <span className="font-semibold text-primary">{user.name || user.email}</span>, scopri le posizioni aperte nel Triveneto e candidati.
           </p>
         </div>
 
@@ -117,7 +117,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                       </span>
 
                       {isApplied && (
-                        <span className="text-[#009245] font-bold flex items-center gap-1 bg-[#009245]/10 px-2.5 py-1 rounded-md">
+                        <span className="text-primary font-bold flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-md">
                           ✓ Già candidato
                         </span>
                       )}

@@ -65,7 +65,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
             color="default"
             label="Esci"
           />
-          <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-sm shrink-0 h-11">
+          <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} className="w-full md:w-auto bg-primary text-white font-bold shadow-sm shrink-0 h-11">
             + Nuova Inserzione
           </Button>
         </div>
@@ -150,7 +150,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
               {initialJobs.map((job) => (
                 <div key={job.id} className="bg-white border border-neutral-200 rounded-xl p-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-neutral-300 hover:shadow transition-all">
                   <div className="flex-1 min-w-0">
-                    <Link href={`/lavoro/inserzioni/${job.id}`} className="text-[17px] font-bold text-neutral-900 hover:text-[#009245] transition-colors leading-tight line-clamp-1 truncate block">
+                    <Link href={`/lavoro/inserzioni/${job.id}`} className="text-[17px] font-bold text-neutral-900 hover:text-primary transition-colors leading-tight line-clamp-1 truncate block">
                       {job.title}
                     </Link>
                     <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mt-1">
@@ -158,7 +158,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                     </p>
                   </div>
                   <div className="flex items-center gap-4 sm:gap-6 shrink-0 border-t sm:border-t-0 border-neutral-100 pt-3 sm:pt-0 mt-1 sm:mt-0">
-                    <button onClick={() => { setSelectedJob(job); setIsApplicationsOpen(true); }} className="text-sm font-semibold text-[#009245] hover:underline whitespace-nowrap">
+                    <button onClick={() => { setSelectedJob(job); setIsApplicationsOpen(true); }} className="text-sm font-semibold text-primary hover:underline whitespace-nowrap">
                       {job.applicant_count} {job.applicant_count === 1 ? 'Candidato' : 'Candidati'}
                     </button>
                     <Chip size="sm" color={job.status === 'attiva' ? 'success' : 'default'} variant="flat" className="shrink-0 font-medium">

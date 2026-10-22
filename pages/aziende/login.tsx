@@ -113,7 +113,7 @@ export default function CompanyLogin() {
       <Head><title>Area Aziende | MIIA</title></Head>
 
       <div className="absolute top-0 right-0 left-0 z-10 flex justify-center p-6">
-        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#009245" />
+        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#008a45" />
       </div>
 
       <div className="w-full max-w-lg bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-neutral-200 flex flex-col max-h-[90vh] relative z-20">

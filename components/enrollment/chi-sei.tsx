@@ -20,7 +20,7 @@ async function post(url: string, data: unknown, method = 'POST') {
   return { ok: res.ok, status: res.status, data: json as Record<string, any> }
 }
 
-const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-[#F3F3F2]' }
+const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-surface' }
 
 /** Passo 1: email, codice di verifica, poi nome, cognome e cellulare. */
 export function ChiSei({ corso, initialEmail = '', state, onVerified, onSaved }: ChiSeiProps) {
