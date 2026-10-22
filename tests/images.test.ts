@@ -58,3 +58,21 @@ describe('HeroUI images', () => {
     for (const tag of tags) expect(tag).not.toMatch(/loading=/)
   })
 })
+
+describe('the site image keeps its wrapper', () => {
+  it('grid classes stay on a div around the image, with no skeleton', async () => {
+    const { createElement } = await import('react')
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { Image } = await import('@components/ui/image')
+
+    const html = renderToStaticMarkup(
+      createElement(Image, { src: photo, width: '100%', classNames: { wrapper: 'col-span-12 md:col-span-6', img: 'object-cover' } })
+    )
+    expect(html).toMatch(/<div class="[^"]*col-span-12 md:col-span-6[^"]*" style="max-width:100%"><img /)
+    expect(html).toContain('opacity-100')
+    expect(html).not.toContain('bg-content3')
+
+    const bare = renderToStaticMarkup(createElement(Image, { src: photo, removeWrapper: true }))
+    expect(bare).toMatch(/^(<link[^>]*>)?<img /)
+  })
+})
