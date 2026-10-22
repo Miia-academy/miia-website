@@ -2,7 +2,8 @@ import type { Course as CourseBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
 import type { PropsWithChildren } from 'react'
 import { storyblokEditable } from '@storyblok/react'
-import { Card, CardBody, CardHeader } from '@heroui/react'
+import { CardBody, CardHeader } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { getLongDate, getShortDate } from '@modules/formats'
 import { resolveAlias } from '@modules/relations'
 import Link from 'next/link'
@@ -53,7 +54,7 @@ export default function Course({ blok, story, parent }: CourseComponentProps) {
     <Container>
       <div {...storyblokEditable(blok as any)}>
         <Wrapper>
-          <Card>
+          <Card shadow="md" bordered={false}>
             <CardHeader className="flex-col items-start">
               <h4 className="type-title-4">{course.title}</h4>
               <small>

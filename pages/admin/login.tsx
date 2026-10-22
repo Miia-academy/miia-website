@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Card, CardHeader, CardBody, Input } from '@heroui/react'
+import { CardHeader, CardBody, Input } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
 
 export default function AdminLogin() {
@@ -38,7 +39,7 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4">
-      <Card shadow="sm" className="w-full max-w-md border border-neutral-200">
+      <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col items-center pt-10 pb-4">
           <div className="w-14 h-14 bg-neutral-900 text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-5 shadow-sm">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">

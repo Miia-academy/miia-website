@@ -7,7 +7,8 @@ import { markApplicationAsViewed } from '@modules/applications/db'
 import { getCompanyApplicationForStudent } from '@modules/applications/access'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Card, CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
@@ -90,7 +91,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
           &larr; Torna alla Dashboard Azienda
         </Link>
 
-        <Card shadow="sm" className="border border-neutral-200">
+        <Card>
           <CardHeader className="pt-6 px-6 pb-4 flex flex-col items-start gap-1">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
               Scheda Dettaglio Candidato

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
 import { AlertModal } from '@components/shared/AlertModal'
 
@@ -58,7 +59,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
 
   return (
     <>
-      <Card shadow="sm" className="border border-neutral-200">
+      <Card>
         <CardHeader className="py-4 px-6 flex justify-between items-center">
           <h2 className="type-subtitle text-neutral-900">Gestione Candidature</h2>
           <span className="text-xs font-semibold text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-full">

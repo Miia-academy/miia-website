@@ -6,7 +6,8 @@ import { getActiveJobs } from '@modules/jobs/db'
 import type { Job } from '@modules/jobs/types'
 import { TIPO_CONTRATTO_LABELS, GRADO_ESPERIENZA_LABELS } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Card, CardHeader, CardBody, CardFooter, Chip, Divider } from '@heroui/react'
+import { CardHeader, CardBody, CardFooter, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
@@ -64,7 +65,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
               const isApplied = Boolean(job.has_applied)
 
               return (
-                <Card key={job.id} shadow="sm" className="border border-neutral-200 hover:shadow-md transition-shadow flex flex-col h-full">
+                <Card key={job.id} className="hover:shadow-md transition-shadow flex flex-col h-full">
 
                   <CardHeader className="flex flex-col items-start px-4 pt-4 sm:px-6 sm:pt-6 pb-0">
                     <div className="flex w-full justify-between items-start gap-3">

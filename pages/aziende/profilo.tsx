@@ -6,7 +6,8 @@ import jwt from 'jsonwebtoken'
 import { getBusinessJobs } from '@modules/jobs/db'
 import type { Job, JobWithApplicantsCount } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Card, CardBody, CardHeader, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from '@heroui/react'
+import { CardBody, CardHeader, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
 import { JobFormModal } from '@components/business/JobFormModal'
 import { DeleteJobModal } from '@components/business/DeleteJobModal'
@@ -74,7 +75,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
 
       <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
-          <Card shadow="sm" className="border border-neutral-200">
+          <Card>
             <CardHeader className="pt-6 px-5 sm:px-6 type-subtitle text-neutral-900 flex justify-between items-center">
               <span>Profilo Operativo</span>
             </CardHeader>
