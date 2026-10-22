@@ -117,7 +117,7 @@ export default function CompanyLogin() {
       </div>
 
       <div className="w-full max-w-lg bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-neutral-200 flex flex-col max-h-[90vh] relative z-20">
-        <h1 className="type-title-3 mb-4 text-center shrink-0">Area Riservata Aziende</h1>
+        <h1 className="type-title-4 mb-4 text-center shrink-0">Area Riservata Aziende</h1>
 
         {successMsg ? (
           <Alert color="success" variant="flat">{successMsg}</Alert>
