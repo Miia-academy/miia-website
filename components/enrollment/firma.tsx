@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Button, InputOtp } from '@heroui/react'
+import { InputOtp } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { sendGTMEvent } from '@next/third-parties/google'
 import { addDays, romeDate } from '@modules/enrollment/dates'
 import { longDate, paymentStart } from '@modules/enrollment/labels'
@@ -91,7 +92,7 @@ export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
             <p className="text-sm text-neutral-700">
               Ti mandiamo un codice di 6 cifre al cellulare <strong>{state.chi_sei.telefono}</strong>. Se il numero non è giusto, correggilo nel primo passo.
             </p>
-            <Button color="primary" className="h-12 font-bold self-start px-8" isLoading={loading === 'send'} onPress={send}>
+            <Button size="lg" color="primary" className="self-start" isLoading={loading === 'send'} onPress={send}>
               Mandami il codice
             </Button>
           </>
@@ -112,7 +113,7 @@ export function Firma({ corso, state, onSigned, onReopen }: FirmaProps) {
               aria-label="Codice per la firma"
             />
             <div className="flex flex-wrap items-center gap-4">
-              <Button color="primary" className="h-12 font-bold px-8" isLoading={loading === 'sign'} isDisabled={!!loading} onPress={() => sign()}>
+              <Button size="lg" color="primary" isLoading={loading === 'sign'} isDisabled={!!loading} onPress={() => sign()}>
                 Firma l’iscrizione
               </Button>
               <Button variant="light" className="underline text-neutral-600" isDisabled={wait > 0 || !!loading} onPress={send}>

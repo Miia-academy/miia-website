@@ -1,5 +1,6 @@
 import type { Action as ActionBlok } from '@types'
-import { Button, Link } from '@heroui/react'
+import { Link } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { compiler } from 'markdown-to-jsx'
 import { storyblokEditable } from '@storyblok/react'
 import { Typography } from './typography'
@@ -52,7 +53,7 @@ export default function Action({ blok, parent, size }: ActionComponentProps) {
         size={size}
         isExternal={!!blok.external}
         color={(blok.color as any) || 'default'}
-        className="col-auto text-medium font-medium min-w-fit cursor-pointer gap-2"
+        className="col-auto text-medium min-w-fit cursor-pointer gap-2"
         {...storyblokEditable(blok as any)}
       >
         {Label}

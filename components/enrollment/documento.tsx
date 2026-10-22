@@ -1,4 +1,5 @@
-import { Button, Checkbox, Input, InputOtp, Popover, PopoverContent, PopoverTrigger, cn } from '@heroui/react'
+import { Checkbox, Input, InputOtp, Popover, PopoverContent, PopoverTrigger, cn } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { canBeForeign, documentFormat, partialPattern } from '@modules/enrollment/document-number'
 
 const inputClasses = { label: 'after:text-secondary', inputWrapper: 'bg-surface' }

@@ -8,7 +8,8 @@ import { AdminApplicationsList } from '@components/admin/AdminApplicationsList'
 import { AlertModal } from '@components/shared/AlertModal'
 import type { AuthPayload } from '@modules/auth'
 import { LogoutButton } from '@components/shared/LogoutButton'
-import { Button, useDisclosure } from '@heroui/react'
+import { useDisclosure } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface AdminProfileProps {
@@ -52,7 +53,7 @@ export default function AdminProfile({ user, initialApplications }: AdminProfile
               color="default"
               label="Esci"
             />
-            <Button color="primary" onPress={onJobOpen} className="font-bold text-white shadow-sm">
+            <Button color="primary" onPress={onJobOpen} className="shadow-sm">
               + Nuova Inserzione
             </Button>
           </div>

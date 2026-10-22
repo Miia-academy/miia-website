@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react'
 import { storyblokEditable } from '@storyblok/react'
 import { useDataContext } from '@modules/context'
-import { Button } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { tv } from 'tailwind-variants'
 
 import ArticleCard from '@components/cards/articleCard'
@@ -137,7 +137,7 @@ export default function Grid({ blok }: GridComponentProps) {
               variant="ghost"
               size="lg"
               onPress={handleLoadMore}
-              className="px-8 font-medium"
+              className="px-8"
             >
               Carica altri {filteredAndSortedItems.length - visibleCount}
             </Button>

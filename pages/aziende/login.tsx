@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { Tabs, Tab, Input, Button, Alert, Checkbox } from '@heroui/react'
+import { Tabs, Tab, Input, Alert, Checkbox } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { Logo } from '@public/logo'
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -140,7 +141,7 @@ export default function CompanyLogin() {
                   onValueChange={setLoginEmail}
                   variant="flat"
                 />
-                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-bold shadow-sm">
+                <Button size="lg" type="submit" isLoading={loading} color="primary" className="shadow-sm">
                   Invia Link di Accesso
                 </Button>
               </form>
@@ -223,7 +224,7 @@ export default function CompanyLogin() {
                 </div>
 
                 <div className="pt-3 border-t border-neutral-100 mt-auto shrink-0 bg-white px-1">
-                  <Button type="submit" isLoading={loading} color="primary" className="w-full h-12 font-bold shadow-sm">
+                  <Button size="lg" type="submit" isLoading={loading} color="primary" className="w-full shadow-sm">
                     Invia Richiesta
                   </Button>
                 </div>

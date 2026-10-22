@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { Card, CardBody, Input, Button, Alert } from '@heroui/react'
+import { Card, CardBody, Input, Alert } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { Logo } from '@public/logo'
 
 export default function StudentLogin() {
@@ -76,7 +77,7 @@ export default function StudentLogin() {
                 variant="flat"
                 classNames={{ inputWrapper: "h-14" }}
               />
-              <Button type="submit" isLoading={loading} color="primary" className="h-14 font-bold shadow-sm text-base">
+              <Button type="submit" isLoading={loading} color="primary" className="h-14 shadow-sm text-base">
                 Invia Magic Link
               </Button>
               {errorMsg && <Alert color="danger" variant="flat">{errorMsg}</Alert>}

@@ -1,6 +1,7 @@
 import type { Aside as AsideBlok } from "@types";
 import { StoryblokComponent, storyblokEditable } from "@storyblok/react";
-import { Accordion, AccordionItem, Button } from "@heroui/react";
+import { Accordion, AccordionItem } from "@heroui/react";
+import { Button } from "@components/ui/button";
 import { tv } from "tailwind-variants";
 import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
@@ -252,7 +253,7 @@ export default function Aside({ blok }: AsideComponentProps) {
                         size="md"
                         color="primary"
                         variant={index === 0 ? "solid" : "ghost"}
-                        className="w-full font-medium text-medium"
+                        className="w-full text-medium"
                       >
                         Iscriviti online
                       </Button>

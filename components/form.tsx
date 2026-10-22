@@ -1,17 +1,7 @@
 import type { Form as FormBlok, Field as FieldBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
-import {
-  Button,
-  Drawer,
-  DrawerContent,
-  DrawerBody,
-  DrawerHeader,
-  DrawerFooter,
-  Spinner,
-  Checkbox,
-  Link,
-  Alert,
-} from '@heroui/react'
+import { Drawer, DrawerContent, DrawerBody, DrawerHeader, DrawerFooter, Spinner, Checkbox, Link, Alert } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { fieldValidation } from '@modules/validations'
 import { getCapitalize } from '@modules/formats'
@@ -697,7 +687,7 @@ export const errors = {
 const classes = tv({
   slots: {
     button:
-      'font-medium text-medium col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3',
+      'text-medium col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3',
     close: 'text-xl hover:bg-transparent active:bg-transparent',
     spinner:
       'absolute inset-0 flex items-center justify-center z-20 bg-opacity-30 bg-background backdrop-blur-sm',

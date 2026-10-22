@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Card, CardHeader, CardBody, Input, Button } from '@heroui/react'
+import { Card, CardHeader, CardBody, Input } from '@heroui/react'
+import { Button } from '@components/ui/button'
 
 export default function AdminLogin() {
   const router = useRouter()
@@ -79,10 +80,10 @@ export default function AdminLogin() {
               />
             </div>
 
-            <Button
+            <Button color="dark" size="lg"
               type="submit"
               isLoading={loading}
-              className="w-full bg-neutral-900 text-white font-bold h-12 shadow-sm"
+              className="w-full shadow-sm"
             >
               Accedi al Gestionale
             </Button>

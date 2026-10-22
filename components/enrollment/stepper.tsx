@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Button } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import type { SectionId } from '@modules/enrollment/types'
 
 export const SECTION_TITLES: Record<SectionId, string> = {
@@ -58,7 +58,7 @@ export function EnrollmentStepper({ items, onEdit }: { items: StepItem[]; onEdit
                   {SECTION_TITLES[item.id]}
                 </h2>
                 {item.state === 'done' && (
-                  <Button size="sm" variant="light" color="primary" className="font-semibold" onPress={() => onEdit(item.id)}>
+                  <Button size="sm" variant="light" color="primary" onPress={() => onEdit(item.id)}>
                     Modifica
                   </Button>
                 )}

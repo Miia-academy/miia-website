@@ -1,6 +1,6 @@
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { Button } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useEffect, useState } from 'react'
 import { useDataContext } from '@modules/context'
 import { bannerArea, bannerLink, fillText, pickForSlot, textVariables, type BannerStory, type Slot } from '@modules/banner'

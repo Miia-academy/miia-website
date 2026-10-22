@@ -7,7 +7,8 @@ import { markApplicationAsViewed } from '@modules/applications/db'
 import { getCompanyApplicationForStudent } from '@modules/applications/access'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { Card, CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface BusinessStudentViewProps {
@@ -185,12 +186,11 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
               </span>
               <div className="flex flex-wrap gap-3 items-center">
                 {student.cv_url ? (
-                  <Button
+                  <Button color="primary"
                     as="a"
                     href={getCvDownloadUrl()}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-white bg-primary"
                   >
                     📄 Scarica Curriculum Vitae (PDF)
                   </Button>
@@ -205,7 +205,6 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                     target="_blank"
                     rel="noreferrer"
                     variant="flat"
-                    className="font-bold"
                   >
                     🔗 Apri Portfolio
                   </Button>

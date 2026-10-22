@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Button, Checkbox, Input, Radio, RadioGroup, Switch, cn } from '@heroui/react'
+import { Checkbox, Input, Radio, RadioGroup, Switch, cn } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import { SLOT_LABELS, requiredSlots, type DocumentSlot } from '@modules/enrollment/documents'
 import { uploadDocument } from './document-upload'
@@ -260,7 +261,7 @@ export function Dati({ corso, state, onSaved }: DatiProps) {
       </fieldset>
 
       <div className="flex flex-col gap-2">
-        <Button type="submit" color="primary" className="h-12 font-bold self-start px-8" isLoading={loading}>
+        <Button size="lg" type="submit" color="primary" className="self-start" isLoading={loading}>
           Continua
         </Button>
         {message && <p role="alert" className="text-sm text-secondary">{message}</p>}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Divider, Select, SelectItem, Checkbox } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Divider, Select, SelectItem, Checkbox } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useDataContext } from '@modules/context'
 
 export interface StudentProfileData {
@@ -271,7 +272,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Button variant="flat" onPress={onClose} disabled={loading} className="w-full sm:w-auto">
                 Annulla
               </Button>
-              <Button type="submit" isLoading={loading} className="w-full sm:w-auto bg-black text-white font-bold shadow-sm">
+              <Button color="dark" type="submit" isLoading={loading} className="w-full sm:w-auto shadow-sm">
                 Salva Profilo
               </Button>
             </ModalFooter>

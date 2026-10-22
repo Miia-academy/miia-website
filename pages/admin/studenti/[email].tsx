@@ -6,7 +6,8 @@ import { getContact } from '@modules/brevo'
 import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { Card, CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface StudentDetailProps {
@@ -210,12 +211,11 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               </span>
               <div className="flex flex-wrap gap-3 items-center">
                 {student.cv_url ? (
-                  <Button
+                  <Button color="primary"
                     as="a"
                     href={student.cv_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-white bg-primary"
                   >
                     📄 Download Curriculum (PDF)
                   </Button>
@@ -230,7 +230,6 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     target="_blank"
                     rel="noreferrer"
                     variant="flat"
-                    className="font-bold"
                   >
                     🔗 Vedi Portfolio
                   </Button>

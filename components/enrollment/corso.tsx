@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Button, Radio, RadioGroup, Spinner, cn } from '@heroui/react'
+import { Radio, RadioGroup, Spinner, cn } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import type { CourseOffer, EditionOption } from '@modules/enrollment/offer'
 import type { PaymentMode } from '@modules/enrollment/types'
@@ -188,7 +189,7 @@ export function Corso({ corso, state, offer, loadError, onSaved, onChange, prese
       )}
 
       <div className="flex flex-col gap-2">
-        <Button type="submit" color="primary" className="h-12 font-bold self-start px-8" isLoading={loading} isDisabled={!offer.prezzi}>
+        <Button size="lg" type="submit" color="primary" className="self-start" isLoading={loading} isDisabled={!offer.prezzi}>
           Continua
         </Button>
         {message && <p role="alert" className="text-sm text-secondary">{message}</p>}
