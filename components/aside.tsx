@@ -46,20 +46,20 @@ const Price = ({
   dueDate,
   showDiscount,
 }: PriceProps) => {
-  const { container, price, discount, shape, date } = priceClasses();
+  const { container, price, from, figure, line, period, discount, shape, date } = priceClasses();
   const formattedDueDate = dueDate ? getShortDate(dueDate) : null;
 
   return (
     <div className={container({ intersec })}>
       <div className={price({ intersec })}>
-        {!!steps && <span className="text-xl lg:text-3xl">A partire da </span>}
-        <span className="mx-1 font-serif text-3xl font-black leading-none lg:text-5xl">
+        {!!steps && <span className={from({ intersec })}>A partire da </span>}
+        <span className={figure({ intersec })}>
           {amount}
           <small className="text-xl">€</small>
         </span>
-        <span className="block">
+        <span className={line({ intersec })}>
           {!!steps && (
-            <span className="mr-1 text-xl leading-none mlg:text-3xl">
+            <span className={period({ intersec })}>
               per {steps} mesi
             </span>
           )}
@@ -279,6 +279,10 @@ const priceClasses = tv({
   slots: {
     container: "relative flex flex-1 flex-col w-full",
     price: "flex-1 font-serif font-semibold min-w-[216px]",
+    from: "text-xl lg:text-3xl",
+    figure: "mx-1 font-serif text-3xl font-black leading-none lg:text-5xl",
+    line: "block",
+    period: "mr-1 text-xl leading-none lg:text-3xl",
     discount: "flex flex-1 items-center gap-2 font-bold text-secondary",
     shape:
       "inline-block shrink-0 py-3 w-12 h-12 text-center text-background bg-[url(/discount.png)] bg-no-repeat bg-contain",
@@ -291,7 +295,12 @@ const priceClasses = tv({
       },
       true: {
         container: "flex-row flex-wrap gap-2 text-foreground sm:min-w-[420px]",
-        price: "text-right text-background",
+        // On phones the bottom bar shows the price on a single line
+        price: "text-center text-background max-sm:whitespace-nowrap sm:text-right",
+        from: "max-sm:text-base max-[359px]:text-sm",
+        figure: "max-sm:text-2xl max-[359px]:text-xl",
+        line: "max-sm:inline",
+        period: "max-sm:text-base max-[359px]:text-sm",
         discount: "absolute sm:relative",
         date: "hidden sm:inline-block",
       },
@@ -327,7 +336,7 @@ const containerClasses = tv({
   base: "flex justify-center",
   variants: {
     active: {
-      true: "mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-1 px-6 py-1 sm:gap-1.5 sm:py-1.5 md:gap-2 md:py-2 lg:gap-3 lg:py-3 [&_button]:w-full [&_button]:sm:w-auto [&_button]:sm:min-w-64",
+      true: "mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-1 px-6 pt-2 pb-6 max-[359px]:px-4 sm:gap-1.5 sm:py-1.5 md:gap-2 md:py-2 lg:gap-3 lg:py-3 [&_button]:w-full [&_button]:sm:w-auto [&_button]:sm:min-w-64",
       // Content and buttons span the whole box
       false: "w-full flex-col gap-3 pb-1 [&_button]:w-full",
     },
