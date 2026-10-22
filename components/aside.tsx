@@ -244,7 +244,7 @@ export default function Aside({ blok }: AsideComponentProps) {
                 return (
                   <div
                     key={form._uid}
-                    className={index > 0 && isStickyBanner ? "hidden" : "w-full sm:w-auto"}
+                    className={!isStickyBanner ? "w-full" : index > 0 ? "hidden" : "w-full sm:w-auto"}
                   >
                     {enrollMain && enrollForm ? (
                       <Button
@@ -318,7 +318,7 @@ const bannerClasses = tv({
     active: {
       true: "fixed bottom-0 left-0 right-0 bg-foreground text-background transition-all",
       false:
-        "flex flex-col items-start justify-start rounded-3xl bg-background p-2 text-foreground shadow-aside transition-all",
+        "flex flex-col justify-start rounded-3xl bg-background p-2 text-foreground shadow-aside transition-all",
     },
   },
 });
@@ -328,7 +328,8 @@ const containerClasses = tv({
   variants: {
     active: {
       true: "mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-1 px-6 py-1 sm:gap-1.5 sm:py-1.5 md:gap-2 md:py-2 lg:gap-3 lg:py-3 [&_button]:w-full [&_button]:sm:w-auto [&_button]:sm:min-w-64",
-      false: "flex-col gap-3 pb-1",
+      // Content and buttons span the whole box
+      false: "w-full flex-col gap-3 pb-1 [&_button]:w-full",
     },
   },
 });
