@@ -6,7 +6,8 @@ import { getContact } from '@modules/brevo'
 import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Card, CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
@@ -100,7 +101,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           &larr; Torna al Pannello
         </Link>
 
-        <Card shadow="sm" className="border border-neutral-200">
+        <Card>
           <CardHeader className="pt-6 px-6 pb-4 flex flex-col items-start gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
@@ -142,21 +143,21 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               <div>
                 <span className="block type-label text-neutral-400">Telefono / SMS</span>
                 <span className="text-base font-semibold text-neutral-800">
-                  {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.sms || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
                 <span className="block type-label text-neutral-400">Provincia</span>
                 <span className="text-base font-semibold text-neutral-800 uppercase">
-                  {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.provincia || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
                 <span className="block type-label text-neutral-400">Indirizzo</span>
                 <span className="text-base font-medium text-neutral-800">
-                  {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.indirizzo || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
             </div>
@@ -220,7 +221,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     📄 Download Curriculum (PDF)
                   </Button>
                 ) : (
-                  <span className="text-sm text-red-500 italic font-semibold">Curriculum: Mancante</span>
+                  <span className="text-sm text-danger italic font-semibold">Curriculum: Mancante</span>
                 )}
 
                 {student.portfolio_url ? (
@@ -242,7 +243,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           </CardBody>
         </Card>
 
-        <Card shadow="sm" className="border border-neutral-200">
+        <Card>
           <CardHeader className="pt-6 px-6 pb-2 flex justify-between items-center">
             <h2 className="type-subtitle text-neutral-900">
               Candidature Inviate ({applications.length})

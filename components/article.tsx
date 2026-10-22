@@ -3,7 +3,7 @@ import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
 import SlotBanner from '@components/banners/slotBanner'
 import Meta from '@components/meta'
 import { compiler } from 'markdown-to-jsx'
-import { Image as HeroImage } from '@heroui/react'
+import { Image as HeroImage } from '@components/ui/image'
 import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
 import { Typography } from './typography'
@@ -105,7 +105,8 @@ export default function Article({ blok }: ArticleProps) {
       </section>
 
       {/* 2. DYNAMIC BODY BLOCKS */}
-      <div className="w-full">
+      {/* Bottom space so the text ends clear of the page edge and the WhatsApp button */}
+      <div className="w-full pb-20 md:pb-24">
         {blok.body &&
           blok.body.map((nestedBlok) => (
             <StoryblokComponent

@@ -16,7 +16,7 @@ export function AlertModal({ isOpen, onOpenChange, title, message, isError = fal
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className={`text-xl font-bold ${isError ? 'text-red-600' : 'text-primary'}`}>
+            <ModalHeader className={`text-xl font-bold ${isError ? 'text-danger-600' : 'text-primary'}`}>
               {title}
             </ModalHeader>
             <ModalBody>

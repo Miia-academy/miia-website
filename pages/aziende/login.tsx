@@ -136,7 +136,6 @@ export default function CompanyLogin() {
                   type="email"
                   label="Email Aziendale"
                   isRequired
-                  classNames={{ label: "after:text-red-500" }}
                   value={loginEmail}
                   onValueChange={setLoginEmail}
                   variant="flat"
@@ -154,7 +153,6 @@ export default function CompanyLogin() {
                   <Input
                     label="Nome Azienda"
                     isRequired
-                    classNames={{ label: "after:text-red-500" }}
                     value={regForm.nome}
                     onValueChange={v => setRegForm({ ...regForm, nome: v })}
                     variant="flat"
@@ -162,7 +160,6 @@ export default function CompanyLogin() {
                   <Input
                     label="Nome Referente"
                     isRequired
-                    classNames={{ label: "after:text-red-500" }}
                     value={regForm.contact_person}
                     onValueChange={v => setRegForm({ ...regForm, contact_person: v })}
                     variant="flat"
@@ -171,7 +168,6 @@ export default function CompanyLogin() {
                     type="email"
                     label="Email Aziendale"
                     isRequired
-                    classNames={{ label: "after:text-red-500" }}
                     value={regForm.email}
                     onValueChange={v => setRegForm({ ...regForm, email: v })}
                     variant="flat"
@@ -189,7 +185,7 @@ export default function CompanyLogin() {
 
                   <div className="flex flex-col gap-2 border-t border-neutral-100">
                     <label className="text-xs font-medium text-neutral-500">
-                      Logo Aziendale<span className="text-red-500">*</span>
+                      Logo Aziendale<span className="text-danger">*</span>
                     </label>
                     <input
                       type="file"

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Image } from '@heroui/react'
+import { Image } from '@components/ui/image'
 import Link from 'next/link'
 import { tv } from 'tailwind-variants'
 

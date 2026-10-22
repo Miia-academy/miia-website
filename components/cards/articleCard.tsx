@@ -1,6 +1,7 @@
 import type { ProcessedArticle } from '@modules/cache'
 import NextLink from 'next/link'
-import { Image, Chip } from '@heroui/react'
+import { Chip } from '@heroui/react'
+import { Image } from '@components/ui/image'
 import { CARD_SIZES, responsiveImage } from '@modules/images'
 import { tv } from 'tailwind-variants'
 

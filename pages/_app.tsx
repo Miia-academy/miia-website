@@ -1,10 +1,10 @@
 // Library styles first, so globals.css can override them
 import 'swiper/css'
 import 'swiper/css/navigation'
-import 'iconoir/css/iconoir.css'
+import '@styles/iconoir.css'
 import '@styles/globals.css'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import type { AppProps } from 'next/app'
+import dynamic from 'next/dynamic'
 import { GoogleTagManager } from '@next/third-parties/google'
 
 import { storyblokInit, apiPlugin } from '@storyblok/react'
@@ -29,7 +29,6 @@ import Image from '@components/image'
 import Action from '@components/action'
 import Field from '@components/field'
 import Form from '@components/form'
-import Map from '@components/map'
 import Article from '@components/article'
 import List from '@components/list'
 import Carousel from '@components/carousel'
@@ -46,6 +45,9 @@ import Menu from '@components/menu'
 import Process from '@components/process'
 import Grid from '@components/grid'
 import Project from '@components/project'
+
+// Mapbox is large and used on few pages: load it only where a map block appears
+const Map = dynamic(() => import('@components/map'))
 
 const components = {
   page: Page,
