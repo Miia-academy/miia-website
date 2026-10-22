@@ -194,6 +194,23 @@ Memorizza le candidature inviate dagli studenti per una specifica inserzione.
 
 Il sistema invia eventi tracciati (`trackEvent`) alle API di Brevo per gestire notifiche transazionali e percorsi di marketing automation:
 
+### Eventi del funnel (sito → GTM e Brevo, stesso nome)
+
+Schema `submit_{evento}_form`, definito in `modules/brevo-events.ts`. Eventi leggeri: solo `area`, `programma`, `corso`, `openday`, `openday_data`, `openday_codice`, `openday_docenti`, `ultima_sorgente`, `ultima_mezzo`, `ultima_campagna`, `ultima_pagina`, più le proprietà proprie degli eventi lato server. Il resto dei dati sta solo sul contatto.
+
+| Evento | Quando | Proprietà in più |
+| :--- | :--- | :--- |
+| `submit_brochure_form` | modulo presentazione (tracking `brochure`, prima `download`) | |
+| `submit_news_form` | modulo newsletter | |
+| `submit_info_form` | richiesta informazioni (tracking `info`, prima `contact`) | |
+| `submit_openday_form` | iscrizione open day dal modulo o dal pulsante nelle email | |
+| `submit_presence_form` | ingresso all'open day (`/api/openday/accedi`) | `ritardo` |
+| `submit_answer_form` | scelta con un clic dalle email (`/api/openday/risposta`) | `tipo`, `valore` |
+| `submit_enrollment_form` | iscrizione online iniziata (codice email confermato), data su `INVIO_ISCRIZIONE` | |
+| `submit_signature_form` | iscrizione firmata: contatto nella lista 18 | `sede`, `inizio`, `modalita`, `offerta_open_day` |
+
+Link delle email per le scelte dell'open day: `/api/openday/risposta?email={{ contact.EMAIL }}&tipo=domanda|richiesta&d=<valore>`.
+
 ### 1. `company_registered`
 - **Descrizione**: Scatenato alla registrazione di una nuova azienda partner.
 - **Destinatario**: Email Azienda.
@@ -316,6 +333,8 @@ cp .env.example .env.local
 | `npm run lint` | Esegue il controllo del codice con ESLint 9 |
 | `npm run cms` | Esegue il pull dei componenti da Storyblok e rigenera i tipi TypeScript |
 | `npm run typecheck` | Controlla i tipi TypeScript senza compilare |
+| `npm run forms:check` | Controlla in sola lettura i moduli Storyblok contro gli attributi Brevo (errore se Brevo rifiuterebbe il contatto) |
+| `npm run forms:migrate` | Mostra le modifiche Storyblok dell'Ambito 3; con `-- --apply` le scrive (solo al passaggio a main: lo spazio è condiviso con la produzione) |
 | `npm test` | Esegue i test (cartella `tests/`): moduli verso Brevo, `/api/crm`, provenienza della visita. Brevo è simulato, nessun dato viene inviato |
 
 ### Sviluppo Locale con Proxy SSL (HTTPS)
