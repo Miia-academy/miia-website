@@ -126,6 +126,7 @@ export interface Event {
   date?: string;
   docenti?: (ISbStoryData<Person> | string)[];
   link_meet?: string;
+  prezzo_agevolato?: boolean;
   page?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   form?: ISbStoryData<Form> | string;
   component: "event";

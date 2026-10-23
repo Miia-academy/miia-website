@@ -139,7 +139,15 @@ export default function Aside({ blok }: AsideComponentProps) {
   const enrollMain = mainEnrollHref(courses, signed);
 
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
-  const forms = Array.isArray(blok.forms) ? blok.forms : [];
+  // Hidden items are dropped first, so the first visible one is the main button
+  // and the one kept in the sticky bar. The enrollment action (/iscrizione/<course>)
+  // shows only with online enrollment on and seats left; before the Storyblok
+  // migration the enrollment request form is hidden when seats are over.
+  const visibleForms = (Array.isArray(blok.forms) ? blok.forms : []).filter((form) =>
+    form.component === "action"
+      ? !!actionHref(form) && !(isEnrollAction(form) && !enrollMain)
+      : !(isEnrollForm(form) && signed !== null && !enrollMain)
+  );
 
   const { isIntersecting, ref } = useIntersectionObserver({ threshold: 0 });
   const isStickyBanner = !isIntersecting;
@@ -222,12 +230,15 @@ export default function Aside({ blok }: AsideComponentProps) {
                               ? enrollHref(course.fullSlug, course.key)
                               : null;
                           return href ? (
-                            <Link
+                            <Button
+                              as={Link}
                               href={href}
-                              className="mt-3 mb-1 flex h-11 w-full items-center justify-center rounded-medium bg-primary px-4 font-bold text-white"
+                              size="md"
+                              color="primary"
+                              className="mt-3 mb-1 w-full text-medium"
                             >
                               Iscriviti online a questa edizione
-                            </Link>
+                            </Button>
                           ) : null;
                         })()}
                       </AccordionItem>
@@ -236,12 +247,10 @@ export default function Aside({ blok }: AsideComponentProps) {
                 </div>
               )}
 
-              {forms.map((form, index) => {
-                // Buttons in the aside are Storyblok actions. The enrollment one
-                // (/iscrizione/<course>) shows only with online enrollment on and seats left.
+              {visibleForms.map((form, index) => {
+                // Buttons in the aside are Storyblok actions
                 if (form.component === "action") {
-                  const href = actionHref(form);
-                  if (!href || (isEnrollAction(form) && !enrollMain)) return null;
+                  const href = actionHref(form) as string;
                   return (
                     <div
                       key={form._uid}
@@ -262,9 +271,8 @@ export default function Aside({ blok }: AsideComponentProps) {
                   );
                 }
                 // Before the Storyblok migration: with online enrollment on the enrollment
-                // request form is replaced by the button, or hidden when seats are over.
+                // request form is replaced by the button.
                 const enrollForm = isEnrollForm(form);
-                if (enrollForm && signed !== null && !enrollMain) return null;
                 return (
                   <div
                     key={form._uid}
