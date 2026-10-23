@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   buildOpendayDetails,
+  hasReservedPrice,
   calendarText,
   courseForOpenday,
   euro,
@@ -88,6 +89,13 @@ describe('buildOpendayDetails', () => {
 
   it('no reserved price without a future edition or a price list', () => {
     expect(buildOpendayDetails({ event, events, teachers: [], editions: [], priceList: LIST }).OD_VALIDO).toBe(false)
+    // "Prezzo agevolato" box unticked in the event: no reserved price
+    const off = buildOpendayDetails({ event, events, teachers: [], editions: [edition({})], priceList: LIST, reservedPrice: false })
+    expect(off.OD_VALIDO).toBe(false)
+    expect(hasReservedPrice({ prezzo_agevolato: false })).toBe(false)
+    // Events created before the box existed keep the reserved price
+    expect(hasReservedPrice({})).toBe(true)
+    expect(hasReservedPrice({ prezzo_agevolato: true })).toBe(true)
     const noList = buildOpendayDetails({ event, events, teachers: [], editions: [edition({})], priceList: null })
     expect(noList.OD_VALIDO).toBe(false)
     expect(noList.PREZZO_OD).toBeUndefined()
