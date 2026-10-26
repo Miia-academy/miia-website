@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
-import { upsertContact, trackEvent } from '@modules/brevo'
+import { BrevoError, upsertContact, trackEvent } from '@modules/brevo'
 import { getJwtSecret } from '@modules/jwt-secret'
 import { loadOpendayDetails } from '@modules/openday-details'
 import { EVENTS, pickEventProperties } from '@modules/brevo-events'
@@ -136,11 +136,15 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
     const area = AREA_OPTIONS[areaQuery.toLowerCase()]
     if (area) attributes.INTERESSE_AREA = [area]
 
-    await upsertContact({
-      email,
-      listIds: [16],
-      attributes,
-    })
+    try {
+      await upsertContact({ email, listIds: [16], attributes })
+    } catch (error) {
+      // As in /api/crm: if Brevo rejects a value (e.g. an attribute not created yet),
+      // the sign-up is kept with the list only. The error stays in the logs.
+      if (!(error instanceof BrevoError && error.status === 400)) throw error
+      console.error('[OpenDay Enroll] Attributes rejected by Brevo, list only:', error.message)
+      await upsertContact({ email, listIds: [16], attributes: {} })
+    }
 
     // Same event as the open day form on the site: light, with the data of this open day
     await trackEvent({

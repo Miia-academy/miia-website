@@ -18,7 +18,7 @@ vi.mock('@modules/brevo', async (importOriginal) => {
 vi.mock('@modules/openday-details', () => ({ loadOpendayDetails: vi.fn() }))
 
 import handler from '@pages/api/openday/registrazione'
-import { trackEvent, upsertContact } from '@modules/brevo'
+import { BrevoError, trackEvent, upsertContact } from '@modules/brevo'
 import { loadOpendayDetails } from '@modules/openday-details'
 
 const SECRET = 'segreto-di-prova'
@@ -155,6 +155,14 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
     await call({ cookies: { [COOKIE]: richiesta('test@miia.it') } })
     const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
     expect(attributes.OPENDAY_CODICE).toBe('openday-interni-novembre')
+  })
+
+  it('se Brevo rifiuta un attributo (non ancora creato) l’iscrizione resta, con la sola lista', async () => {
+    vi.mocked(upsertContact).mockRejectedValueOnce(new BrevoError(400, 'Attribute not found'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const res = await call({ cookies: { [COOKIE]: richiesta('test@miia.it', 'interni') } })
+    expect(res.statusCode).toBe(200)
+    expect(upsertContact).toHaveBeenLastCalledWith({ email: 'test@miia.it', listIds: [16], attributes: {} })
   })
 
   it('se Storyblok o Brevo non rispondono la persona riceve un errore', async () => {
