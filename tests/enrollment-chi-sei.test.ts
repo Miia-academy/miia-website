@@ -260,7 +260,7 @@ describe('POST /api/iscrizione/verifica', () => {
     expect(db.logEvent).toHaveBeenCalledWith(row().id, 'email_verificata', '203.0.113.7', null, { corso: CORSO })
   })
 
-  it('prima verifica per il corso: data su INVIO_ISCRIZIONE, evento submit_enrollment_form in Brevo e per GTM', async () => {
+  it('prima verifica per il corso: data su ISCRIZIONE_INIZIO_DATA, evento submit_enrollment_form in Brevo e per GTM', async () => {
     vi.mocked(db.latestActiveCode).mockResolvedValue(active())
     vi.mocked(db.takeCodeAttempt).mockResolvedValue(true)
     vi.mocked(db.markCodeUsed).mockResolvedValue(true)
@@ -271,7 +271,7 @@ describe('POST /api/iscrizione/verifica', () => {
 
     expect(upsertContact).toHaveBeenCalledWith({
       email: EMAIL,
-      attributes: { INVIO_ISCRIZIONE: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), CORSO: 'Interior design, primo livello' },
+      attributes: { ISCRIZIONE_INIZIO_DATA: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), ISCRIZIONE_CORSO: 'Interior design, primo livello' },
     })
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_enrollment_form',

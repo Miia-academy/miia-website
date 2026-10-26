@@ -89,33 +89,78 @@ describe('dati in Brevo alla firma', () => {
   const row = {
     email: 'a@b.it',
     dati: { data_nascita: '1990-05-12', via: 'Via Roma 1', cap: '31100', comune: 'Treviso', provincia: 'TV', codice_fiscale: 'RSSMRA90E12L407X' },
-    profilo: { scopo: 'professione', titolo_studi: 'laurea_magistrale', area_studi: 'artistica', situazione_lavoro: 'impiegato', settore: 'arredamento_design', azienda: 'Studio', ruolo: '' },
+    profilo: {
+      scopo: 'professione',
+      titolo_studi: 'laurea_magistrale',
+      area_studi: 'artistica',
+      istituto: 'IUAV',
+      anno_studi: '2014',
+      ultima_formazione: 'Corso CAD',
+      anno_formazione: '2020',
+      situazione_lavoro: 'impiegato',
+      settore: 'arredamento_design',
+      azienda: 'Studio',
+      ruolo: '',
+      ore_settimana: 'tra_6_e_9',
+      computer: 'buona',
+      come_ci_hai_conosciuto: ['instagram', 'amico'],
+    },
     consensi: { voci: { newsletter: { valore: true } } },
+    pagamento_modalita: '5_rate',
+    offerta_open_day: true,
   } as any
   const attrs = signedContactAttributes(row, { sede: 'Treviso', giorni: ['Sabato'], orari: ['9:00/12:00'] }, 'Interior design, primo livello', new Date('2026-10-15T10:00:00Z'))
 
-  it('usa i valori delle liste di Brevo', () => {
-    expect(attrs).toMatchObject({
-      COMPLEANNO: '1990-05-12',
-      COMUNE: 'Treviso',
-      PROVINCIA: 'TV',
-      STUDI: ['laurea'],
-      FORMAZIONE: ['artistica'],
-      OCCUPAZIONE: ['Impiegato'],
-      SETTORE: ['arredamento_design'],
-      SEDE: ['treviso'],
-      FREQUENZA: ['sabato'],
-      ISCRIZIONE: '2026-10-15',
+  it('usa i nomi e i valori del dizionario attributi Brevo (26/10)', () => {
+    expect(attrs).toEqual({
+      PERSONA_NASCITA_DATA: '1990-05-12',
+      PERSONA_INDIRIZZO: 'Via Roma 1',
+      PERSONA_CAP: '31100',
+      PERSONA_COMUNE: 'Treviso',
+      PERSONA_PROVINCIA: 'TV',
+      PROFILO_STUDI_TITOLO: ['laurea_magistrale'],
+      PROFILO_STUDI_AREA: ['artistica'],
+      PROFILO_STUDI_ISTITUTO: 'IUAV',
+      PROFILO_STUDI_ANNO: '2014',
+      PROFILO_FORMAZIONE_ULTIMA: 'Corso CAD',
+      PROFILO_FORMAZIONE_ANNO: '2020',
+      PROFILO_LAVORO_SITUAZIONE: ['impiegato'],
+      PROFILO_LAVORO_SETTORE: ['arredamento_design'],
+      PROFILO_LAVORO_AZIENDA: 'Studio',
+      INTERESSE_TEMPO_DISPONIBILE: ['tra_6_e_9'],
+      INTERESSE_SCOPO: ['lavoro'],
+      COMPETENZE_COMPUTER: ['buona'],
+      ORIGINE_DICHIARATA: ['instagram', 'amico'],
+      ISCRIZIONE_STATO: 2,
       ISCRIZIONE_CORSO: 'Interior design, primo livello',
-      CORSO: 'Interior design, primo livello',
-      ISCRIZIONE_SCOPO: 'Farne una professione',
+      ISCRIZIONE_SEDE: ['treviso'],
+      ISCRIZIONE_FREQUENZA: ['sabato'],
+      ISCRIZIONE_DATA: '2026-10-15',
+      ISCRIZIONE_SCOPO: 4,
+      ISCRIZIONE_PAGAMENTO_MODALITA: 2,
+      ISCRIZIONE_OFFERTA_OPENDAY: true,
+      ISCRIZIONE_RECESSO_FINE_DATA: '2026-10-29',
       NEWSLETTER: true,
     })
   })
 
-  it('non manda codice fiscale né campi vuoti', () => {
+  it('provincia in maiuscolo, scopo tradotto in INTERESSE_SCOPO', () => {
+    const other = signedContactAttributes(
+      { ...row, dati: { provincia: 'pd' }, profilo: { scopo: 'aggiornare_competenze' }, pagamento_modalita: null, offerta_open_day: false },
+      { sede: 'Padova', giorni: ['Martedì'], orari: ['19:00/22:00'] },
+      'Interior design, primo livello',
+      new Date('2026-10-15T10:00:00Z')
+    )
+    expect(other).toMatchObject({ PERSONA_PROVINCIA: 'PD', INTERESSE_SCOPO: ['aggiornamento'], ISCRIZIONE_SCOPO: 1, ISCRIZIONE_OFFERTA_OPENDAY: false })
+    expect(other).not.toHaveProperty('ISCRIZIONE_PAGAMENTO_MODALITA')
+  })
+
+  it('non manda codice fiscale, campi vuoti né i nomi di prima', () => {
     expect(JSON.stringify(attrs)).not.toContain('RSSMRA')
-    expect(attrs).not.toHaveProperty('RUOLO')
+    expect(attrs).not.toHaveProperty('PROFILO_LAVORO_RUOLO')
+    for (const old of ['COMPLEANNO', 'INDIRIZZO', 'COMUNE', 'PROVINCIA', 'STUDI', 'OCCUPAZIONE', 'AZIENDA', 'SEDE', 'CORSO', 'ISCRIZIONE']) {
+      expect(attrs).not.toHaveProperty(old)
+    }
   })
 
   it('alla firma: contatto nella lista 18 ed evento submit_signature_form leggero', async () => {
