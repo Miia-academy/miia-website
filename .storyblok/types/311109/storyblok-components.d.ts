@@ -44,6 +44,8 @@ export interface Article {
 export interface Aside {
   id?: string;
   enrollment?: unknown;
+  price_text?: string;
+  filter?: string;
   amount?: string;
   steps?: string;
   discount?: string;

@@ -44,6 +44,7 @@ L'applicazione integra un **Headless CMS (Storyblok)** per la gestione dinamica 
 ### 1. Sito Web Istituzionale
 - **Pagine dinamiche da Headless CMS**: Sincronizzazione in tempo reale con Storyblok tramite Pages Router dinamico (`pages/[...slug].tsx`) e componenti modulari React.
 - **Catalogo Corsi & Progetti**: Schede dettagliate per i percorsi formativi di Interior Design e Moda.
+- **Fianco delle pagine corso (`aside`)**: il *Titolo prezzo* usa le variabili del listino (`{rata10}`, `{rata5}`, `{unica}`, `{esame}`; `**cifra grande**`, `_nota_`), il *Filtro edizioni* sceglie le edizioni pubblicate per parole (`interni,primo,bassano`: area, livello, città o frequenza). Se i campi sono vuoti valgono prezzo, rate e corsi scelti a mano.
 - **Iscrizione Open Day**: Form integrato con sincronizzazione contatti su Brevo e pagina di conferma/feedback personalizzata (`pages/conferma.tsx`).
 - **Mappe Interattive**: Integrazione Mapbox GL per la visualizzazione delle sedi e delle aree formative.
 

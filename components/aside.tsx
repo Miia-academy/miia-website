@@ -6,10 +6,11 @@ import { tv } from "tailwind-variants";
 import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
 import { actionHref, canEnroll, enrollHref, isEnrollAction, isEnrollForm, mainEnrollHref } from "@components/enrollment/enroll-link";
 import Link from "next/link";
+import { fillPriceText, filterEditions, priceSegments } from "@modules/aside";
 
 interface ListItemProps {
   label: string;
@@ -46,8 +47,7 @@ const Price = ({
   dueDate,
   showDiscount,
 }: PriceProps) => {
-  const { container, price, from, figure, line, period, discount, shape, date } = priceClasses();
-  const formattedDueDate = dueDate ? getShortDate(dueDate) : null;
+  const { container, price, from, figure, line, period } = priceClasses();
 
   return (
     <div className={container({ intersec })}>
@@ -70,15 +70,22 @@ const Price = ({
         </span>
       </div>
 
-      {showDiscount && !!percent && !!formattedDueDate && (
-        <div className={discount({ intersec })}>
-          <span className={shape()}>{percent}%</span>
-          <span className={date({ intersec })}>
-            per iscrizioni entro <br className="sm:max-md:hidden" />
-            {formattedDueDate}
-          </span>
-        </div>
-      )}
+      {showDiscount && <Discount intersec={intersec} percent={percent} dueDate={dueDate} />}
+    </div>
+  );
+};
+
+const Discount = ({ intersec, percent, dueDate }: { intersec: boolean; percent?: number; dueDate?: string }) => {
+  const { discount, shape, date } = priceClasses();
+  const formattedDueDate = dueDate ? getShortDate(dueDate) : null;
+  if (!percent || !formattedDueDate) return null;
+  return (
+    <div className={discount({ intersec })}>
+      <span className={shape()}>{percent}%</span>
+      <span className={date({ intersec })}>
+        per iscrizioni entro <br className="sm:max-md:hidden" />
+        {formattedDueDate}
+      </span>
     </div>
   );
 };
@@ -87,8 +94,30 @@ interface AsideComponentProps {
   blok: AsideBlok;
 }
 
+/** Price headline from the "Titolo prezzo" text, e.g. "A partire da **{rata10}€** per 10 mesi _*iva inclusa_". */
+const PriceText = ({ text, intersec, discount }: { text: string; intersec: boolean; discount: ReactNode }) => {
+  const { container, price, figure, period } = priceClasses();
+  return (
+    <div className={container({ intersec })}>
+      <p className={price({ intersec })}>
+        {priceSegments(text).map((segment, i) =>
+          segment.kind === "figure" ? (
+            <span key={i} className={figure({ intersec })}>{segment.value}</span>
+          ) : segment.kind === "note" ? (
+            <small key={i} className="italic">{segment.value}</small>
+          ) : (
+            <span key={i} className={period({ intersec })}>{segment.value}</span>
+          )
+        )}
+      </p>
+      {discount}
+    </div>
+  );
+};
+
 export default function Aside({ blok }: AsideComponentProps) {
-  const { locations } = useDataContext();
+  const { locations, courses: allEditions, prices } = useDataContext();
+  const priceText = fillPriceText(blok.price_text, prices);
 
   const amount = blok.amount ? parseFloat(blok.amount) : 100;
   const steps = blok.steps ? parseInt(blok.steps, 10) : null;
@@ -100,7 +129,11 @@ export default function Aside({ blok }: AsideComponentProps) {
 
   const { courses, formOptions } = useMemo(() => {
     const opts: Array<{ name: string; value: string }> = [];
-    const rawCourses = Array.isArray(blok.courses) ? blok.courses : [];
+    // With the "Filtro edizioni" the editions come from the site data (only the
+    // published ones on the live site); otherwise from the ones picked by hand.
+    const rawCourses = blok.filter?.trim()
+      ? filterEditions(allEditions, blok.filter).map((c) => ({ uuid: c.uuid, full_slug: c.fullSlug, content: c }))
+      : Array.isArray(blok.courses) ? blok.courses : [];
 
     const crs = rawCourses.map((courseItem: any) => {
       const content = courseItem.content || courseItem || {};
@@ -131,7 +164,7 @@ export default function Aside({ blok }: AsideComponentProps) {
     });
 
     return { courses: crs, formOptions: opts };
-  }, [blok.courses, locations]);
+  }, [blok.courses, blok.filter, allEditions, locations]);
 
   const signed = useSignedCounts(courses.map((c) => c.key));
   // Con l'iscrizione online accesa e posti liberi, il pulsante "Iscriviti online"
@@ -175,14 +208,26 @@ export default function Aside({ blok }: AsideComponentProps) {
         <aside ref={ref} className={asideClasses()}>
           <div className={bannerClasses({ active: isStickyBanner })}>
             <div className={containerClasses({ active: isStickyBanner })}>
-              <Price
-                amount={amount}
-                steps={steps}
-                intersec={isStickyBanner}
-                percent={discountPercent}
-                dueDate={blok.due_date}
-                showDiscount={showDiscount}
-              />
+              {priceText ? (
+                <PriceText
+                  text={priceText}
+                  intersec={isStickyBanner}
+                  discount={
+                    showDiscount && (
+                      <Discount intersec={isStickyBanner} percent={discountPercent} dueDate={blok.due_date} />
+                    )
+                  }
+                />
+              ) : (
+                <Price
+                  amount={amount}
+                  steps={steps}
+                  intersec={isStickyBanner}
+                  percent={discountPercent}
+                  dueDate={blok.due_date}
+                  showDiscount={showDiscount}
+                />
+              )}
 
               {courses.length > 0 && (
                 <div className={isStickyBanner ? "hidden" : "w-full"}>
