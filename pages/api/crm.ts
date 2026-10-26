@@ -64,11 +64,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const listIds = sanitizeLists(contact?.listIds)
     // Nuova iscrizione a un open day: la presenza e il ritardo della volta prima non
     // valgono più (li segna di nuovo la pagina miia.it/open-day/accedi).
-    if (attributes.OPENDAY) {
-      attributes.PARTECIPAZIONE_OPENDAY = false
-      attributes.OD_RITARDO = false
-      // Date, start, teachers and prices of that open day, for the emails
-      if (attributes.OD_CODICE) Object.assign(attributes, await loadOpendayDetails(attributes.OD_CODICE))
+    if (attributes.OPENDAY_DATA) {
+      attributes.OPENDAY_PRESENTE = false
+      attributes.OPENDAY_RITARDO = false
+      // Date, start, teachers and course of that open day, for the emails
+      if (attributes.OPENDAY_CODICE) Object.assign(attributes, await loadOpendayDetails(attributes.OPENDAY_CODICE))
     }
 
     try {

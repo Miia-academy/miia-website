@@ -1,9 +1,11 @@
 /**
  * Open day details saved on the Brevo contact when a person signs up for an open day,
- * so the open day emails can show date, start, timetable, teachers and prices
- * (attributes OD_*, PREZZO_* and PROSSIMO_OD_TESTO).
+ * so the open day emails can show date, start, timetable and teachers
+ * (attributes OPENDAY_*_TESTO, OPENDAY_VALIDO), plus the course of interest
+ * (INTERESSE_CORSO). No prices: the emails don't show them (decision of 26/10),
+ * the enrollment page reads them from the price list.
  *
- * Everything is read from Storyblok: the "event" story (by its slug, OD_CODICE),
+ * Everything is read from Storyblok: the "event" story (by its slug, OPENDAY_CODICE),
  * the editions of the matching course and the "listino" datasource.
  * Loading never blocks a sign-up: if anything is missing, nothing is added and the
  * emails fall back to their default texts.
@@ -11,9 +13,10 @@
 import { cdn, getCourseEditions, getPriceList, type Edition } from '@modules/enrollment/catalog'
 import { normalizeCodice, quandoTesto, toEvento, type OpendayEvento } from '@modules/openday-accesso'
 import { joinNames } from '@modules/events'
+import { categoryId, interestCourse } from '@modules/brevo-attributes'
 import type { PriceList } from '@modules/enrollment/types'
 
-export type OpendayDetails = Record<string, string | boolean>
+export type OpendayDetails = Record<string, string | boolean | number>
 
 const AREA_FOLDERS: Record<string, string> = {
   interni: 'interior-design',
@@ -28,15 +31,6 @@ export function courseForOpenday(openday: string | undefined | null): string | n
   const folder = AREA_FOLDERS[area]
   if (!folder || !/^(primo|secondo) livello$/.test(level || '')) return null
   return `corso-${folder}-${level.replace(' ', '-')}`
-}
-
-/** 4990 → "4.990 €", 499.5 → "499,50 €" (as written in the emails). */
-export function euro(amount: number): string {
-  const cents = Math.round(amount * 100)
-  const whole = Math.floor(cents / 100)
-  const rest = cents % 100
-  const grouped = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  return `${grouped}${rest ? `,${String(rest).padStart(2, '0')}` : ''} €`
 }
 
 /** "2027-03-06" → "marzo 2027" */
@@ -72,20 +66,10 @@ export function calendarText(editions: Edition[]): string {
     .join('; ')
 }
 
-export function priceAttributes(list: PriceList): OpendayDetails {
-  return {
-    PREZZO_OD: euro(list.offerta),
-    PREZZO_OD_RATA5: euro(list.offerta / 5),
-    PREZZO_OD_RATA10: euro(list.offerta / 10),
-    PREZZO_UNICA: euro(list.unica),
-    PREZZO_RATA5: euro(list.rata5),
-    PREZZO_RATA10: euro(list.rata10),
-    PREZZO_ESAME: euro(list.esame),
-  }
-}
-
 interface DetailsInput {
   event: OpendayEvento
+  /** "Open day" field of the event in Storyblok: area and level ("interni - primo livello"). */
+  course?: string | null
   /** All open days, in date order. */
   events: OpendayEvento[]
   teachers: string[]
@@ -102,12 +86,13 @@ export function hasReservedPrice(content: { prezzo_agevolato?: unknown } | undef
 }
 
 /**
- * Attributes for the contact. OD_VALIDO (reserved open day price) is true when the
+ * Attributes for the contact. OPENDAY_VALIDO (reserved open day price) is true when the
  * event offers it ("Prezzo agevolato" in Storyblok), the open day leads to a course
  * with a future edition and the price list is complete.
  */
 export function buildOpendayDetails({
   event,
+  course,
   events,
   teachers,
   editions,
@@ -115,18 +100,19 @@ export function buildOpendayDetails({
   reservedPrice = true,
 }: DetailsInput): OpendayDetails {
   const details: OpendayDetails = {
-    OD_DATA_TESTO: quandoTesto(event.inizio),
-    OD_VALIDO: reservedPrice && !!priceList && editions.length > 0,
+    OPENDAY_DATA_TESTO: quandoTesto(event.inizio),
+    OPENDAY_VALIDO: reservedPrice && !!priceList && editions.length > 0,
   }
-  if (teachers.length) details.OD_DOCENTI = joinNames(teachers)
+  const interest = categoryId('INTERESSE_CORSO', interestCourse(course))
+  if (interest) details.INTERESSE_CORSO = interest
+  if (teachers.length) details.OPENDAY_DOCENTI_TESTO = joinNames(teachers)
   if (editions.length) {
-    details.OD_PARTENZA = monthText(editions[0].inizio)
+    details.OPENDAY_PARTENZA_TESTO = monthText(editions[0].inizio)
     const calendar = calendarText(editions)
-    if (calendar) details.OD_CALENDARIO = calendar
+    if (calendar) details.OPENDAY_CALENDARIO_TESTO = calendar
   }
-  if (priceList) Object.assign(details, priceAttributes(priceList))
   const next = events.find((e) => e.area === event.area && e.inizio > event.inizio)
-  if (next) details.PROSSIMO_OD_TESTO = dayText(next.inizio)
+  if (next) details.OPENDAY_PROSSIMO_TESTO = dayText(next.inizio)
   return details
 }
 
@@ -170,6 +156,7 @@ export async function loadOpendayDetails(code: unknown): Promise<OpendayDetails>
     ])
     return buildOpendayDetails({
       event,
+      course: story.content?.openday,
       events,
       teachers,
       editions,

@@ -4,14 +4,13 @@ import {
   hasReservedPrice,
   calendarText,
   courseForOpenday,
-  euro,
   loadOpendayDetails,
 } from '@modules/openday-details'
 import { sanitizeAttributes } from '@modules/crm-form'
 import type { Edition } from '@modules/enrollment/catalog'
 
-// Open day fields on the contact (OD_*, PREZZO_*, PROSSIMO_OD_TESTO): read from
-// Storyblok when someone signs up, so the open day emails stop using fallback texts.
+// Open day fields on the contact (OPENDAY_*, INTERESSE_CORSO): read from Storyblok
+// when someone signs up, so the open day emails stop using fallback texts. No prices (26/10).
 
 const LIST = { unica: 5490, rata5: 1150, rata10: 594, offerta: 4990, esame: 300 }
 
@@ -37,13 +36,6 @@ describe('helpers', () => {
     expect(courseForOpenday('interni')).toBeNull()
   })
 
-  it('writes amounts like the emails', () => {
-    expect(euro(4990)).toBe('4.990 €')
-    expect(euro(499)).toBe('499 €')
-    expect(euro(4990 / 10)).toBe('499 €')
-    expect(euro(998.5)).toBe('998,50 €')
-  })
-
   it('lists the editions starting in the first month', () => {
     const text = calendarText([
       edition({}),
@@ -65,45 +57,44 @@ describe('buildOpendayDetails', () => {
   it('fills every field when Storyblok has all the data', () => {
     const details = buildOpendayDetails({
       event,
+      course: 'interni - primo livello',
       events,
       teachers: ['Anna Rossi', 'Luca Bianchi'],
       editions: [edition({})],
       priceList: LIST,
     })
     expect(details).toEqual({
-      OD_DATA_TESTO: 'lunedì 16 novembre alle 21:00',
-      OD_VALIDO: true,
-      OD_DOCENTI: 'Anna Rossi e Luca Bianchi',
-      OD_PARTENZA: 'marzo 2027',
-      OD_CALENDARIO: 'Treviso: sabato, 9:00-12:00 e 13:00-16:00',
-      PREZZO_OD: '4.990 €',
-      PREZZO_OD_RATA5: '998 €',
-      PREZZO_OD_RATA10: '499 €',
-      PREZZO_UNICA: '5.490 €',
-      PREZZO_RATA5: '1.150 €',
-      PREZZO_RATA10: '594 €',
-      PREZZO_ESAME: '300 €',
-      PROSSIMO_OD_TESTO: 'lunedì 14 dicembre',
+      OPENDAY_DATA_TESTO: 'lunedì 16 novembre alle 21:00',
+      OPENDAY_VALIDO: true,
+      INTERESSE_CORSO: 1,
+      OPENDAY_DOCENTI_TESTO: 'Anna Rossi e Luca Bianchi',
+      OPENDAY_PARTENZA_TESTO: 'marzo 2027',
+      OPENDAY_CALENDARIO_TESTO: 'Treviso: sabato, 9:00-12:00 e 13:00-16:00',
+      OPENDAY_PROSSIMO_TESTO: 'lunedì 14 dicembre',
     })
   })
 
   it('no reserved price without a future edition or a price list', () => {
-    expect(buildOpendayDetails({ event, events, teachers: [], editions: [], priceList: LIST }).OD_VALIDO).toBe(false)
+    expect(buildOpendayDetails({ event, events, teachers: [], editions: [], priceList: LIST }).OPENDAY_VALIDO).toBe(false)
     // "Prezzo agevolato" box unticked in the event: no reserved price
     const off = buildOpendayDetails({ event, events, teachers: [], editions: [edition({})], priceList: LIST, reservedPrice: false })
-    expect(off.OD_VALIDO).toBe(false)
+    expect(off.OPENDAY_VALIDO).toBe(false)
     expect(hasReservedPrice({ prezzo_agevolato: false })).toBe(false)
     // Events created before the box existed keep the reserved price
     expect(hasReservedPrice({})).toBe(true)
     expect(hasReservedPrice({ prezzo_agevolato: true })).toBe(true)
     const noList = buildOpendayDetails({ event, events, teachers: [], editions: [edition({})], priceList: null })
-    expect(noList.OD_VALIDO).toBe(false)
-    expect(noList.PREZZO_OD).toBeUndefined()
+    expect(noList.OPENDAY_VALIDO).toBe(false)
+  })
+
+  it('no course of interest when the event has no area and level', () => {
+    expect(buildOpendayDetails({ event, events, teachers: [], editions: [], priceList: null }).INTERESSE_CORSO).toBeUndefined()
+    expect(buildOpendayDetails({ event, course: 'moda - secondo livello', events, teachers: [], editions: [], priceList: null }).INTERESSE_CORSO).toBe(4)
   })
 
   it('no next open day text after the last one of the area', () => {
     const last = events[events.length - 1]
-    expect(buildOpendayDetails({ event: last, events, teachers: [], editions: [], priceList: null }).PROSSIMO_OD_TESTO).toBeUndefined()
+    expect(buildOpendayDetails({ event: last, events, teachers: [], editions: [], priceList: null }).OPENDAY_PROSSIMO_TESTO).toBeUndefined()
   })
 })
 
@@ -157,13 +148,14 @@ describe('loadOpendayDetails', () => {
     })
     const details = await loadOpendayDetails('openday-interni-novembre')
     expect(details).toMatchObject({
-      OD_DATA_TESTO: 'lunedì 16 novembre alle 21:00',
-      OD_VALIDO: true,
-      OD_DOCENTI: 'Anna Rossi e Luca Bianchi',
-      OD_PARTENZA: 'marzo 2027',
-      OD_CALENDARIO: 'Treviso: sabato, 9:00-12:00',
-      PREZZO_OD: '4.990 €',
+      OPENDAY_DATA_TESTO: 'lunedì 16 novembre alle 21:00',
+      OPENDAY_VALIDO: true,
+      INTERESSE_CORSO: 1,
+      OPENDAY_DOCENTI_TESTO: 'Anna Rossi e Luca Bianchi',
+      OPENDAY_PARTENZA_TESTO: 'marzo 2027',
+      OPENDAY_CALENDARIO_TESTO: 'Treviso: sabato, 9:00-12:00',
     })
+    expect(Object.keys(details).some((k) => k.startsWith('PREZZO_'))).toBe(false)
   })
 
   it('returns nothing for an unknown code or when Storyblok fails', async () => {
@@ -180,6 +172,10 @@ describe('form attributes', () => {
   it('a public form cannot write the reserved price or the open day texts', () => {
     const attrs = sanitizeAttributes({
       NOME: 'Anna',
+      OPENDAY_VALIDO: true,
+      OFFERTA_SCADENZA_DATA: '2027-12-31',
+      OPENDAY_PRESENTE: true,
+      OPENDAY_PARTENZA_TESTO: 'domani',
       OD_VALIDO: true,
       SCADENZA_OFFERTA: '2027-12-31',
       OD_RITARDO: false,

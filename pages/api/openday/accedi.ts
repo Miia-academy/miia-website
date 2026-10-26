@@ -58,15 +58,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     >
     const ritardo = inRitardo(evento.inizio, now)
     const attributes: Record<string, unknown> = {
-      PARTECIPAZIONE_OPENDAY: true,
-      OD_RITARDO: ritardo,
-      DATA_PRESENZA: romeDay(now),
-      OD_SCADENZA_TESTO: scadenzaTesto(evento.inizio),
+      OPENDAY_PRESENTE: true,
+      OPENDAY_RITARDO: ritardo,
+      OPENDAY_PRESENZA_DATA: romeDay(now),
+      OFFERTA_SCADENZA_TESTO: scadenzaTesto(evento.inizio),
     }
     // Il prezzo riservato (letto dall'iscrizione online) solo a chi entra in orario
-    // a un open day che lo prevede (OD_VALIDO).
-    if (existing.OD_VALIDO === true && !ritardo) {
-      attributes.SCADENZA_OFFERTA = scadenzaOfferta(evento.inizio)
+    // a un open day che lo prevede (OPENDAY_VALIDO; OD_VALIDO per chi si è iscritto prima del 26/10).
+    if ((existing.OPENDAY_VALIDO ?? existing.OD_VALIDO) === true && !ritardo) {
+      attributes.OFFERTA_SCADENZA_DATA = scadenzaOfferta(evento.inizio)
     }
     await upsertContact({ email, attributes })
     // Event for the automations: who entered which open day, and whether late

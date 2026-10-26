@@ -106,6 +106,8 @@ export function buildEvent(
   const today = new Date()
 
   const rawArea =
+    data['interesse_area']?.value ||
+    data['interesse_corso']?.value ||
     data['area']?.value ||
     data['area_disciplinare']?.value ||
     data['enroll']?.value ||
@@ -118,6 +120,8 @@ export function buildEvent(
   } else if (typeof rawArea === 'string' && rawArea.trim() !== '') {
     selectedArea = rawArea.toLowerCase()
   }
+  // interior_primo → interior
+  if (selectedArea) selectedArea = selectedArea.split('_')[0]
 
   let opendayEvent: ProcessedEvent | undefined
 
@@ -184,6 +188,12 @@ export function buildEvent(
     const value = ids.map((id) => data[id]?.value).find((v) => fieldText(v))
     if (value !== undefined) properties[property] = fieldText(value)
   }
+  // interesse_corso holds area and level together (interior_primo)
+  const [courseArea, courseLevel] = fieldText(data['interesse_corso']?.value).split('_')
+  if (courseArea && courseLevel) {
+    properties['area'] = properties['area'] || courseArea
+    properties['programma'] = properties['programma'] || courseLevel
+  }
 
   const name = formEventName(tracking)
   return {
@@ -195,7 +205,7 @@ export function buildEvent(
 
 // Form fields that fill the event properties, in order of preference.
 const EVENT_FIELDS: Record<string, string[]> = {
-  area: ['area', 'area_disciplinare'],
+  area: ['interesse_area', 'area', 'area_disciplinare'],
   programma: ['programma'],
   corso: ['corso', 'enroll'],
 }
@@ -234,8 +244,8 @@ export function opendayAttributes(
 ): Record<string, string> {
   if (normalizeTracking(tracking) !== 'openday' || !properties['openday']) return {}
   return {
-    OPENDAY: String(properties['openday']),
-    ...(properties['openday_codice'] ? { OD_CODICE: String(properties['openday_codice']) } : {}),
+    OPENDAY_DATA: String(properties['openday']),
+    ...(properties['openday_codice'] ? { OPENDAY_CODICE: String(properties['openday_codice']) } : {}),
   }
 }
 

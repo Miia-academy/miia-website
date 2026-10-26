@@ -7,8 +7,8 @@ import { getJwtSecret } from '@modules/jwt-secret'
 
 /**
  * One-click choices in the open day emails: the questions of "Cosa vedrai"
- * (tipo "domanda", saved in OD_DOMANDA) and the requests of the day after
- * (tipo "richiesta", saved in OD_RICHIESTA).
+ * (tipo "domanda", saved in OPENDAY_DOMANDA) and the requests of the day after
+ * (tipo "richiesta", saved in OPENDAY_RICHIESTA).
  *
  * GET is the link in the email: it only remembers the choice in a signed cookie
  * and opens /conferma, so a link opened by a preview or an antivirus writes
@@ -20,7 +20,7 @@ import { getJwtSecret } from '@modules/jwt-secret'
 
 const COOKIE_NAME = 'miia_openday_risposta'
 const COOKIE_MAX_AGE = 30 * 60
-const ATTRIBUTE: Record<string, string> = { domanda: 'OD_DOMANDA', richiesta: 'OD_RICHIESTA' }
+const ATTRIBUTE: Record<string, string> = { domanda: 'OPENDAY_DOMANDA', richiesta: 'OPENDAY_RICHIESTA' }
 // Value of the choice: the entry name in the Storyblok "Domande open day" datasource
 const VALUE = /^[a-z][a-z0-9_-]{0,39}$/
 

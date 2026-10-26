@@ -104,13 +104,13 @@ describe('GET /api/openday/registrazione (link nelle email)', () => {
 })
 
 describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione")', () => {
-  it('adds the open day details (OD_*, PREZZO_*) to the contact', async () => {
-    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OD_VALIDO: true, PREZZO_OD: '4.990 €' })
+  it('adds the open day details (OPENDAY_*, INTERESSE_CORSO) to the contact', async () => {
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OPENDAY_VALIDO: true, INTERESSE_CORSO: 1 })
     await call({ cookies: { [COOKIE]: richiesta('test@miia.it', 'interni') } })
     expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({
-      OD_CODICE: 'openday-interni-novembre',
-      OD_VALIDO: true,
-      PREZZO_OD: '4.990 €',
+      OPENDAY_CODICE: 'openday-interni-novembre',
+      OPENDAY_VALIDO: true,
+      INTERESSE_CORSO: 1,
     })
   })
 
@@ -121,7 +121,7 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
     expect(upsertContact).not.toHaveBeenCalled()
   })
 
-  it('iscrive al prossimo open day dell’area: lista 16, OD_CODICE, presenza e ritardo azzerati, evento submit_openday_form', async () => {
+  it('iscrive al prossimo open day dell’area: lista 16, OPENDAY_CODICE, presenza e ritardo azzerati, evento submit_openday_form', async () => {
     const res = await call({ cookies: { [COOKIE]: richiesta('test@miia.it', 'interni') } })
     expect(res.statusCode).toBe(200)
     expect(res.body).toEqual({ ok: true, openday_data: '16/11/2026' })
@@ -129,12 +129,11 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
       email: 'test@miia.it',
       listIds: [16],
       attributes: {
-        ULTIMA_AZIONE: 'openday',
-        OPENDAY: '2026-11-16',
-        OD_CODICE: 'openday-interni-novembre',
-        PARTECIPAZIONE_OPENDAY: false,
-        OD_RITARDO: false,
-        AREA: ['interior'],
+        OPENDAY_DATA: '2026-11-16',
+        OPENDAY_CODICE: 'openday-interni-novembre',
+        OPENDAY_PRESENTE: false,
+        OPENDAY_RITARDO: false,
+        INTERESSE_AREA: ['interior'],
       },
     })
     expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
@@ -155,7 +154,7 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
   it('ignora gli open day già passati e senza area sceglie il primo in calendario', async () => {
     await call({ cookies: { [COOKIE]: richiesta('test@miia.it') } })
     const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
-    expect(attributes.OD_CODICE).toBe('openday-interni-novembre')
+    expect(attributes.OPENDAY_CODICE).toBe('openday-interni-novembre')
   })
 
   it('se Storyblok o Brevo non rispondono la persona riceve un errore', async () => {

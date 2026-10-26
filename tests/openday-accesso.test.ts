@@ -148,10 +148,10 @@ describe('/api/openday/accedi', () => {
     expect(upsertContact).not.toHaveBeenCalled()
   })
 
-  it('in orario segna la presenza e dà il prezzo riservato a chi ha OD_VALIDO', async () => {
+  it('in orario segna la presenza e dà il prezzo riservato a chi ha OPENDAY_VALIDO', async () => {
     at('21:05')
     vi.mocked(getContact).mockResolvedValue({
-      attributes: { OD_VALIDO: true },
+      attributes: { OPENDAY_VALIDO: true },
     } as never)
     const res = await call({
       codice: 'openday-interni-novembre',
@@ -162,13 +162,20 @@ describe('/api/openday/accedi', () => {
     expect(upsertContact).toHaveBeenCalledWith({
       email: 'test@miia.it',
       attributes: {
-        PARTECIPAZIONE_OPENDAY: true,
-        OD_RITARDO: false,
-        DATA_PRESENZA: '2026-11-16',
-        OD_SCADENZA_TESTO: '30 novembre',
-        SCADENZA_OFFERTA: '2026-11-30',
+        OPENDAY_PRESENTE: true,
+        OPENDAY_RITARDO: false,
+        OPENDAY_PRESENZA_DATA: '2026-11-16',
+        OFFERTA_SCADENZA_TESTO: '30 novembre',
+        OFFERTA_SCADENZA_DATA: '2026-11-30',
       },
     })
+  })
+
+  it('chi si è iscritto prima del 26/10 ha ancora OD_VALIDO: il prezzo riservato vale lo stesso', async () => {
+    at('21:05')
+    vi.mocked(getContact).mockResolvedValue({ attributes: { OD_VALIDO: true } } as never)
+    await call({ codice: 'openday-interni-novembre', email: 'test@miia.it' })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes!.OFFERTA_SCADENZA_DATA).toBe('2026-11-30')
   })
 
   it('chi entra dopo le 21:15 è in ritardo e non riceve il prezzo riservato', async () => {
@@ -178,8 +185,8 @@ describe('/api/openday/accedi', () => {
     } as never)
     await call({ codice: 'openday-interni-novembre', email: 'test@miia.it' })
     const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
-    expect(attributes.OD_RITARDO).toBe(true)
-    expect(attributes.SCADENZA_OFFERTA).toBeUndefined()
+    expect(attributes.OPENDAY_RITARDO).toBe(true)
+    expect(attributes.OFFERTA_SCADENZA_DATA).toBeUndefined()
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_presence_form',
       email: 'test@miia.it',

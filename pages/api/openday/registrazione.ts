@@ -8,7 +8,7 @@ import { EVENTS, pickEventProperties } from '@modules/brevo-events'
 const COOKIE_NAME = 'miia_openday_richiesta'
 const COOKIE_MAX_AGE = 30 * 60 // 30 minuti per confermare
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-// Area in the email links (interni, moda) → option of the Brevo AREA attribute
+// Area in the email links (interni, moda) → option of the Brevo INTERESSE_AREA attribute
 const AREA_OPTIONS: Record<string, string> = { interni: 'interior', interior: 'interior', moda: 'fashion', fashion: 'fashion' }
 
 interface RichiestaOpenday {
@@ -120,23 +120,21 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
       })
     }
 
-    const attributes: Record<string, string | boolean> = {
-      ULTIMA_AZIONE: 'openday',
-    }
+    const attributes: Record<string, unknown> = {}
 
     if (opendayDateStr) {
-      attributes.OPENDAY = opendayDateStr
+      attributes.OPENDAY_DATA = opendayDateStr
       // Codice per miia.it/open-day/accedi; presenza e ritardo dell'open day precedente si azzerano
-      if (targetEvent?.slug) attributes.OD_CODICE = targetEvent.slug
-      attributes.PARTECIPAZIONE_OPENDAY = false
-      attributes.OD_RITARDO = false
-      // Date, start, teachers and prices of that open day, for the emails
+      if (targetEvent?.slug) attributes.OPENDAY_CODICE = targetEvent.slug
+      attributes.OPENDAY_PRESENTE = false
+      attributes.OPENDAY_RITARDO = false
+      // Date, start, teachers and course of that open day, for the emails
       if (targetEvent?.slug) Object.assign(attributes, await loadOpendayDetails(targetEvent.slug))
     }
 
-    // Event data is also kept on the contact, with the Brevo AREA options
+    // Event data is also kept on the contact, with the Brevo INTERESSE_AREA options
     const area = AREA_OPTIONS[areaQuery.toLowerCase()]
-    if (area) attributes.AREA = [area] as never
+    if (area) attributes.INTERESSE_AREA = [area]
 
     await upsertContact({
       email,
@@ -153,7 +151,7 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
         openday: opendayDateStr,
         openday_data: opendayDataLocale,
         openday_codice: targetEvent?.slug,
-        openday_docenti: attributes.OD_DOCENTI,
+        openday_docenti: attributes.OPENDAY_DOCENTI_TESTO as string | undefined,
       }),
     })
 

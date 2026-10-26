@@ -4,6 +4,7 @@
  * L'endpoint /api/crm è pubblico: tutto ciò che arriva dal browser va trattato
  * come non affidabile. Qui si decide cosa può essere scritto nel CRM e come.
  */
+import { categoryId, interestCourse } from '@modules/brevo-attributes'
 
 // Liste che i moduli pubblici possono assegnare (configurabili da Storyblok).
 // Non includono liste che danno accessi o che gestite voi a mano,
@@ -74,7 +75,26 @@ const PROTECTED_ATTRIBUTES = new Set([
   'OD_CALENDARIO',
   'OD_DOCENTI',
   'PROSSIMO_OD_TESTO',
+  // Names of 26/10 (attribute dictionary): facts written by the server when they happen.
+  // OPENDAY_DATA and OPENDAY_CODICE stay writable: the open day form sends them.
+  'OPENDAY_VALIDO',
+  'OPENDAY_PRESENTE',
+  'OPENDAY_RITARDO',
+  'OPENDAY_PRESENZA_DATA',
+  'OPENDAY_DATA_TESTO',
+  'OPENDAY_PARTENZA_TESTO',
+  'OPENDAY_CALENDARIO_TESTO',
+  'OPENDAY_DOCENTI_TESTO',
+  'OPENDAY_PROSSIMO_TESTO',
+  'OPENDAY_DOMANDA',
+  'OPENDAY_RICHIESTA',
+  'OPENDAY_ESITO',
+  'OPENDAY_ASSENZE',
+  'ORIGINE_DICHIARATA',
 ])
+
+// Enrollment, reserved offer, interview and automation state: never from a public form.
+const SERVER_ATTRIBUTE = /^(ISCRIZIONE|OFFERTA|COLLOQUIO|AUTOMAZIONE)_/
 
 // Gli attributi di provenienza li scrive solo il server, da sanitizeAttribution.
 const SOURCE_ATTRIBUTE = /^(ORIGINE|ULTIMA)_(SORGENTE|MEZZO|CAMPAGNA|CONTENUTO|TERMINE|CLICK_ID|PAGINA|DATA)$/
@@ -136,9 +156,15 @@ function sanitizeValue(value: unknown): Primitive | Primitive[] | null {
   return null
 }
 
-/** False for attributes a public form can never write (protected, source, prices). */
+/** False for attributes a public form can never write (protected, source, prices, server facts). */
 export function isFormWritableAttribute(name: string): boolean {
-  return ATTRIBUTE_NAME.test(name) && !PROTECTED_ATTRIBUTES.has(name) && !SOURCE_ATTRIBUTE.test(name) && !PRICE_ATTRIBUTE.test(name)
+  return (
+    ATTRIBUTE_NAME.test(name) &&
+    !PROTECTED_ATTRIBUTES.has(name) &&
+    !SOURCE_ATTRIBUTE.test(name) &&
+    !PRICE_ATTRIBUTE.test(name) &&
+    !SERVER_ATTRIBUTE.test(name)
+  )
 }
 
 /**
@@ -164,6 +190,13 @@ export function sanitizeAttributes(
 
     const clean = sanitizeValue(value)
     if (clean === null) continue
+
+    // Category in Brevo: the form sends the course code (interior_primo), Brevo wants its id
+    if (name === 'INTERESSE_CORSO') {
+      const id = categoryId(name, interestCourse(clean))
+      if (id) attributes[name] = id
+      continue
+    }
 
     const previous = existing[name]
     if (Array.isArray(clean) && Array.isArray(previous)) {

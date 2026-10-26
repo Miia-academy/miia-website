@@ -55,7 +55,18 @@ afterEach(() => {
 })
 
 describe('/open-day/accedi senza codice', () => {
-  it('con l’email nel link porta all’open day salvato nel contatto (OD_CODICE)', async () => {
+  it('con l’email nel link porta all’open day salvato nel contatto (OPENDAY_CODICE)', async () => {
+    storie([INTERNI_NOV, MODA_NOV])
+    vi.mocked(getContact).mockResolvedValue({ attributes: { OPENDAY_CODICE: 'openday-moda-novembre' } } as never)
+    const { ctx, headers } = context({}, { email: 'Test@Miia.it' })
+    const result = await senzaCodice(ctx)
+    expect(result).toEqual({
+      redirect: { destination: '/open-day/accedi/openday-moda-novembre?email=test%40miia.it', permanent: false },
+    })
+    expect(headers['Cache-Control']).toBe('no-store')
+  })
+
+  it('con l’email nel link porta all’open day salvato nel contatto (OD_CODICE, prima del 26/10)', async () => {
     storie([INTERNI_NOV, MODA_NOV])
     vi.mocked(getContact).mockResolvedValue({ attributes: { OD_CODICE: 'openday-moda-novembre' } } as never)
     const { ctx, headers } = context({}, { email: 'Test@Miia.it' })
