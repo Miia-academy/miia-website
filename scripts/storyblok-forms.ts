@@ -123,7 +123,7 @@ async function migrate(apply: boolean) {
   const planned: Array<{ story: Story; changes: string[] }> = []
   for (const story of stories) {
     const course = story.full_slug.startsWith('corsi/') ? await courseOf(story) : null
-    const changes = migrateStory(story.content, aliases, attributes, course)
+    const changes = migrateStory(story.content, aliases, attributes, course, story.full_slug)
     if (changes.length) planned.push({ story, changes })
   }
   for (const { story, changes } of planned) {
