@@ -144,6 +144,7 @@ describe('modifiche Storyblok al passaggio a main', () => {
       'sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/corso-interior-design-primo-livello',
       'sidebar: filtro edizioni "interni,primo,padova"',
       'sidebar: titolo prezzo dal listino',
+      'sidebar: tolti i campi vecchi courses',
       'campi interesse_area/interesse_corso/collegamento_materiale → area "interior" e programma "primo" nascosti',
     ])
     expect(content.body[0]).toMatchObject({ filter: 'interni,primo,padova', price_text: 'A partire da **{rata10}€** per 10 mesi _*iva inclusa_' })

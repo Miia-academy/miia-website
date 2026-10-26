@@ -361,6 +361,12 @@ export function migrateStory(
         obj.price_text = DEFAULT_PRICE_TEXT
         changes.push('sidebar: titolo prezzo dal listino')
       }
+      // Fields removed from the schema on 26/10: price and editions now come from the new ones
+      const removed = ['amount', 'steps', 'courses'].filter((k) => k in obj)
+      if (obj.filter && removed.length) {
+        removed.forEach((k) => delete obj[k])
+        changes.push(`sidebar: tolti i campi vecchi ${removed.join(', ')}`)
+      }
     }
     if (obj.component === 'form') changes.push(...migrateForm(obj as FormBlok, attributes))
     for (const value of Object.values(obj)) if (value && typeof value === 'object') walk(value)

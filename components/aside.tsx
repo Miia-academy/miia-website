@@ -10,7 +10,7 @@ import { useMemo, type ReactNode } from "react";
 import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
 import { actionHref, canEnroll, enrollHref, isEnrollAction, isEnrollForm, mainEnrollHref } from "@components/enrollment/enroll-link";
 import Link from "next/link";
-import { fillPriceText, filterEditions, priceSegments } from "@modules/aside";
+import { DEFAULT_PRICE_TEXT, fillPriceText, filterEditions, priceSegments } from "@modules/aside";
 
 interface ListItemProps {
   label: string;
@@ -117,7 +117,12 @@ const PriceText = ({ text, intersec, discount }: { text: string; intersec: boole
 
 export default function Aside({ blok }: AsideComponentProps) {
   const { locations, courses: allEditions, prices } = useDataContext();
-  const priceText = fillPriceText(blok.price_text, prices);
+  // Pages still with the hand-typed price keep it until the switch to main;
+  // without it the headline comes from the price list.
+  const priceText = fillPriceText(
+    blok.price_text?.trim() ? blok.price_text : blok.amount ? undefined : DEFAULT_PRICE_TEXT,
+    prices
+  );
 
   const amount = blok.amount ? parseFloat(blok.amount) : 100;
   const steps = blok.steps ? parseInt(blok.steps, 10) : null;
