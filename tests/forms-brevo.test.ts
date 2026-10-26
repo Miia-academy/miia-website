@@ -258,6 +258,8 @@ describe('numeri delle opzioni degli attributi a categoria', () => {
     const attributes = [
       category('INTERESSE_CORSO', ['interior_primo', 'interior_secondo', 'fashion_primo', 'fashion_secondo']),
       category('ISCRIZIONE_STATO', ['bozza', 'firmata', 'recesso', 'definitiva', 'annullata']),
+      category('ISCRIZIONE_SEDE', ['treviso', 'padova', 'bassano']),
+      category('ISCRIZIONE_FREQUENZA', ['serale', 'diurno', 'sabato']),
       category('ISCRIZIONE_SCOPO', ['aggiornare_competenze', 'cambiare_ruolo', 'cambiare_settore', 'professione', 'curiosita']),
       category('ISCRIZIONE_PAGAMENTO_MODALITA', ['unica', '5_rate', '10_rate']),
     ]

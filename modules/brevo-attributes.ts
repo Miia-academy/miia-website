@@ -12,6 +12,9 @@ export const CATEGORY_IDS = {
   // Already in Brevo with area and level ("interni - primo livello"): only the labels change
   INTERESSE_CORSO: { interior_primo: 1, interior_secondo: 2, fashion_primo: 3, fashion_secondo: 4 },
   ISCRIZIONE_STATO: { bozza: 1, firmata: 2, recesso: 3, definitiva: 4, annullata: 5 },
+  // Created in Brevo on 26/10 as single choice (one edition per enrollment), in this order
+  ISCRIZIONE_SEDE: { treviso: 1, padova: 2, bassano: 3 },
+  ISCRIZIONE_FREQUENZA: { serale: 1, diurno: 2, sabato: 3 },
   ISCRIZIONE_SCOPO: { aggiornare_competenze: 1, cambiare_ruolo: 2, cambiare_settore: 3, professione: 4, curiosita: 5 },
   ISCRIZIONE_PAGAMENTO_MODALITA: { unica: 1, '5_rate': 2, '10_rate': 3 },
 } as const satisfies Record<string, Record<string, number>>

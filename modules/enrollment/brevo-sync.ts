@@ -16,8 +16,6 @@ import type { Enrollment } from './types'
 /** Brevo list 18 "Studenti - Iscritti": the contact joins it when signing. */
 export const ENROLLED_LIST_ID = 18
 
-const SEDI = ['treviso', 'padova', 'bassano']
-
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
 
 /** Frequenza come in Brevo: sabato, serale o diurno. */
@@ -70,8 +68,8 @@ export function signedContactAttributes(
     ORIGINE_DICHIARATA: many(p.come_ci_hai_conosciuto),
     ISCRIZIONE_STATO: CATEGORY_IDS.ISCRIZIONE_STATO.firmata,
     ISCRIZIONE_CORSO: corso,
-    ISCRIZIONE_SEDE: SEDI.includes(sede) ? [sede] : null,
-    ISCRIZIONE_FREQUENZA: frequenza ? [frequenza] : null,
+    ISCRIZIONE_SEDE: categoryId('ISCRIZIONE_SEDE', sede),
+    ISCRIZIONE_FREQUENZA: categoryId('ISCRIZIONE_FREQUENZA', frequenza),
     ISCRIZIONE_DATA: romeDate(signedAt),
     ISCRIZIONE_SCOPO: categoryId('ISCRIZIONE_SCOPO', p.scopo),
     ISCRIZIONE_PAGAMENTO_MODALITA: categoryId('ISCRIZIONE_PAGAMENTO_MODALITA', row.pagamento_modalita),

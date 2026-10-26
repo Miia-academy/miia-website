@@ -133,8 +133,8 @@ describe('dati in Brevo alla firma', () => {
       ORIGINE_DICHIARATA: ['instagram', 'amico'],
       ISCRIZIONE_STATO: 2,
       ISCRIZIONE_CORSO: 'Interior design, primo livello',
-      ISCRIZIONE_SEDE: ['treviso'],
-      ISCRIZIONE_FREQUENZA: ['sabato'],
+      ISCRIZIONE_SEDE: 1,
+      ISCRIZIONE_FREQUENZA: 3,
       ISCRIZIONE_DATA: '2026-10-15',
       ISCRIZIONE_SCOPO: 4,
       ISCRIZIONE_PAGAMENTO_MODALITA: 2,
@@ -151,7 +151,7 @@ describe('dati in Brevo alla firma', () => {
       'Interior design, primo livello',
       new Date('2026-10-15T10:00:00Z')
     )
-    expect(other).toMatchObject({ PERSONA_PROVINCIA: 'PD', INTERESSE_SCOPO: ['aggiornamento'], ISCRIZIONE_SCOPO: 1, ISCRIZIONE_OFFERTA_OPENDAY: false })
+    expect(other).toMatchObject({ ISCRIZIONE_SEDE: 2, ISCRIZIONE_FREQUENZA: 1, PERSONA_PROVINCIA: 'PD', INTERESSE_SCOPO: ['aggiornamento'], ISCRIZIONE_SCOPO: 1, ISCRIZIONE_OFFERTA_OPENDAY: false })
     expect(other).not.toHaveProperty('ISCRIZIONE_PAGAMENTO_MODALITA')
   })
 
