@@ -3,8 +3,10 @@ import { getStoryblokApi } from '@storyblok/react'
 import type { Course, Event, Location } from '@types'
 import { relations } from '@config/relations'
 import { normalizeBanner, normalizeSiteBanners, type BannerData } from '@modules/banner'
+import { parsePriceList } from '@modules/enrollment/catalog'
+import { publicPrices, type PublicPrices } from '@modules/aside'
 
-export type ProcessedCourse = Course & { uuid: string }
+export type ProcessedCourse = Course & { uuid: string; fullSlug: string }
 export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
 export type ProcessedLocation = Location & { uuid?: string }
 
@@ -59,6 +61,8 @@ export type GlobalData = {
   persons: ProcessedPerson[]
   projects: ProcessedProject[]
   competenze: Competenza[]
+  // Public price list for the course pages; null if the "listino" datasource is incomplete.
+  prices?: PublicPrices | null
   // Site banners; null if the switch is off or the list is not published.
   banner?: BannerData | null
 }
@@ -115,7 +119,8 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       articlesRes,
       personsRes,
       projectsRes,
-      competenzeRes
+      competenzeRes,
+      listinoRes,
     ] = await Promise.all([
       storyblokApi.getStories({ version, content_type: 'course', per_page: 100, resolve_relations: resolveRelations }),
       storyblokApi.getStories({ version, content_type: 'event', per_page: 100, sort_by: 'content.date:asc', resolve_relations: resolveRelations }),
@@ -124,12 +129,14 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       storyblokApi.getStories({ version, content_type: 'person', per_page: 100, sort_by: 'content.title:asc', resolve_relations: resolveRelations }),
       storyblokApi.getStories({ version, content_type: 'project', per_page: 100, sort_by: 'first_published_at:desc', resolve_relations: resolveRelations }),
       storyblokApi.get('cdn/datasource_entries', { datasource: 'competenze' }),
+      storyblokApi.get('cdn/datasource_entries', { datasource: 'listino', per_page: 100 }),
     ])
     const banner = await getBannerData(version)
 
     const courses: ProcessedCourse[] = coursesRes.data.stories.map((s: any) => ({
       ...(s.content as Course),
       uuid: s.uuid,
+      fullSlug: s.full_slug,
     }))
 
     const events: ProcessedEvent[] = eventsRes.data.stories.map((s: any) => ({
@@ -190,7 +197,9 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       value: e.value,
     }))
 
-    return { courses, events, locations, articles, persons, projects, competenze, banner }
+    const prices = publicPrices(parsePriceList(listinoRes.data.datasource_entries || []))
+
+    return { courses, events, locations, articles, persons, projects, competenze, prices, banner }
   } catch (error) {
     console.error('❌ Errore durante il fetching REST in getCachedData:', error)
     return { courses: [], events: [], locations: [], articles: [], persons: [], projects: [], competenze: [] }

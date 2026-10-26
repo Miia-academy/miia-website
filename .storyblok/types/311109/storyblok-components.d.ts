@@ -44,6 +44,8 @@ export interface Article {
 export interface Aside {
   id?: string;
   enrollment?: unknown;
+  price_text?: string;
+  filter?: string;
   amount?: string;
   steps?: string;
   discount?: string;
@@ -126,6 +128,7 @@ export interface Event {
   date?: string;
   docenti?: (ISbStoryData<Person> | string)[];
   link_meet?: string;
+  prezzo_agevolato?: boolean;
   page?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   form?: ISbStoryData<Form> | string;
   component: "event";

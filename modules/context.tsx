@@ -75,6 +75,7 @@ export function DataProvider({
   const projects = data?.projects || []
   const competenze = competenzeState
   const banner = data?.banner || null
+  const prices = data?.prices || null
 
   const getLatestItems = useCallback(
     <T,>(items: T[], dateExtractor: (item: T) => string | undefined, limit?: number): T[] => {
@@ -144,6 +145,7 @@ export function DataProvider({
       projects,
       competenze,
       banner,
+      prices,
       loading,
       getLatestItems,
       getEventsByPrefix,
@@ -163,6 +165,7 @@ export function DataProvider({
       projects,
       competenze,
       banner,
+      prices,
       loading,
       getLatestItems,
       getEventsByPrefix,

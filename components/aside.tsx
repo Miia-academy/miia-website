@@ -6,10 +6,11 @@ import { tv } from "tailwind-variants";
 import { useIntersectionObserver } from "usehooks-ts";
 import { getLongDate, getShortDate } from "@modules/formats";
 import { useDataContext } from "@modules/context";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { editionKey, seatsLabel, useSignedCounts } from "@components/enrollment/use-seats";
 import { actionHref, canEnroll, enrollHref, isEnrollAction, isEnrollForm, mainEnrollHref } from "@components/enrollment/enroll-link";
 import Link from "next/link";
+import { DEFAULT_PRICE_TEXT, fillPriceText, filterEditions, priceSegments } from "@modules/aside";
 
 interface ListItemProps {
   label: string;
@@ -46,8 +47,7 @@ const Price = ({
   dueDate,
   showDiscount,
 }: PriceProps) => {
-  const { container, price, from, figure, line, period, discount, shape, date } = priceClasses();
-  const formattedDueDate = dueDate ? getShortDate(dueDate) : null;
+  const { container, price, from, figure, line, period } = priceClasses();
 
   return (
     <div className={container({ intersec })}>
@@ -70,15 +70,22 @@ const Price = ({
         </span>
       </div>
 
-      {showDiscount && !!percent && !!formattedDueDate && (
-        <div className={discount({ intersec })}>
-          <span className={shape()}>{percent}%</span>
-          <span className={date({ intersec })}>
-            per iscrizioni entro <br className="sm:max-md:hidden" />
-            {formattedDueDate}
-          </span>
-        </div>
-      )}
+      {showDiscount && <Discount intersec={intersec} percent={percent} dueDate={dueDate} />}
+    </div>
+  );
+};
+
+const Discount = ({ intersec, percent, dueDate }: { intersec: boolean; percent?: number; dueDate?: string }) => {
+  const { discount, shape, date } = priceClasses();
+  const formattedDueDate = dueDate ? getShortDate(dueDate) : null;
+  if (!percent || !formattedDueDate) return null;
+  return (
+    <div className={discount({ intersec })}>
+      <span className={shape()}>{percent}%</span>
+      <span className={date({ intersec })}>
+        per iscrizioni entro <br className="sm:max-md:hidden" />
+        {formattedDueDate}
+      </span>
     </div>
   );
 };
@@ -87,8 +94,35 @@ interface AsideComponentProps {
   blok: AsideBlok;
 }
 
+/** Price headline from the "Titolo prezzo" text, e.g. "A partire da **{rata10}€** per 10 mesi _*iva inclusa_". */
+const PriceText = ({ text, intersec, discount }: { text: string; intersec: boolean; discount: ReactNode }) => {
+  const { container, price, figure, period } = priceClasses();
+  return (
+    <div className={container({ intersec })}>
+      <p className={price({ intersec })}>
+        {priceSegments(text).map((segment, i) =>
+          segment.kind === "figure" ? (
+            <span key={i} className={figure({ intersec })}>{segment.value}</span>
+          ) : segment.kind === "note" ? (
+            <small key={i} className="italic">{segment.value}</small>
+          ) : (
+            <span key={i} className={period({ intersec })}>{segment.value}</span>
+          )
+        )}
+      </p>
+      {discount}
+    </div>
+  );
+};
+
 export default function Aside({ blok }: AsideComponentProps) {
-  const { locations } = useDataContext();
+  const { locations, courses: allEditions, prices } = useDataContext();
+  // Pages still with the hand-typed price keep it until the switch to main;
+  // without it the headline comes from the price list.
+  const priceText = fillPriceText(
+    blok.price_text?.trim() ? blok.price_text : blok.amount ? undefined : DEFAULT_PRICE_TEXT,
+    prices
+  );
 
   const amount = blok.amount ? parseFloat(blok.amount) : 100;
   const steps = blok.steps ? parseInt(blok.steps, 10) : null;
@@ -100,7 +134,11 @@ export default function Aside({ blok }: AsideComponentProps) {
 
   const { courses, formOptions } = useMemo(() => {
     const opts: Array<{ name: string; value: string }> = [];
-    const rawCourses = Array.isArray(blok.courses) ? blok.courses : [];
+    // With the "Filtro edizioni" the editions come from the site data (only the
+    // published ones on the live site); otherwise from the ones picked by hand.
+    const rawCourses = blok.filter?.trim()
+      ? filterEditions(allEditions, blok.filter).map((c) => ({ uuid: c.uuid, full_slug: c.fullSlug, content: c }))
+      : Array.isArray(blok.courses) ? blok.courses : [];
 
     const crs = rawCourses.map((courseItem: any) => {
       const content = courseItem.content || courseItem || {};
@@ -131,7 +169,7 @@ export default function Aside({ blok }: AsideComponentProps) {
     });
 
     return { courses: crs, formOptions: opts };
-  }, [blok.courses, locations]);
+  }, [blok.courses, blok.filter, allEditions, locations]);
 
   const signed = useSignedCounts(courses.map((c) => c.key));
   // Con l'iscrizione online accesa e posti liberi, il pulsante "Iscriviti online"
@@ -139,10 +177,26 @@ export default function Aside({ blok }: AsideComponentProps) {
   const enrollMain = mainEnrollHref(courses, signed);
 
   const contents = Array.isArray(blok.contents) ? blok.contents : [];
-  const forms = Array.isArray(blok.forms) ? blok.forms : [];
+  // Hidden items are dropped first, so the first visible one is the main button
+  // and the one kept in the sticky bar. The enrollment action (/iscrizione/<course>)
+  // shows only with online enrollment on and seats left; before the Storyblok
+  // migration the enrollment request form is hidden when seats are over.
+  const visibleForms = (Array.isArray(blok.forms) ? blok.forms : []).filter((form) =>
+    form.component === "action"
+      ? !!actionHref(form) && !(isEnrollAction(form) && !enrollMain)
+      : !(isEnrollForm(form) && signed !== null && !enrollMain)
+  );
 
   const { isIntersecting, ref } = useIntersectionObserver({ threshold: 0 });
   const isStickyBanner = !isIntersecting;
+
+  const editionHref = (course: (typeof courses)[number]) =>
+    course.key && canEnroll(signed, seatsLabel(course.seats, course.key, signed))
+      ? enrollHref(course.fullSlug, course.key)
+      : null;
+  // A single edition is open by default with its own enrollment button: the course
+  // button would repeat it, so it shows only in the sticky bar.
+  const hideCourseEnroll = !isStickyBanner && courses.length === 1 && !!editionHref(courses[0]);
 
   return (
     <section
@@ -167,14 +221,26 @@ export default function Aside({ blok }: AsideComponentProps) {
         <aside ref={ref} className={asideClasses()}>
           <div className={bannerClasses({ active: isStickyBanner })}>
             <div className={containerClasses({ active: isStickyBanner })}>
-              <Price
-                amount={amount}
-                steps={steps}
-                intersec={isStickyBanner}
-                percent={discountPercent}
-                dueDate={blok.due_date}
-                showDiscount={showDiscount}
-              />
+              {priceText ? (
+                <PriceText
+                  text={priceText}
+                  intersec={isStickyBanner}
+                  discount={
+                    showDiscount && (
+                      <Discount intersec={isStickyBanner} percent={discountPercent} dueDate={blok.due_date} />
+                    )
+                  }
+                />
+              ) : (
+                <Price
+                  amount={amount}
+                  steps={steps}
+                  intersec={isStickyBanner}
+                  percent={discountPercent}
+                  dueDate={blok.due_date}
+                  showDiscount={showDiscount}
+                />
+              )}
 
               {courses.length > 0 && (
                 <div className={isStickyBanner ? "hidden" : "w-full"}>
@@ -217,17 +283,17 @@ export default function Aside({ blok }: AsideComponentProps) {
                           />
                         </ul>
                         {(() => {
-                          const href =
-                            course.key && canEnroll(signed, seatsLabel(course.seats, course.key, signed))
-                              ? enrollHref(course.fullSlug, course.key)
-                              : null;
+                          const href = editionHref(course);
                           return href ? (
-                            <Link
+                            <Button
+                              as={Link}
                               href={href}
-                              className="mt-3 mb-1 flex h-11 w-full items-center justify-center rounded-medium bg-primary px-4 font-bold text-white"
+                              size="md"
+                              color="primary"
+                              className="mt-3 mb-1 w-full text-medium"
                             >
                               Iscriviti online a questa edizione
-                            </Link>
+                            </Button>
                           ) : null;
                         })()}
                       </AccordionItem>
@@ -236,12 +302,12 @@ export default function Aside({ blok }: AsideComponentProps) {
                 </div>
               )}
 
-              {forms.map((form, index) => {
-                // Buttons in the aside are Storyblok actions. The enrollment one
-                // (/iscrizione/<course>) shows only with online enrollment on and seats left.
+              {visibleForms.map((form, index) => {
+                // Hidden in place, so the other buttons keep their style
+                if (hideCourseEnroll && form.component === "action" && isEnrollAction(form)) return null;
+                // Buttons in the aside are Storyblok actions
                 if (form.component === "action") {
-                  const href = actionHref(form);
-                  if (!href || (isEnrollAction(form) && !enrollMain)) return null;
+                  const href = actionHref(form) as string;
                   return (
                     <div
                       key={form._uid}
@@ -262,9 +328,8 @@ export default function Aside({ blok }: AsideComponentProps) {
                   );
                 }
                 // Before the Storyblok migration: with online enrollment on the enrollment
-                // request form is replaced by the button, or hidden when seats are over.
+                // request form is replaced by the button.
                 const enrollForm = isEnrollForm(form);
-                if (enrollForm && signed !== null && !enrollMain) return null;
                 return (
                   <div
                     key={form._uid}

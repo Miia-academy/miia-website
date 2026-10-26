@@ -122,7 +122,13 @@ describe('controllo moduli Storyblok contro attributi Brevo', () => {
 describe('modifiche Storyblok al passaggio a main', () => {
   it('pagina sede: pulsante di iscrizione al posto del modulo, area e programma nascosti', () => {
     const content = sedePage()
-    const changes = migrateStory(content, ALIASES, ATTRIBUTES, 'corso-interior-design-primo-livello')
+    const changes = migrateStory(
+      content,
+      ALIASES,
+      ATTRIBUTES,
+      'corso-interior-design-primo-livello',
+      'corsi/interior-design/corso-interior-design-primo-livello-padova'
+    )
     const [button, brochure] = content.body[0].forms as any[]
     expect(button).toMatchObject({
       component: 'action',
@@ -134,7 +140,14 @@ describe('modifiche Storyblok al passaggio a main', () => {
       expect.objectContaining({ id: 'area', input: 'multiple', hidden: true, placeholder: 'interior' }),
       expect.objectContaining({ id: 'programma', input: 'multiple', hidden: true, placeholder: 'primo' }),
     ])
-    expect(changes).toHaveLength(2)
+    expect(changes).toEqual([
+      'sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/corso-interior-design-primo-livello',
+      'sidebar: filtro edizioni "interni,primo,padova"',
+      'sidebar: titolo prezzo dal listino',
+      'sidebar: tolti i campi vecchi courses',
+      'campi interesse_area/interesse_corso/collegamento_materiale → area "interior" e programma "primo" nascosti',
+    ])
+    expect(content.body[0]).toMatchObject({ filter: 'interni,primo,padova', price_text: 'A partire da **{rata10}€** per 10 mesi _*iva inclusa_' })
     // Dopo la modifica il controllo non trova più errori nella pagina
     const after = checkForms([{ full_slug: 'p', content }], ALIASES, ATTRIBUTES).filter((f) => f.level === 'errore')
     expect(after).toEqual([])
@@ -151,6 +164,17 @@ describe('modifiche Storyblok al passaggio a main', () => {
     expect(occupazione.input).toBe('select')
     expect(optionValues(occupazione.options)).toEqual(['Studente', 'Impiegato', 'Altro'])
     expect(checkForm(enroll, ATTRIBUTES, 'x').filter((f) => f.level === 'errore')).toEqual([])
+  })
+
+  it('pagina corso senza pulsante di iscrizione (secondo livello): lo aggiunge in cima', () => {
+    const content = {
+      component: 'aside',
+      forms: [{ component: 'form', alias: 'uuid-brochure', fields: [] }],
+    }
+    const changes = migrateStory(content, ALIASES, ATTRIBUTES, 'corso-interior-design-secondo-livello', 'corsi/interior-design/corso-interior-design-secondo-livello/')
+    expect(changes).toContain('sidebar: aggiunto il pulsante /iscrizione/corso-interior-design-secondo-livello')
+    expect(changes).toContain('sidebar: filtro edizioni "interni,secondo"')
+    expect((content.forms as any[]).map((f) => f.component)).toEqual(['action', 'form'])
   })
 
   it('una seconda esecuzione non cambia più nulla', () => {

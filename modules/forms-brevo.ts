@@ -11,6 +11,8 @@
 import { randomUUID } from 'node:crypto'
 import { isFormWritableAttribute } from '@modules/crm-form'
 import { normalizeTracking } from '@modules/brevo-events'
+import { DEFAULT_PRICE_TEXT, filterFromPageSlug } from '@modules/aside'
+import { isEnrollAction } from '@components/enrollment/enroll-link'
 
 export interface BrevoAttribute {
   name: string
@@ -329,7 +331,8 @@ export function migrateStory(
   content: unknown,
   aliases: Record<string, FormBlok>,
   attributes: BrevoAttribute[],
-  course: string | null
+  course: string | null,
+  pageSlug = ''
 ): string[] {
   const changes: string[] = []
   const walk = (node: unknown) => {
@@ -337,11 +340,33 @@ export function migrateStory(
     if (!node || typeof node !== 'object') return
     const obj = node as Record<string, unknown>
     if (obj.component === 'aside' && Array.isArray(obj.forms) && course) {
-      obj.forms = obj.forms.map((f) => {
+      let forms: unknown[] = obj.forms.map((f) => {
         if (!isEnrollFormBlok(f, aliases)) return f
         changes.push(`sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/${course}`)
         return enrollAction(course)
       })
+      // Every course page gets the enrollment button (it hides itself when seats are over)
+      // (the aside takes at most 3 buttons: a full one is left as it is)
+      if (!forms.some((f) => isEnrollAction(f as Record<string, unknown>)) && forms.length < 3) {
+        forms = [enrollAction(course), ...forms]
+        changes.push(`sidebar: aggiunto il pulsante /iscrizione/${course}`)
+      }
+      obj.forms = forms
+      const filter = filterFromPageSlug(pageSlug)
+      if (filter && !(typeof obj.filter === 'string' && obj.filter.trim())) {
+        obj.filter = filter
+        changes.push(`sidebar: filtro edizioni "${filter}"`)
+      }
+      if (!(typeof obj.price_text === 'string' && obj.price_text.trim())) {
+        obj.price_text = DEFAULT_PRICE_TEXT
+        changes.push('sidebar: titolo prezzo dal listino')
+      }
+      // Fields removed from the schema on 26/10: price and editions now come from the new ones
+      const removed = ['amount', 'steps', 'courses'].filter((k) => k in obj)
+      if (obj.filter && removed.length) {
+        removed.forEach((k) => delete obj[k])
+        changes.push(`sidebar: tolti i campi vecchi ${removed.join(', ')}`)
+      }
     }
     if (obj.component === 'form') changes.push(...migrateForm(obj as FormBlok, attributes))
     for (const value of Object.values(obj)) if (value && typeof value === 'object') walk(value)

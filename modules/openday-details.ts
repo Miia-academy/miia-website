@@ -92,16 +92,31 @@ interface DetailsInput {
   /** Future editions of the open day's course, in start order (empty if unknown). */
   editions: Edition[]
   priceList: PriceList | null
+  /** "Prezzo agevolato" box of the event in Storyblok; missing (older events) counts as yes. */
+  reservedPrice?: boolean
+}
+
+/** The event's "Prezzo agevolato" box: only an explicit false turns the reserved price off. */
+export function hasReservedPrice(content: { prezzo_agevolato?: unknown } | undefined): boolean {
+  return content?.prezzo_agevolato !== false
 }
 
 /**
  * Attributes for the contact. OD_VALIDO (reserved open day price) is true when the
- * open day leads to a course with a future edition and the price list is complete.
+ * event offers it ("Prezzo agevolato" in Storyblok), the open day leads to a course
+ * with a future edition and the price list is complete.
  */
-export function buildOpendayDetails({ event, events, teachers, editions, priceList }: DetailsInput): OpendayDetails {
+export function buildOpendayDetails({
+  event,
+  events,
+  teachers,
+  editions,
+  priceList,
+  reservedPrice = true,
+}: DetailsInput): OpendayDetails {
   const details: OpendayDetails = {
     OD_DATA_TESTO: quandoTesto(event.inizio),
-    OD_VALIDO: !!priceList && editions.length > 0,
+    OD_VALIDO: reservedPrice && !!priceList && editions.length > 0,
   }
   if (teachers.length) details.OD_DOCENTI = joinNames(teachers)
   if (editions.length) {
@@ -118,7 +133,7 @@ export function buildOpendayDetails({ event, events, teachers, editions, priceLi
 interface EventStory {
   slug?: string
   name?: string
-  content?: { date?: string; title?: string; openday?: string; link_meet?: string; docenti?: unknown }
+  content?: { date?: string; title?: string; openday?: string; link_meet?: string; docenti?: unknown; prezzo_agevolato?: unknown }
 }
 
 async function loadTeachers(uuids: string[]): Promise<string[]> {
@@ -153,7 +168,14 @@ export async function loadOpendayDetails(code: unknown): Promise<OpendayDetails>
       course ? getCourseEditions(course, event.inizio).catch(() => []) : Promise.resolve([]),
       getPriceList().catch(() => null),
     ])
-    return buildOpendayDetails({ event, events, teachers, editions, priceList })
+    return buildOpendayDetails({
+      event,
+      events,
+      teachers,
+      editions,
+      priceList,
+      reservedPrice: hasReservedPrice(story.content),
+    })
   } catch (error) {
     console.error('[Open day] Could not load details from Storyblok:', error)
     return {}
