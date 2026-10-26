@@ -190,6 +190,14 @@ export default function Aside({ blok }: AsideComponentProps) {
   const { isIntersecting, ref } = useIntersectionObserver({ threshold: 0 });
   const isStickyBanner = !isIntersecting;
 
+  const editionHref = (course: (typeof courses)[number]) =>
+    course.key && canEnroll(signed, seatsLabel(course.seats, course.key, signed))
+      ? enrollHref(course.fullSlug, course.key)
+      : null;
+  // A single edition is open by default with its own enrollment button: the course
+  // button would repeat it, so it shows only in the sticky bar.
+  const hideCourseEnroll = !isStickyBanner && courses.length === 1 && !!editionHref(courses[0]);
+
   return (
     <section
       id={blok.id}
@@ -275,10 +283,7 @@ export default function Aside({ blok }: AsideComponentProps) {
                           />
                         </ul>
                         {(() => {
-                          const href =
-                            course.key && canEnroll(signed, seatsLabel(course.seats, course.key, signed))
-                              ? enrollHref(course.fullSlug, course.key)
-                              : null;
+                          const href = editionHref(course);
                           return href ? (
                             <Button
                               as={Link}
@@ -298,6 +303,8 @@ export default function Aside({ blok }: AsideComponentProps) {
               )}
 
               {visibleForms.map((form, index) => {
+                // Hidden in place, so the other buttons keep their style
+                if (hideCourseEnroll && form.component === "action" && isEnrollAction(form)) return null;
                 // Buttons in the aside are Storyblok actions
                 if (form.component === "action") {
                   const href = actionHref(form) as string;
