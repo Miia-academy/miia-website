@@ -10,6 +10,7 @@
  */
 import { randomUUID } from 'node:crypto'
 import { isFormWritableAttribute } from '@modules/crm-form'
+import { CATEGORY_IDS, interestCourse, isCategoryAttribute } from '@modules/brevo-attributes'
 import { normalizeTracking } from '@modules/brevo-events'
 import { DEFAULT_PRICE_TEXT, filterFromPageSlug } from '@modules/aside'
 import { isEnrollAction } from '@components/enrollment/enroll-link'
@@ -143,8 +144,11 @@ export function checkForm(
   }
 
   const ids = new Set((form.fields || []).map((f) => f.id))
-  if (normalizeTracking(tracking) === 'brochure' && !(ids.has('area') && ids.has('programma'))) {
-    add('avviso', 'modulo brochure senza area e programma: l’automazione non sa quale presentazione mandare')
+  if (normalizeTracking(tracking) === 'brochure' && !(ids.has('interesse_area') && ids.has('interesse_corso'))) {
+    add('avviso', 'modulo brochure senza interesse_area e interesse_corso: l’automazione non sa quale presentazione mandare')
+  }
+  for (const [old, name] of Object.entries(FIELD_RENAMES)) {
+    if (ids.has(old)) add('avviso', `campo "${old}" da rinominare in "${name}" al passaggio a main`)
   }
 
   for (const field of form.fields || []) {
@@ -168,7 +172,13 @@ export function checkForm(
     const choice = field.input === 'select' || field.input === 'multiple'
     const values = field.hidden ? hiddenValues(field) : optionValues(field.options)
 
-    if (attribute.category === 'category') {
+    if (attribute.category === 'category' && isCategoryAttribute(name)) {
+      // The site turns the code into the option id (see @modules/brevo-attributes)
+      const codes = Object.keys(CATEGORY_IDS[name])
+      for (const value of field.input === 'hidden' ? hiddenValues(field) : values) {
+        if (!codes.includes(value)) add('errore', `${label}: valore "${value}" non previsto in ${name} (${codes.join(', ')})`)
+      }
+    } else if (attribute.category === 'category') {
       add('errore', `${label}: ${name} in Brevo è di tipo categoria (valori numerici), il sito manda testo`)
     } else if (attribute.type === 'multiple-choice') {
       if (!choice && !field.hidden && field.input !== 'enroll') {
@@ -195,6 +205,47 @@ export function checkForm(
   return findings
 }
 
+/**
+ * The option ids the site sends for category attributes (@modules/brevo-attributes)
+ * against the options in Brevo: a wrong id would save another value without errors.
+ */
+export function checkCategoryIds(attributes: BrevoAttribute[]): Finding[] {
+  const findings: Finding[] = []
+  const byName = new Map(attributes.map((a) => [a.name.toUpperCase(), a]))
+  for (const [name, options] of Object.entries(CATEGORY_IDS)) {
+    const where = `Brevo ${name}`
+    const attribute = byName.get(name)
+    if (!attribute) {
+      findings.push({ level: 'avviso', where, message: 'attributo assente in Brevo, il dato non viene salvato' })
+      continue
+    }
+    if (attribute.category !== 'category') {
+      findings.push({ level: 'errore', where, message: 'in Brevo non è di tipo categoria: il sito manda il numero dell’opzione' })
+      continue
+    }
+    const labels = new Map(
+      (attribute.enumeration || []).map((e) => {
+        const option = e as { value?: unknown; label?: unknown }
+        return [Number(option.value), String(option.label ?? '')]
+      })
+    )
+    for (const [code, id] of Object.entries(options as Record<string, number>)) {
+      const label = labels.get(id)
+      if (label === code) continue
+      if (label !== undefined && name === 'INTERESSE_CORSO' && interestCourse(label) === code) {
+        findings.push({ level: 'avviso', where, message: `opzione ${id} "${label}" da rinominare in "${code}"` })
+      } else {
+        findings.push({
+          level: 'errore',
+          where,
+          message: label === undefined ? `manca l’opzione ${id} "${code}"` : `l’opzione ${id} è "${label}", il sito la usa per "${code}"`,
+        })
+      }
+    }
+  }
+  return findings
+}
+
 /** Checks all the forms of the given stories. `aliases` maps a linked form uuid to its content. */
 export function checkForms(
   stories: Array<{ full_slug: string; content: unknown }>,
@@ -214,6 +265,21 @@ export function checkForms(
 
 const LEGACY_TRACKING: Record<string, string> = { download: 'brochure', contact: 'info', open_day: 'openday' }
 
+/** Field ids renamed with the attribute dictionary of 26/10 (the id is the Brevo attribute). */
+export const FIELD_RENAMES: Record<string, string> = {
+  finalita: 'interesse_scopo',
+  area: 'interesse_area',
+  sede: 'interesse_sede',
+  frequenza: 'interesse_frequenza',
+  sessione: 'interesse_inizio',
+}
+
+// Forms about other things (requests, projects, jobs, companies, enrollment request) keep their fields
+const OTHER_TRACKING = new Set(['info', 'project', 'recruit', 'partnership', 'enroll'])
+
+// Fields that told the area and the course before: they become interesse_area and interesse_corso
+const COURSE_FIELDS = ['interesse_area', 'interesse_corso', 'collegamento_materiale', 'area', 'programma']
+
 function areaValue(value: string): string | null {
   const v = value.toLowerCase()
   if (/interni|interior/.test(v)) return 'interior'
@@ -221,17 +287,10 @@ function areaValue(value: string): string | null {
   return null
 }
 
-function levelValue(value: string): string | null {
-  const v = value.toLowerCase()
-  if (v.includes('secondo')) return 'secondo'
-  if (v.includes('primo')) return 'primo'
-  return null
-}
-
-const hiddenField = (id: string, placeholder: string): FieldBlok => ({
+const hiddenField = (id: string, placeholder: string, input = 'multiple'): FieldBlok => ({
   _uid: randomUUID(),
   id,
-  input: 'multiple',
+  input,
   hidden: true,
   label: id,
   placeholder,
@@ -240,12 +299,27 @@ const hiddenField = (id: string, placeholder: string): FieldBlok => ({
   component: 'field',
 })
 
+/** The course fields of a form are already in the new shape: hidden interesse_area and interesse_corso with a code. */
+function hasNewCourseFields(fields: FieldBlok[]): boolean {
+  const area = fields.find((f) => f.id === 'interesse_area')
+  const course = fields.find((f) => f.id === 'interesse_corso')
+  const others = fields.some((f) => ['collegamento_materiale', 'programma'].includes(String(f.id)) || (f.id === 'area' && f.hidden))
+  const codeOk = !course || (!!course.hidden && String(course.placeholder || '') in CATEGORY_IDS.INTERESSE_CORSO)
+  const areaOk = !area || !area.hidden || /^(interior|fashion)$/.test(String(area.placeholder || ''))
+  const areaVisibleOk = !area || area.hidden || area.input !== 'hidden'
+  return !others && codeOk && areaOk && areaVisibleOk
+}
+
 /**
  * Changes for one form block:
  * - tracking download/contact/open_day → brochure/info/openday;
- * - sede pages: interesse_area/interesse_corso → hidden area/programma
- *   (the old ones were never sent: type "hidden" without the Hidden box),
- *   collegamento_materiale removed (the brochure follows area and level);
+ * - area and course of the page as hidden interesse_area (interior, fashion) and
+ *   interesse_corso (interior_primo...): from the sede-page fields
+ *   interesse_area/interesse_corso/collegamento_materiale (never sent: type
+ *   "hidden" without the Hidden box) or from hidden area + programma;
+ * - field ids as the attributes of 26/10: finalita → interesse_scopo, area →
+ *   interesse_area, sede → interesse_sede, frequenza → interesse_frequenza,
+ *   sessione → interesse_inizio (only in brochure, open day and newsletter forms);
  * - fields linked to a multiple-choice attribute: a choice with the Brevo
  *   values (e.g. occupazione, today free text with lowercase options).
  */
@@ -258,16 +332,37 @@ export function migrateForm(blok: FormBlok, attributes: BrevoAttribute[]): strin
   }
 
   const fields = blok.fields || []
-  const legacyArea = fields.find((f) => f.id === 'interesse_area')
-  const legacyCourse = fields.find((f) => f.id === 'interesse_corso')
-  if (legacyArea || legacyCourse) {
-    const area = areaValue(String(legacyArea?.placeholder || legacyCourse?.placeholder || ''))
-    const level = levelValue(String(legacyCourse?.placeholder || ''))
-    const kept = fields.filter((f) => !['interesse_area', 'interesse_corso', 'collegamento_materiale'].includes(String(f.id)))
-    if (area && !kept.some((f) => f.id === 'area')) kept.push(hiddenField('area', area))
-    if (level && !kept.some((f) => f.id === 'programma')) kept.push(hiddenField('programma', level))
+  const courseFields = fields.filter((f) => {
+    if (!COURSE_FIELDS.includes(String(f.id))) return false
+    // A visible area choice (newsletter) is a renamed field, not the page's course
+    return !(f.id === 'area' || f.id === 'interesse_area') || f.hidden || f.input === 'hidden'
+  })
+  if (courseFields.length && !hasNewCourseFields(fields)) {
+    const text = (id: string) => String(fields.find((f) => f.id === id)?.placeholder || '')
+    const areaSource = [text('interesse_area'), text('area'), text('interesse_corso'), text('collegamento_materiale')].join(' ')
+    const area = areaValue(areaSource)
+    const course = interestCourse(areaSource, [text('interesse_corso'), text('programma'), text('collegamento_materiale')].join(' '))
+    const kept = fields.filter((f) => !courseFields.includes(f))
+    if (area) kept.push(hiddenField('interesse_area', area))
+    if (course) kept.push(hiddenField('interesse_corso', course, 'text'))
     blok.fields = kept
-    changes.push(`campi interesse_area/interesse_corso/collegamento_materiale → area "${area}" e programma "${level}" nascosti`)
+    changes.push(
+      `campi ${courseFields.map((f) => f.id).join('/')} → interesse_area "${area || ''}" e interesse_corso "${course || ''}" nascosti`
+    )
+  }
+
+  const normalized = (tracking && normalizeTracking(LEGACY_TRACKING[tracking] || tracking)) || ''
+  if (!OTHER_TRACKING.has(normalized)) {
+    const ids = new Set((blok.fields || []).map((f) => f.id))
+    for (const field of blok.fields || []) {
+      const id = field.id || ''
+      const name = FIELD_RENAMES[id]
+      if (!name || ids.has(name)) continue
+      changes.push(`campo ${id} → ${name}`)
+      ids.delete(id)
+      ids.add(name)
+      field.id = name
+    }
   }
 
   const byName = new Map(attributes.map((a) => [a.name.toUpperCase(), a]))
