@@ -13,6 +13,7 @@ import {
 } from '@modules/crm-form'
 import { pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
 import { loadOpendayDetails } from '@modules/openday-details'
+import { romeDate } from '@modules/enrollment/dates'
 
 /**
  * Invio dei moduli pubblici del sito verso Brevo.
@@ -61,6 +62,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (isSourceTrackingEnabled()) {
       Object.assign(attributes, sanitizeAttribution(source, existing))
     }
+    // Contatto creato adesso: la data serve alle email (blocco di benvenuto)
+    if (!returning) attributes.ORIGINE_CONTATTO_DATA = romeDate()
     const listIds = sanitizeLists(contact?.listIds)
     // Nuova iscrizione a un open day: la presenza e il ritardo della volta prima non
     // valgono più (li segna di nuovo la pagina miia.it/open-day/accedi).
@@ -80,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!(error instanceof BrevoError && error.status === 400)) throw error
       console.error('[CRM] Attributi rifiutati da Brevo, salvo i dati essenziali:', error.message)
       const essentials: Record<string, unknown> = {}
-      for (const key of ['NOME', 'COGNOME', 'SMS']) {
+      for (const key of ['NOME', 'COGNOME', 'SMS', 'ORIGINE_CONTATTO_DATA']) {
         if (attributes[key] !== undefined) essentials[key] = attributes[key]
       }
       await upsertContact({ email, attributes: essentials, listIds })
