@@ -1570,11 +1570,50 @@
       "filter": {
         "type": "text",
         "pos": 3,
-        "id": "aCwvC_lVQ5WuEh0AFLbzOA"
+        "id": "aCwvC_lVQ5WuEh0AFLbzOA",
+        "description": "Articoli e progetti: uno o più tag separati da virgola",
+        "display_name": "Filtro (tag)",
+        "tooltip": true
+      },
+      "visibility": {
+        "description": "Vuoto: solo gli articoli visibili. Nascosti = articoli con \"Nascondi in lista\".",
+        "display_name": "Visibilità articoli",
+        "options": [
+          {
+            "name": "Solo nascosti",
+            "value": "hidden"
+          },
+          {
+            "name": "Tutti",
+            "value": "all"
+          }
+        ],
+        "pos": 4,
+        "tooltip": true,
+        "type": "option",
+        "id": "7h684IkZTumzBsOrjw_j-g"
+      },
+      "controls": {
+        "description": "Pulsanti sopra la griglia; l'autore vale solo per gli articoli",
+        "display_name": "Filtri interattivi",
+        "options": [
+          {
+            "name": "Tag",
+            "value": "tags"
+          },
+          {
+            "name": "Autore",
+            "value": "authors"
+          }
+        ],
+        "pos": 5,
+        "tooltip": true,
+        "type": "options",
+        "id": "Tp3kocD1S8qNaB6WlllRkA"
       },
       "columns": {
         "type": "number",
-        "pos": 4,
+        "pos": 6,
         "use_uuid": true,
         "exclude_empty_option": true,
         "options": [
@@ -1597,7 +1636,7 @@
       },
       "limit": {
         "type": "number",
-        "pos": 5,
+        "pos": 7,
         "use_uuid": true,
         "id": "4AjHNaoZRSSCJHQONmYjEQ",
         "min_value": 6,
@@ -1610,7 +1649,8 @@
         "display_name": "Tema scuro",
         "default_value": false,
         "inline_label": true,
-        "id": "4t_bsrGTR-qb3OzsK9Thyw"
+        "id": "4t_bsrGTR-qb3OzsK9Thyw",
+        "pos": 8
       }
     },
     "image": null,
