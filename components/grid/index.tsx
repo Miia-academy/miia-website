@@ -144,7 +144,7 @@ export default function Grid({ blok }: GridComponentProps) {
         />
 
         {(tags.length > 1 || categories.length > 1 || authors.length > 1) && (
-          <div className="mb-8 space-y-3">
+          <div className="mb-8 space-y-2 md:space-y-3">
             {tags.length > 1 && (
               <FilterGroup
                 label="Filtra per tema"
