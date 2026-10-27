@@ -124,32 +124,32 @@ describe('/api/crm', () => {
   })
 
   it('iscrizione a un open day: salva il codice e azzera presenza e ritardo precedenti', async () => {
-    vi.mocked(getContact).mockResolvedValue({ attributes: { PARTECIPAZIONE_OPENDAY: true } } as never)
+    vi.mocked(getContact).mockResolvedValue({ attributes: { OPENDAY_PRESENTE: true } } as never)
     await call({
       contact: {
         email: TEST_EMAIL,
-        attributes: { OPENDAY: '2026-11-16T20:00:00.000Z', OD_CODICE: 'openday-interni-novembre', PARTECIPAZIONE_OPENDAY: true },
+        attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre', OPENDAY_PRESENTE: true },
       },
     })
     expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({
-      OPENDAY: '2026-11-16T20:00:00.000Z',
-      OD_CODICE: 'openday-interni-novembre',
-      PARTECIPAZIONE_OPENDAY: false,
-      OD_RITARDO: false,
+      OPENDAY_DATA: '2026-11-16T20:00:00.000Z',
+      OPENDAY_CODICE: 'openday-interni-novembre',
+      OPENDAY_PRESENTE: false,
+      OPENDAY_RITARDO: false,
     })
   })
 
   it('open day sign-up: adds the details of that open day from Storyblok', async () => {
     vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
-    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OD_VALIDO: true, OD_PARTENZA: 'marzo 2027' })
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OPENDAY_VALIDO: true, OPENDAY_PARTENZA_TESTO: 'marzo 2027', INTERESSE_CORSO: 1 })
     await call({
       contact: {
         email: TEST_EMAIL,
-        attributes: { OPENDAY: '2026-11-16T20:00:00.000Z', OD_CODICE: 'openday-interni-novembre', OD_VALIDO: false },
+        attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre', OPENDAY_VALIDO: false },
       },
     })
     expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
-    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({ OD_VALIDO: true, OD_PARTENZA: 'marzo 2027' })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({ OPENDAY_VALIDO: true, OPENDAY_PARTENZA_TESTO: 'marzo 2027', INTERESSE_CORSO: 1 })
   })
 
   it('other forms do not load open day details', async () => {

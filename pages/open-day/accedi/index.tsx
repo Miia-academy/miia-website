@@ -5,7 +5,7 @@ import { loadOpenday, normalizeCodice, stasera } from '@modules/openday-accesso'
 
 /**
  * miia.it/open-day/accedi senza codice (per esempio scritto a mano).
- * Con l'email nel link usa l'open day a cui la persona è iscritta (OD_CODICE);
+ * Con l'email nel link usa l'open day a cui la persona è iscritta (OPENDAY_CODICE, prima del 26/10 OD_CODICE);
  * altrimenti, se stasera c'è un solo open day, porta a quello. Nei casi dubbi
  * porta alla pagina con un codice sconosciuto, che rimanda all'ultima email.
  */
@@ -17,7 +17,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query, res }) => 
   if (email) {
     try {
       const contact = await getContact({ identifier: email })
-      const codice = normalizeCodice((contact as { attributes?: Record<string, unknown> })?.attributes?.OD_CODICE)
+      const attributes = (contact as { attributes?: Record<string, unknown> })?.attributes || {}
+      const codice = normalizeCodice(attributes.OPENDAY_CODICE || attributes.OD_CODICE)
       if (codice)
         return {
           redirect: {

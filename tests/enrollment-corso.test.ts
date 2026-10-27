@@ -160,7 +160,7 @@ describe('offerta del passo 2', () => {
     expect(offer.quota_esame).toBe(366)
   })
 
-  it('con SCADENZA_OFFERTA valida tutte le modalità costano il prezzo open day', () => {
+  it('con OFFERTA_SCADENZA_DATA valida tutte le modalità costano il prezzo open day', () => {
     const offer = buildOffer([edition()], {}, LIST, '2026-10-20', NOW)
     expect(offer.offerta).toBe(true)
     expect(offer.scadenza_offerta).toBe('2026-10-20')

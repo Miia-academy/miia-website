@@ -77,7 +77,7 @@ test('Modulo open day: codice per la pagina "Entra" e pagina accedi', async ({ p
   expect(invio.event.event_name).toBe('submit_openday_form')
   const codice = invio.event.event_properties.openday_codice
   expect(codice, 'codice dell’open day (slug della storia evento)').toMatch(/^openday-/)
-  expect(invio.contact.attributes.OD_CODICE).toBe(codice)
+  expect(invio.contact.attributes.OPENDAY_CODICE).toBe(codice)
   testInfo.annotations.push(
     { type: 'Open day scelto', description: `${codice} – ${invio.event.event_properties.openday_data || ''}` },
     { type: 'Docenti', description: invio.event.event_properties.openday_docenti || '(nessuno nel campo Docenti)' }

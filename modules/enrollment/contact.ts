@@ -77,11 +77,15 @@ export async function sendCodeEmail(email: string, code: string, minutes: number
   })
 }
 
-/** Scadenza dell'offerta open day del contatto (attributo SCADENZA_OFFERTA), o null. */
+/**
+ * Scadenza dell'offerta open day del contatto (attributo OFFERTA_SCADENZA_DATA), o null.
+ * SCADENZA_OFFERTA è il nome di prima del 26/10: resta in Brevo finché non si cancella.
+ */
 export async function offerDeadline(email: string): Promise<string | null> {
   try {
     const contact = await getContact({ identifier: email })
-    const value = (contact?.attributes as Record<string, unknown> | undefined)?.SCADENZA_OFFERTA
+    const attributes = (contact?.attributes as Record<string, unknown> | undefined) || {}
+    const value = attributes.OFFERTA_SCADENZA_DATA || attributes.SCADENZA_OFFERTA
     return typeof value === 'string' && value ? value.slice(0, 10) : null
   } catch (error) {
     if (error instanceof BrevoError && error.status === 404) return null

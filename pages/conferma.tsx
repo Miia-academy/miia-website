@@ -12,8 +12,8 @@ import { sendGTMEvent } from '@next/third-parties/google'
 import { EVENTS } from '@modules/brevo-events'
 
 // Testi della pagina dopo il clic su una scelta nelle email dell'open day: le domande di
-// "Cosa vedrai" (OD_DOMANDA: sbocchi, programma, attestato, costi, orari) e le richieste
-// del giorno dopo (OD_RICHIESTA: dubbi, approfondire, simone).
+// "Cosa vedrai" (OPENDAY_DOMANDA: sbocchi, programma, attestato, costi, orari) e le richieste
+// del giorno dopo (OPENDAY_RICHIESTA: dubbi, approfondire, simone).
 // Si cambiano in Storyblok › Datasources › "Domande open day": il nome della voce è il
 // valore salvato in Brevo e non va rinominato; il valore è la frase mostrata.
 // Questi testi servono solo se Storyblok non risponde.

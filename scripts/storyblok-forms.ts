@@ -11,6 +11,7 @@
 import { config } from 'dotenv'
 import { getAllowedLists } from '@modules/crm-form'
 import {
+  checkCategoryIds,
   checkForms,
   courseFromPageSlug,
   migrateSchemas,
@@ -100,7 +101,7 @@ async function courseOf(story: Story): Promise<string | null> {
 
 async function check() {
   const [stories, attributes] = await Promise.all([formStories(), brevoAttributes()])
-  const findings = checkForms(stories, aliasesOf(stories), attributes, getAllowedLists())
+  const findings = [...checkCategoryIds(attributes), ...checkForms(stories, aliasesOf(stories), attributes, getAllowedLists())]
   for (const f of findings) console.log(`${f.level === 'errore' ? '✗' : '!'} ${f.where}: ${f.message}`)
   const errors = findings.filter((f) => f.level === 'errore').length
   console.log(`\n${stories.length} storie con moduli, ${errors} errori, ${findings.length - errors} avvisi.`)

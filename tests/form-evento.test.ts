@@ -99,7 +99,7 @@ describe('contatto del modulo', () => {
   })
 })
 
-// Verifica moduli 21/10: brochure e richiesta iscrizione scrivevano OPENDAY sul contatto
+// Verifica moduli 21/10: brochure e richiesta iscrizione scrivevano la data dell'open day sul contatto
 // e le automazioni dell'open day trattavano la persona come iscritta.
 describe('data dell’open day sul contatto', () => {
   const data: FormData = { email: campo('test@miia.it'), area: campo(['interior']) }
@@ -107,8 +107,8 @@ describe('data dell’open day sul contatto', () => {
   it.each(['open_day', 'openday'])('il modulo open day (%s) salva data e codice', (tracking) => {
     const event = buildEvent(data, EVENTI, tracking)
     expect(opendayAttributes(event.event_properties, tracking)).toEqual({
-      OPENDAY: '2026-11-16T20:00:00.000Z',
-      OD_CODICE: 'openday-interni-novembre',
+      OPENDAY_DATA: '2026-11-16T20:00:00.000Z',
+      OPENDAY_CODICE: 'openday-interni-novembre',
     })
   })
 

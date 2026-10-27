@@ -69,7 +69,7 @@ describe('/api/openday/risposta', () => {
     const token = jwt.sign({ purpose: 'risposta', email: 'test@miia.it', tipo: 'domanda', valore: 'costi' }, 'segreto-di-prova')
     const res = await call({ cookies: { [COOKIE]: token } })
     expect(res.statusCode).toBe(200)
-    expect(upsertContact).toHaveBeenCalledWith({ email: 'test@miia.it', attributes: { OD_DOMANDA: 'costi' } })
+    expect(upsertContact).toHaveBeenCalledWith({ email: 'test@miia.it', attributes: { OPENDAY_DOMANDA: 'costi' } })
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_answer_form',
       email: 'test@miia.it',

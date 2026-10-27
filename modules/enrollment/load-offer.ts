@@ -18,7 +18,7 @@ export async function loadOffer(corso: string, email: string): Promise<CourseOff
   const [editions, list, scadenza] = await Promise.all([
     getCourseEditions(corso),
     orNull('Lettura del listino', getPriceList()),
-    orNull('Lettura di SCADENZA_OFFERTA', offerDeadline(email)),
+    orNull('Lettura di OFFERTA_SCADENZA_DATA', offerDeadline(email)),
   ])
   const signed = await countSignedByEdition(editions.map((e) => e.chiave))
   return buildOffer(editions, signed, list, scadenza)

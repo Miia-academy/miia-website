@@ -8,7 +8,7 @@ const INSTALLMENTS: Record<PaymentMode, number> = {
 }
 
 /**
- * L'offerta open day vale se SCADENZA_OFFERTA (attributo Brevo, data di
+ * L'offerta open day vale se OFFERTA_SCADENZA_DATA (attributo Brevo, data di
  * partecipazione + 14 giorni) è oggi o nel futuro, contando i giorni in Italia.
  */
 export function isOfferValid(scadenza: unknown, now: Date = new Date()): boolean {

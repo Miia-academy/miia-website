@@ -3,12 +3,12 @@
  * dell'open day giusto e segna in Brevo chi è entrato.
  *
  * Il codice è lo slug della storia "event" in Storyblok (es. openday-interni-novembre),
- * salvato nel contatto (OD_CODICE) quando la persona si iscrive. Il link della call sta
+ * salvato nel contatto (OPENDAY_CODICE) quando la persona si iscrive. Il link della call sta
  * nel campo "Link della call" dell'evento e non arriva mai al browser prima dell'apertura.
  *
  * Orari, contati dall'ora di inizio dell'evento:
  * - si entra da 15 minuti prima;
- * - chi entra più di 15 minuti dopo l'inizio è segnato in ritardo (OD_RITARDO);
+ * - chi entra più di 15 minuti dopo l'inizio è segnato in ritardo (OPENDAY_RITARDO);
  * - dopo 60 minuti l'open day è finito e la pagina propone il prossimo.
  */
 import { getStoryblokVersion } from '@config/version'

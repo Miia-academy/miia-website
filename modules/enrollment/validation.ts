@@ -240,7 +240,7 @@ export const AREE_STUDIO = [
   'turismo',
   'altro',
 ] as const
-/** Situazione lavorativa: stessi valori dell'attributo Brevo OCCUPAZIONE. */
+/** Situazione lavorativa: stessi valori dell'attributo Brevo PROFILO_LAVORO_SITUAZIONE. */
 export const SITUAZIONI_LAVORO = [
   'studente',
   'disoccupato',
@@ -255,7 +255,7 @@ export const SITUAZIONI_LAVORO = [
 ] as const
 /** Chi studia o cerca lavoro non indica settore, azienda e ruolo. */
 export const SENZA_LAVORO: readonly string[] = ['studente', 'disoccupato']
-/** Settore di lavoro (proposta del 14/10, da confermare con Simone; in Brevo servirà l'attributo SETTORE). */
+/** Settore di lavoro (proposta del 14/10, da confermare con Simone; in Brevo è l'attributo PROFILO_LAVORO_SETTORE). */
 export const SETTORI_LAVORO = [
   'arredamento_design',
   'edilizia_architettura',
