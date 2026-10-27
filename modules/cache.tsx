@@ -5,6 +5,7 @@ import { relations } from '@config/relations'
 import { normalizeBanner, normalizeSiteBanners, type BannerData } from '@modules/banner'
 import { parsePriceList } from '@modules/enrollment/catalog'
 import { publicPrices, type PublicPrices } from '@modules/aside'
+import { articleAuthor, type GridAuthor } from '@modules/grid'
 
 export type ProcessedCourse = Course & { uuid: string; fullSlug: string }
 export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
@@ -24,6 +25,7 @@ export type ProcessedArticle = {
   slug?: string
   createdAt: string
   tagList: string[]
+  author?: GridAuthor
 }
 
 export type ProcessedPerson = {
@@ -152,6 +154,19 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       uuid: s.uuid,
     }))
 
+    const persons: ProcessedPerson[] = personsRes.data.stories.map((s: any) => ({
+      uuid: s.uuid,
+      name: s.content?.title || s.name || '',
+      title: s.content?.title || s.name || '',
+      role: s.content?.role,
+      image: s.content?.image,
+      description: s.content?.description || '',
+      hide: s.content?.hide || [],
+      video: s.content?.video || '',
+      fullSlug: formatSlug(s.full_slug),
+      tagList: s.tag_list || [],
+    }))
+
     const articles: ProcessedArticle[] = articlesRes.data.stories.map((s: any) => ({
       uuid: s.uuid,
       title: s.content?.title,
@@ -165,19 +180,7 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       slug: s.slug,
       createdAt: s.first_published_at || s.created_at,
       tagList: s.tag_list || [],
-    }))
-
-    const persons: ProcessedPerson[] = personsRes.data.stories.map((s: any) => ({
-      uuid: s.uuid,
-      name: s.content?.title || s.name || '',
-      title: s.content?.title || s.name || '',
-      role: s.content?.role,
-      image: s.content?.image,
-      description: s.content?.description || '',
-      hide: s.content?.hide || [],
-      video: s.content?.video || '',
-      fullSlug: formatSlug(s.full_slug),
-      tagList: s.tag_list || [],
+      author: articleAuthor(s.content?.author, persons),
     }))
 
     const projects: ProcessedProject[] = projectsRes.data.stories.map((s: any) => ({
