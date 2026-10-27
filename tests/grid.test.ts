@@ -3,6 +3,8 @@ import {
   articleAuthor,
   authorOptions,
   byVisibility,
+  categoryOptions,
+  folderCategory,
   filterKeys,
   gridControls,
   tagLabel,
@@ -62,8 +64,22 @@ describe('interactive filters', () => {
     ])
   })
 
+  it('categories without duplicates, in order of label', () => {
+    expect(categoryOptions([{ category: 'moda' }, { category: 'interior-design' }, { category: 'Moda' }, {}])).toEqual([
+      'interior-design',
+      'moda',
+    ])
+  })
+
+  it('category from the folder of the article', () => {
+    expect(folderCategory('blog/moda/sfilata-2025')).toBe('moda')
+    expect(folderCategory('/blog/interior-design/focus-cucina/')).toBe('interior-design')
+    expect(folderCategory('articolo')).toBeUndefined()
+    expect(folderCategory(undefined)).toBeUndefined()
+  })
+
   it('only the known controls', () => {
-    expect(gridControls(['tags', 'authors', 'other', ''])).toEqual(['tags', 'authors'])
+    expect(gridControls(['tags', 'categories', 'authors', 'other', ''])).toEqual(['tags', 'categories', 'authors'])
     expect(gridControls('tags')).toEqual(['tags'])
     expect(gridControls(undefined)).toEqual([])
   })

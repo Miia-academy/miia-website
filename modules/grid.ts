@@ -5,13 +5,14 @@
 export type GridVisibility = '' | 'hidden' | 'all'
 
 /** Interactive filters the editor can show above the grid. */
-export type GridControl = 'tags' | 'authors'
+export type GridControl = 'tags' | 'categories' | 'authors'
 
 export type GridAuthor = { uuid: string; name: string }
 
 type Hideable = { hidden?: boolean }
 type Tagged = { tagList?: string[] }
 type Authored = { author?: GridAuthor }
+type Categorized = { category?: string }
 
 /** Keys of the "filter" field: one or more values separated by commas, compared in lowercase. */
 export function filterKeys(filter?: string): string[] {
@@ -43,6 +44,17 @@ export function tagOptions(items: Tagged[]): string[] {
   return [...tags.values()].sort((a, b) => tagLabel(a).localeCompare(tagLabel(b), 'it'))
 }
 
+/** Categories of the items, without duplicates (ignoring case), in order of label. */
+export function categoryOptions(items: Categorized[]): string[] {
+  return tagOptions(items.map((item) => ({ tagList: item.category ? [item.category] : [] })))
+}
+
+/** Category of an article without one of its own: the folder it is in ("blog/moda/x" → "moda"). */
+export function folderCategory(fullSlug?: string): string | undefined {
+  const parts = (fullSlug || '').split('/').filter(Boolean)
+  return parts.length > 1 ? parts[parts.length - 2] : undefined
+}
+
 /** Authors of the items, without duplicates, in alphabetical order. */
 export function authorOptions(items: Authored[]): GridAuthor[] {
   const authors = new Map<string, GridAuthor>()
@@ -58,10 +70,10 @@ export function tagLabel(tag: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-/** Editor's choice of controls; values other than tags and authors are ignored. */
+/** Editor's choice of controls; unknown values are ignored. */
 export function gridControls(value: unknown): GridControl[] {
   const list = Array.isArray(value) ? value : typeof value === 'string' && value ? [value] : []
-  return list.filter((c): c is GridControl => c === 'tags' || c === 'authors')
+  return list.filter((c): c is GridControl => c === 'tags' || c === 'categories' || c === 'authors')
 }
 
 /** The article's author, whether Storyblok resolved the relation (story) or left the uuid. */

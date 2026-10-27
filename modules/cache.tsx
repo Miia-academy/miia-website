@@ -5,7 +5,7 @@ import { relations } from '@config/relations'
 import { normalizeBanner, normalizeSiteBanners, type BannerData } from '@modules/banner'
 import { parsePriceList } from '@modules/enrollment/catalog'
 import { publicPrices, type PublicPrices } from '@modules/aside'
-import { articleAuthor, type GridAuthor } from '@modules/grid'
+import { articleAuthor, folderCategory, type GridAuthor } from '@modules/grid'
 
 export type ProcessedCourse = Course & { uuid: string; fullSlug: string }
 export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
@@ -170,7 +170,7 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
     const articles: ProcessedArticle[] = articlesRes.data.stories.map((s: any) => ({
       uuid: s.uuid,
       title: s.content?.title,
-      category: s.content?.category,
+      category: s.content?.category || folderCategory(s.full_slug),
       description: s.content?.description || s.content?.intro || '',
       hidden: s.content?.hidden,
       cover_image: s.content?.cover_image,

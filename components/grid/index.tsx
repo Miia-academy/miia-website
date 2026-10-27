@@ -11,7 +11,7 @@ import ProjectCard from '@components/cards/projectCard'
 
 import GridHeading from './heading'
 import FilterGroup from './filters'
-import { authorOptions, byVisibility, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
+import { authorOptions, byVisibility, categoryOptions, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
 
 import type { Grid as GridBlokType } from '@types'
 
@@ -30,6 +30,7 @@ export default function Grid({ blok }: GridComponentProps) {
   const pageSize = blok.limit ? parseInt(blok.limit as string, 10) : 6
   const [visibleCount, setVisibleCount] = useState(pageSize)
   const [activeTag, setActiveTag] = useState('')
+  const [activeCategory, setActiveCategory] = useState('')
   const [activeAuthor, setActiveAuthor] = useState('')
 
   const isDarkSection = !!blok.dark
@@ -95,6 +96,10 @@ export default function Grid({ blok }: GridComponentProps) {
     () => (controls.includes('tags') ? tagOptions(filteredAndSortedItems) : []),
     [controls, filteredAndSortedItems]
   )
+  const categories = useMemo(
+    () => (isArticles && controls.includes('categories') ? categoryOptions(filteredAndSortedItems) : []),
+    [isArticles, controls, filteredAndSortedItems]
+  )
   const authors = useMemo(
     () => (isArticles && controls.includes('authors') ? authorOptions(filteredAndSortedItems) : []),
     [isArticles, controls, filteredAndSortedItems]
@@ -103,9 +108,12 @@ export default function Grid({ blok }: GridComponentProps) {
   const shownItems = useMemo(
     () =>
       filteredAndSortedItems.filter(
-        (item) => (!activeTag || hasTag(item, activeTag)) && (!activeAuthor || item.author?.uuid === activeAuthor)
+        (item) =>
+          (!activeTag || hasTag(item, activeTag)) &&
+          (!activeCategory || item.category?.toLowerCase() === activeCategory.toLowerCase()) &&
+          (!activeAuthor || item.author?.uuid === activeAuthor)
       ),
-    [filteredAndSortedItems, activeTag, activeAuthor]
+    [filteredAndSortedItems, activeTag, activeCategory, activeAuthor]
   )
 
   const visibleItems = useMemo(() => shownItems.slice(0, visibleCount), [shownItems, visibleCount])
@@ -135,7 +143,7 @@ export default function Grid({ blok }: GridComponentProps) {
           isDarkSection={isDarkSection}
         />
 
-        {(tags.length > 1 || authors.length > 1) && (
+        {(tags.length > 1 || categories.length > 1 || authors.length > 1) && (
           <div className="mb-8 space-y-3">
             {tags.length > 1 && (
               <FilterGroup
@@ -145,6 +153,18 @@ export default function Grid({ blok }: GridComponentProps) {
                 active={activeTag}
                 onChange={(value) => {
                   setActiveTag(value)
+                  setVisibleCount(pageSize)
+                }}
+              />
+            )}
+            {categories.length > 1 && (
+              <FilterGroup
+                label="Filtra per categoria"
+                allLabel="Tutte le categorie"
+                options={categories.map((category) => ({ value: category, label: tagLabel(category) }))}
+                active={activeCategory}
+                onChange={(value) => {
+                  setActiveCategory(value)
                   setVisibleCount(pageSize)
                 }}
               />

@@ -184,7 +184,7 @@ export interface Grid {
   subtitle?: string;
   filter?: string;
   visibility?: "" | "hidden" | "all";
-  controls?: ("" | "tags" | "authors")[];
+  controls?: ("" | "tags" | "categories" | "authors")[];
   columns?: string;
   limit?: string;
   dark?: boolean;

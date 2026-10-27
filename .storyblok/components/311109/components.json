@@ -1594,12 +1594,16 @@
         "id": "7h684IkZTumzBsOrjw_j-g"
       },
       "controls": {
-        "description": "Pulsanti sopra la griglia; l'autore vale solo per gli articoli",
+        "description": "Pulsanti sopra la griglia; categoria e autore valgono solo per gli articoli",
         "display_name": "Filtri interattivi",
         "options": [
           {
             "name": "Tag",
             "value": "tags"
+          },
+          {
+            "name": "Categoria",
+            "value": "categories"
           },
           {
             "name": "Autore",
