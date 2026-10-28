@@ -124,7 +124,7 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
   it('iscrive al prossimo open day dell’area: lista 16, OPENDAY_CODICE, presenza e ritardo azzerati, evento submit_openday_form', async () => {
     const res = await call({ cookies: { [COOKIE]: richiesta('test@miia.it', 'interni') } })
     expect(res.statusCode).toBe(200)
-    expect(res.body).toEqual({ ok: true, openday_data: '16/11/2026' })
+    expect(res.body).toEqual({ ok: true, openday_data: '16 novembre 2026' })
     expect(upsertContact).toHaveBeenCalledWith({
       email: 'test@miia.it',
       listIds: [16],
@@ -143,7 +143,7 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
       properties: {
         area: 'interior',
         openday: '2026-11-16',
-        openday_data: '16/11/2026',
+        openday_data: '16 novembre 2026',
         openday_codice: 'openday-interni-novembre',
       },
     })

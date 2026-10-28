@@ -114,9 +114,10 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
     if (targetEvent) {
       opendayDateStr = targetEvent.date.toISOString().split('T')[0]
       opendayDataLocale = targetEvent.date.toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'long',
         year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
+        timeZone: 'Europe/Rome',
       })
     }
 
@@ -156,6 +157,7 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
         openday_data: opendayDataLocale,
         openday_codice: targetEvent?.slug,
         openday_docenti: attributes.OPENDAY_DOCENTI_TESTO as string | undefined,
+        openday_prezzo: attributes.OPENDAY_VALIDO as boolean | undefined,
       }),
     })
 

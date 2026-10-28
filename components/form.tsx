@@ -33,10 +33,12 @@ export interface OptionProps {
   value: string
 }
 
+// "16 novembre 2026": the emails show it as it is
 const dateFormat = {
+  day: 'numeric' as const,
+  month: 'long' as const,
   year: 'numeric' as const,
-  month: '2-digit' as const,
-  day: '2-digit' as const,
+  timeZone: 'Europe/Rome',
 }
 
 export type ExtendedFormBlok = FormBlok & {
