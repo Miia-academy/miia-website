@@ -50,7 +50,7 @@ export const EVENT_PROPERTIES = [
   'openday_data',
   'openday_codice',
   'openday_docenti',
-  'openday_prezzo',
+  'openday_agevolato',
   'ultima_sorgente',
   'ultima_mezzo',
   'ultima_campagna',

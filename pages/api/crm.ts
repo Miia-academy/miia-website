@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const eventName = sanitizeEventName(event?.event_name)
     const eventProperties = sanitizeEventProperties(event?.event_properties)
     // Only the server says whether an open day gives the reserved price
-    delete eventProperties.openday_prezzo
+    delete eventProperties.openday_agevolato
     let details: OpendayDetails = {}
     // Nuova iscrizione a un open day: la presenza e il ritardo della volta prima non
     // valgono più (li segna di nuovo la pagina miia.it/open-day/accedi).
@@ -85,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!isNaN(at.valueOf())) attributes.OPENDAY_INVITO_DATA = romeDate(at)
       details = await loadOpendayDetails(eventProperties.openday_codice)
     }
-    if (typeof details.OPENDAY_VALIDO === 'boolean') eventProperties.openday_prezzo = details.OPENDAY_VALIDO
+    if (typeof details.OPENDAY_VALIDO === 'boolean') eventProperties.openday_agevolato = details.OPENDAY_VALIDO
 
     try {
       await upsertContact({ email, attributes, listIds })

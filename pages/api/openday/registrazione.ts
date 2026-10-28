@@ -157,7 +157,7 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
         openday_data: opendayDataLocale,
         openday_codice: targetEvent?.slug,
         openday_docenti: attributes.OPENDAY_DOCENTI_TESTO as string | undefined,
-        openday_prezzo: attributes.OPENDAY_VALIDO as boolean | undefined,
+        openday_agevolato: attributes.OPENDAY_VALIDO as boolean | undefined,
       }),
     })
 

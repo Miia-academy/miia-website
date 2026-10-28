@@ -159,7 +159,7 @@ describe('/api/crm', () => {
       contact: { email: TEST_EMAIL, attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre' } },
       event: { event_name: 'submit_openday_form', event_properties: { openday_codice: 'openday-interni-novembre' } },
     })
-    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_prezzo: true })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: true })
   })
 
   it('brochure: date of the open day offered on the contact, reserved price in the event', async () => {
@@ -174,7 +174,7 @@ describe('/api/crm', () => {
           openday: '2026-11-16T20:00:00.000Z',
           openday_data: '16 novembre 2026',
           openday_codice: 'openday-interni-novembre',
-          openday_prezzo: true,
+          openday_agevolato: true,
         },
       },
     })
@@ -185,17 +185,17 @@ describe('/api/crm', () => {
     expect(attributes).not.toHaveProperty('OPENDAY_DATA')
     expect(attributes).not.toHaveProperty('OPENDAY_DATA_TESTO')
     // The value sent by the browser is ignored: the server's one wins
-    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_prezzo: false })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: false })
   })
 
-  it('il browser non può scrivere OPENDAY_INVITO_DATA né openday_prezzo', async () => {
+  it('il browser non può scrivere OPENDAY_INVITO_DATA né openday_agevolato', async () => {
     vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
     await call({
       contact: { email: TEST_EMAIL, attributes: { OPENDAY_INVITO_DATA: '2030-01-01' } },
-      event: { event_name: 'submit_brochure_form', event_properties: { openday_prezzo: true } },
+      event: { event_name: 'submit_brochure_form', event_properties: { openday_agevolato: true } },
     })
     expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).not.toHaveProperty('OPENDAY_INVITO_DATA')
-    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).not.toHaveProperty('openday_prezzo')
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).not.toHaveProperty('openday_agevolato')
   })
 
   it('other forms do not load open day details', async () => {

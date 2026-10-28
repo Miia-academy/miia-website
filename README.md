@@ -197,7 +197,7 @@ Il sistema invia eventi tracciati (`trackEvent`) alle API di Brevo per gestire n
 
 ### Eventi del funnel (sito → GTM e Brevo, stesso nome)
 
-Schema `submit_{evento}_form`, definito in `modules/brevo-events.ts`. Eventi leggeri: solo `area`, `programma`, `corso`, `openday`, `openday_data`, `openday_codice`, `openday_docenti`, `openday_prezzo`, `ultima_sorgente`, `ultima_mezzo`, `ultima_campagna`, `ultima_pagina`, più le proprietà proprie degli eventi lato server. Il resto dei dati sta solo sul contatto.
+Schema `submit_{evento}_form`, definito in `modules/brevo-events.ts`. Eventi leggeri: solo `area`, `programma`, `corso`, `openday`, `openday_data`, `openday_codice`, `openday_docenti`, `openday_agevolato`, `ultima_sorgente`, `ultima_mezzo`, `ultima_campagna`, `ultima_pagina`, più le proprietà proprie degli eventi lato server. Il resto dei dati sta solo sul contatto.
 
 | Evento | Quando | Proprietà in più |
 | :--- | :--- | :--- |
