@@ -112,6 +112,8 @@ describe('POST /api/openday/registrazione (pulsante "Confermo la partecipazione"
       OPENDAY_VALIDO: true,
       INTERESSE_CORSO: 1,
     })
+    // Not a boolean: Brevo would show false as "0", which a template condition reads as true
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'si' })
   })
 
   it('senza la richiesta firmata non iscrive', async () => {

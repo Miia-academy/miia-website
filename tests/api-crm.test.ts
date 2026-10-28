@@ -159,7 +159,7 @@ describe('/api/crm', () => {
       contact: { email: TEST_EMAIL, attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre' } },
       event: { event_name: 'submit_openday_form', event_properties: { openday_codice: 'openday-interni-novembre' } },
     })
-    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: true })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'si' })
   })
 
   it('brochure: date of the open day offered on the contact, reserved price in the event', async () => {
@@ -185,7 +185,7 @@ describe('/api/crm', () => {
     expect(attributes).not.toHaveProperty('OPENDAY_DATA')
     expect(attributes).not.toHaveProperty('OPENDAY_DATA_TESTO')
     // The value sent by the browser is ignored: the server's one wins
-    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: false })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'no' })
   })
 
   it('il browser non può scrivere OPENDAY_INVITO_DATA né openday_agevolato', async () => {

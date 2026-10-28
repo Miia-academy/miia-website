@@ -11,7 +11,7 @@ import {
   sanitizeEventProperties,
   sanitizeLists,
 } from '@modules/crm-form'
-import { pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
+import { pickEventProperties, siNo, sourceEventProperties } from '@modules/brevo-events'
 import { loadOpendayDetails, type OpendayDetails } from '@modules/openday-details'
 import { romeDate } from '@modules/enrollment/dates'
 
@@ -85,7 +85,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!isNaN(at.valueOf())) attributes.OPENDAY_INVITO_DATA = romeDate(at)
       details = await loadOpendayDetails(eventProperties.openday_codice)
     }
-    if (typeof details.OPENDAY_VALIDO === 'boolean') eventProperties.openday_agevolato = details.OPENDAY_VALIDO
+    const agevolato = siNo(details.OPENDAY_VALIDO)
+    if (agevolato) eventProperties.openday_agevolato = agevolato
 
     try {
       await upsertContact({ email, attributes, listIds })
