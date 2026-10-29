@@ -115,7 +115,7 @@ describe('data dell’open day sul contatto', () => {
   it('brochure e richiesta iscrizione non la salvano, ma l’evento la porta per l’invito', () => {
     for (const tracking of ['download', 'brochure', 'enroll', undefined]) {
       const event = buildEvent(data, EVENTI, tracking)
-      expect(event.event_properties.openday_data).toBe('16/11/2026')
+      expect(event.event_properties.openday_data).toBe('16 novembre 2026')
       expect(opendayAttributes(event.event_properties, tracking)).toEqual({})
     }
   })

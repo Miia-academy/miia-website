@@ -157,6 +157,52 @@ describe('/api/crm', () => {
     expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({ OPENDAY_VALIDO: true, OPENDAY_PARTENZA_TESTO: 'marzo 2027', INTERESSE_CORSO: 1 })
   })
 
+  it('open day sign-up: the event says whether it gives the reserved price', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OPENDAY_VALIDO: true })
+    await call({
+      contact: { email: TEST_EMAIL, attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre' } },
+      event: { event_name: 'submit_openday_form', event_properties: { openday_codice: 'openday-interni-novembre' } },
+    })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'si' })
+  })
+
+  it('brochure: date of the open day offered on the contact, reserved price in the event', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockClear().mockResolvedValueOnce({ OPENDAY_VALIDO: false, OPENDAY_DATA_TESTO: 'x' })
+    await call({
+      contact: { email: TEST_EMAIL, attributes: { NOME: 'Anna' } },
+      event: {
+        event_name: 'submit_brochure_form',
+        event_properties: {
+          area: 'interior',
+          openday: '2026-11-16T20:00:00.000Z',
+          openday_data: '16 novembre 2026',
+          openday_codice: 'openday-interni-novembre',
+          openday_agevolato: true,
+        },
+      },
+    })
+    expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
+    const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes
+    expect(attributes).toMatchObject({ OPENDAY_INVITO_DATA: '2026-11-16' })
+    // Not signed up: no open day data or texts on the contact
+    expect(attributes).not.toHaveProperty('OPENDAY_DATA')
+    expect(attributes).not.toHaveProperty('OPENDAY_DATA_TESTO')
+    // The value sent by the browser is ignored: the server's one wins
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'no' })
+  })
+
+  it('il browser non può scrivere OPENDAY_INVITO_DATA né openday_agevolato', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    await call({
+      contact: { email: TEST_EMAIL, attributes: { OPENDAY_INVITO_DATA: '2030-01-01' } },
+      event: { event_name: 'submit_brochure_form', event_properties: { openday_agevolato: true } },
+    })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).not.toHaveProperty('OPENDAY_INVITO_DATA')
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).not.toHaveProperty('openday_agevolato')
+  })
+
   it('other forms do not load open day details', async () => {
     vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
     vi.mocked(loadOpendayDetails).mockClear()

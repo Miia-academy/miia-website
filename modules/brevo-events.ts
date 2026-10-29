@@ -50,6 +50,7 @@ export const EVENT_PROPERTIES = [
   'openday_data',
   'openday_codice',
   'openday_docenti',
+  'openday_agevolato',
   'ultima_sorgente',
   'ultima_mezzo',
   'ultima_campagna',
@@ -92,3 +93,6 @@ export function sourceEventProperties(raw: Record<string, unknown>): Record<stri
   }
   return result
 }
+
+/** Brevo shows booleans in events as "0"/"1", and "0" counts as true in a template condition: "si"/"no" reads safely */
+export const siNo = (value: unknown) => (typeof value === 'boolean' ? (value ? 'si' : 'no') : undefined)

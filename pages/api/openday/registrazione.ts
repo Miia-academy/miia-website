@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import { BrevoError, upsertContact, trackEvent } from '@modules/brevo'
 import { getJwtSecret } from '@modules/jwt-secret'
 import { loadOpendayDetails } from '@modules/openday-details'
-import { EVENTS, pickEventProperties } from '@modules/brevo-events'
+import { EVENTS, pickEventProperties, siNo } from '@modules/brevo-events'
 
 const COOKIE_NAME = 'miia_openday_richiesta'
 const COOKIE_MAX_AGE = 30 * 60 // 30 minuti per confermare
@@ -114,9 +114,10 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
     if (targetEvent) {
       opendayDateStr = targetEvent.date.toISOString().split('T')[0]
       opendayDataLocale = targetEvent.date.toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'long',
         year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
+        timeZone: 'Europe/Rome',
       })
     }
 
@@ -156,6 +157,7 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
         openday_data: opendayDataLocale,
         openday_codice: targetEvent?.slug,
         openday_docenti: attributes.OPENDAY_DOCENTI_TESTO as string | undefined,
+        openday_agevolato: siNo(attributes.OPENDAY_VALIDO),
       }),
     })
 
