@@ -51,7 +51,12 @@ beforeEach(() => {
   vi.mocked(upsertContact).mockReset().mockResolvedValue(undefined as never)
   vi.mocked(trackEvent).mockReset().mockResolvedValue(undefined as never)
   vi.spyOn(console, 'error').mockImplementation(() => {})
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-10-27T23:30:00Z'))
 })
+
+// Data italiana del momento simulato (in UTC è ancora il 27)
+const OGGI = '2026-10-28'
 
 describe('/api/crm', () => {
   it('accetta solo POST', async () => {
@@ -83,7 +88,7 @@ describe('/api/crm', () => {
     expect(upsertContact).toHaveBeenCalledOnce()
     expect(upsertContact).toHaveBeenCalledWith({
       email: TEST_EMAIL,
-      attributes: { NOME: 'Prova', SMS: '+393331234567' },
+      attributes: { NOME: 'Prova', SMS: '+393331234567', ORIGINE_CONTATTO_DATA: OGGI },
       listIds: [15],
     })
     expect(trackEvent).toHaveBeenCalledWith({
@@ -205,9 +210,19 @@ describe('/api/crm', () => {
     expect(upsertContact).toHaveBeenCalledTimes(2)
     expect(vi.mocked(upsertContact).mock.calls[1][0]).toEqual({
       email: TEST_EMAIL,
-      attributes: { NOME: 'Prova', COGNOME: 'Test', SMS: '+393331234567' },
+      attributes: { NOME: 'Prova', COGNOME: 'Test', SMS: '+393331234567', ORIGINE_CONTATTO_DATA: OGGI },
       listIds: [16],
     })
+  })
+
+  it('data di creazione: solo per il contatto nuovo, mai dal modulo', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: { NOME: 'Prova' } } as never)
+    await call({ contact: { email: TEST_EMAIL, attributes: { NOME: 'Prova', ORIGINE_CONTATTO_DATA: '2020-01-01' } } })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({ NOME: 'Prova' })
+
+    newContact()
+    await call({ contact: { email: TEST_EMAIL, attributes: { ORIGINE_CONTATTO_DATA: '2020-01-01' } } })
+    expect(vi.mocked(upsertContact).mock.calls[1][0].attributes).toEqual({ ORIGINE_CONTATTO_DATA: OGGI })
   })
 
   it('se Brevo non risponde, il modulo riceve un errore generico', async () => {
@@ -223,10 +238,13 @@ describe('/api/crm', () => {
       last: { source: 'newsletter', medium: 'email', campaign: 'reminder', date: '2026-10-10T10:00:00Z' },
     }
 
-    it('spenta (default): nessun attributo ORIGINE o ULTIMA', async () => {
+    it('spenta (default): nessun attributo di provenienza, solo la data di creazione', async () => {
       newContact()
       await call({ contact: { email: TEST_EMAIL, attributes: { NOME: 'Prova' } }, source })
-      expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({ NOME: 'Prova' })
+      expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({
+        NOME: 'Prova',
+        ORIGINE_CONTATTO_DATA: OGGI,
+      })
     })
 
     it('accesa: nuovo contatto riceve ORIGINE e ULTIMA', async () => {
