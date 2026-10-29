@@ -52,3 +52,9 @@ export const getCapitalize = (string: string) =>
       s.length > 1 ? `${s[0].toUpperCase()}${s.substring(1).toLowerCase()}` : s
     )
     .join(' ')
+
+/** Folder page of a story: "blog/interior-design/focus-cucina" → "/blog/interior-design"; "/" at the top level. */
+export function parentPath(fullSlug?: string): string {
+  const parts = (fullSlug || '').split('/').filter(Boolean)
+  return `/${parts.slice(0, -1).join('/')}`
+}

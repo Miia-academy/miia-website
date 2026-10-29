@@ -5,6 +5,7 @@ import { relations } from '@config/relations'
 import { normalizeBanner, normalizeSiteBanners, type BannerData } from '@modules/banner'
 import { parsePriceList } from '@modules/enrollment/catalog'
 import { publicPrices, type PublicPrices } from '@modules/aside'
+import { articleAuthor, folderCategory, type GridAuthor } from '@modules/grid'
 
 export type ProcessedCourse = Course & { uuid: string; fullSlug: string }
 export type ProcessedEvent = Event & { uuid: string; slug: string; name: string; isOpenday: boolean }
@@ -24,6 +25,7 @@ export type ProcessedArticle = {
   slug?: string
   createdAt: string
   tagList: string[]
+  author?: GridAuthor
 }
 
 export type ProcessedPerson = {
@@ -152,21 +154,6 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       uuid: s.uuid,
     }))
 
-    const articles: ProcessedArticle[] = articlesRes.data.stories.map((s: any) => ({
-      uuid: s.uuid,
-      title: s.content?.title,
-      category: s.content?.category,
-      description: s.content?.description || s.content?.intro || '',
-      hidden: s.content?.hidden,
-      cover_image: s.content?.cover_image,
-      image: s.content?.image || s.content?.cover_image,
-      date: s.content?.date,
-      fullSlug: formatSlug(s.full_slug),
-      slug: s.slug,
-      createdAt: s.first_published_at || s.created_at,
-      tagList: s.tag_list || [],
-    }))
-
     const persons: ProcessedPerson[] = personsRes.data.stories.map((s: any) => ({
       uuid: s.uuid,
       name: s.content?.title || s.name || '',
@@ -178,6 +165,22 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       video: s.content?.video || '',
       fullSlug: formatSlug(s.full_slug),
       tagList: s.tag_list || [],
+    }))
+
+    const articles: ProcessedArticle[] = articlesRes.data.stories.map((s: any) => ({
+      uuid: s.uuid,
+      title: s.content?.title,
+      category: s.content?.category || folderCategory(s.full_slug),
+      description: s.content?.description || s.content?.intro || '',
+      hidden: s.content?.hidden,
+      cover_image: s.content?.cover_image,
+      image: s.content?.image || s.content?.cover_image,
+      date: s.content?.date,
+      fullSlug: formatSlug(s.full_slug),
+      slug: s.slug,
+      createdAt: s.first_published_at || s.created_at,
+      tagList: s.tag_list || [],
+      author: articleAuthor(s.content?.author, persons),
     }))
 
     const projects: ProcessedProject[] = projectsRes.data.stories.map((s: any) => ({

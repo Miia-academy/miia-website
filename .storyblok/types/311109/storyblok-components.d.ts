@@ -183,6 +183,8 @@ export interface Grid {
   title?: string;
   subtitle?: string;
   filter?: string;
+  visibility?: "" | "hidden" | "all";
+  controls?: ("" | "tags" | "categories" | "authors")[];
   columns?: string;
   limit?: string;
   dark?: boolean;

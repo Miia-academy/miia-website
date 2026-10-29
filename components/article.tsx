@@ -6,15 +6,30 @@ import { compiler } from 'markdown-to-jsx'
 import { Image as HeroImage } from '@components/ui/image'
 import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
+import { useRouter } from 'next/router'
 import { Typography } from './typography'
-import { getLongDate } from '@modules/formats'
+import { getLongDate, parentPath } from '@modules/formats'
 
 interface ArticleProps {
   blok: ArticleBlok
   fullSlug?: string
 }
 
-export default function Article({ blok }: ArticleProps) {
+export default function Article({ blok, fullSlug }: ArticleProps) {
+  const router = useRouter()
+  const backHref = fullSlug ? parentPath(fullSlug) : '/blog'
+  // Coming from another page of the site (a list, maybe filtered): go back to it as it was
+  const goBack = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof document === 'undefined' || window.history.length < 2) return
+    try {
+      if (new URL(document.referrer).origin !== window.location.origin) return
+    } catch {
+      return
+    }
+    event.preventDefault()
+    router.back()
+  }
+
   // Tema 'light' per garantire il contrasto sul background scuro dell'Hero
   const heroTypography = Typography({ theme: 'light' })
 
@@ -53,7 +68,8 @@ export default function Article({ blok }: ArticleProps) {
         {/* Back Link */}
         <div className="relative z-20 mx-auto w-full max-w-[1280px] p-6 pt-8">
           <NextLink
-            href="/blog"
+            href={backHref}
+            onClick={goBack}
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-200 transition-colors hover:text-white"
           >
             <i className="iconoir-arrow-left text-base" />
