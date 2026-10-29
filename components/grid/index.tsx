@@ -10,6 +10,8 @@ import PersonCard from '@components/cards/personCard'
 import ProjectCard from '@components/cards/projectCard'
 
 import GridHeading from './heading'
+import FilterGroup from './filters'
+import { authorOptions, byVisibility, categoryOptions, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
 
 import type { Grid as GridBlokType } from '@types'
 
@@ -27,21 +29,26 @@ export default function Grid({ blok }: GridComponentProps) {
 
   const pageSize = blok.limit ? parseInt(blok.limit as string, 10) : 6
   const [visibleCount, setVisibleCount] = useState(pageSize)
+  const [activeTag, setActiveTag] = useState('')
+  const [activeCategory, setActiveCategory] = useState('')
+  const [activeAuthor, setActiveAuthor] = useState('')
 
   const isDarkSection = !!blok.dark
 
   const filteredAndSortedItems = useMemo(() => {
     let rawItems: any[] = []
     const filterKey = (blok.filter || '').trim().toLowerCase()
+    const keys = filterKeys(blok.filter)
 
     switch (blok.resource) {
+      // Empty type: articles, like the cards rendered below
+      case '':
+      case undefined:
       case 'articles':
-        rawItems = articles.filter((art) => !art.hidden)
-        if (filterKey) {
-          rawItems = rawItems.filter(
-            (art) =>
-              art.tagList?.some((t: string) => t.toLowerCase() === filterKey) ||
-              art.category?.toLowerCase() === filterKey
+        rawItems = byVisibility(articles, blok.visibility)
+        if (keys.length) {
+          rawItems = rawItems.filter((art) =>
+            keys.some((key) => hasTag(art, key) || art.category?.toLowerCase() === key)
           )
         }
         rawItems.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
@@ -72,25 +79,46 @@ export default function Grid({ blok }: GridComponentProps) {
 
       case 'projects':
         rawItems = [...projects]
-        if (filterKey) {
-          rawItems = rawItems.filter((project) =>
-            project.tagList?.some((t: string) => t.toLowerCase() === filterKey)
-          )
-        }
+        if (keys.length) rawItems = rawItems.filter((project) => keys.some((key) => hasTag(project, key)))
         rawItems.sort((a, b) => new Date(b.firstPublishedAt || 0).getTime() - new Date(a.firstPublishedAt || 0).getTime())
         break
 
       default:
-        rawItems = articles
+        rawItems = []
     }
     return rawItems
-  }, [blok.resource, blok.filter, articles, courses, events, persons, projects])
+  }, [blok.resource, blok.filter, blok.visibility, articles, courses, events, persons, projects])
 
-  const visibleItems = useMemo(() => {
-    return filteredAndSortedItems.slice(0, visibleCount)
-  }, [filteredAndSortedItems, visibleCount])
+  // Interactive filters chosen by the editor; each one shows only when it has at least two values
+  const controls = useMemo(() => gridControls(blok.controls), [blok.controls])
+  const isArticles = !blok.resource || blok.resource === 'articles'
+  const tags = useMemo(
+    () => (controls.includes('tags') ? tagOptions(filteredAndSortedItems) : []),
+    [controls, filteredAndSortedItems]
+  )
+  const categories = useMemo(
+    () => (isArticles && controls.includes('categories') ? categoryOptions(filteredAndSortedItems) : []),
+    [isArticles, controls, filteredAndSortedItems]
+  )
+  const authors = useMemo(
+    () => (isArticles && controls.includes('authors') ? authorOptions(filteredAndSortedItems) : []),
+    [isArticles, controls, filteredAndSortedItems]
+  )
 
-  const hasMore = visibleCount < filteredAndSortedItems.length
+  const shownItems = useMemo(
+    () =>
+      filteredAndSortedItems.filter(
+        (item) =>
+          (!activeTag || hasTag(item, activeTag)) &&
+          (!activeCategory || item.category?.toLowerCase() === activeCategory.toLowerCase()) &&
+          (!activeAuthor || item.author?.uuid === activeAuthor)
+      ),
+    [filteredAndSortedItems, activeTag, activeCategory, activeAuthor]
+  )
+
+  const visibleItems = useMemo(() => shownItems.slice(0, visibleCount), [shownItems, visibleCount])
+
+  const hasMore = visibleCount < shownItems.length
   const handleLoadMore = () => setVisibleCount((prev) => prev + pageSize)
 
   const columnsClass = useMemo(() => {
@@ -111,9 +139,50 @@ export default function Grid({ blok }: GridComponentProps) {
         <GridHeading
           title={blok.title}
           subtitle={blok.subtitle}
-          totalCount={filteredAndSortedItems.length}
+          totalCount={shownItems.length}
           isDarkSection={isDarkSection}
         />
+
+        {(tags.length > 1 || categories.length > 1 || authors.length > 1) && (
+          <div className="mb-8 space-y-2 md:space-y-3">
+            {tags.length > 1 && (
+              <FilterGroup
+                label="Filtra per tema"
+                allLabel="Tutti i temi"
+                options={tags.map((tag) => ({ value: tag, label: tagLabel(tag) }))}
+                active={activeTag}
+                onChange={(value) => {
+                  setActiveTag(value)
+                  setVisibleCount(pageSize)
+                }}
+              />
+            )}
+            {categories.length > 1 && (
+              <FilterGroup
+                label="Filtra per categoria"
+                allLabel="Tutte le categorie"
+                options={categories.map((category) => ({ value: category, label: tagLabel(category) }))}
+                active={activeCategory}
+                onChange={(value) => {
+                  setActiveCategory(value)
+                  setVisibleCount(pageSize)
+                }}
+              />
+            )}
+            {authors.length > 1 && (
+              <FilterGroup
+                label="Filtra per autore"
+                allLabel="Tutti gli autori"
+                options={authors.map((author) => ({ value: author.uuid, label: author.name }))}
+                active={activeAuthor}
+                onChange={(value) => {
+                  setActiveAuthor(value)
+                  setVisibleCount(pageSize)
+                }}
+              />
+            )}
+          </div>
+        )}
 
         <div className={`grid ${blok.resource === 'persons' ? 'gap-4 sm:gap-6' : 'gap-6 sm:gap-8'} ${columnsClass}`}>
           {(blok.resource === 'articles' || !blok.resource) &&
@@ -139,7 +208,7 @@ export default function Grid({ blok }: GridComponentProps) {
               onPress={handleLoadMore}
               className="px-8"
             >
-              Carica altri {filteredAndSortedItems.length - visibleCount}
+              Carica altri {shownItems.length - visibleCount}
             </Button>
           </div>
         )}

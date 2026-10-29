@@ -24,6 +24,8 @@ export function getAllowedLists(): number[] {
 // stati gestiti dalle automazioni o dal backoffice.
 const PROTECTED_ATTRIBUTES = new Set([
   'EMAIL',
+  // Data di creazione del contatto: la scrive solo il server
+  'ORIGINE_CONTATTO_DATA',
   'TIPO_UTENTE',
   'MAGIC_TOKEN',
   'EXT_ID',

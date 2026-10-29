@@ -29,6 +29,8 @@ export interface OpendayEvento {
   titolo: string
   /** Area dal campo "Openday" dell'evento: "interni", "moda". */
   area: string
+  /** Livello dallo stesso campo: "primo", "secondo" (vuoto se manca). */
+  livello: string
   inizio: Date
   link: string
 }
@@ -153,10 +155,12 @@ export function toEvento(story: StoryEvento): OpendayEvento | null {
   const codice = normalizeCodice(story.slug)
   const inizio = parseInizio(story.content?.date)
   if (!codice || !inizio || !story.name?.startsWith('openday-')) return null
+  const [area, livello] = (story.content?.openday || '').split(' - ').map((part) => part.trim())
   return {
     codice,
     titolo: (story.content?.title || '').trim(),
-    area: (story.content?.openday || '').split(' - ')[0].trim(),
+    area: area || '',
+    livello: (livello || '').toLowerCase().replace(/\s*livello$/, ''),
     inizio,
     link: (story.content?.link_meet || '').trim(),
   }

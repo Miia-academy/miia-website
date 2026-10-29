@@ -1,6 +1,6 @@
 import type { ProcessedArticle } from '@modules/cache'
 import NextLink from 'next/link'
-import { Chip } from '@heroui/react'
+import TagRow from './tagRow'
 import { Image } from '@components/ui/image'
 import { CARD_SIZES, responsiveImage } from '@modules/images'
 import { tv } from 'tailwind-variants'
@@ -29,19 +29,8 @@ export default function ArticleCard({ article, isDark }: ArticleCardProps) {
             radius="sm"
           />
           {article.tagList && article.tagList.length > 0 && (
-            <div className="absolute bottom-0 z-20 flex w-full flex-wrap gap-2 p-2">
-              {article.tagList.map((tag, index) => (
-                <Chip
-                  key={index}
-                  classNames={{
-                    base: 'bg-neutral-200 text-neutral-900',
-                    content: 'font-medium',
-                  }}
-                  size="sm"
-                >
-                  {tag}
-                </Chip>
-              ))}
+            <div className="absolute bottom-0 z-20 w-full p-2">
+              <TagRow tags={article.tagList} />
             </div>
           )}
         </NextLink>

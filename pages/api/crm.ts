@@ -62,6 +62,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (isSourceTrackingEnabled()) {
       Object.assign(attributes, sanitizeAttribution(source, existing))
     }
+    // Contatto creato adesso: la data serve alle email (blocco di benvenuto)
+    if (!returning) attributes.ORIGINE_CONTATTO_DATA = romeDate()
     const listIds = sanitizeLists(contact?.listIds)
     const eventName = sanitizeEventName(event?.event_name)
     const eventProperties = sanitizeEventProperties(event?.event_properties)
@@ -97,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!(error instanceof BrevoError && error.status === 400)) throw error
       console.error('[CRM] Attributi rifiutati da Brevo, salvo i dati essenziali:', error.message)
       const essentials: Record<string, unknown> = {}
-      for (const key of ['NOME', 'COGNOME', 'SMS']) {
+      for (const key of ['NOME', 'COGNOME', 'SMS', 'ORIGINE_CONTATTO_DATA']) {
         if (attributes[key] !== undefined) essentials[key] = attributes[key]
       }
       await upsertContact({ email, attributes: essentials, listIds })
