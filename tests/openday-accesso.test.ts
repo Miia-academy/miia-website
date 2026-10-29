@@ -67,6 +67,8 @@ describe('orari dell’open day', () => {
     expect(normalizeCodice('Openday-Interni-Novembre')).toBe('openday-interni-novembre')
     expect(normalizeCodice('../admin')).toBeNull()
     expect(toEvento(NOVEMBRE)?.area).toBe('interni')
+    expect(toEvento(NOVEMBRE)?.livello).toBe('primo')
+    expect(toEvento({ ...NOVEMBRE, content: { ...NOVEMBRE.content, openday: 'moda' } })?.livello).toBe('')
     expect(toEvento({ ...NOVEMBRE, name: 'evento-sede' })).toBeNull()
   })
 
@@ -190,7 +192,14 @@ describe('/api/openday/accedi', () => {
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_presence_form',
       email: 'test@miia.it',
-      properties: { openday: '2026-11-16', openday_codice: 'openday-interni-novembre', ritardo: true },
+      properties: {
+        openday: '2026-11-16',
+        openday_codice: 'openday-interni-novembre',
+        ritardo: true,
+        area: 'interior',
+        programma: 'primo',
+        corso: 'corso-interior-design-primo-livello',
+      },
     })
   })
 
