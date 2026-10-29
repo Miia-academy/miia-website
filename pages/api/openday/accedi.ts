@@ -12,6 +12,9 @@ import {
   scadenzaTesto,
 } from '@modules/openday-accesso'
 
+// Area dell'evento (interni, moda) → valore negli eventi, come nella brochure: corso-{area}-design-{programma}-livello
+const AREA_EVENTO: Record<string, string> = { interni: 'interior', moda: 'fashion' }
+
 /**
  * POST { codice, email }: la persona ha premuto "Entra nell'open day".
  *
@@ -57,6 +60,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       unknown
     >
     const ritardo = inRitardo(evento.inizio, now)
+    const area = AREA_EVENTO[evento.area.toLowerCase()]
+    const programma = /^(primo|secondo)$/.test(evento.livello) ? evento.livello : undefined
     const attributes: Record<string, unknown> = {
       OPENDAY_PRESENTE: true,
       OPENDAY_RITARDO: ritardo,
@@ -77,6 +82,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         openday: romeDay(evento.inizio),
         openday_codice: codice,
         ritardo: ritardo,
+        // Il corso dell'open day, per il pulsante "Iscriviti online" nelle email del dopo open day
+        area,
+        programma,
+        corso: area && programma ? `corso-${area}-design-${programma}-livello` : undefined,
       }),
     })
   } catch (error) {
