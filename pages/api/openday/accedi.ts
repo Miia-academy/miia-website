@@ -71,7 +71,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Il prezzo riservato (letto dall'iscrizione online) a chi entra, anche in ritardo: il prezzo
     // si presenta alla fine dell'open day (decisione del 30/10). Solo se l'open day lo prevede
     // (OPENDAY_VALIDO; OD_VALIDO per chi si è iscritto prima del 26/10).
-    if ((existing.OPENDAY_VALIDO ?? existing.OD_VALIDO) === true) {
+    const valido = (existing.OPENDAY_VALIDO ?? existing.OD_VALIDO) === true
+    if (valido) {
       attributes.OFFERTA_SCADENZA_DATA = scadenzaOfferta(evento.inizio)
     }
     await upsertContact({ email, attributes })
@@ -84,6 +85,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         openday_codice: codice,
         // "si"/"no": Brevo mostra i booleani degli eventi come "0"/"1", e "0" nelle condizioni vale vero
         ritardo: siNo(ritardo),
+        // Per il blocco delle agevolazioni nella prima email: OFFERTA_SCADENZA_DATA può restare da un open day precedente
+        openday_agevolato: siNo(valido),
         // Il corso dell'open day, per il pulsante "Iscriviti online" nelle email del dopo open day
         area,
         programma,

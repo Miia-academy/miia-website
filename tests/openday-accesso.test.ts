@@ -196,6 +196,7 @@ describe('/api/openday/accedi', () => {
         openday: '2026-11-16',
         openday_codice: 'openday-interni-novembre',
         ritardo: 'si',
+        openday_agevolato: 'si',
         area: 'interior',
         programma: 'primo',
         corso: 'corso-interior-design-primo-livello',
