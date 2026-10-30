@@ -205,7 +205,7 @@ Schema `submit_{evento}_form`, definito in `modules/brevo-events.ts`. Eventi leg
 | `submit_news_form` | modulo newsletter | |
 | `submit_info_form` | richiesta informazioni (tracking `info`, prima `contact`) | |
 | `submit_openday_form` | iscrizione open day dal modulo o dal pulsante nelle email | |
-| `submit_presence_form` | ingresso all'open day (`/api/openday/accedi`) | `ritardo`, `area`, `programma`, `corso` (dal campo "Openday" dell'evento) |
+| `submit_presence_form` | ingresso all'open day (`/api/openday/accedi`) | `ritardo` ("si"/"no"), `area`, `programma`, `corso` (dal campo "Openday" dell'evento) |
 | `submit_answer_form` | scelta con un clic dalle email (`/api/openday/risposta`) | `tipo`, `valore` |
 | `submit_enrollment_form` | iscrizione online iniziata (codice email confermato), data su `INVIO_ISCRIZIONE` | |
 | `submit_signature_form` | iscrizione firmata: contatto nella lista 18 | `sede`, `inizio`, `modalita`, `offerta_open_day` |
