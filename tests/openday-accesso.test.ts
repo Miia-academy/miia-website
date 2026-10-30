@@ -180,7 +180,7 @@ describe('/api/openday/accedi', () => {
     expect(vi.mocked(upsertContact).mock.calls[0][0].attributes!.OFFERTA_SCADENZA_DATA).toBe('2026-11-30')
   })
 
-  it('chi entra dopo le 21:15 è in ritardo e non riceve il prezzo riservato', async () => {
+  it('chi entra dopo le 21:15 è in ritardo ma riceve lo stesso il prezzo riservato', async () => {
     at('21:20')
     vi.mocked(getContact).mockResolvedValue({
       attributes: { OD_VALIDO: true },
@@ -188,14 +188,14 @@ describe('/api/openday/accedi', () => {
     await call({ codice: 'openday-interni-novembre', email: 'test@miia.it' })
     const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
     expect(attributes.OPENDAY_RITARDO).toBe(true)
-    expect(attributes.OFFERTA_SCADENZA_DATA).toBeUndefined()
+    expect(attributes.OFFERTA_SCADENZA_DATA).toBe('2026-11-30')
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_presence_form',
       email: 'test@miia.it',
       properties: {
         openday: '2026-11-16',
         openday_codice: 'openday-interni-novembre',
-        ritardo: true,
+        ritardo: 'si',
         area: 'interior',
         programma: 'primo',
         corso: 'corso-interior-design-primo-livello',

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { BrevoError, getContact, trackEvent, upsertContact } from '@modules/brevo'
-import { EVENTS, pickEventProperties } from '@modules/brevo-events'
+import { EVENTS, pickEventProperties, siNo } from '@modules/brevo-events'
 import { normalizeEmail } from '@modules/crm-form'
 import {
   fase,
@@ -68,9 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       OPENDAY_PRESENZA_DATA: romeDay(now),
       OFFERTA_SCADENZA_TESTO: scadenzaTesto(evento.inizio),
     }
-    // Il prezzo riservato (letto dall'iscrizione online) solo a chi entra in orario
-    // a un open day che lo prevede (OPENDAY_VALIDO; OD_VALIDO per chi si è iscritto prima del 26/10).
-    if ((existing.OPENDAY_VALIDO ?? existing.OD_VALIDO) === true && !ritardo) {
+    // Il prezzo riservato (letto dall'iscrizione online) a chi entra, anche in ritardo: il prezzo
+    // si presenta alla fine dell'open day (decisione del 30/10). Solo se l'open day lo prevede
+    // (OPENDAY_VALIDO; OD_VALIDO per chi si è iscritto prima del 26/10).
+    if ((existing.OPENDAY_VALIDO ?? existing.OD_VALIDO) === true) {
       attributes.OFFERTA_SCADENZA_DATA = scadenzaOfferta(evento.inizio)
     }
     await upsertContact({ email, attributes })
@@ -81,7 +82,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       properties: pickEventProperties(EVENTS.presence, {
         openday: romeDay(evento.inizio),
         openday_codice: codice,
-        ritardo: ritardo,
+        // "si"/"no": Brevo mostra i booleani degli eventi come "0"/"1", e "0" nelle condizioni vale vero
+        ritardo: siNo(ritardo),
         // Il corso dell'open day, per il pulsante "Iscriviti online" nelle email del dopo open day
         area,
         programma,
