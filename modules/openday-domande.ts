@@ -211,3 +211,13 @@ export async function attributiContatto(email: string): Promise<Record<string, u
     throw error
   }
 }
+
+/**
+ * Prova delle domande con ?debug=1: solo in locale (npm run dev) e nell'anteprima di develop,
+ * mai in produzione. La pagina si comporta come se l'open day fosse aperto; "Entra" salva solo
+ * le risposte sul contatto, senza segnare la presenza, senza evento (nessuna automazione parte)
+ * e senza aprire la call.
+ */
+export function debugAmmesso(): boolean {
+  return process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview'
+}

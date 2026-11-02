@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { normalizeEmail } from '@modules/crm-form'
 import { fase, loadOpenday, normalizeCodice } from '@modules/openday-accesso'
-import { accessoPer, attributiContatto, loadModuloAccesso } from '@modules/openday-domande'
+import { accessoPer, attributiContatto, debugAmmesso, loadModuloAccesso } from '@modules/openday-domande'
 
 /**
  * POST { codice, email }: le domande da fare prima di entrare, per chi scrive l'email a mano
@@ -25,7 +25,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const evento = (await loadOpenday()).find((e) => e.codice === codice)
-    if (!evento || fase(evento.inizio) === 'finito') return res.status(200).json({ titolo: '', testo: '', domande: [] })
+    const debug = (body as { debug?: unknown }).debug === true && debugAmmesso()
+    if (!evento || (fase(evento.inizio) === 'finito' && !debug))
+      return res.status(200).json({ titolo: '', testo: '', domande: [] })
     const modulo = await loadModuloAccesso(evento.modulo)
     return res.status(200).json(accessoPer(modulo, await attributiContatto(email)))
   } catch (error) {

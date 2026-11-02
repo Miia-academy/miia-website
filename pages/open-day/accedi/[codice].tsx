@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import type { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import { Input, Link as HeroLink } from '@heroui/react'
+import { Checkbox, CheckboxGroup, Input, Link as HeroLink, Radio, RadioGroup } from '@heroui/react'
+import { pillCheckbox, pillRadio } from '@components/ui/fields'
 import { Button } from '@components/ui/button'
 import { tv } from 'tailwind-variants'
 import { Logo } from '@public/logo'
@@ -18,7 +19,14 @@ import {
   quandoTesto,
   type Fase,
 } from '@modules/openday-accesso'
-import { accessoPer, attributiContatto, loadModuloAccesso, type Accesso, type Risposte } from '@modules/openday-domande'
+import {
+  accessoPer,
+  attributiContatto,
+  debugAmmesso,
+  loadModuloAccesso,
+  type Accesso,
+  type Risposte,
+} from '@modules/openday-domande'
 
 const styles = tv({
   slots: {
@@ -42,6 +50,8 @@ interface Props {
   email: string
   /** Domande prima di entrare, già calcolate quando l'email è nel link. */
   accesso: Accesso | null
+  /** ?debug=1 in locale o nell'anteprima: open day trattato come aperto, si salvano solo le risposte. */
+  debug: boolean
 }
 
 /** Domande da fare a chi ha l'email nel link; null se non si possono leggere (si entra lo stesso). */
@@ -89,12 +99,21 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params, qu
       }
     }
   }
+  const debug = query.debug === '1' && debugAmmesso()
   const accesso =
-    trovato && email && fase(trovato.inizio) !== 'finito' ? await accessoIniziale(trovato.modulo, email) : null
-  return { props: { evento, prossimo: next, email, accesso } }
+    trovato && email && (debug || fase(trovato.inizio) !== 'finito')
+      ? await accessoIniziale(trovato.modulo, email)
+      : null
+  return { props: { evento, prossimo: next, email, accesso, debug } }
 }
 
-export default function Accedi({ evento, prossimo: next, email: emailIniziale, accesso: accessoIniziale }: Props) {
+export default function Accedi({
+  evento,
+  prossimo: next,
+  email: emailIniziale,
+  accesso: accessoIniziale,
+  debug,
+}: Props) {
   const [now, setNow] = useState<Date | null>(null)
   const [email, setEmail] = useState(emailIniziale)
   const [loading, setLoading] = useState(false)
@@ -113,21 +132,10 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale, a
     return () => clearInterval(timer)
   }, [])
 
-  const stato: Fase | null = evento && now ? fase(new Date(evento.inizio), now) : null
+  const [prova, setProva] = useState('')
+  const stato: Fase | null = evento && now ? (debug ? 'aperto' : fase(new Date(evento.inizio), now)) : null
 
-  const scegli = (id: string, valore: string, multipla: boolean) =>
-    setRisposte((prev) => {
-      const attuali = prev[id] || []
-      const scelto = attuali.includes(valore)
-      const valori = multipla
-        ? scelto
-          ? attuali.filter((v) => v !== valore)
-          : [...attuali, valore]
-        : scelto
-          ? []
-          : [valore]
-      return { ...prev, [id]: valori }
-    })
+  const scegli = (id: string, valori: string[]) => setRisposte((prev) => ({ ...prev, [id]: valori }))
 
   /** Con l'email scritta a mano: prima le domande (se ce ne sono), poi si entra. true = domande da mostrare. */
   const caricaDomande = async (indirizzo: string): Promise<boolean> => {
@@ -136,7 +144,7 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale, a
       const res = await fetch('/api/openday/domande', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codice: evento.codice, email: indirizzo }),
+        body: JSON.stringify({ codice: evento.codice, email: indirizzo, ...(debug ? { debug: true } : {}) }),
       })
       const data = (await res.json().catch(() => null)) as Accesso | null
       setAccesso(data && Array.isArray(data.domande) ? data : null)
@@ -166,9 +174,19 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale, a
       const res = await fetch('/api/openday/accedi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codice: evento.codice, email, ...(conRisposte ? { risposte } : {}) }),
+        body: JSON.stringify({
+          codice: evento.codice,
+          email,
+          ...(conRisposte ? { risposte } : {}),
+          ...(debug ? { debug: true } : {}),
+        }),
       })
       const data = await res.json().catch(() => ({}))
+      if (res.ok && data.debug) {
+        setProva(data.message || `Salvato sul contatto: ${JSON.stringify(data.salvato)}`)
+        setLoading(false)
+        return
+      }
       if (res.ok && data.link) {
         sendGTMEvent({ event: EVENTS.presence })
         window.location.href = data.link
@@ -250,29 +268,39 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale, a
                       {accesso?.testo && <p className="text-default-600">{accesso.testo}</p>}
                     </div>
                   )}
-                  {domande.map((domanda) => (
-                    <fieldset key={domanda.id} className="flex flex-col gap-2">
-                      <legend className="mb-2 font-medium">{domanda.label}</legend>
-                      <div className="flex flex-wrap gap-2">
-                        {domanda.opzioni.map((opzione) => {
-                          const scelto = (risposte[domanda.id] || []).includes(opzione.value)
-                          return (
-                            <Button
-                              key={opzione.value}
-                              size="sm"
-                              radius="full"
-                              color={scelto ? 'primary' : 'default'}
-                              variant={scelto ? 'solid' : 'bordered'}
-                              aria-pressed={scelto}
-                              onPress={() => scegli(domanda.id, opzione.value, domanda.multipla)}
-                            >
-                              {opzione.label}
-                            </Button>
-                          )
-                        })}
-                      </div>
-                    </fieldset>
-                  ))}
+                  {domande.map((domanda) =>
+                    domanda.multipla ? (
+                      <CheckboxGroup
+                        key={domanda.id}
+                        label={domanda.label}
+                        value={risposte[domanda.id] || []}
+                        onValueChange={(valori) => scegli(domanda.id, valori)}
+                        orientation="horizontal"
+                        classNames={{ label: 'font-medium text-foreground', wrapper: 'gap-2' }}
+                      >
+                        {domanda.opzioni.map((opzione) => (
+                          <Checkbox key={opzione.value} value={opzione.value} classNames={pillCheckbox}>
+                            {opzione.label}
+                          </Checkbox>
+                        ))}
+                      </CheckboxGroup>
+                    ) : (
+                      <RadioGroup
+                        key={domanda.id}
+                        label={domanda.label}
+                        value={risposte[domanda.id]?.[0] || ''}
+                        onValueChange={(valore) => scegli(domanda.id, valore ? [valore] : [])}
+                        orientation="horizontal"
+                        classNames={{ label: 'font-medium text-foreground', wrapper: 'gap-2' }}
+                      >
+                        {domanda.opzioni.map((opzione) => (
+                          <Radio key={opzione.value} value={opzione.value} classNames={pillRadio}>
+                            {opzione.label}
+                          </Radio>
+                        ))}
+                      </RadioGroup>
+                    ),
+                  )}
                 </div>
               )}
               <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
@@ -309,6 +337,11 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale, a
                 )}
               </div>
               {error && <p className="text-danger-500">{error}</p>}
+              {debug && (
+                <p className="text-sm text-default-500">
+                  Modalità prova: nessuna presenza, nessun evento, nessuna call. {prova}
+                </p>
+              )}
             </>
           )}
         </div>

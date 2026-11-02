@@ -13,6 +13,7 @@ import {
 } from '@modules/openday-accesso'
 import {
   attributiDaRisposte,
+  debugAmmesso,
   domandeDelModulo,
   loadModuloAccesso,
   proprietaDaRisposte,
@@ -55,6 +56,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(502).json({ message: 'Si è verificato un errore, riprova tra un momento.' })
   }
   if (!evento) return res.status(404).json({ message: 'Open day non trovato.' })
+
+  if ((body as { debug?: unknown }).debug === true && debugAmmesso()) {
+    return res.status(200).json(await provaRisposte(email, evento.modulo, (body as { risposte?: unknown }).risposte))
+  }
 
   const now = new Date()
   const stato = fase(evento.inizio, now)
@@ -140,4 +145,19 @@ async function leggiRisposte(modulo: string, raw: unknown): Promise<Risposte> {
     console.error('[Open day] Modulo di accesso non letto, risposte ignorate:', error)
     return {}
   }
+}
+
+/** ?debug=1 (vedi debugAmmesso): salva solo le risposte e dice cosa ha scritto. */
+async function provaRisposte(email: string, modulo: string, raw: unknown) {
+  try {
+    await getContact({ identifier: email })
+  } catch (error) {
+    if (error instanceof BrevoError && error.status === 404)
+      return { ok: true, debug: true, salvato: {}, message: 'Email non in Brevo: nessun dato salvato.' }
+    throw error
+  }
+  const risposte = await leggiRisposte(modulo, raw)
+  const salvato = Object.keys(risposte).length ? attributiDaRisposte(risposte, await tipiAttributi()) : {}
+  if (Object.keys(salvato).length) await upsertContact({ email, attributes: salvato })
+  return { ok: true, debug: true, salvato, evento: proprietaDaRisposte(risposte) }
 }

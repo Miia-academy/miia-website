@@ -294,3 +294,42 @@ describe('pagina /open-day/accedi/<codice>', () => {
     expect(getContact).not.toHaveBeenCalled()
   })
 })
+
+describe('prova con ?debug=1', () => {
+  const risposte = { openday_domanda: 'costi' }
+
+  it('in produzione è ignorata: fuori orario non si entra e non si salva nulla', async () => {
+    alle('10:00')
+    storyblok()
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('VERCEL_ENV', 'production')
+    const res = await call(accedi, { codice: 'openday-interni-novembre', email: 'test@miia.it', risposte, debug: true })
+    expect(res.statusCode).toBe(409)
+    expect(upsertContact).not.toHaveBeenCalled()
+  })
+
+  it('in locale salva solo le risposte: niente presenza, niente evento, niente call', async () => {
+    alle('10:00')
+    storyblok()
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    const res = await call(accedi, { codice: 'openday-interni-novembre', email: 'test@miia.it', risposte, debug: true })
+    expect(res.body).toMatchObject({ ok: true, debug: true, salvato: { OPENDAY_DOMANDA: 'costi' } })
+    expect(res.body.link).toBeUndefined()
+    expect(upsertContact).toHaveBeenCalledWith({ email: 'test@miia.it', attributes: { OPENDAY_DOMANDA: 'costi' } })
+    expect(trackEvent).not.toHaveBeenCalled()
+  })
+
+  it('nell’anteprima di develop la pagina tratta l’open day come aperto', async () => {
+    alle('10:00')
+    storyblok()
+    vi.stubEnv('VERCEL_ENV', 'preview')
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    const result = (await getServerSideProps({
+      params: { codice: 'openday-interni-novembre' },
+      query: { email: 'test@miia.it', debug: '1' },
+      res: { setHeader: () => {} },
+    } as unknown as GetServerSidePropsContext)) as { props: { debug: boolean } }
+    expect(result.props.debug).toBe(true)
+  })
+})
