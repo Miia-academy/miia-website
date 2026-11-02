@@ -26,7 +26,7 @@ const edition = (over: Partial<Edition>): Edition => ({
   ...over,
 })
 
-const ev = (codice: string, area: string, iso: string) => ({ codice, titolo: '', area, livello: 'primo', inizio: new Date(iso), link: '' })
+const ev = (codice: string, area: string, iso: string) => ({ codice, titolo: '', area, livello: 'primo', inizio: new Date(iso), link: '', modulo: '' })
 
 describe('helpers', () => {
   it('maps the open day to its course folder', () => {

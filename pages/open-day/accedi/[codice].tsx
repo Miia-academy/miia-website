@@ -18,6 +18,7 @@ import {
   quandoTesto,
   type Fase,
 } from '@modules/openday-accesso'
+import { accessoPer, attributiContatto, loadModuloAccesso, type Accesso, type Risposte } from '@modules/openday-domande'
 
 const styles = tv({
   slots: {
@@ -39,6 +40,19 @@ interface Props {
   evento: Evento | null
   prossimo: (Evento & { iscrizione: string }) | null
   email: string
+  /** Domande prima di entrare, già calcolate quando l'email è nel link. */
+  accesso: Accesso | null
+}
+
+/** Domande da fare a chi ha l'email nel link; null se non si possono leggere (si entra lo stesso). */
+async function accessoIniziale(modulo: string, email: string): Promise<Accesso | null> {
+  try {
+    const [m, attributi] = await Promise.all([loadModuloAccesso(modulo), attributiContatto(email)])
+    return accessoPer(m, attributi)
+  } catch (error) {
+    console.error('[Open day] Domande di accesso non disponibili:', error)
+    return null
+  }
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ params, query, res }) => {
@@ -75,14 +89,21 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params, qu
       }
     }
   }
-  return { props: { evento, prossimo: next, email } }
+  const accesso =
+    trovato && email && fase(trovato.inizio) !== 'finito' ? await accessoIniziale(trovato.modulo, email) : null
+  return { props: { evento, prossimo: next, email, accesso } }
 }
 
-export default function Accedi({ evento, prossimo: next, email: emailIniziale }: Props) {
+export default function Accedi({ evento, prossimo: next, email: emailIniziale, accesso: accessoIniziale }: Props) {
   const [now, setNow] = useState<Date | null>(null)
   const [email, setEmail] = useState(emailIniziale)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // Domande prima di entrare: dal server se l'email è nel link, altrimenti chieste dopo l'email
+  const [accesso, setAccesso] = useState<Accesso | null>(accessoIniziale)
+  const [accessoPer, setAccessoPer] = useState(accessoIniziale ? emailIniziale : '')
+  const [risposte, setRisposte] = useState<Risposte>({})
+  const domande = accesso?.domande || []
 
   // L'orario si controlla nel browser e si aggiorna da solo: chi apre la pagina in
   // anticipo vede il pulsante attivarsi senza ricaricare.
@@ -94,19 +115,58 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale }:
 
   const stato: Fase | null = evento && now ? fase(new Date(evento.inizio), now) : null
 
-  const entra = async () => {
+  const scegli = (id: string, valore: string, multipla: boolean) =>
+    setRisposte((prev) => {
+      const attuali = prev[id] || []
+      const scelto = attuali.includes(valore)
+      const valori = multipla
+        ? scelto
+          ? attuali.filter((v) => v !== valore)
+          : [...attuali, valore]
+        : scelto
+          ? []
+          : [valore]
+      return { ...prev, [id]: valori }
+    })
+
+  /** Con l'email scritta a mano: prima le domande (se ce ne sono), poi si entra. true = domande da mostrare. */
+  const caricaDomande = async (indirizzo: string): Promise<boolean> => {
+    if (!evento || accessoPer === indirizzo) return false
+    try {
+      const res = await fetch('/api/openday/domande', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codice: evento.codice, email: indirizzo }),
+      })
+      const data = (await res.json().catch(() => null)) as Accesso | null
+      setAccesso(data && Array.isArray(data.domande) ? data : null)
+      setAccessoPer(indirizzo)
+      setRisposte({})
+      return !!data?.domande?.length
+    } catch {
+      setAccessoPer(indirizzo)
+      return false
+    }
+  }
+
+  const entra = async (conRisposte = true) => {
     if (!evento) return
-    if (!normalizeEmail(email)) {
+    const indirizzo = normalizeEmail(email)
+    if (!indirizzo) {
       setError("Scrivi l'email con cui ti sei iscritto.")
       return
     }
     setLoading(true)
     setError('')
+    if (await caricaDomande(indirizzo)) {
+      setLoading(false)
+      return
+    }
     try {
       const res = await fetch('/api/openday/accedi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codice: evento.codice, email }),
+        body: JSON.stringify({ codice: evento.codice, email, ...(conRisposte ? { risposte } : {}) }),
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.link) {
@@ -128,7 +188,7 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale }:
         <title>Entra nell&apos;open day</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <section className="relative flex flex-col justify-center p-6 sm:py-8 md:py-10 lg:py-12 max-w-[1280px] min-h-inherit mx-auto h-screen">
+      <section className="relative mx-auto flex min-h-screen max-w-[1280px] flex-col justify-center px-6 py-28">
         <Link href="/" className="absolute top-8 left-8">
           <Logo classes="" primary="#262C2A" secondary="#262C2A" />
         </Link>
@@ -182,6 +242,39 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale }:
                   <>Ti aspettiamo. Entrando, scrivi nome e cognome e spegni il microfono.</>
                 )}
               </p>
+              {domande.length > 0 && (
+                <div className="flex flex-col gap-5 border-t border-default-200 pt-6">
+                  {(accesso?.titolo || accesso?.testo) && (
+                    <div className="flex flex-col gap-1">
+                      {accesso?.titolo && <h2 className="text-xl font-semibold">{accesso.titolo}</h2>}
+                      {accesso?.testo && <p className="text-default-600">{accesso.testo}</p>}
+                    </div>
+                  )}
+                  {domande.map((domanda) => (
+                    <fieldset key={domanda.id} className="flex flex-col gap-2">
+                      <legend className="mb-2 font-medium">{domanda.label}</legend>
+                      <div className="flex flex-wrap gap-2">
+                        {domanda.opzioni.map((opzione) => {
+                          const scelto = (risposte[domanda.id] || []).includes(opzione.value)
+                          return (
+                            <Button
+                              key={opzione.value}
+                              size="sm"
+                              radius="full"
+                              color={scelto ? 'primary' : 'default'}
+                              variant={scelto ? 'solid' : 'bordered'}
+                              aria-pressed={scelto}
+                              onPress={() => scegli(domanda.id, opzione.value, domanda.multipla)}
+                            >
+                              {opzione.label}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                    </fieldset>
+                  ))}
+                </div>
+              )}
               <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
                 {!emailIniziale && (
                   <Input
@@ -199,10 +292,21 @@ export default function Accedi({ evento, prossimo: next, email: emailIniziale }:
                   className="h-16 shrink-0 self-start sm:self-auto"
                   isDisabled={stato !== 'aperto'}
                   isLoading={loading}
-                  onPress={entra}
+                  onPress={() => entra()}
                 >
                   Entra nell&apos;open day
                 </Button>
+                {domande.length > 0 && (
+                  <Button
+                    variant="light"
+                    size="lg"
+                    className="h-16 shrink-0 self-start sm:self-auto"
+                    isDisabled={stato !== 'aperto' || loading}
+                    onPress={() => entra(false)}
+                  >
+                    Salta ed entra
+                  </Button>
+                )}
               </div>
               {error && <p className="text-danger-500">{error}</p>}
             </>
