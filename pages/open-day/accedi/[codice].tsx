@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import { Checkbox, CheckboxGroup, Input, Link as HeroLink, Radio, RadioGroup } from '@heroui/react'
+import { Checkbox, CheckboxGroup, Input, Link as HeroLink, Radio, RadioGroup, cn } from '@heroui/react'
 import { pillCheckbox, pillRadio } from '@components/ui/fields'
 import { Button } from '@components/ui/button'
 import { tv } from 'tailwind-variants'
@@ -36,6 +36,11 @@ const styles = tv({
   },
 })
 const { wrapper, title, description } = styles()
+
+// Pillole più compatte di quelle dell'iscrizione: qui le domande sono una decina di scelte in fila
+const compatta = 'px-3 py-1 border-1'
+const pillRadioCompatta = { ...pillRadio, base: cn(pillRadio.base, compatta) }
+const pillCheckboxCompatta = { ...pillCheckbox, base: cn(pillCheckbox.base, compatta) }
 
 interface Evento {
   codice: string
@@ -123,6 +128,13 @@ export default function Accedi({
   const [accessoPer, setAccessoPer] = useState(accessoIniziale ? emailIniziale : '')
   const [risposte, setRisposte] = useState<Risposte>({})
   const domande = accesso?.domande || []
+  // Email già controllata (domande caricate per lei): niente più casella, solo "Entri come ... Cambia"
+  const emailVerificata = !!accessoPer && accessoPer === normalizeEmail(email)
+  const cambiaEmail = () => {
+    setAccesso(null)
+    setAccessoPer('')
+    setRisposte({})
+  }
 
   // L'orario si controlla nel browser e si aggiorna da solo: chi apre la pagina in
   // anticipo vede il pulsante attivarsi senza ricaricare.
@@ -261,7 +273,7 @@ export default function Accedi({
                 )}
               </p>
               {domande.length > 0 && (
-                <div className="flex flex-col gap-5 border-t border-default-200 pt-6">
+                <div className="mb-4 flex flex-col gap-5 border-t border-default-200 pt-6">
                   {(accesso?.titolo || accesso?.testo) && (
                     <div className="flex flex-col gap-1">
                       {accesso?.titolo && <h2 className="text-xl font-semibold">{accesso.titolo}</h2>}
@@ -279,7 +291,7 @@ export default function Accedi({
                         classNames={{ label: 'font-medium text-foreground', wrapper: 'gap-2' }}
                       >
                         {domanda.opzioni.map((opzione) => (
-                          <Checkbox key={opzione.value} value={opzione.value} classNames={pillCheckbox}>
+                          <Checkbox key={opzione.value} value={opzione.value} classNames={pillCheckboxCompatta}>
                             {opzione.label}
                           </Checkbox>
                         ))}
@@ -294,7 +306,7 @@ export default function Accedi({
                         classNames={{ label: 'font-medium text-foreground', wrapper: 'gap-2' }}
                       >
                         {domanda.opzioni.map((opzione) => (
-                          <Radio key={opzione.value} value={opzione.value} classNames={pillRadio}>
+                          <Radio key={opzione.value} value={opzione.value} classNames={pillRadioCompatta}>
                             {opzione.label}
                           </Radio>
                         ))}
@@ -303,8 +315,16 @@ export default function Accedi({
                   )}
                 </div>
               )}
+              {!emailIniziale && emailVerificata && (
+                <p className="text-sm text-default-500">
+                  Entri come {email}.{' '}
+                  <button type="button" className="underline" onClick={cambiaEmail}>
+                    Cambia
+                  </button>
+                </p>
+              )}
               <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
-                {!emailIniziale && (
+                {!emailIniziale && !emailVerificata && (
                   <Input
                     type="email"
                     size="lg"
