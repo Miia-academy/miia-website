@@ -18,6 +18,7 @@ export interface Alias {
   title?: string;
   image?: StoryblokAsset;
   resource: "next-event" | "last-article";
+  articolo?: ISbStoryData<Article> | string;
   filter?: string;
   submit?: Form[];
   persone?: boolean;
