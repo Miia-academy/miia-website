@@ -118,6 +118,16 @@
         "id": "d5UZkX1uT7idbt6Pty0cdw",
         "exclude_empty_option": true
       },
+      "articolo": {
+        "type": "option",
+        "display_name": "Articolo in evidenza",
+        "description": "Solo per Ultimo articolo: scegli l'articolo da mostrare. Vuoto = l'ultimo pubblicato",
+        "source": "internal_stories",
+        "filter_content_type": [
+          "article"
+        ],
+        "folder_slug": "blog/"
+      },
       "filter": {
         "type": "text",
         "display_name": "Filtra per nome",
