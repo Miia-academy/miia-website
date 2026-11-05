@@ -46,18 +46,41 @@ beforeEach(() => {
 
 describe('/api/openday/risposta', () => {
   it('accetta solo tipo domanda o richiesta e valori semplici', () => {
-    expect(parseAnswer({ email: 'A@b.it', tipo: 'domanda', d: 'Costi' })).toEqual({ email: 'a@b.it', tipo: 'domanda', valore: 'costi' })
+    expect(parseAnswer({ email: 'A@b.it', tipo: 'domanda', d: 'Costi' })).toEqual({ email: 'a@b.it', tipo: 'domanda', valore: 'costi', fase: null })
+    expect(parseAnswer({ email: 'a@b.it', tipo: 'domanda', d: 'costi', fase: 'Brochure' })?.fase).toBe('brochure')
+    expect(parseAnswer({ email: 'a@b.it', tipo: 'domanda', d: 'costi', fase: 'altro' })?.fase).toBeNull()
     expect(parseAnswer({ email: 'a@b.it', tipo: 'altro', d: 'costi' })).toBeNull()
     expect(parseAnswer({ email: 'a@b.it', tipo: 'richiesta', d: '<script>' })).toBeNull()
     expect(parseAnswer({ email: 'no', tipo: 'richiesta', d: 'simone' })).toBeNull()
   })
 
-  it('il link dell’email non scrive nulla: lascia un cookie firmato e apre /conferma', async () => {
+  it('il link dell’email non scrive nulla: lascia un cookie firmato e apre /risposta', async () => {
     const res = await call({ method: 'GET', query: { email: 'test@miia.it', tipo: 'richiesta', d: 'simone' } })
     expect(res.statusCode).toBe(302)
-    expect(res.location).toBe('/conferma?type=richiesta&d=simone')
+    expect(res.location).toBe('/risposta?tipo=richiesta&d=simone')
     expect(String(res.headers['Set-Cookie'])).toMatch(new RegExp(`^${COOKIE}=.+HttpOnly`))
     expect(upsertContact).not.toHaveBeenCalled()
+  })
+
+  it('fase e corso passano alla pagina; un corso non valido si scarta', async () => {
+    const res = await call({
+      method: 'GET',
+      query: { email: 'test@miia.it', tipo: 'domanda', d: 'pagamenti', fase: 'post-openday', corso: 'corso-interior-design-primo-livello' },
+    })
+    expect(res.location).toBe('/risposta?tipo=domanda&d=pagamenti&fase=post-openday&corso=corso-interior-design-primo-livello')
+    const bad = await call({ method: 'GET', query: { email: 'test@miia.it', tipo: 'domanda', d: 'pagamenti', fase: 'brochure', corso: '../x' } })
+    expect(bad.location).toBe('/risposta?tipo=domanda&d=pagamenti&fase=brochure')
+  })
+
+  it('la fase arriva come proprietà di submit_answer_form', async () => {
+    const token = jwt.sign({ purpose: 'risposta', email: 'test@miia.it', tipo: 'domanda', valore: 'lavoro', fase: 'post-openday' }, 'segreto-di-prova')
+    await call({ cookies: { [COOKIE]: token } })
+    expect(upsertContact).toHaveBeenCalledWith({ email: 'test@miia.it', attributes: { OPENDAY_DOMANDA: 'lavoro' } })
+    expect(trackEvent).toHaveBeenCalledWith({
+      eventName: 'submit_answer_form',
+      email: 'test@miia.it',
+      properties: { tipo: 'domanda', valore: 'lavoro', fase: 'post-openday' },
+    })
   })
 
   it('un link non valido porta alla home', async () => {

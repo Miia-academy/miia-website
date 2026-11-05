@@ -60,7 +60,7 @@ export const EVENT_PROPERTIES = [
 /** Extra properties of the events the server sends on its own. */
 export const SERVER_EVENT_PROPERTIES: Record<string, readonly string[]> = {
   [EVENTS.presence]: ['ritardo'],
-  [EVENTS.answer]: ['tipo', 'valore'],
+  [EVENTS.answer]: ['tipo', 'valore', 'fase'],
   [EVENTS.signature]: ['sede', 'inizio', 'modalita', 'offerta_open_day'],
 }
 

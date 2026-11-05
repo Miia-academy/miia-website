@@ -6,68 +6,23 @@ import { tv } from 'tailwind-variants'
 import { Link as HeroLink } from '@heroui/react'
 import { Button } from '@components/ui/button'
 import Link from 'next/link'
-import type { GetStaticProps } from 'next'
-import { getStoryblokApi } from '@storyblok/react'
 import { sendGTMEvent } from '@next/third-parties/google'
 import { EVENTS } from '@modules/brevo-events'
 
-// Testi della pagina dopo il clic su una scelta nelle email dell'open day: le domande di
-// "Cosa vedrai" (OPENDAY_DOMANDA: sbocchi, programma, attestato, costi, orari) e le richieste
-// del giorno dopo (OPENDAY_RICHIESTA: dubbi, approfondire, simone).
-// Si cambiano in Storyblok › Datasources › "Domande open day": il nome della voce è il
-// valore salvato in Brevo e non va rinominato; il valore è la frase mostrata.
-// Questi testi servono solo se Storyblok non risponde.
-const DOMANDE_OPENDAY: Record<string, string> = {
-  sbocchi: 'Ti racconteremo dove lavorano oggi i nostri diplomati e come si arriva al primo incarico.',
-  programma: 'Ti mostreremo il programma del corso, materia per materia, con esempi di progetti.',
-  attestato: 'Ti spiegheremo che attestato ottieni alla fine del corso e come si usa nel lavoro.',
-  costi: 'Ti spiegheremo quanto costa il corso e come si può pagare, anche a rate.',
-  orari: 'Ti diremo giorni e orari delle lezioni e come si frequenta mentre si lavora o si studia.',
-  dubbi: 'Tra qualche giorno ti mandiamo le risposte alle domande che ci fanno tutti dopo l’open day.',
-  approfondire: 'Tra qualche giorno ti mandiamo il programma completo e alcuni progetti d’esame dei nostri studenti.',
-  simone: 'Simone ti chiamerà entro due giorni lavorativi.',
-}
-
-interface Props {
-  domande: Record<string, string>
-}
-
-export const getStaticProps: GetStaticProps<Props> = async () => {
-  const domande = { ...DOMANDE_OPENDAY }
-  try {
-    const { data } = await getStoryblokApi().get('cdn/datasource_entries', {
-      datasource: 'domande-open-day',
-      per_page: 100,
-    })
-    for (const e of (data.datasource_entries || []) as Array<{ name?: string; value?: string }>) {
-      const name = String(e.name || '').trim()
-      const value = String(e.value || '').trim()
-      if (name && value) domande[name] = value
-    }
-  } catch (error) {
-    console.error('[Conferma] Lettura "Domande open day" da Storyblok non riuscita:', error)
-    return { props: { domande }, revalidate: 60 }
-  }
-  return { props: { domande }, revalidate: 300 }
-}
-
-export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
+export default function Feedback() {
   const router = useRouter()
   const params = router.query
   const [confirming, setConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
 
-  // One-click choice from the open day emails: saved once the page is open
-  // (the link only left a signed cookie, see /api/openday/risposta)
+  // Old links of the one-click questions (/conferma?type=domanda|richiesta): the answer
+  // page is now /risposta (see /api/openday/risposta), it also saves the choice
   const answerType = router.isReady ? String(router.query.type || '') : ''
   useEffect(() => {
     if (answerType !== 'domanda' && answerType !== 'richiesta') return
-    fetch('/api/openday/risposta', { method: 'POST' })
-      .then((res) => {
-        if (res.ok) sendGTMEvent({ event: EVENTS.answer })
-      })
-      .catch(() => {})
-  }, [answerType])
+    const next = new URLSearchParams({ tipo: answerType, d: String(router.query.d || '') })
+    router.replace(`/risposta?${next.toString()}`)
+  }, [answerType, router])
 
   // Open Day: l'iscrizione avviene solo dopo il click sul pulsante
   const confirmOpenday = async () => {
@@ -283,50 +238,6 @@ export default function Feedback({ domande = DOMANDE_OPENDAY }: Props) {
                   Scopri i corsi
                 </Button>
               )}
-            </Fragment>
-          )}
-
-          {/* Open Day: risposta con un clic dall'email "Cosa vedrai" (la scelta la salva Brevo dal clic) */}
-          {params.type === 'domanda' && (
-            <Fragment>
-              <Head>
-                <title>Grazie per la tua domanda</title>
-                <meta name="robots" content="noindex" />
-              </Head>
-              <h1 className={title()}>
-                <span>Grazie,</span>
-                <br />
-                <span className="text-5xl">all'open day partiamo dalla tua domanda.</span>
-              </h1>
-              <p className={description()}>
-                {domande[String(params.d)] ||
-                  'Durante la serata rispondiamo alle domande di chi partecipa.'}{' '}
-                Nei prossimi giorni ti scriviamo ancora per prepararti alla serata.
-              </p>
-              <Button href="/" color="primary" as={HeroLink}>
-                Torna al sito
-              </Button>
-            </Fragment>
-          )}
-
-          {/* Dopo l'open day: scelta con un clic nell'email del giorno dopo (la salva Brevo dal clic) */}
-          {params.type === 'richiesta' && (
-            <Fragment>
-              <Head>
-                <title>Grazie, ci pensiamo noi</title>
-                <meta name="robots" content="noindex" />
-              </Head>
-              <h1 className={title()}>
-                <span>Grazie,</span>
-                <br />
-                <span className="text-5xl">ci pensiamo noi.</span>
-              </h1>
-              <p className={description()}>
-                {domande[String(params.d)] || 'Nei prossimi giorni ti scriviamo per aiutarti a decidere.'}
-              </p>
-              <Button href="/" color="primary" as={HeroLink}>
-                Torna al sito
-              </Button>
             </Fragment>
           )}
 

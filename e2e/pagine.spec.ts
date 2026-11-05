@@ -44,21 +44,23 @@ test('Pagina open day', async ({ page }, testInfo) => {
   await controlliGrafici(page, testInfo, 'Pagina open day', errori)
 })
 
-test('Ringraziamento dopo la domanda nell’email "Cosa vedrai"', async ({ page }, testInfo) => {
+test('Risposta a un dubbio cliccato in un’email, dopo l’open day', async ({ page }, testInfo) => {
   const errori = raccogliErrori(page)
-  await apri(page, '/conferma?type=domanda&d=costi')
-  await expect(page.getByText("all'open day partiamo dalla tua domanda")).toBeVisible()
-  // La frase viene da Storyblok › Datasources › "Domande open day", voce "costi"
-  await expect(page.locator('p').filter({ hasText: /cost/i }).first()).toBeVisible()
-  await controlliGrafici(page, testInfo, 'Conferma domanda', errori)
+  await apri(page, '/risposta?tipo=domanda&d=pagamenti&fase=post-openday&corso=corso-interior-design-primo-livello')
+  await expect(page.getByText('Ecco la risposta alla tua domanda.')).toBeVisible()
+  // La risposta viene da Storyblok › Datasources › "Domande open day", voce "pagamenti"
+  await expect(page.locator('p').filter({ hasText: /rate/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /telefonata di 15 minuti/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Iscriviti online' })).toHaveAttribute('href', '/iscrizione/corso-interior-design-primo-livello')
+  await controlliGrafici(page, testInfo, 'Risposta dopo open day', errori)
 })
 
-test('Ringraziamento dopo la richiesta del giorno dopo', async ({ page }, testInfo) => {
+test('I vecchi link di /conferma aprono la pagina delle risposte', async ({ page }, testInfo) => {
   const errori = raccogliErrori(page)
   await apri(page, '/conferma?type=richiesta&d=simone')
-  await expect(page.getByText('ci pensiamo noi.')).toBeVisible()
-  await expect(page.getByText(/Simone/)).toBeVisible()
-  await controlliGrafici(page, testInfo, 'Conferma richiesta', errori)
+  await expect(page).toHaveURL(/\/risposta\?tipo=richiesta&d=simone/)
+  await expect(page.getByText('Grazie, ci pensiamo noi.')).toBeVisible()
+  await controlliGrafici(page, testInfo, 'Risposta richiesta', errori)
 })
 
 test('Entra nell’open day con un codice sconosciuto', async ({ page }, testInfo) => {
