@@ -10,8 +10,9 @@
 import { trackEvent, upsertContact } from '@modules/brevo'
 import { EVENTS, pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
 import { CATEGORY_IDS, INTEREST_PURPOSE, categoryId } from '@modules/brevo-attributes'
+import { courseTitle } from './courses'
 import { romeDate, withdrawalEnd } from './dates'
-import type { Enrollment } from './types'
+import type { Enrollment, EnrollmentStatus } from './types'
 
 /** Brevo list 18 "Studenti - Iscritti": the contact joins it when signing. */
 export const ENROLLED_LIST_ID = 18
@@ -135,5 +136,25 @@ export async function syncEnrollmentStart(row: Enrollment, corso: string, starte
     eventName: EVENTS.enrollment,
     email: row.email,
     properties: pickEventProperties(EVENTS.enrollment, { corso, ...sourceEventProperties(row.provenienza || {}) }),
+  })
+}
+
+/**
+ * After signing, the office changes the state: ISCRIZIONE_STATO follows it.
+ * Recesso and annullata also take the contact out of list 18 and send
+ * submit_cancellation_form, so the enrollment automations can stop.
+ */
+export async function syncStatusChange(row: Enrollment, stato: Exclude<EnrollmentStatus, 'bozza' | 'firmata'>) {
+  const cancelled = stato === 'recesso' || stato === 'annullata'
+  await upsertContact({
+    email: row.email,
+    attributes: { ISCRIZIONE_STATO: CATEGORY_IDS.ISCRIZIONE_STATO[stato] },
+    unlinkListIds: cancelled ? [ENROLLED_LIST_ID] : undefined,
+  })
+  if (!cancelled) return
+  await trackEvent({
+    eventName: EVENTS.cancellation,
+    email: row.email,
+    properties: pickEventProperties(EVENTS.cancellation, { corso: courseTitle(row.corso) }),
   })
 }
