@@ -21,11 +21,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   if (admin.tipo_utente !== 'Admin') return res.status(403).json({ message: 'Accesso negato' })
 
-  const { id, stato, nota } = (req.body || {}) as Record<string, unknown>
+  const { id, stato, canale, data, nota } = (req.body || {}) as Record<string, unknown>
   if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ message: 'Iscrizione non valida' })
   if (!isTargetStatus(stato)) return res.status(400).json({ message: 'Stato non valido' })
 
-  const result = await changeStatus(id, stato, admin.email, typeof nota === 'string' ? nota : '')
-  if (!result.ok) return res.status(409).json({ message: result.message })
+  const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+  const result = await changeStatus(id, stato, admin.email, { canale: text(canale), data: text(data), nota: text(nota) })
+  if (!result.ok) return res.status(result.status).json({ message: result.message })
   return res.status(200).json({ stato: result.row.stato })
 }
