@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Pagina /conferma (PR #70): le frasi dopo un clic nelle email dell'open day vengono
-// dalla datasource Storyblok "Domande open day", con testi di riserva.
+// Pagina /risposta (prima /conferma, PR #70): le risposte ai dubbi cliccati nelle email
+// vengono dalla datasource Storyblok "Domande open day", con testi di riserva.
 const get = vi.fn()
 vi.mock('@storyblok/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@storyblok/react')>()),
   getStoryblokApi: () => ({ get }),
 }))
 
-import { getStaticProps } from '@pages/conferma'
+import { getStaticProps } from '@pages/risposta'
 import {
   acceptAllCookies,
   getConsentPurposes,
@@ -19,7 +19,7 @@ import {
   PURPOSE,
 } from '@modules/consent'
 
-describe('/conferma: frasi delle domande open day', () => {
+describe('/risposta: risposte ai dubbi delle email', () => {
   beforeEach(() => {
     get.mockReset()
     vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -34,21 +34,21 @@ describe('/conferma: frasi delle domande open day', () => {
         ],
       },
     })
-    const result = (await getStaticProps({} as any)) as { props: { domande: Record<string, string> }; revalidate: number }
+    const result = (await getStaticProps({} as any)) as { props: { risposte: Record<string, string> }; revalidate: number }
     expect(get).toHaveBeenCalledWith('cdn/datasource_entries', { datasource: 'domande-open-day', per_page: 100 })
-    expect(result.props.domande.sbocchi).toBe('Frase scritta in Storyblok.')
-    expect(result.props.domande.vuota).toBeUndefined()
+    expect(result.props.risposte.sbocchi).toBe('Frase scritta in Storyblok.')
+    expect(result.props.risposte.vuota).toBeUndefined()
     // Tutte le voci usate dalle email ci sono sempre
     for (const voce of ['sbocchi', 'programma', 'attestato', 'costi', 'orari', 'dubbi', 'approfondire', 'simone']) {
-      expect(result.props.domande[voce]).toBeTruthy()
+      expect(result.props.risposte[voce]).toBeTruthy()
     }
     expect(result.revalidate).toBe(300)
   })
 
   it('se Storyblok non risponde la pagina usa le frasi di riserva e riprova dopo un minuto', async () => {
     get.mockRejectedValue(new Error('offline'))
-    const result = (await getStaticProps({} as any)) as { props: { domande: Record<string, string> }; revalidate: number }
-    expect(result.props.domande.simone).toBe('Simone ti chiamerà entro due giorni lavorativi.')
+    const result = (await getStaticProps({} as any)) as { props: { risposte: Record<string, string> }; revalidate: number }
+    expect(result.props.risposte.simone).toBe('Simone ti chiamerà entro due giorni lavorativi.')
     expect(result.revalidate).toBe(60)
   })
 })
