@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getAllApplications } from '@modules/applications/db'
 import { JobFormModal } from '@components/business/JobFormModal'
@@ -53,6 +54,9 @@ export default function AdminProfile({ user, initialApplications }: AdminProfile
               color="default"
               label="Esci"
             />
+            <Button as={Link} href="/admin/iscrizioni" variant="bordered" className="mr-2">
+              Iscrizioni
+            </Button>
             <Button color="primary" onPress={onJobOpen} className="shadow-sm">
               + Nuova Inserzione
             </Button>

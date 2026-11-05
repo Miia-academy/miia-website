@@ -70,3 +70,13 @@ describe('stato dopo la firma', () => {
     expect(db.logEvent).toHaveBeenCalledWith(ROW.id, 'recesso', null, null, { da: 'admin@miia.it', nota: 'email del 5/11', brevo: false })
   })
 })
+
+describe('API admin del cambio stato', () => {
+  it('rifiuta chi non è admin', async () => {
+    const { default: handler } = await import('@pages/api/admin/iscrizione-stato')
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() }
+    await handler({ method: 'POST', cookies: {}, body: { id: ROW.id, stato: 'recesso' } } as never, res as never)
+    expect(res.status).toHaveBeenCalledWith(401)
+    expect(db.updateEnrollmentStatus).not.toHaveBeenCalled()
+  })
+})

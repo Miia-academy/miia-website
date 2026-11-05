@@ -257,3 +257,28 @@ export async function updateEnrollmentStatus(
   `) as Enrollment[]
   return rows[0] ?? null
 }
+
+/** Riga della pagina admin delle iscrizioni firmate: solo i dati per riconoscerla. */
+export interface SignedEnrollmentRow {
+  id: string
+  email: string
+  nome: string | null
+  cognome: string | null
+  corso: string
+  sede: string | null
+  stato: Enrollment['stato']
+  firmata_il: string
+  fine_recesso: string | null
+}
+
+/** Iscrizioni firmate, dalla più recente (le ultime 300). */
+export async function listSignedEnrollments(): Promise<SignedEnrollmentRow[]> {
+  return (await sql()`
+    SELECT id, email, nome, cognome, corso, edizione->>'sede' AS sede, stato,
+           firmata_il, fine_recesso::text AS fine_recesso
+    FROM iscrizioni.iscrizioni
+    WHERE stato <> 'bozza'
+    ORDER BY firmata_il DESC NULLS LAST
+    LIMIT 300
+  `) as SignedEnrollmentRow[]
+}
