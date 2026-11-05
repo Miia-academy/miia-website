@@ -20,12 +20,14 @@ vi.mock('@modules/enrollment/contact', () => ({
   syncContact: vi.fn(),
 }))
 vi.mock('@modules/brevo', () => ({ upsertContact: vi.fn(), trackEvent: vi.fn() }))
+vi.mock('@modules/enrollment/load-offer', () => ({ loadOffer: vi.fn(async () => { throw new Error('catalogo non usato') }) }))
 
 import codice from '@pages/api/iscrizione/codice'
 import verifica from '@pages/api/iscrizione/verifica'
 import bozza from '@pages/api/iscrizione/bozza'
 import * as db from '@modules/enrollment/db'
 import * as contact from '@modules/enrollment/contact'
+import { loadOffer } from '@modules/enrollment/load-offer'
 import { trackEvent, upsertContact } from '@modules/brevo'
 import { codeMatches, generateCode, hashCode, normalizeCode, sendWaitSeconds } from '@modules/enrollment/codes'
 import { SESSION_COOKIE, signSession, verifySession } from '@modules/enrollment/session'
@@ -266,12 +268,23 @@ describe('POST /api/iscrizione/verifica', () => {
     vi.mocked(db.markCodeUsed).mockResolvedValue(true)
     vi.mocked(db.openDraft).mockResolvedValue(row({ provenienza: { ultima_sorgente: 'google', ultima_click_id: 'abc' } }))
     vi.mocked(contact.contactPrefill).mockResolvedValue({ trovato: false, nome: '', cognome: '', telefono: '' })
+    vi.mocked(loadOffer).mockResolvedValueOnce({
+      edizioni: [
+        { inizio: '2027-01-09', stato: 'completa' },
+        { inizio: '2027-02-06', stato: 'disponibile' },
+      ],
+    } as never)
 
     const res = await call(verifica, { body: { email: EMAIL, corso: CORSO, codice: '123456' } })
 
     expect(upsertContact).toHaveBeenCalledWith({
       email: EMAIL,
-      attributes: { ISCRIZIONE_INIZIO_DATA: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), ISCRIZIONE_CORSO: 'Interior design, primo livello' },
+      attributes: {
+        ISCRIZIONE_INIZIO_DATA: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        ISCRIZIONE_CORSO: 'Interior design, primo livello',
+        // Prima edizione ancora aperta: quella completa si salta
+        ISCRIZIONE_EDIZIONE_INIZIO_DATA: '2027-02-06',
+      },
     })
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_enrollment_form',

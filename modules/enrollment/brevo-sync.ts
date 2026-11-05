@@ -131,11 +131,14 @@ export function isNewDraft(row: Pick<Enrollment, 'creata_il' | 'aggiornata_il'>)
 
 /**
  * Online enrollment started (email code confirmed): date on ISCRIZIONE_INIZIO_DATA,
- * course on ISCRIZIONE_CORSO and the submit_enrollment_form event, for the
- * abandoned-enrollment automation.
+ * course on ISCRIZIONE_CORSO, the start of the first open edition on
+ * ISCRIZIONE_EDIZIONE_INIZIO_DATA (so the abandoned-enrollment automation can press
+ * as the course gets close) and the submit_enrollment_form event.
  */
-export async function syncEnrollmentStart(row: Enrollment, corso: string, startedAt: Date) {
-  await upsertContact({ email: row.email, attributes: { ISCRIZIONE_INIZIO_DATA: romeDate(startedAt), ISCRIZIONE_CORSO: corso } })
+export async function syncEnrollmentStart(row: Enrollment, corso: string, startedAt: Date, editionStart: string | null = null) {
+  const attributes: Record<string, unknown> = { ISCRIZIONE_INIZIO_DATA: romeDate(startedAt), ISCRIZIONE_CORSO: corso }
+  if (editionStart) attributes.ISCRIZIONE_EDIZIONE_INIZIO_DATA = editionStart.slice(0, 10)
+  await upsertContact({ email: row.email, attributes })
   await trackEvent({
     eventName: EVENTS.enrollment,
     email: row.email,
@@ -161,4 +164,9 @@ export async function syncStatusChange(row: Enrollment, stato: Exclude<Enrollmen
     email: row.email,
     properties: pickEventProperties(EVENTS.cancellation, { corso: row.corso }),
   })
+}
+
+/** Step 2 saved: ISCRIZIONE_EDIZIONE_INIZIO_DATA follows the edition the person chose. */
+export async function syncChosenEdition(email: string, editionStart: string) {
+  await upsertContact({ email, attributes: { ISCRIZIONE_EDIZIONE_INIZIO_DATA: editionStart.slice(0, 10) } })
 }

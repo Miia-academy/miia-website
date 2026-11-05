@@ -41,3 +41,8 @@ export function buildOffer(
 export function openEditions(offer: CourseOffer): string[] {
   return offer.edizioni.filter((e) => e.stato !== 'completa').map((e) => e.chiave)
 }
+
+/** Inizio della prima edizione ancora aperta (le edizioni sono in ordine di inizio), o null. */
+export function firstOpenStart(offer: CourseOffer): string | null {
+  return offer.edizioni.find((e) => e.stato !== 'completa')?.inizio ?? null
+}
