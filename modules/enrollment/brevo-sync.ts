@@ -11,7 +11,8 @@ import { trackEvent, upsertContact } from '@modules/brevo'
 import { EVENTS, pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
 import { CATEGORY_IDS, INTEREST_PURPOSE, categoryId } from '@modules/brevo-attributes'
 import { romeDate, withdrawalEnd } from './dates'
-import type { Enrollment } from './types'
+import type { Enrollment, EnrollmentStatus } from './types'
+import { contractNumber } from './withdrawal'
 
 /** Brevo list 18 "Studenti - Iscritti": the contact joins it when signing. */
 export const ENROLLED_LIST_ID = 18
@@ -27,7 +28,7 @@ export function frequency(giorni: string[], orari: string[]): string {
 
 export function signedContactAttributes(
   row: Enrollment,
-  edition: { sede: string; giorni: string[]; orari: string[] },
+  edition: { sede: string; giorni: string[]; orari: string[]; inizio?: string | null },
   corso: string,
   signedAt: Date
 ): Record<string, unknown> {
@@ -75,6 +76,10 @@ export function signedContactAttributes(
     ISCRIZIONE_PAGAMENTO_MODALITA: categoryId('ISCRIZIONE_PAGAMENTO_MODALITA', row.pagamento_modalita),
     ISCRIZIONE_OFFERTA_OPENDAY: row.offerta_open_day === true,
     ISCRIZIONE_RECESSO_FINE_DATA: withdrawalEnd(signedAt),
+    // Quadro di massima per la contabilità, finché non c'è l'app della scuola: mai nelle email.
+    ISCRIZIONE_CONTRATTO: contractNumber(row.id, signedAt),
+    ISCRIZIONE_TOTALE: row.pagamento_totale === null || row.pagamento_totale === '' ? null : Number(row.pagamento_totale),
+    ISCRIZIONE_EDIZIONE_INIZIO_DATA: str(edition.inizio).slice(0, 10),
   }
   // Solo il sì: un "no" qui non deve cancellare un'iscrizione alla newsletter data altrove.
   if (voci.newsletter?.valore === true || voci.newsletter?.valore === 'si') attrs.NEWSLETTER = true
@@ -82,14 +87,14 @@ export function signedContactAttributes(
   return Object.fromEntries(Object.entries(attrs).filter(([, v]) => v !== '' && v !== null && v !== undefined))
 }
 
-/** Properties of the submit_signature_form event: the course and edition just signed, no amounts. */
-export function signedEventProperties(
-  row: Enrollment,
-  edition: { sede: string; inizio?: string | null },
-  corso: string
-) {
+/**
+ * Properties of the submit_signature_form event: the course and edition just signed, no amounts.
+ * In every enrollment event `corso` is the slug (corso-interior-design-primo-livello), as in
+ * submit_presence_form, so emails can link /iscrizione/{{ params.corso }}; the title is in ISCRIZIONE_CORSO.
+ */
+export function signedEventProperties(row: Enrollment, edition: { sede: string; inizio?: string | null }) {
   return pickEventProperties(EVENTS.signature, {
-    corso,
+    corso: row.corso,
     sede: edition.sede.toLowerCase(),
     inizio: edition.inizio || '',
     modalita: row.pagamento_modalita || '',
@@ -113,7 +118,7 @@ export async function syncSignedContact(
     attributes: signedContactAttributes(row, edition, corso, signedAt),
     listIds: [ENROLLED_LIST_ID],
   })
-  await trackEvent({ eventName: EVENTS.signature, email: row.email, properties: signedEventProperties(row, edition, corso) })
+  await trackEvent({ eventName: EVENTS.signature, email: row.email, properties: signedEventProperties(row, edition) })
 }
 
 /**
@@ -126,14 +131,42 @@ export function isNewDraft(row: Pick<Enrollment, 'creata_il' | 'aggiornata_il'>)
 
 /**
  * Online enrollment started (email code confirmed): date on ISCRIZIONE_INIZIO_DATA,
- * course on ISCRIZIONE_CORSO and the submit_enrollment_form event, for the
- * abandoned-enrollment automation.
+ * course on ISCRIZIONE_CORSO, the start of the first open edition on
+ * ISCRIZIONE_EDIZIONE_INIZIO_DATA (so the abandoned-enrollment automation can press
+ * as the course gets close) and the submit_enrollment_form event.
  */
-export async function syncEnrollmentStart(row: Enrollment, corso: string, startedAt: Date) {
-  await upsertContact({ email: row.email, attributes: { ISCRIZIONE_INIZIO_DATA: romeDate(startedAt), ISCRIZIONE_CORSO: corso } })
+export async function syncEnrollmentStart(row: Enrollment, corso: string, startedAt: Date, editionStart: string | null = null) {
+  const attributes: Record<string, unknown> = { ISCRIZIONE_INIZIO_DATA: romeDate(startedAt), ISCRIZIONE_CORSO: corso }
+  if (editionStart) attributes.ISCRIZIONE_EDIZIONE_INIZIO_DATA = editionStart.slice(0, 10)
+  await upsertContact({ email: row.email, attributes })
   await trackEvent({
     eventName: EVENTS.enrollment,
     email: row.email,
-    properties: pickEventProperties(EVENTS.enrollment, { corso, ...sourceEventProperties(row.provenienza || {}) }),
+    properties: pickEventProperties(EVENTS.enrollment, { corso: row.corso, ...sourceEventProperties(row.provenienza || {}) }),
   })
+}
+
+/**
+ * After signing, the office changes the state: ISCRIZIONE_STATO follows it.
+ * Recesso and annullata also take the contact out of list 18 and send
+ * submit_cancellation_form, so the enrollment automations can stop.
+ */
+export async function syncStatusChange(row: Enrollment, stato: Exclude<EnrollmentStatus, 'bozza' | 'firmata'>) {
+  const cancelled = stato === 'recesso' || stato === 'annullata'
+  await upsertContact({
+    email: row.email,
+    attributes: { ISCRIZIONE_STATO: CATEGORY_IDS.ISCRIZIONE_STATO[stato] },
+    unlinkListIds: cancelled ? [ENROLLED_LIST_ID] : undefined,
+  })
+  if (!cancelled) return
+  await trackEvent({
+    eventName: EVENTS.cancellation,
+    email: row.email,
+    properties: pickEventProperties(EVENTS.cancellation, { corso: row.corso }),
+  })
+}
+
+/** Step 2 saved: ISCRIZIONE_EDIZIONE_INIZIO_DATA follows the edition the person chose. */
+export async function syncChosenEdition(email: string, editionStart: string) {
+  await upsertContact({ email, attributes: { ISCRIZIONE_EDIZIONE_INIZIO_DATA: editionStart.slice(0, 10) } })
 }
