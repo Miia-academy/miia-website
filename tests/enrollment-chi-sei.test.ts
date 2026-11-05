@@ -276,7 +276,7 @@ describe('POST /api/iscrizione/verifica', () => {
     expect(trackEvent).toHaveBeenCalledWith({
       eventName: 'submit_enrollment_form',
       email: EMAIL,
-      properties: { corso: 'Interior design, primo livello', ultima_sorgente: 'google' },
+      properties: { corso: 'corso-interior-design-primo-livello', ultima_sorgente: 'google' },
     })
     expect(res.body.evento).toEqual({ event: 'submit_enrollment_form', course: CORSO })
   })

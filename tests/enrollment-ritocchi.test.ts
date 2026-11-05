@@ -171,6 +171,7 @@ describe('dati in Brevo alla firma', () => {
   it('alla firma: contatto nella lista 18 ed evento submit_signature_form leggero', async () => {
     const signed = {
       ...row,
+      corso: 'corso-interior-design-primo-livello',
       pagamento_modalita: 'rate5',
       pagamento_totale: '5700',
       offerta_open_day: true,
@@ -187,7 +188,7 @@ describe('dati in Brevo alla firma', () => {
       eventName: 'submit_signature_form',
       email: 'a@b.it',
       properties: {
-        corso: 'Interior design, primo livello',
+        corso: 'corso-interior-design-primo-livello',
         sede: 'treviso',
         inizio: '2026-11-07',
         modalita: 'rate5',

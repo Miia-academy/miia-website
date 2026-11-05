@@ -10,7 +10,6 @@
 import { trackEvent, upsertContact } from '@modules/brevo'
 import { EVENTS, pickEventProperties, sourceEventProperties } from '@modules/brevo-events'
 import { CATEGORY_IDS, INTEREST_PURPOSE, categoryId } from '@modules/brevo-attributes'
-import { courseTitle } from './courses'
 import { romeDate, withdrawalEnd } from './dates'
 import type { Enrollment, EnrollmentStatus } from './types'
 import { contractNumber } from './withdrawal'
@@ -88,14 +87,14 @@ export function signedContactAttributes(
   return Object.fromEntries(Object.entries(attrs).filter(([, v]) => v !== '' && v !== null && v !== undefined))
 }
 
-/** Properties of the submit_signature_form event: the course and edition just signed, no amounts. */
-export function signedEventProperties(
-  row: Enrollment,
-  edition: { sede: string; inizio?: string | null },
-  corso: string
-) {
+/**
+ * Properties of the submit_signature_form event: the course and edition just signed, no amounts.
+ * In every enrollment event `corso` is the slug (corso-interior-design-primo-livello), as in
+ * submit_presence_form, so emails can link /iscrizione/{{ params.corso }}; the title is in ISCRIZIONE_CORSO.
+ */
+export function signedEventProperties(row: Enrollment, edition: { sede: string; inizio?: string | null }) {
   return pickEventProperties(EVENTS.signature, {
-    corso,
+    corso: row.corso,
     sede: edition.sede.toLowerCase(),
     inizio: edition.inizio || '',
     modalita: row.pagamento_modalita || '',
@@ -119,7 +118,7 @@ export async function syncSignedContact(
     attributes: signedContactAttributes(row, edition, corso, signedAt),
     listIds: [ENROLLED_LIST_ID],
   })
-  await trackEvent({ eventName: EVENTS.signature, email: row.email, properties: signedEventProperties(row, edition, corso) })
+  await trackEvent({ eventName: EVENTS.signature, email: row.email, properties: signedEventProperties(row, edition) })
 }
 
 /**
@@ -140,7 +139,7 @@ export async function syncEnrollmentStart(row: Enrollment, corso: string, starte
   await trackEvent({
     eventName: EVENTS.enrollment,
     email: row.email,
-    properties: pickEventProperties(EVENTS.enrollment, { corso, ...sourceEventProperties(row.provenienza || {}) }),
+    properties: pickEventProperties(EVENTS.enrollment, { corso: row.corso, ...sourceEventProperties(row.provenienza || {}) }),
   })
 }
 
@@ -160,6 +159,6 @@ export async function syncStatusChange(row: Enrollment, stato: Exclude<Enrollmen
   await trackEvent({
     eventName: EVENTS.cancellation,
     email: row.email,
-    properties: pickEventProperties(EVENTS.cancellation, { corso: courseTitle(row.corso) }),
+    properties: pickEventProperties(EVENTS.cancellation, { corso: row.corso }),
   })
 }

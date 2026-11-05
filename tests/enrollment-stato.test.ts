@@ -47,7 +47,7 @@ describe('stato dopo la firma', () => {
     expect(vi.mocked(trackEvent).mock.calls[0][0]).toEqual({
       eventName: 'submit_cancellation_form',
       email: ROW.email,
-      properties: { corso: 'Interior design, primo livello' },
+      properties: { corso: 'corso-interior-design-primo-livello' },
     })
   })
 
