@@ -13,6 +13,7 @@ import { CATEGORY_IDS, INTEREST_PURPOSE, categoryId } from '@modules/brevo-attri
 import { courseTitle } from './courses'
 import { romeDate, withdrawalEnd } from './dates'
 import type { Enrollment, EnrollmentStatus } from './types'
+import { contractNumber } from './withdrawal'
 
 /** Brevo list 18 "Studenti - Iscritti": the contact joins it when signing. */
 export const ENROLLED_LIST_ID = 18
@@ -28,7 +29,7 @@ export function frequency(giorni: string[], orari: string[]): string {
 
 export function signedContactAttributes(
   row: Enrollment,
-  edition: { sede: string; giorni: string[]; orari: string[] },
+  edition: { sede: string; giorni: string[]; orari: string[]; inizio?: string | null },
   corso: string,
   signedAt: Date
 ): Record<string, unknown> {
@@ -76,6 +77,10 @@ export function signedContactAttributes(
     ISCRIZIONE_PAGAMENTO_MODALITA: categoryId('ISCRIZIONE_PAGAMENTO_MODALITA', row.pagamento_modalita),
     ISCRIZIONE_OFFERTA_OPENDAY: row.offerta_open_day === true,
     ISCRIZIONE_RECESSO_FINE_DATA: withdrawalEnd(signedAt),
+    // Quadro di massima per la contabilità, finché non c'è l'app della scuola: mai nelle email.
+    ISCRIZIONE_CONTRATTO: contractNumber(row.id, signedAt),
+    ISCRIZIONE_TOTALE: row.pagamento_totale === null || row.pagamento_totale === '' ? null : Number(row.pagamento_totale),
+    ISCRIZIONE_EDIZIONE_INIZIO_DATA: str(edition.inizio).slice(0, 10),
   }
   // Solo il sì: un "no" qui non deve cancellare un'iscrizione alla newsletter data altrove.
   if (voci.newsletter?.valore === true || voci.newsletter?.valore === 'si') attrs.NEWSLETTER = true
