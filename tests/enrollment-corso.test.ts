@@ -10,12 +10,14 @@ vi.mock('@modules/enrollment/db', () => ({
 }))
 vi.mock('@modules/enrollment/load-offer', () => ({ loadOffer: vi.fn() }))
 vi.mock('@modules/enrollment/contact', () => ({ syncContact: vi.fn() }))
+vi.mock('@modules/enrollment/brevo-sync', () => ({ syncChosenEdition: vi.fn() }))
 
 import bozza from '@pages/api/iscrizione/bozza'
 import offerta from '@pages/api/iscrizione/offerta'
 import posti from '@pages/api/iscrizione/posti'
 import * as db from '@modules/enrollment/db'
 import { loadOffer } from '@modules/enrollment/load-offer'
+import { syncChosenEdition } from '@modules/enrollment/brevo-sync'
 import { parsePriceList, toEdition, type Edition } from '@modules/enrollment/catalog'
 import { buildOffer, openEditions } from '@modules/enrollment/offer'
 import { SESSION_COOKIE, signSession } from '@modules/enrollment/session'
@@ -260,6 +262,7 @@ describe('PUT /api/iscrizione/bozza, passo 2', () => {
     expect(value).toEqual({ edizione: `${UUID}:2026-11-07`, scopo: 'professione', modalita: '10_rate' })
     expect([price.totale, price.rata, price.offerta]).toEqual([4990, 499, true])
     expect(complete).toEqual(['chi_sei', 'corso'])
+    expect(syncChosenEdition).toHaveBeenCalledWith(EMAIL, '2026-11-07')
     expect(res.body.iscrizione.corso_pagamento).toEqual({
       edizione: `${UUID}:2026-11-07`,
       scopo: 'professione',

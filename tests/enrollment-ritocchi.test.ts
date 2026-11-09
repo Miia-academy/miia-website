@@ -87,6 +87,7 @@ import { frequency, isNewDraft, signedContactAttributes, syncSignedContact } fro
 
 describe('dati in Brevo alla firma', () => {
   const row = {
+    id: '1a2b3c4d-0000-4000-8000-000000000001',
     email: 'a@b.it',
     dati: { data_nascita: '1990-05-12', via: 'Via Roma 1', cap: '31100', comune: 'Treviso', provincia: 'TV', codice_fiscale: 'RSSMRA90E12L407X' },
     profilo: {
@@ -107,9 +108,10 @@ describe('dati in Brevo alla firma', () => {
     },
     consensi: { voci: { newsletter: { valore: true } } },
     pagamento_modalita: '5_rate',
+    pagamento_totale: '3900.00',
     offerta_open_day: true,
   } as any
-  const attrs = signedContactAttributes(row, { sede: 'Treviso', giorni: ['Sabato'], orari: ['9:00/12:00'] }, 'Interior design, primo livello', new Date('2026-10-15T10:00:00Z'))
+  const attrs = signedContactAttributes(row, { sede: 'Treviso', giorni: ['Sabato'], orari: ['9:00/12:00'], inizio: '2026-11-07' }, 'Interior design, primo livello', new Date('2026-10-15T10:00:00Z'))
 
   it('usa i nomi e i valori del dizionario attributi Brevo (26/10)', () => {
     expect(attrs).toEqual({
@@ -140,6 +142,9 @@ describe('dati in Brevo alla firma', () => {
       ISCRIZIONE_PAGAMENTO_MODALITA: 2,
       ISCRIZIONE_OFFERTA_OPENDAY: true,
       ISCRIZIONE_RECESSO_FINE_DATA: '2026-10-29',
+      ISCRIZIONE_CONTRATTO: '2026-1A2B3C4D',
+      ISCRIZIONE_TOTALE: 3900,
+      ISCRIZIONE_EDIZIONE_INIZIO_DATA: '2026-11-07',
       NEWSLETTER: true,
     })
   })
@@ -166,6 +171,7 @@ describe('dati in Brevo alla firma', () => {
   it('alla firma: contatto nella lista 18 ed evento submit_signature_form leggero', async () => {
     const signed = {
       ...row,
+      corso: 'corso-interior-design-primo-livello',
       pagamento_modalita: 'rate5',
       pagamento_totale: '5700',
       offerta_open_day: true,
@@ -182,7 +188,7 @@ describe('dati in Brevo alla firma', () => {
       eventName: 'submit_signature_form',
       email: 'a@b.it',
       properties: {
-        corso: 'Interior design, primo livello',
+        corso: 'corso-interior-design-primo-livello',
         sede: 'treviso',
         inizio: '2026-11-07',
         modalita: 'rate5',

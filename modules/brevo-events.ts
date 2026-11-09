@@ -15,6 +15,8 @@ export const EVENTS = {
   answer: 'submit_answer_form',
   enrollment: 'submit_enrollment_form',
   signature: 'submit_signature_form',
+  /** Recesso o annullamento di un'iscrizione firmata: fa uscire dalle automazioni dell'iscrizione. */
+  cancellation: 'submit_cancellation_form',
 } as const
 
 /**

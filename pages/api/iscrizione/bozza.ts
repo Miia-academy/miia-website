@@ -1,6 +1,7 @@
 import type { NextApiResponse } from 'next'
 import { body, enrollmentApi } from '@modules/enrollment/api'
 import { syncContact } from '@modules/enrollment/contact'
+import { syncChosenEdition } from '@modules/enrollment/brevo-sync'
 import { getEnrollment, logEvent, saveChiSei, saveCorso, saveConsensi, saveDati, saveProfilo } from '@modules/enrollment/db'
 import { getConditions } from '@modules/enrollment/conditions'
 import { documentsComplete } from '@modules/enrollment/documents'
@@ -57,6 +58,15 @@ export default enrollmentApi(['GET', 'PUT'], async (req, res) => {
     const saved = await saveCorso(row.id, session.email, result.value, offer.prezzi[result.value.modalita], complete)
     if (!saved) return notVerified(res)
     await logEvent(row.id, 'sezione_salvata', ip, ua, { sezione: section, edizione: result.value.edizione })
+    const start = offer.edizioni.find((e) => e.chiave === result.value.edizione)?.inizio
+    if (start) {
+      try {
+        await syncChosenEdition(session.email, start)
+      } catch (error) {
+        // L'iscrizione va avanti: Brevo ha ancora la data della prima edizione aperta.
+        console.error('[Iscrizione] Inizio edizione non salvato in Brevo:', error)
+      }
+    }
     return res.status(200).json({ ok: true, iscrizione: publicState(saved) })
   }
 

@@ -4,6 +4,8 @@ import { CODE_MAX_ATTEMPTS, codeMatches, normalizeCode } from '@modules/enrollme
 import { contactPrefill } from '@modules/enrollment/contact'
 import { isNewDraft, syncEnrollmentStart } from '@modules/enrollment/brevo-sync'
 import { courseTitle } from '@modules/enrollment/courses'
+import { loadOffer } from '@modules/enrollment/load-offer'
+import { firstOpenStart } from '@modules/enrollment/offer'
 import { EVENTS } from '@modules/brevo-events'
 import { latestActiveCode, logEvent, markCodeUsed, openDraft, takeCodeAttempt } from '@modules/enrollment/db'
 import { sessionCookie, signSession } from '@modules/enrollment/session'
@@ -45,7 +47,11 @@ export default enrollmentApi(['POST'], async (req, res) => {
   const started = isNewDraft(draft)
   if (started) {
     try {
-      await syncEnrollmentStart(draft, courseTitle(corso), new Date())
+      // Prima edizione ancora aperta: se il catalogo non risponde si manda il resto.
+      const start = await loadOffer(corso, email)
+        .then(firstOpenStart)
+        .catch(() => null)
+      await syncEnrollmentStart(draft, courseTitle(corso), new Date(), start)
     } catch (error) {
       // The enrollment goes on: Brevo only misses the start date and the event.
       console.error('[Iscrizione] Brevo enrollment start not saved:', error)
