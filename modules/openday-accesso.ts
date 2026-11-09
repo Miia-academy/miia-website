@@ -33,6 +33,8 @@ export interface OpendayEvento {
   livello: string
   inizio: Date
   link: string
+  /** uuid del campo "Modulo di accesso" (domande prima di entrare); vuoto = modulo generale. */
+  modulo: string
 }
 
 export function normalizeCodice(value: unknown): string | null {
@@ -148,6 +150,7 @@ interface StoryEvento {
     title?: string
     openday?: string
     link_meet?: string
+    modulo_accesso?: string
   }
 }
 
@@ -163,6 +166,7 @@ export function toEvento(story: StoryEvento): OpendayEvento | null {
     livello: (livello || '').toLowerCase().replace(/\s*livello$/, ''),
     inizio,
     link: (story.content?.link_meet || '').trim(),
+    modulo: (story.content?.modulo_accesso || '').trim(),
   }
 }
 
