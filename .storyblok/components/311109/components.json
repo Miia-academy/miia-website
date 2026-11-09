@@ -89,50 +89,103 @@
     "id": 6876489,
     "schema": {
       "title": {
-        "type": "text",
         "display_name": "Titolo",
-        "id": "h9cUaFErQRm8pLXhQx-7-g"
+        "id": "h9cUaFErQRm8pLXhQx-7-g",
+        "pos": 0,
+        "type": "text"
       },
       "image": {
-        "type": "asset",
         "display_name": "Immagine",
         "filetypes": [
           "images"
         ],
-        "id": "NKeZ9F0eSB-yQMn8LBUvBQ"
+        "id": "NKeZ9F0eSB-yQMn8LBUvBQ",
+        "pos": 1,
+        "type": "asset"
       },
       "resource": {
-        "type": "option",
         "display_name": "Tipo",
+        "exclude_empty_option": true,
+        "id": "d5UZkX1uT7idbt6Pty0cdw",
         "options": [
           {
-            "value": "next-event",
-            "name": "Prossimo evento"
+            "name": "Prossimo evento",
+            "value": "next-event"
           },
           {
-            "value": "last-article",
-            "name": "Ultimo articolo"
+            "name": "Ultimo articolo",
+            "value": "last-article"
           }
         ],
+        "pos": 2,
         "required": true,
-        "id": "d5UZkX1uT7idbt6Pty0cdw",
-        "exclude_empty_option": true
+        "type": "option"
+      },
+      "tab-1b79346f-dd32-497e-b7e5-e58bfab5a467": {
+        "display_name": "Prossimo evento",
+        "keys": [
+          "filter",
+          "submit",
+          "persone",
+          "persone_titolo"
+        ],
+        "pos": 3,
+        "type": "tab",
+        "id": "G3k0b90ySX635eWL-rWkZw"
       },
       "filter": {
-        "type": "text",
-        "display_name": "Filtra per nome",
         "description": "Il nome della risorsa contiene il filtro",
-        "id": "pKEvT4_TSAiHHvcLZLIHGQ"
+        "display_name": "Filtra per nome",
+        "id": "pKEvT4_TSAiHHvcLZLIHGQ",
+        "pos": 4,
+        "type": "text"
       },
       "submit": {
-        "type": "bloks",
-        "display_name": "Iscrizione",
-        "restrict_components": true,
         "component_whitelist": [
           "form"
         ],
+        "display_name": "Iscrizione",
+        "id": "-o0qT1AzQFCSws0JngTWvA",
         "maximum": 1,
-        "id": "-o0qT1AzQFCSws0JngTWvA"
+        "pos": 5,
+        "restrict_components": true,
+        "type": "bloks"
+      },
+      "persone": {
+        "description": "Solo per Prossimo evento: mostra sotto l'evento le persone scelte nel campo Docenti dell'evento",
+        "display_name": "Mostra persone",
+        "id": "_3czBE_RR_O69MWl_cB9kg",
+        "pos": 6,
+        "type": "boolean"
+      },
+      "persone_titolo": {
+        "default_value": "I Docenti",
+        "description": "Titolo sopra le persone, es. I Docenti. Vuoto = nessun titolo",
+        "display_name": "Titolo persone",
+        "id": "l4Tg2z_AT5SJstPJ88INIA",
+        "pos": 7,
+        "type": "text"
+      },
+      "tab-0ab72f13-e621-41f8-ac03-868d0ec5b139": {
+        "display_name": "Ultimo articolo",
+        "keys": [
+          "articolo"
+        ],
+        "pos": 8,
+        "type": "tab",
+        "id": "CrcvE-YhQfisA4aNDsWxOQ"
+      },
+      "articolo": {
+        "description": "Scegli l'articolo da mostrare. Vuoto = l'ultimo pubblicato",
+        "display_name": "Articolo in evidenza",
+        "filter_content_type": [
+          "article"
+        ],
+        "folder_slug": "blog/",
+        "pos": 9,
+        "source": "internal_stories",
+        "type": "option",
+        "id": "z8wdGuMTR6WlLYHS6C22-A"
       }
     },
     "image": null,
