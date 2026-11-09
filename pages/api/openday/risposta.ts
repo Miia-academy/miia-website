@@ -4,18 +4,21 @@ import { trackEvent, upsertContact } from '@modules/brevo'
 import { EVENTS, pickEventProperties } from '@modules/brevo-events'
 import { normalizeEmail } from '@modules/crm-form'
 import { getJwtSecret } from '@modules/jwt-secret'
+import { parseCorso, parseFase, type Fase } from '@modules/risposte'
 
 /**
- * One-click choices in the open day emails: the questions of "Cosa vedrai"
- * (tipo "domanda", saved in OPENDAY_DOMANDA) and the requests of the day after
- * (tipo "richiesta", saved in OPENDAY_RICHIESTA).
+ * One-click questions in the funnel emails (brochure, before and after the open day):
+ * tipo "domanda" is saved in OPENDAY_DOMANDA, tipo "richiesta" in OPENDAY_RICHIESTA.
  *
  * GET is the link in the email: it only remembers the choice in a signed cookie
- * and opens /conferma, so a link opened by a preview or an antivirus writes
- * nothing. The /conferma page then calls POST, which saves the choice on the
- * contact and sends the submit_answer_form event.
+ * and opens the answer page /risposta, so a link opened by a preview or an
+ * antivirus writes nothing. The page then calls POST, which saves the choice on
+ * the contact and sends the submit_answer_form event (tipo, valore, fase).
  *
- * Email link: /api/openday/risposta?email={{ contact.EMAIL }}&tipo=domanda&d=costi
+ * Email link:
+ *   /api/openday/risposta?email={{ contact.EMAIL }}&tipo=domanda&d=costi&fase=brochure&corso=corso-interior-design-primo-livello
+ * fase (brochure | pre-openday | post-openday) and corso are optional: they only
+ * choose the final button of the page. Old links without them keep working.
  */
 
 const COOKIE_NAME = 'miia_openday_risposta'
@@ -28,6 +31,7 @@ interface Answer {
   email: string
   tipo: string
   valore: string
+  fase: Fase | null
 }
 
 export function parseAnswer(raw: Record<string, unknown>): Answer | null {
@@ -35,7 +39,7 @@ export function parseAnswer(raw: Record<string, unknown>): Answer | null {
   const tipo = typeof raw.tipo === 'string' ? raw.tipo.trim() : ''
   const valore = typeof raw.d === 'string' ? raw.d.trim().toLowerCase() : ''
   if (!email || !ATTRIBUTE[tipo] || !VALUE.test(valore)) return null
-  return { email, tipo, valore }
+  return { email, tipo, valore, fase: parseFase(raw.fase) }
 }
 
 function cookie(value: string, maxAge: number) {
@@ -48,8 +52,11 @@ function handleLink(req: NextApiRequest, res: NextApiResponse) {
   if (!answer) return res.redirect(302, '/')
   const token = jwt.sign({ purpose: 'risposta', ...answer }, getJwtSecret(), { expiresIn: COOKIE_MAX_AGE })
   res.setHeader('Set-Cookie', cookie(token, COOKIE_MAX_AGE))
-  const target = new URLSearchParams({ type: answer.tipo, d: answer.valore })
-  return res.redirect(302, `/conferma?${target.toString()}`)
+  const target = new URLSearchParams({ tipo: answer.tipo, d: answer.valore })
+  if (answer.fase) target.set('fase', answer.fase)
+  const corso = parseCorso(req.query.corso)
+  if (corso) target.set('corso', corso)
+  return res.redirect(302, `/risposta?${target.toString()}`)
 }
 
 function readAnswer(req: NextApiRequest): Answer | null {
@@ -57,7 +64,7 @@ function readAnswer(req: NextApiRequest): Answer | null {
   if (!token) return null
   try {
     const d = jwt.verify(token, getJwtSecret()) as Record<string, unknown>
-    return d.purpose === 'risposta' ? parseAnswer({ email: d.email, tipo: d.tipo, d: d.valore }) : null
+    return d.purpose === 'risposta' ? parseAnswer({ email: d.email, tipo: d.tipo, d: d.valore, fase: d.fase }) : null
   } catch {
     return null
   }
@@ -72,7 +79,7 @@ async function handleSave(req: NextApiRequest, res: NextApiResponse) {
     await trackEvent({
       eventName: EVENTS.answer,
       email: answer.email,
-      properties: pickEventProperties(EVENTS.answer, { tipo: answer.tipo, valore: answer.valore }),
+      properties: pickEventProperties(EVENTS.answer, { tipo: answer.tipo, valore: answer.valore, fase: answer.fase || '' }),
     })
   } catch (error) {
     console.error('[Open day] Answer not saved in Brevo:', error)
