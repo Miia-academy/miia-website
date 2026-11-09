@@ -15,6 +15,8 @@ export const EVENTS = {
   answer: 'submit_answer_form',
   enrollment: 'submit_enrollment_form',
   signature: 'submit_signature_form',
+  /** Recesso o annullamento di un'iscrizione firmata: fa uscire dalle automazioni dell'iscrizione. */
+  cancellation: 'submit_cancellation_form',
 } as const
 
 /**
@@ -60,7 +62,7 @@ export const EVENT_PROPERTIES = [
 /** Extra properties of the events the server sends on its own. */
 export const SERVER_EVENT_PROPERTIES: Record<string, readonly string[]> = {
   [EVENTS.presence]: ['ritardo'],
-  [EVENTS.answer]: ['tipo', 'valore'],
+  [EVENTS.answer]: ['tipo', 'valore', 'fase'],
   [EVENTS.signature]: ['sede', 'inizio', 'modalita', 'offerta_open_day'],
 }
 

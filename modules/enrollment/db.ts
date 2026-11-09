@@ -237,3 +237,58 @@ export async function signEnrollment(
   `) as Enrollment[]
   return rows[0] ?? null
 }
+
+// --- Stato dopo la firma (segreteria) ---
+
+/**
+ * Cambia lo stato di un'iscrizione solo se è ancora in uno degli stati di
+ * partenza ammessi: due clic insieme non applicano il cambio due volte.
+ */
+export async function updateEnrollmentStatus(
+  id: string,
+  from: readonly Enrollment['stato'][],
+  to: Enrollment['stato']
+): Promise<Enrollment | null> {
+  const rows = (await sql()`
+    UPDATE iscrizioni.iscrizioni
+    SET stato = ${to}, aggiornata_il = now()
+    WHERE id = ${id} AND stato = ANY(${from as string[]}::text[])
+    RETURNING *
+  `) as Enrollment[]
+  return rows[0] ?? null
+}
+
+/** Riga della pagina admin delle iscrizioni firmate: solo i dati per riconoscerla. */
+export interface SignedEnrollmentRow {
+  id: string
+  email: string
+  nome: string | null
+  cognome: string | null
+  corso: string
+  sede: string | null
+  stato: Enrollment['stato']
+  firmata_il: string
+  fine_recesso: string | null
+  pagamento_modalita: Enrollment['pagamento_modalita']
+  pagamento_totale: string | null
+  offerta_open_day: boolean
+}
+
+/** Iscrizioni firmate, dalla più recente (le ultime 300). */
+export async function listSignedEnrollments(): Promise<SignedEnrollmentRow[]> {
+  return (await sql()`
+    SELECT id, email, nome, cognome, corso, edizione->>'sede' AS sede, stato,
+           firmata_il, fine_recesso::text AS fine_recesso,
+           pagamento_modalita, pagamento_totale, offerta_open_day
+    FROM iscrizioni.iscrizioni
+    WHERE stato <> 'bozza'
+    ORDER BY firmata_il DESC NULLS LAST
+    LIMIT 300
+  `) as SignedEnrollmentRow[]
+}
+
+/** Un'iscrizione per id, per la segreteria (nessun controllo sull'email). */
+export async function getEnrollmentById(id: string): Promise<Enrollment | null> {
+  const rows = (await sql()`SELECT * FROM iscrizioni.iscrizioni WHERE id = ${id} LIMIT 1`) as Enrollment[]
+  return rows[0] ?? null
+}

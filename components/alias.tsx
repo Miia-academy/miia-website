@@ -53,11 +53,16 @@ export default function Alias({ blok }: AliasComponentProps) {
     }
 
     if (isArticle) {
-      setSelectedArticle(articles[0] || null)
+      // Article chosen in Storyblok ("articolo" field, a story uuid or a resolved story);
+      // when empty or not found (e.g. unpublished), fall back to the latest article.
+      const chosen = blok.articolo
+      const chosenUuid = typeof chosen === 'string' ? chosen : chosen?.uuid
+      const pinned = chosenUuid ? articles.find((a) => a.uuid === chosenUuid) : undefined
+      setSelectedArticle(pinned || articles[0] || null)
     }
 
     setIsClientReady(true)
-  }, [events, articles, isEvent, isArticle, blok.filter])
+  }, [events, articles, isEvent, isArticle, blok.filter, blok.articolo])
 
   if (!isClientReady) return null
 
