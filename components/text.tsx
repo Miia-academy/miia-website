@@ -53,6 +53,7 @@ export default function Text({ blok }: TextComponentProps) {
       {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
         <div className={titleClasses({ hide: hideTitle })}>
           {compiler(blok.title, {
+            wrapper: null,
             overrides: Typography(typography),
           })}
         </div>
@@ -61,6 +62,7 @@ export default function Text({ blok }: TextComponentProps) {
       {typeof blok.description === 'string' && blok.description.trim() !== '' ? (
         <div className={descriptionClasses({ hide: hideDescription })}>
           {compiler(blok.description, {
+            wrapper: null,
             overrides: Typography(typography),
           })}
         </div>
@@ -69,6 +71,8 @@ export default function Text({ blok }: TextComponentProps) {
   )
 }
 
+// wrapper: null above: the markdown blocks are direct children, so space-y-2
+// spaces them (with markdown's own wrapper div they touched)
 const titleClasses = tv({
   // Aggiunto relative z-10 per tenerlo sopra al backdrop-blur della descrizione
   base: 'space-y-2 relative z-10',

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { Card, CardBody, Input, Button, Alert } from '@heroui/react'
+import { CardBody, Input, Alert } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 import { Logo } from '@public/logo'
 
 export default function StudentLogin() {
@@ -46,13 +48,13 @@ export default function StudentLogin() {
       </Head>
 
       <div className="absolute top-0 right-0 left-0 z-10 flex justify-center p-6">
-        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#009245" />
+        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#008a45" />
       </div>
 
-      <Card className="w-full max-w-lg rounded-3xl shadow-sm border border-neutral-200 relative z-20" shadow="none">
+      <Card className="w-full max-w-lg rounded-3xl relative z-20">
         <CardBody className="p-5 sm:p-8 space-y-6 sm:space-y-8">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Area Studenti</h1>
+            <h1 className="type-title-3 tracking-tight text-neutral-900">Area Studenti</h1>
             <p className="text-sm text-neutral-500 mt-2">
               {router.query.redirectUrl
                 ? 'Accedi per visualizzare i dettagli di questa inserzione.'
@@ -76,7 +78,7 @@ export default function StudentLogin() {
                 variant="flat"
                 classNames={{ inputWrapper: "h-14" }}
               />
-              <Button type="submit" isLoading={loading} color="primary" className="h-14 font-bold shadow-sm text-base">
+              <Button type="submit" isLoading={loading} color="primary" className="h-14 shadow-sm text-base">
                 Invia Magic Link
               </Button>
               {errorMsg && <Alert color="danger" variant="flat">{errorMsg}</Alert>}

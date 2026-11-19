@@ -1,11 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
-import { upsertContact, trackEvent } from '@modules/brevo'
+import { BrevoError, upsertContact, trackEvent } from '@modules/brevo'
 import { getJwtSecret } from '@modules/jwt-secret'
+import { loadOpendayDetails } from '@modules/openday-details'
+import { EVENTS, pickEventProperties, siNo } from '@modules/brevo-events'
 
 const COOKIE_NAME = 'miia_openday_richiesta'
 const COOKIE_MAX_AGE = 30 * 60 // 30 minuti per confermare
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Area in the email links (interni, moda) → option of the Brevo INTERESSE_AREA attribute
+const AREA_OPTIONS: Record<string, string> = { interni: 'interior', interior: 'interior', moda: 'fashion', fashion: 'fashion' }
 
 interface RichiestaOpenday {
   email: string
@@ -85,6 +89,7 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
       .filter((story: any) => story.content?.date)
       .map((story: any) => ({
         name: story.name,
+        slug: story.slug,
         date: new Date(story.content.date),
       }))
       .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
@@ -109,29 +114,51 @@ async function handleConfirm(req: NextApiRequest, res: NextApiResponse) {
     if (targetEvent) {
       opendayDateStr = targetEvent.date.toISOString().split('T')[0]
       opendayDataLocale = targetEvent.date.toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'long',
         year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
+        timeZone: 'Europe/Rome',
       })
     }
 
-    const attributes: Record<string, string> = {
-      ULTIMA_AZIONE: 'openday',
-    }
+    const attributes: Record<string, unknown> = {}
 
     if (opendayDateStr) {
-      attributes.OPENDAY = opendayDateStr
+      attributes.OPENDAY_DATA = opendayDateStr
+      // Codice per miia.it/open-day/accedi; presenza e ritardo dell'open day precedente si azzerano
+      if (targetEvent?.slug) attributes.OPENDAY_CODICE = targetEvent.slug
+      attributes.OPENDAY_PRESENTE = false
+      attributes.OPENDAY_RITARDO = false
+      // Date, start, teachers and course of that open day, for the emails
+      if (targetEvent?.slug) Object.assign(attributes, await loadOpendayDetails(targetEvent.slug))
     }
 
-    await upsertContact({
-      email,
-      listIds: [16],
-      attributes,
-    })
+    // Event data is also kept on the contact, with the Brevo INTERESSE_AREA options
+    const area = AREA_OPTIONS[areaQuery.toLowerCase()]
+    if (area) attributes.INTERESSE_AREA = [area]
 
+    try {
+      await upsertContact({ email, listIds: [16], attributes })
+    } catch (error) {
+      // As in /api/crm: if Brevo rejects a value (e.g. an attribute not created yet),
+      // the sign-up is kept with the list only. The error stays in the logs.
+      if (!(error instanceof BrevoError && error.status === 400)) throw error
+      console.error('[OpenDay Enroll] Attributes rejected by Brevo, list only:', error.message)
+      await upsertContact({ email, listIds: [16], attributes: {} })
+    }
+
+    // Same event as the open day form on the site: light, with the data of this open day
     await trackEvent({
-      eventName: 'submit_open_day',
+      eventName: EVENTS.openday,
       email,
+      properties: pickEventProperties(EVENTS.openday, {
+        area: area || areaQuery,
+        openday: opendayDateStr,
+        openday_data: opendayDataLocale,
+        openday_codice: targetEvent?.slug,
+        openday_docenti: attributes.OPENDAY_DOCENTI_TESTO as string | undefined,
+        openday_agevolato: siNo(attributes.OPENDAY_VALIDO),
+      }),
     })
 
     // La richiesta è usata: il cookie non serve più

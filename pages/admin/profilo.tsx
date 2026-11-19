@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import jwt from 'jsonwebtoken'
 import { getAllApplications } from '@modules/applications/db'
 import { JobFormModal } from '@components/business/JobFormModal'
@@ -8,7 +9,8 @@ import { AdminApplicationsList } from '@components/admin/AdminApplicationsList'
 import { AlertModal } from '@components/shared/AlertModal'
 import type { AuthPayload } from '@modules/auth'
 import { LogoutButton } from '@components/shared/LogoutButton'
-import { Button, useDisclosure } from '@heroui/react'
+import { useDisclosure } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface AdminProfileProps {
@@ -38,7 +40,7 @@ export default function AdminProfile({ user, initialApplications }: AdminProfile
         {/* Header Admin */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h1 className="type-title-3 tracking-tight text-neutral-900">
               Pannello Operativo
             </h1>
             <p className="mt-1 text-sm text-neutral-500">
@@ -52,7 +54,10 @@ export default function AdminProfile({ user, initialApplications }: AdminProfile
               color="default"
               label="Esci"
             />
-            <Button color="primary" onPress={onJobOpen} className="font-bold text-white shadow-sm">
+            <Button as={Link} href="/admin/iscrizioni" variant="bordered" className="mr-2">
+              Iscrizioni
+            </Button>
+            <Button color="primary" onPress={onJobOpen} className="shadow-sm">
               + Nuova Inserzione
             </Button>
           </div>

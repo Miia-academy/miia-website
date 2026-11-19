@@ -7,7 +7,9 @@ import { markApplicationAsViewed } from '@modules/applications/db'
 import { getCompanyApplicationForStudent } from '@modules/applications/access'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface BusinessStudentViewProps {
@@ -89,12 +91,12 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
           &larr; Torna alla Dashboard Azienda
         </Link>
 
-        <Card shadow="sm" className="border border-neutral-200">
+        <Card>
           <CardHeader className="pt-6 px-6 pb-4 flex flex-col items-start gap-1">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
               Scheda Dettaglio Candidato
             </span>
-            <h1 className="text-3xl font-extrabold text-neutral-900 mt-2">
+            <h1 className="type-title-3 text-neutral-900 mt-2">
               {fullName}
             </h1>
           </CardHeader>
@@ -104,32 +106,32 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
           <CardBody className="p-6 space-y-6">
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Recapiti & Informazioni di Contatto
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-neutral-50 p-4 rounded-xl border border-neutral-200">
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Email</span>
+                  <span className="block type-label text-neutral-400">Email</span>
                   <a href={`mailto:${student.email}`} className="text-base font-semibold text-emerald-700 hover:underline break-all">
                     {student.email}
                   </a>
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Telefono / SMS</span>
+                  <span className="block type-label text-neutral-400">Telefono / SMS</span>
                   <a href={`tel:${student.sms}`} className="text-base font-semibold text-neutral-800 hover:underline">
-                    {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
+                    {student.sms || <span className="text-danger italic text-sm">Mancante</span>}
                   </a>
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Provincia</span>
+                  <span className="block type-label text-neutral-400">Provincia</span>
                   <span className="text-base font-semibold text-neutral-800 uppercase">
-                    {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
+                    {student.provincia || <span className="text-danger italic text-sm">Mancante</span>}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Indirizzo Sede / Residenza</span>
+                  <span className="block type-label text-neutral-400">Indirizzo Sede / Residenza</span>
                   <span className="text-base font-medium text-neutral-800">
-                    {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
+                    {student.indirizzo || <span className="text-danger italic text-sm">Mancante</span>}
                   </span>
                 </div>
               </div>
@@ -138,7 +140,7 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Mobilità e Disponibilità
               </span>
               <div className="flex flex-wrap gap-2">
@@ -151,14 +153,14 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Competenze
               </span>
               {detailedSkills.length > 0 ? (
                 <div className="space-y-4 mt-2">
                   {detailedSkills.map((skill, idx) => (
                     <div key={idx} className="flex items-start gap-3">
-                      <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                       <div className="space-y-0.5">
                         <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                           {skill.title}
@@ -180,22 +182,21 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Documenti Candidato
               </span>
               <div className="flex flex-wrap gap-3 items-center">
                 {student.cv_url ? (
-                  <Button
+                  <Button color="primary"
                     as="a"
                     href={getCvDownloadUrl()}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-white bg-[#009245]"
                   >
                     📄 Scarica Curriculum Vitae (PDF)
                   </Button>
                 ) : (
-                  <span className="text-sm text-red-500 italic font-semibold">Curriculum Vitae: Mancante</span>
+                  <span className="text-sm text-danger italic font-semibold">Curriculum Vitae: Mancante</span>
                 )}
 
                 {student.portfolio_url && (
@@ -205,7 +206,6 @@ export default function BusinessStudentView({ student, appId }: BusinessStudentV
                     target="_blank"
                     rel="noreferrer"
                     variant="flat"
-                    className="font-bold"
                   >
                     🔗 Apri Portfolio
                   </Button>

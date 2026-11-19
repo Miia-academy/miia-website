@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { Storage } from '@google-cloud/storage'
 import { getContact, createContact, upsertContact, trackEvent, BrevoError } from '@modules/brevo'
 import { normalizePhone } from '@modules/crm-form'
+import { IMAGE_KINDS, InvalidUpload, parseUpload, type ParsedUpload } from '@modules/uploads'
 
 // Aziende APPROVATE: la lista dà accesso all'area riservata e la gestiscono solo i referenti MIIA da Brevo.
 const BREVO_LIST_AZIENDE = Number(process.env.BREVO_BUSINESS_LIST_ID) || Number(process.env.BREVO_AZIENDE_LIST_ID) || 30
@@ -13,53 +14,9 @@ const PUBLIC_BUCKET_NAME = process.env.GCS_BUCKET_PUBLIC || 'miia-public'
 const MAX_LOGO_BYTES = 1_000_000
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// Il logo finisce in un bucket pubblico: si accettano solo immagini vere e il tipo si decide dal contenuto.
-const LOGO_TYPES: Record<string, { ext: string; matches: (b: Buffer) => boolean }> = {
-  'image/png': {
-    ext: 'png',
-    matches: (b) => b.length > 8 && b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
-  },
-  'image/jpeg': {
-    ext: 'jpg',
-    matches: (b) => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
-  },
-  'image/webp': {
-    ext: 'webp',
-    matches: (b) => b.length > 12 && b.subarray(0, 4).toString('ascii') === 'RIFF' && b.subarray(8, 12).toString('ascii') === 'WEBP',
-  },
-}
-
 // La risposta è identica per contatti nuovi o già presenti: non rivela chi è in archivio.
 const RICHIESTA_RICEVUTA =
   'Richiesta ricevuta. Verificheremo i dati dell’azienda e ti scriveremo non appena l’account sarà approvato.'
-
-class InvalidInput extends Error {}
-
-interface Logo {
-  buffer: Buffer
-  mime: string
-  ext: string
-}
-
-function parseLogo(base64: unknown, mime: unknown): Logo | null {
-  if (!base64) return null
-
-  if (typeof base64 !== 'string' || typeof mime !== 'string' || !LOGO_TYPES[mime]) {
-    throw new InvalidInput('Formato del logo non valido: usa PNG, JPG o WebP.')
-  }
-
-  const buffer = Buffer.from(base64.replace(/^data:[^;]+;base64,/, ''), 'base64')
-
-  if (buffer.length === 0 || buffer.length > MAX_LOGO_BYTES) {
-    throw new InvalidInput('Il logo supera la dimensione massima di 1 MB.')
-  }
-
-  if (!LOGO_TYPES[mime].matches(buffer)) {
-    throw new InvalidInput('Il file del logo non è un’immagine valida.')
-  }
-
-  return { buffer, mime, ext: LOGO_TYPES[mime].ext }
-}
 
 function getStorageClient() {
   const clientEmail = process.env.GCS_CLIENT_EMAIL
@@ -77,7 +34,7 @@ function getStorageClient() {
   })
 }
 
-async function uploadLogo(logo: Logo): Promise<string> {
+async function uploadLogo(logo: ParsedUpload): Promise<string> {
   try {
     const bucket = getStorageClient().bucket(PUBLIC_BUCKET_NAME)
     const fileName = `aziende/loghi/${Date.now()}-${randomUUID()}.${logo.ext}`
@@ -96,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Metodo non consentito' })
   }
 
-  const { email, nome, contact_person, sms, telefono, logoBase64, logoMimeType } = req.body ?? {}
+  const { email, nome, contact_person, sms, telefono, logoBase64 } = req.body ?? {}
 
   const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
   const companyName = typeof nome === 'string' ? nome.trim().slice(0, 120) : ''
@@ -113,7 +70,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Il logo si valida prima di tutto: gli errori sono gli stessi per contatti nuovi e già presenti.
-    const logo = parseLogo(logoBase64, logoMimeType)
+    // The logo goes to a public bucket: only real images, type decided from the content
+    const logo = parseUpload(logoBase64, { kinds: IMAGE_KINDS, maxBytes: MAX_LOGO_BYTES, label: 'logo', formats: 'PNG, JPG o WebP' })
 
     // 1. Il contatto esiste già? In quel caso i suoi dati non si toccano.
     let existing: any = null
@@ -175,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({ message: RICHIESTA_RICEVUTA })
   } catch (error: any) {
-    if (error instanceof InvalidInput) {
+    if (error instanceof InvalidUpload) {
       return res.status(400).json({ message: error.message })
     }
 

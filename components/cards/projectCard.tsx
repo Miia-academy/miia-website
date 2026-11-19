@@ -1,5 +1,8 @@
 import type { ProcessedProject } from '@modules/cache'
-import { Image, Card, Chip } from '@heroui/react'
+import { Chip } from '@heroui/react'
+import { Image } from '@components/ui/image'
+import { Card } from '@components/ui/card'
+import { CARD_SIZES, responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
 import Markdown from 'markdown-to-jsx'
 import { Typography } from '@components/typography'
@@ -31,6 +34,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Card
+      bordered={false}
       as={NextLink}
       href={cleanSlug}
       isPressable
@@ -41,7 +45,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         {coverAsset?.filename ? (
           <Image
             removeWrapper
-            src={coverAsset.filename}
+            {...responsiveImage(coverAsset.filename, CARD_SIZES)}
             alt={coverAsset.alt || project.title || project.name || ''}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             radius="none"

@@ -31,7 +31,7 @@ export default function Process({ blok }: ProcessComponentProps) {
     <div className="col-span-12" {...storyblokEditable(blok as any)}>
       {/* Type Narrowing: ci assicuriamo che title sia effettivamente una stringa stampabile */}
       {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
-        <h4 className="font-bold text-2xl">{blok.title}</h4>
+        <h4 className="type-title-4">{blok.title}</h4>
       ) : null}
 
       <div className={processClasses()}>

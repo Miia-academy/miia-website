@@ -1,6 +1,6 @@
 # MIIA Website & Career Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -10,7 +10,7 @@
 [![Brevo](https://img.shields.io/badge/Brevo-CRM_%26_Email-0B996F?style=for-the-badge)](https://www.brevo.com/)
 [![Google Cloud](https://img.shields.io/badge/Google_Cloud-Storage-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com/storage)
 
-Piattaforma web istituzionale e Career Board di **[Made in Italy Academy](https://www.madeinitalyacademy.it)** (MIIA), scuola di alta formazione specializzata in corsi per Interior Design, Arredatori, Stilisti e Modellisti.
+Piattaforma web istituzionale e Career Board di **[Made in Italy Academy](https://miia.it)** (MIIA), scuola di alta formazione specializzata in corsi per Interior Design, Arredatori, Stilisti e Modellisti.
 
 L'applicazione integra un **Headless CMS (Storyblok)** per la gestione dinamica dei contenuti con un portale applicativo completo (**Bacheca Lavoro Triveneto**) che connette gli studenti diplomati dell'accademia con le aziende del settore.
 
@@ -44,6 +44,7 @@ L'applicazione integra un **Headless CMS (Storyblok)** per la gestione dinamica 
 ### 1. Sito Web Istituzionale
 - **Pagine dinamiche da Headless CMS**: Sincronizzazione in tempo reale con Storyblok tramite Pages Router dinamico (`pages/[...slug].tsx`) e componenti modulari React.
 - **Catalogo Corsi & Progetti**: Schede dettagliate per i percorsi formativi di Interior Design e Moda.
+- **Fianco delle pagine corso (`aside`)**: il *Titolo prezzo* usa le variabili del listino (`{rata10}`, `{rata5}`, `{unica}`, `{esame}`; `**cifra grande**`, `_nota_`), il *Filtro edizioni* sceglie le edizioni pubblicate per parole (`interni,primo,bassano`: area, livello, città o frequenza). Prezzo, rate e corsi scelti a mano sono stati tolti dallo schema il 26/10: il codice li legge solo finché `forms:migrate` non sistema le pagine al passaggio a main.
 - **Iscrizione Open Day**: Form integrato con sincronizzazione contatti su Brevo e pagina di conferma/feedback personalizzata (`pages/conferma.tsx`).
 - **Mappe Interattive**: Integrazione Mapbox GL per la visualizzazione delle sedi e delle aree formative.
 
@@ -194,6 +195,23 @@ Memorizza le candidature inviate dagli studenti per una specifica inserzione.
 
 Il sistema invia eventi tracciati (`trackEvent`) alle API di Brevo per gestire notifiche transazionali e percorsi di marketing automation:
 
+### Eventi del funnel (sito → GTM e Brevo, stesso nome)
+
+Schema `submit_{evento}_form`, definito in `modules/brevo-events.ts`. Eventi leggeri: solo `area`, `programma`, `corso`, `openday`, `openday_data`, `openday_codice`, `openday_docenti`, `openday_agevolato` ("si"/"no"), `ultima_sorgente`, `ultima_mezzo`, `ultima_campagna`, `ultima_pagina`, più le proprietà proprie degli eventi lato server. Il resto dei dati sta solo sul contatto.
+
+| Evento | Quando | Proprietà in più |
+| :--- | :--- | :--- |
+| `submit_brochure_form` | modulo presentazione (tracking `brochure`, prima `download`) | |
+| `submit_news_form` | modulo newsletter | |
+| `submit_info_form` | richiesta informazioni (tracking `info`, prima `contact`) | |
+| `submit_openday_form` | iscrizione open day dal modulo o dal pulsante nelle email | |
+| `submit_presence_form` | ingresso all'open day (`/api/openday/accedi`) | `ritardo` e `openday_agevolato` ("si"/"no"), `area`, `programma`, `corso` (dal campo "Openday" dell'evento) |
+| `submit_answer_form` | scelta con un clic dalle email (`/api/openday/risposta`) | `tipo`, `valore` |
+| `submit_enrollment_form` | iscrizione online iniziata (codice email confermato), data su `INVIO_ISCRIZIONE` | |
+| `submit_signature_form` | iscrizione firmata: contatto nella lista 18 | `sede`, `inizio`, `modalita`, `offerta_open_day` |
+
+Link delle email per le scelte dell'open day: `/api/openday/risposta?email={{ contact.EMAIL }}&tipo=domanda|richiesta&d=<valore>`.
+
 ### 1. `company_registered`
 - **Descrizione**: Scatenato alla registrazione di una nuova azienda partner.
 - **Destinatario**: Email Azienda.
@@ -243,24 +261,29 @@ cp .env.example .env.local
 
 | Variabile | Obbligatoria | Descrizione |
 | :--- | :---: | :--- |
-| `STORYBLOK_SPACE_ID` | Sì | ID numerico dello Space Storyblok |
-| `NEXT_PUBLIC_IS_PREVIEW` | Sì | Abilita la modalità preview Storyblok (`true` o `false`) |
 | `NEXT_PUBLIC_STORYBLOK_PREVIEW`| Sì | Token API Preview di Storyblok |
 | `STORYBLOK_MANAGEMENT` | Opzionale | Token Management API Storyblok (necessario per sync CLI) |
-| `STORYBLOK_LOGOS_FOLDER_ID` | Opzionale | ID cartella Storyblok per i loghi aziendali |
-| `STORYBLOK_BUSINESS_FOLDER_ID`| Opzionale | ID cartella Storyblok per le storie azienda |
-| `STORYBLOK_STUDENT_FOLDER_ID` | Opzionale | ID cartella Storyblok per le storie studente |
-| `STORYBLOK_JOBS_FOLDER_ID` | Opzionale | ID cartella Storyblok per le storie offerte |
-| `BREVO_API_KEY` / `BREVO_TOKEN` | Sì | Chiave API REST v3 per Brevo |
+| `STORYBLOK_TOKEN` | Opzionale | Token per `/api/config/skills` (se manca usa il token preview) |
+| `STORYBLOK_FORCE_DRAFT` | Opzionale | `true` mostra le bozze anche in produzione |
+| `BREVO_TOKEN` | Sì | Chiave API REST v3 per Brevo |
 | `BREVO_MANAGEMENT` | Opzionale | Token addizionale per chiamate management Brevo |
 | `BREVO_STUDENT_LIST_ID` | Sì | ID lista Brevo contenente gli studenti diplomati autorizzati (default `42`) |
 | `BREVO_BUSINESS_LIST_ID`| Sì | ID lista Brevo delle aziende approvate, l'unica che dà accesso all'area aziende. Si gestisce solo da Brevo (default `30`) |
 | `BREVO_BUSINESS_REQUESTS_LIST_ID`| No | ID lista Brevo delle richieste di accesso delle aziende in attesa di approvazione (default `8`) |
+| `BREVO_AZIENDE_LIST_ID` | No | Lista aziende usata dalla pagina admin delle inserzioni (default `43`) |
+| `CRM_ALLOWED_LISTS` | No | Liste Brevo in cui i moduli del sito possono scrivere, separate da virgola |
+| `CRM_SOURCE_ATTRIBUTES` | No | `on` salva la provenienza della visita (ORIGINE_* e ULTIMA_*) su Brevo |
+| `ENROLLMENT_ONLINE` | No | `on` attiva l'iscrizione online |
+| `ENROLLMENT_SENDER_EMAIL` / `ENROLLMENT_OFFICE_EMAIL` | No | Mittente e copia della segreteria per l'iscrizione (default `iscrizione@miia.it`) |
+| `ENROLLMENT_SMS_SENDER` | No | Mittente degli SMS dell'iscrizione (default `MIIA`) |
+| `BANNER_SITO` | No | `on` mostra i banner in produzione (sempre attivi in anteprima e in locale) |
+| `NEXT_PUBLIC_GTM` | No | Contenitore Tag Manager, caricato solo in produzione |
+| `NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID` | No | ID della cookie policy Iubenda |
 | `NEXT_PUBLIC_MAPBOX_TOKEN` | Sì | Token pubblico Mapbox GL per il rendering delle mappe |
 | `JWT_SECRET` | Sì | Chiave segreta per la firma e verifica dei token JWT |
 | `NEXT_PUBLIC_BASE_URL` | Sì | URL base dell'applicazione per i Magic Link (es. `http://localhost:8080`) |
 | `DATABASE_URL` | Sì | Stringa di connessione a Neon Postgres (`postgresql://...`) |
-| `ADMIN_EMAIL` | Sì | Email di accesso per il backoffice amministratore (`/admin/login`) |
+| `ADMIN_EMAIL` | Sì | Email di accesso per il backoffice amministratore (`/admin/login`); senza email e password l'accesso è disattivato |
 | `ADMIN_PASSWORD` | Sì | Password di accesso per il backoffice amministratore |
 | `GCS_BUCKET_PUBLIC` | Sì | Nome bucket Google Cloud Storage per gli asset pubblici |
 | `GCS_BUCKET_PRIVATE` | Sì | Nome bucket Google Cloud Storage per i CV privati |
@@ -311,6 +334,8 @@ cp .env.example .env.local
 | `npm run lint` | Esegue il controllo del codice con ESLint 9 |
 | `npm run cms` | Esegue il pull dei componenti da Storyblok e rigenera i tipi TypeScript |
 | `npm run typecheck` | Controlla i tipi TypeScript senza compilare |
+| `npm run forms:check` | Controlla in sola lettura i moduli Storyblok contro gli attributi Brevo (errore se Brevo rifiuterebbe il contatto) |
+| `npm run forms:migrate` | Mostra le modifiche Storyblok dell'Ambito 3; con `-- --apply` le scrive (solo al passaggio a main: lo spazio è condiviso con la produzione) |
 | `npm test` | Esegue i test (cartella `tests/`): moduli verso Brevo, `/api/crm`, provenienza della visita. Brevo è simulato, nessun dato viene inviato |
 
 ### Sviluppo Locale con Proxy SSL (HTTPS)
@@ -374,6 +399,7 @@ Il progetto è ottimizzato per il rilascio su **[Vercel](https://vercel.com/)**:
 2. Configurare tutte le variabili d'ambiente presenti in `.env.local` nelle impostazioni del progetto su Vercel (*Settings &rarr; Environment Variables*).
 3. Verificare che la versione di Node.js nelle impostazioni sia `20.x` o superiore.
 4. Il comando di build è in `vercel.json` (`scripts/vercel-build.mjs`): sul ramo `develop` esegue prima i test (`npm test`) e, se falliscono, la build si ferma; su `main` e sugli altri rami esegue solo `next build`. La directory di output è `.next`.
+5. Vercel fa la build solo per `main` e `develop` (`ignoreCommand` in `vercel.json`): gli altri rami non hanno anteprima e si provano in locale (`npm run dev`) prima del merge in `develop`.
 
 ---
 

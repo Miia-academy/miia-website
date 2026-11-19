@@ -79,3 +79,29 @@ export async function getSignedFileUrl(filePath: string, isPublic = false): Prom
 
   return url
 }
+/**
+ * Link firmato per caricare un file direttamente dal browser nel bucket privato
+ * (il file non passa dalla funzione Vercel, che ha un limite di 4,5 MB).
+ * Tipo e dimensione massima sono fissati nella firma.
+ */
+export async function getSignedUploadUrl(filePath: string, contentType: string, maxBytes: number): Promise<string> {
+  const { privateBucket } = getGcsClient()
+  const [url] = await privateBucket.file(filePath).getSignedUrl({
+    version: 'v4',
+    action: 'write',
+    expires: Date.now() + 10 * 60 * 1000, // Scadenza 10 minuti
+    contentType,
+    extensionHeaders: { 'x-goog-content-length-range': `1,${maxBytes}` },
+  })
+  return url
+}
+
+/** Tipo e dimensione di un file del bucket privato, o null se non esiste. */
+export async function getPrivateFileInfo(filePath: string): Promise<{ contentType: string; size: number } | null> {
+  const { privateBucket } = getGcsClient()
+  const file = privateBucket.file(filePath)
+  const [exists] = await file.exists()
+  if (!exists) return null
+  const [meta] = await file.getMetadata()
+  return { contentType: String(meta.contentType || ''), size: Number(meta.size || 0) }
+}

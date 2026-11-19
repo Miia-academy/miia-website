@@ -6,7 +6,9 @@ import jwt from 'jsonwebtoken'
 import { getBusinessJobs } from '@modules/jobs/db'
 import type { Job, JobWithApplicantsCount } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Button, Card, CardBody, CardHeader, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from '@heroui/react'
+import { CardBody, CardHeader, Divider, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 import { JobFormModal } from '@components/business/JobFormModal'
 import { DeleteJobModal } from '@components/business/DeleteJobModal'
 import { ApplicationsModal } from '@components/business/ApplicationsModal'
@@ -54,7 +56,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
       <div className="mx-auto max-w-6xl mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6 border-b border-neutral-200 pb-6">
         <div className="flex items-center gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 truncate">Area Azienda</h1>
+            <h1 className="type-title-3 tracking-tight text-neutral-900 truncate">Area Azienda</h1>
             <p className="mt-0.5 text-sm text-neutral-500 truncate">Gestisci le tue inserzioni e le candidature</p>
           </div>
         </div>
@@ -65,7 +67,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
             color="default"
             label="Esci"
           />
-          <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} className="w-full md:w-auto bg-[#009245] text-white font-bold shadow-sm shrink-0 h-11">
+          <Button color="primary" onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} className="w-full md:w-auto shadow-sm shrink-0 h-11">
             + Nuova Inserzione
           </Button>
         </div>
@@ -73,8 +75,8 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
 
       <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
-          <Card shadow="sm" className="border border-neutral-200">
-            <CardHeader className="pt-6 px-5 sm:px-6 font-bold text-xl text-neutral-900 flex justify-between items-center">
+          <Card>
+            <CardHeader className="pt-6 px-5 sm:px-6 type-subtitle text-neutral-900 flex justify-between items-center">
               <span>Profilo Operativo</span>
             </CardHeader>
             <Divider className="my-2" />
@@ -88,45 +90,45 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                   </div>
                 )}
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-900 leading-tight">{profileData.azienda || <span className="text-red-500 italic text-sm">Nome mancante</span>}</h2>
+                  <h2 className="type-subtitle text-neutral-900">{profileData.azienda || <span className="text-danger italic text-sm">Nome mancante</span>}</h2>
                   <p className="text-xs text-neutral-500 font-mono mt-0.5">{user.email}</p>
                 </div>
               </div>
               <div className="space-y-4 text-sm">
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Referente</span>
-                  <p className="font-medium text-neutral-800">{profileData.referente || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                  <span className="block type-label text-neutral-400 mb-1">Referente</span>
+                  <p className="font-medium text-neutral-800">{profileData.referente || <span className="text-danger italic text-xs">Mancante</span>}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Telefono</span>
-                    <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                    <span className="block type-label text-neutral-400 mb-1">Telefono</span>
+                    <p className="font-medium text-neutral-800">{profileData.sms || <span className="text-danger italic text-xs">Mancante</span>}</p>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Sito Web</span>
+                    <span className="block type-label text-neutral-400 mb-1">Sito Web</span>
                     {profileData.sito_web ? (
                       <a href={profileData.sito_web.startsWith('http') ? profileData.sito_web : `https://${profileData.sito_web}`} target="_blank" rel="noreferrer" className="font-medium text-emerald-600 hover:underline truncate block">
                         {profileData.sito_web.replace(/^https?:\/\//, '')}
                       </a>
                     ) : (
-                      <span className="text-red-500 italic text-xs">Mancante</span>
+                      <span className="text-danger italic text-xs">Mancante</span>
                     )}
                   </div>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Indirizzo Sede</span>
-                  <p className="font-medium text-neutral-800">{profileData.indirizzo || <span className="text-red-500 italic text-xs">Mancante</span>}</p>
+                  <span className="block type-label text-neutral-400 mb-1">Indirizzo Sede</span>
+                  <p className="font-medium text-neutral-800">{profileData.indirizzo || <span className="text-danger italic text-xs">Mancante</span>}</p>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold uppercase text-neutral-400 tracking-wider mb-1">Chi Siamo</span>
+                  <span className="block type-label text-neutral-400 mb-1">Chi Siamo</span>
                   {profileData.descrizione ? (
                     <p className="text-neutral-600 leading-relaxed line-clamp-4">{profileData.descrizione}</p>
                   ) : (
-                    <span className="text-red-500 italic text-xs">Descrizione mancante. I candidati non sapranno di cosa vi occupate.</span>
+                    <span className="text-danger italic text-xs">Descrizione mancante. I candidati non sapranno di cosa vi occupate.</span>
                   )}
                 </div>
               </div>
-              <Button onPress={() => setIsProfileFormOpen(true)} className="w-full bg-neutral-900 text-white font-bold h-11">
+              <Button color="dark" onPress={() => setIsProfileFormOpen(true)} className="w-full h-11">
                 Modifica Profilo
               </Button>
             </CardBody>
@@ -135,13 +137,13 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
 
         <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
           <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
-            <h2 className="font-bold text-xl text-neutral-900">Le Tue Inserzioni</h2>
+            <h2 className="type-subtitle text-neutral-900">Le Tue Inserzioni</h2>
             <span className="text-sm text-neutral-500 font-medium">{initialJobs.length} {initialJobs.length === 1 ? 'Annuncio' : 'Annunci'}</span>
           </div>
           {initialJobs.length === 0 ? (
             <div className="p-10 text-center border border-dashed border-neutral-300 rounded-2xl bg-white mt-4">
               <p className="mb-4 text-neutral-500">Nessun annuncio creato finora.</p>
-              <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} variant="flat" color="primary" className="font-semibold">
+              <Button onPress={() => { setSelectedJob(null); setIsJobFormOpen(true); }} variant="flat" color="primary">
                 Pubblica la prima inserzione
               </Button>
             </div>
@@ -150,7 +152,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
               {initialJobs.map((job) => (
                 <div key={job.id} className="bg-white border border-neutral-200 rounded-xl p-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-neutral-300 hover:shadow transition-all">
                   <div className="flex-1 min-w-0">
-                    <Link href={`/lavoro/inserzioni/${job.id}`} className="text-[17px] font-bold text-neutral-900 hover:text-[#009245] transition-colors leading-tight line-clamp-1 truncate block">
+                    <Link href={`/lavoro/inserzioni/${job.id}`} className="text-[17px] font-bold text-neutral-900 hover:text-primary transition-colors leading-tight line-clamp-1 truncate block">
                       {job.title}
                     </Link>
                     <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mt-1">
@@ -158,7 +160,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                     </p>
                   </div>
                   <div className="flex items-center gap-4 sm:gap-6 shrink-0 border-t sm:border-t-0 border-neutral-100 pt-3 sm:pt-0 mt-1 sm:mt-0">
-                    <button onClick={() => { setSelectedJob(job); setIsApplicationsOpen(true); }} className="text-sm font-semibold text-[#009245] hover:underline whitespace-nowrap">
+                    <button onClick={() => { setSelectedJob(job); setIsApplicationsOpen(true); }} className="text-sm font-semibold text-primary hover:underline whitespace-nowrap">
                       {job.applicant_count} {job.applicant_count === 1 ? 'Candidato' : 'Candidati'}
                     </button>
                     <Chip size="sm" color={job.status === 'attiva' ? 'success' : 'default'} variant="flat" className="shrink-0 font-medium">
@@ -166,7 +168,7 @@ export default function BusinessProfileDashboard({ user, initialJobs }: Business
                     </Chip>
                     <Dropdown placement="bottom-end">
                       <DropdownTrigger>
-                        <Button isIconOnly size="sm" variant="light" className="text-neutral-500 hover:text-neutral-900 text-2xl font-bold min-w-8 w-8 h-8">&#8942;</Button>
+                        <Button isIconOnly size="sm" variant="light" className="text-neutral-500 hover:text-neutral-900 text-2xl min-w-8 w-8 h-8">&#8942;</Button>
                       </DropdownTrigger>
                       <DropdownMenu aria-label="Azioni Inserzione">
                         <DropdownItem key="status" onPress={() => handleToggleStatus(job.id, job.status)}>

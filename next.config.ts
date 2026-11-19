@@ -3,6 +3,10 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
+  // Tag Manager only in production (see config/gtm.ts)
+  env: {
+    GTM_ENABLED: process.env.VERCEL_ENV === 'production' ? 'on' : 'off',
+  },
   // Image source
   images: {
     formats: ['image/webp'],

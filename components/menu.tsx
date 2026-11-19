@@ -1,12 +1,5 @@
 import type { Menu as MenuBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  Link,
-} from '@heroui/react'
 import { tv } from 'tailwind-variants'
 
 interface MenuComponentProps {

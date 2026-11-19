@@ -59,9 +59,8 @@ export function withApiAuth(options: WrapperOptions, handler: ApiHandlerWithAuth
         return res.status(error.status).json({ message: error.message })
       }
 
-      return res.status(500).json({
-        message: error?.message || 'Errore interno del server',
-      })
+      // Technical details stay in the logs, never in the browser
+      return res.status(500).json({ message: 'Errore interno del server' })
     }
   }
 }

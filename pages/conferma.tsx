@@ -1,16 +1,28 @@
 import { Logo } from '@public/logo'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { tv } from 'tailwind-variants'
-import { Link as HeroLink, Button } from '@heroui/react'
+import { Link as HeroLink } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import Link from 'next/link'
+import { sendGTMEvent } from '@next/third-parties/google'
+import { EVENTS } from '@modules/brevo-events'
 
 export default function Feedback() {
   const router = useRouter()
   const params = router.query
   const [confirming, setConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
+
+  // Old links of the one-click questions (/conferma?type=domanda|richiesta): the answer
+  // page is now /risposta (see /api/openday/risposta), it also saves the choice
+  const answerType = router.isReady ? String(router.query.type || '') : ''
+  useEffect(() => {
+    if (answerType !== 'domanda' && answerType !== 'richiesta') return
+    const next = new URLSearchParams({ tipo: answerType, d: String(router.query.d || '') })
+    router.replace(`/risposta?${next.toString()}`)
+  }, [answerType, router])
 
   // Open Day: l'iscrizione avviene solo dopo il click sul pulsante
   const confirmOpenday = async () => {
@@ -27,6 +39,7 @@ export default function Feedback() {
         )
         return
       }
+      sendGTMEvent({ event: EVENTS.openday })
       const next = new URLSearchParams({ type: 'openday', status: 'success' })
       if (params.area) next.set('area', String(params.area))
       if (data.openday_data) next.set('openday_data', data.openday_data)
@@ -51,7 +64,7 @@ export default function Feedback() {
     collegamentoCorso = `corsi/${paths[0]}/corso-${paths[0]}-${paths[1]}-livello`
   }
 
-  const { title, subtitle, description, wrapper } = classes()
+  const { title, description, wrapper } = classes()
 
   const areaFormatted = params.area
     ? String(params.area).charAt(0).toUpperCase() + String(params.area).slice(1)
@@ -256,8 +269,7 @@ export default function Feedback() {
 
 const classes = tv({
   slots: {
-    title: 'font-serif font-black text-4xl md:text-6xl leading-none mb-6',
-    subtitle: 'font-sans font-medium text-2xl md:text-3xl leading-none mb-3',
+    title: 'font-serif type-display mb-6',
     description: 'font-sans text-lg mb-12',
     wrapper: 'md:max-w-2/3',
   },

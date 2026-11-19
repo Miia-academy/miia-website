@@ -50,7 +50,7 @@ const BackgroundImage = ({ blok }: BackgroundComponentProps) => {
           })}
           src={width > 768 ? image.filename : image.filename + cropped}
           alt={image.alt || ''}
-          sizes="(max-width:480px):320px,(max-width:512px):480px,(max-width:768px):512px,(max-width:1024px):768px,(max-width:1240px):1024px,1440px"
+          sizes="100vw"
           quality={60}
           priority
           fill

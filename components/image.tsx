@@ -1,12 +1,12 @@
 import type { Image as ImageBlok } from '@types'
 import {
-  Image as HeroImage,
   Modal,
   ModalContent,
   useDisclosure,
 } from '@heroui/react'
+import { Image as HeroImage } from '@components/ui/image'
 import { tv } from 'tailwind-variants'
-import { default as NextImage } from 'next/image'
+import { gridSizes, responsiveImage } from '@modules/images'
 import { storyblokEditable } from '@storyblok/react'
 
 // Definizioni type-safe per Tailwind Variants
@@ -21,38 +21,25 @@ interface ImageComponentProps {
 }
 
 export default function Image({ blok, parent }: ImageComponentProps) {
-  if (!blok.image?.filename) return null
-
   const { isOpen, onOpen, onClose } = useDisclosure()
 
-  // Parsing sicuro delle dimensioni dall'URL di Storyblok
-  const sizeMatch = blok.image.filename.match(/\/(\d+)x(\d+)\//)
-  const size = sizeMatch ? sizeMatch.slice(1).map(Number) : null
-  const ratio = size && size.length === 2 ? size[0] / size[1] : undefined
-
-  let width: number | undefined = undefined
-  let height: number | undefined = undefined
-  let axis = 'width'
-
-  if (ratio) {
-    width = ratio > 1 ? 1280 : 768 * ratio
-    height = ratio < 1 ? 768 : 1280 / ratio
-    axis = ratio > 1 ? 'width' : 'height'
-  }
+  if (!blok.image?.filename) return null
 
   const isFullWith = blok.width?.[0] === '1/1'
   const orderAttr = blok.order ? (blok.order.toString() as OrderVariant) : undefined
+  const image = responsiveImage(blok.image.filename, gridSizes(blok.width))
 
   return (
     <>
       <HeroImage
         {...storyblokEditable(blok as any)}
-        src={blok.image.filename}
+        src={image.src}
+        srcSet={image.srcSet}
+        sizes={image.sizes}
         alt={blok.image.alt || ''}
         onClick={onOpen}
         width="100%"
         removeWrapper={!!blok.size}
-        sizes={`(max-${axis}:512px):512px,(max-${axis}:768px):768px,(max-${axis}:1024px):1024px,(max-${axis}:1280px):1280px,1280px`}
         classNames={{
           wrapper: wrapperClasses({
             order: orderAttr,
@@ -83,13 +70,10 @@ export default function Image({ blok, parent }: ImageComponentProps) {
           }}
         >
           <ModalContent className="p-0">
-            <NextImage
-              src={blok.image.filename}
+            <img
+              {...responsiveImage(blok.image.filename, '100vw')}
               alt={blok.image.alt || ''}
-              width={width}
-              height={height}
-              sizes={`(max-${axis}:512px):256px,(max-${axis}:768px):512px,(max-${axis}:1024px):768px,(max-${axis}:1280px):1024px,1280px`}
-              fill={!ratio}
+              className="block h-auto max-h-[80vh] w-auto max-w-[100vw]"
             />
           </ModalContent>
         </Modal>
@@ -148,7 +132,7 @@ const wrapperClasses = tv({
 })
 
 const imageClasses = tv({
-  base: 'h-auto max-h-lg opacity-100',
+  base: 'h-auto max-h-lg',
   variants: {
     size: {
       sm: 'max-w-32',

@@ -15,7 +15,8 @@ import {
 } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface CompanyDetails {
@@ -158,7 +159,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-                <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight break-words">
+                <h1 className="type-title-3 tracking-tight text-neutral-900 break-words">
                   {job.title}
                 </h1>
 
@@ -167,16 +168,16 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
                   hasAppliedState ? (
                     <Button
                       isDisabled
-                      className="bg-[#009245]/10 text-[#009245] font-bold border border-[#009245]/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
+                      className="bg-primary/10 text-primary border border-primary/30 opacity-100 cursor-not-allowed shrink-0 h-11 px-6"
                     >
                       ✓ Già candidato
                     </Button>
                   ) : (
-                    <Button
+                    <Button color="primary"
                       onPress={handleApply}
                       isLoading={loading}
                       isDisabled={job.status !== 'attiva'}
-                      className="bg-[#009245] text-white font-bold shrink-0 h-11 px-6 shadow-sm"
+                      className="shrink-0 h-11 px-6 shadow-sm"
                     >
                       Candidati Ora
                     </Button>
@@ -189,7 +190,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
 
             {/* Condizioni Operative */}
             <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              <h2 className="type-label text-neutral-400">
                 Condizioni & Inquadramento
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
@@ -249,7 +250,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
 
             {/* Descrizione del Ruolo */}
             <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              <h2 className="type-label text-neutral-400">
                 Descrizione del Ruolo
               </h2>
               <p className="text-neutral-700 whitespace-pre-line text-sm leading-relaxed">
@@ -262,13 +263,13 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
               <>
                 <Divider />
                 <div className="space-y-4">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                  <h2 className="type-label text-neutral-400">
                     Competenze Richieste
                   </h2>
                   <div className="space-y-4">
                     {detailedSkills.map((skill) => (
                       <div key={skill.key} className="flex items-start gap-3">
-                        <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                         <div className="space-y-0.5">
                           <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                             {skill.title}
@@ -339,7 +340,7 @@ export default function DettaglioInserzione({ user, job, company, hasApplied }: 
           <ModalContent>
             {(onClose) => (
               <>
-                <ModalHeader className={`text-xl font-bold ${alertInfo.isError ? 'text-red-600' : 'text-[#009245]'}`}>
+                <ModalHeader className={`text-xl font-bold ${alertInfo.isError ? 'text-danger-600' : 'text-primary'}`}>
                   {alertInfo.title}
                 </ModalHeader>
                 <ModalBody>

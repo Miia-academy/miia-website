@@ -1,17 +1,25 @@
+// Library styles first, so globals.css can override them
+import 'swiper/css'
+import 'swiper/css/navigation'
+import '@styles/iconoir.css'
 import '@styles/globals.css'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import type { AppProps } from 'next/app'
+import dynamic from 'next/dynamic'
 import { GoogleTagManager } from '@next/third-parties/google'
 
 import { storyblokInit, apiPlugin } from '@storyblok/react'
 import { HeroUIProvider } from '@heroui/react'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { DataProvider } from '@modules/context'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { captureAttribution, refreshAttributionStorage } from '@modules/attribution'
+import { debugProfiloAttivo, inviaRiassunto, tracciaPagina } from '@modules/tracking'
+import DebugProfilo from '@components/debugProfilo'
+import SiteBanner from '@components/banners/siteBanner'
 
 import { fontSans, fontSerif } from '@config/fonts'
+import { getGtmId } from '@config/gtm'
 
 import Page from '@components/page'
 import Section from '@components/section'
@@ -21,7 +29,6 @@ import Image from '@components/image'
 import Action from '@components/action'
 import Field from '@components/field'
 import Form from '@components/form'
-import Map from '@components/map'
 import Article from '@components/article'
 import List from '@components/list'
 import Carousel from '@components/carousel'
@@ -38,6 +45,9 @@ import Menu from '@components/menu'
 import Process from '@components/process'
 import Grid from '@components/grid'
 import Project from '@components/project'
+
+// Mapbox is large and used on few pages: load it only where a map block appears
+const Map = dynamic(() => import('@components/map'))
 
 const components = {
   page: Page,
@@ -78,6 +88,14 @@ storyblokInit({
   components,
 })
 
+/** Banners chosen in the page ("Banner" field of Page, Article and Project), before the whole site's. */
+function pageBanners(pageProps: any): string[] {
+  const banner = pageProps?.story?.content?.banner
+  return Array.isArray(banner) ? banner.filter((b: unknown): b is string => typeof b === 'string') : []
+}
+
+const gtmId = getGtmId()
+
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
 
@@ -94,21 +112,45 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, [router.events])
 
+  // Profilo di interesse: pagine viste e lette, solo con il consenso marketing.
+  // Il riassunto parte verso il cookie quando la persona chiude o cambia scheda.
+  const [debugProfilo, setDebugProfilo] = useState(false)
+  useEffect(() => {
+    const traccia = (url?: string) => tracciaPagina(url)
+    const fineVisita = () => {
+      if (document.visibilityState === 'hidden') inviaRiassunto()
+    }
+    traccia()
+    setDebugProfilo(debugProfiloAttivo())
+    router.events.on('routeChangeComplete', traccia)
+    document.addEventListener('visibilitychange', fineVisita)
+    window.addEventListener('pagehide', fineVisita)
+    return () => {
+      router.events.off('routeChangeComplete', traccia)
+      document.removeEventListener('visibilitychange', fineVisita)
+      window.removeEventListener('pagehide', fineVisita)
+    }
+  }, [router.events])
+
   return (
     <>
+      {/* Fonts for the whole page, modals included: next/font CSS is loaded only from _app */}
+      <style jsx global>{`
+        :root {
+          --font-sans: ${fontSans.style.fontFamily};
+          --font-serif: ${fontSerif.style.fontFamily};
+        }
+      `}</style>
       <DataProvider data={pageProps.data}>
         <HeroUIProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">
             <Component {...pageProps} />
+            <SiteBanner pageBanners={pageBanners(pageProps)} />
           </NextThemesProvider>
         </HeroUIProvider>
       </DataProvider>
-      <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM || ''} />
+      {debugProfilo && <DebugProfilo />}
+      {gtmId && <GoogleTagManager gtmId={gtmId} />}
     </>
   )
-}
-
-export const fonts = {
-  sans: fontSans.style.fontFamily,
-  serif: fontSerif.style.fontStyle,
 }

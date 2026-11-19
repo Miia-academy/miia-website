@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { Tabs, Tab, Input, Button, Alert, Checkbox } from '@heroui/react'
+import { Tabs, Tab, Input, Alert, Checkbox } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { Logo } from '@public/logo'
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -113,11 +114,11 @@ export default function CompanyLogin() {
       <Head><title>Area Aziende | MIIA</title></Head>
 
       <div className="absolute top-0 right-0 left-0 z-10 flex justify-center p-6">
-        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#009245" />
+        <Logo classes="h-8 sm:h-12" primary="#171717" secondary="#008a45" />
       </div>
 
       <div className="w-full max-w-lg bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-neutral-200 flex flex-col max-h-[90vh] relative z-20">
-        <h1 className="text-2xl font-bold mb-4 text-center shrink-0">Area Riservata Aziende</h1>
+        <h1 className="type-title-4 mb-4 text-center shrink-0">Area Riservata Aziende</h1>
 
         {successMsg ? (
           <Alert color="success" variant="flat">{successMsg}</Alert>
@@ -135,12 +136,11 @@ export default function CompanyLogin() {
                   type="email"
                   label="Email Aziendale"
                   isRequired
-                  classNames={{ label: "after:text-red-500" }}
                   value={loginEmail}
                   onValueChange={setLoginEmail}
                   variant="flat"
                 />
-                <Button type="submit" isLoading={loading} color="primary" className="h-12 font-bold shadow-sm">
+                <Button size="lg" type="submit" isLoading={loading} color="primary" className="shadow-sm">
                   Invia Link di Accesso
                 </Button>
               </form>
@@ -153,7 +153,6 @@ export default function CompanyLogin() {
                   <Input
                     label="Nome Azienda"
                     isRequired
-                    classNames={{ label: "after:text-red-500" }}
                     value={regForm.nome}
                     onValueChange={v => setRegForm({ ...regForm, nome: v })}
                     variant="flat"
@@ -161,7 +160,6 @@ export default function CompanyLogin() {
                   <Input
                     label="Nome Referente"
                     isRequired
-                    classNames={{ label: "after:text-red-500" }}
                     value={regForm.contact_person}
                     onValueChange={v => setRegForm({ ...regForm, contact_person: v })}
                     variant="flat"
@@ -170,7 +168,6 @@ export default function CompanyLogin() {
                     type="email"
                     label="Email Aziendale"
                     isRequired
-                    classNames={{ label: "after:text-red-500" }}
                     value={regForm.email}
                     onValueChange={v => setRegForm({ ...regForm, email: v })}
                     variant="flat"
@@ -188,7 +185,7 @@ export default function CompanyLogin() {
 
                   <div className="flex flex-col gap-2 border-t border-neutral-100">
                     <label className="text-xs font-medium text-neutral-500">
-                      Logo Aziendale<span className="text-red-500">*</span>
+                      Logo Aziendale<span className="text-danger">*</span>
                     </label>
                     <input
                       type="file"
@@ -223,7 +220,7 @@ export default function CompanyLogin() {
                 </div>
 
                 <div className="pt-3 border-t border-neutral-100 mt-auto shrink-0 bg-white px-1">
-                  <Button type="submit" isLoading={loading} color="primary" className="w-full h-12 font-bold shadow-sm">
+                  <Button size="lg" type="submit" isLoading={loading} color="primary" className="w-full shadow-sm">
                     Invia Richiesta
                   </Button>
                 </div>

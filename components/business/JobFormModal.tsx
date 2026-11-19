@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Input,
-  Textarea,
-  Select,
-  SelectItem,
-  Button,
-  Divider,
-} from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, Select, SelectItem, Divider } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useDataContext } from '@modules/context'
 import {
   PROVINCE_TRIVENETO,
@@ -278,7 +267,7 @@ export function JobFormModal({
 
               {/* SEZIONE 1: Informazioni & Requisiti Inserzione */}
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">
+                <span className="type-label text-neutral-400">
                   Informazioni & Requisiti Inserzione
                 </span>
 
@@ -367,7 +356,7 @@ export function JobFormModal({
 
               {/* SEZIONE 2: Dettagli Operativi & Sede */}
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">
+                <span className="type-label text-neutral-400">
                   Dettagli Operativi & Sede
                 </span>
 
@@ -455,9 +444,9 @@ export function JobFormModal({
               </Button>
               <Button
                 type="submit"
+                color={isEdit ? 'dark' : 'primary'}
                 isLoading={loading}
-                className={`w-full sm:w-auto font-bold px-6 shadow-sm text-white ${isEdit ? 'bg-black' : 'bg-[#009245]'
-                  }`}
+                className="w-full sm:w-auto px-6 shadow-sm"
               >
                 {isEdit ? 'Salva Modifiche' : 'Pubblica Inserzione'}
               </Button>

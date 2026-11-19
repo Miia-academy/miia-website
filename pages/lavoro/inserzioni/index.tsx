@@ -6,7 +6,9 @@ import { getActiveJobs } from '@modules/jobs/db'
 import type { Job } from '@modules/jobs/types'
 import { TIPO_CONTRATTO_LABELS, GRADO_ESPERIENZA_LABELS } from '@modules/jobs/types'
 import type { AuthPayload } from '@modules/auth'
-import { Card, CardHeader, CardBody, CardFooter, Chip, Button, Divider } from '@heroui/react'
+import { CardHeader, CardBody, CardFooter, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface JobWithStats extends Job {
@@ -24,8 +26,6 @@ interface BachecaLavoroProps {
 }
 
 export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
-  const isStudente = user.tipo_utente === 'Studente'
-  console.log(user.tipo_utente)
 
   return (
     <div className="min-h-screen bg-neutral-50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
@@ -43,11 +43,11 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
 
         {/* Header Bacheca */}
         <div className="mb-8 sm:mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">
+          <h1 className="type-title-3 tracking-tight text-neutral-900">
             Bacheca Opportunità
           </h1>
           <p className="mt-2 text-base sm:text-lg text-neutral-500">
-            Ciao <span className="font-semibold text-[#009245]">{user.name || user.email}</span>, scopri le posizioni aperte nel Triveneto e candidati.
+            Ciao <span className="font-semibold text-primary">{user.name || user.email}</span>, scopri le posizioni aperte nel Triveneto e candidati.
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
               const isApplied = Boolean(job.has_applied)
 
               return (
-                <Card key={job.id} shadow="sm" className="border border-neutral-200 hover:shadow-md transition-shadow flex flex-col h-full">
+                <Card key={job.id} className="hover:shadow-md transition-shadow flex flex-col h-full">
 
                   <CardHeader className="flex flex-col items-start px-4 pt-4 sm:px-6 sm:pt-6 pb-0">
                     <div className="flex w-full justify-between items-start gap-3">
@@ -119,7 +119,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                       </span>
 
                       {isApplied && (
-                        <span className="text-[#009245] font-bold flex items-center gap-1 bg-[#009245]/10 px-2.5 py-1 rounded-md">
+                        <span className="text-primary font-bold flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-md">
                           ✓ Già candidato
                         </span>
                       )}
@@ -132,7 +132,7 @@ export default function BachecaLavoro({ user, jobs }: BachecaLavoroProps) {
                       href={`/lavoro/inserzioni/${job.id}`}
                       variant="ghost"
                       color="primary"
-                      className="w-full font-bold"
+                      className="w-full"
                     >
                       Vedi Dettagli
                     </Button>

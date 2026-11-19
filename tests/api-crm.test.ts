@@ -12,8 +12,12 @@ vi.mock('@modules/brevo', async (importOriginal) => {
   }
 })
 
+// Open day details (OD_*, PREZZO_*) are tested in openday-details.test.ts
+vi.mock('@modules/openday-details', () => ({ loadOpendayDetails: vi.fn(async () => ({})) }))
+
 import handler from '@pages/api/crm'
 import { BrevoError, getContact, trackEvent, upsertContact } from '@modules/brevo'
+import { loadOpendayDetails } from '@modules/openday-details'
 
 const TEST_EMAIL = 'test+gtm@miia.it'
 
@@ -47,7 +51,12 @@ beforeEach(() => {
   vi.mocked(upsertContact).mockReset().mockResolvedValue(undefined as never)
   vi.mocked(trackEvent).mockReset().mockResolvedValue(undefined as never)
   vi.spyOn(console, 'error').mockImplementation(() => {})
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-10-27T23:30:00Z'))
 })
+
+// Data italiana del momento simulato (in UTC è ancora il 27)
+const OGGI = '2026-10-28'
 
 describe('/api/crm', () => {
   it('accetta solo POST', async () => {
@@ -79,7 +88,7 @@ describe('/api/crm', () => {
     expect(upsertContact).toHaveBeenCalledOnce()
     expect(upsertContact).toHaveBeenCalledWith({
       email: TEST_EMAIL,
-      attributes: { NOME: 'Prova', SMS: '+393331234567' },
+      attributes: { NOME: 'Prova', SMS: '+393331234567', ORIGINE_CONTATTO_DATA: OGGI },
       listIds: [15],
     })
     expect(trackEvent).toHaveBeenCalledWith({
@@ -87,6 +96,24 @@ describe('/api/crm', () => {
       email: TEST_EMAIL,
       properties: { corso: 'Interior' },
     })
+  })
+
+  it('evento leggero: solo le proprietà dell’elenco fisso', async () => {
+    newContact()
+    await call({
+      contact: { email: TEST_EMAIL },
+      event: {
+        event_name: 'submit_brochure_form',
+        event_properties: { area: 'interior', programma: 'primo', finalita: 'lavoro', sede: 'treviso', messaggio: 'ciao' },
+      },
+    })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toEqual({ area: 'interior', programma: 'primo' })
+  })
+
+  it('nomi vecchi senza _form non partono più', async () => {
+    newContact()
+    await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_download' } })
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 
   it('contatto già in Brevo: unisce le scelte multiple e risponde returning', async () => {
@@ -99,6 +126,88 @@ describe('/api/crm', () => {
     expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({
       CORSI: ['Moda', 'Interior'],
     })
+  })
+
+  it('iscrizione a un open day: salva il codice e azzera presenza e ritardo precedenti', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: { OPENDAY_PRESENTE: true } } as never)
+    await call({
+      contact: {
+        email: TEST_EMAIL,
+        attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre', OPENDAY_PRESENTE: true },
+      },
+    })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({
+      OPENDAY_DATA: '2026-11-16T20:00:00.000Z',
+      OPENDAY_CODICE: 'openday-interni-novembre',
+      OPENDAY_PRESENTE: false,
+      OPENDAY_RITARDO: false,
+    })
+  })
+
+  it('open day sign-up: adds the details of that open day from Storyblok', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OPENDAY_VALIDO: true, OPENDAY_PARTENZA_TESTO: 'marzo 2027', INTERESSE_CORSO: 1 })
+    await call({
+      contact: {
+        email: TEST_EMAIL,
+        attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre', OPENDAY_VALIDO: false },
+      },
+    })
+    expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toMatchObject({ OPENDAY_VALIDO: true, OPENDAY_PARTENZA_TESTO: 'marzo 2027', INTERESSE_CORSO: 1 })
+  })
+
+  it('open day sign-up: the event says whether it gives the reserved price', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockResolvedValueOnce({ OPENDAY_VALIDO: true })
+    await call({
+      contact: { email: TEST_EMAIL, attributes: { OPENDAY_DATA: '2026-11-16T20:00:00.000Z', OPENDAY_CODICE: 'openday-interni-novembre' } },
+      event: { event_name: 'submit_openday_form', event_properties: { openday_codice: 'openday-interni-novembre' } },
+    })
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'si' })
+  })
+
+  it('brochure: date of the open day offered on the contact, reserved price in the event', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockClear().mockResolvedValueOnce({ OPENDAY_VALIDO: false, OPENDAY_DATA_TESTO: 'x' })
+    await call({
+      contact: { email: TEST_EMAIL, attributes: { NOME: 'Anna' } },
+      event: {
+        event_name: 'submit_brochure_form',
+        event_properties: {
+          area: 'interior',
+          openday: '2026-11-16T20:00:00.000Z',
+          openday_data: '16 novembre 2026',
+          openday_codice: 'openday-interni-novembre',
+          openday_agevolato: true,
+        },
+      },
+    })
+    expect(loadOpendayDetails).toHaveBeenCalledWith('openday-interni-novembre')
+    const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes
+    expect(attributes).toMatchObject({ OPENDAY_INVITO_DATA: '2026-11-16' })
+    // Not signed up: no open day data or texts on the contact
+    expect(attributes).not.toHaveProperty('OPENDAY_DATA')
+    expect(attributes).not.toHaveProperty('OPENDAY_DATA_TESTO')
+    // The value sent by the browser is ignored: the server's one wins
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toMatchObject({ openday_agevolato: 'no' })
+  })
+
+  it('il browser non può scrivere OPENDAY_INVITO_DATA né openday_agevolato', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    await call({
+      contact: { email: TEST_EMAIL, attributes: { OPENDAY_INVITO_DATA: '2030-01-01' } },
+      event: { event_name: 'submit_brochure_form', event_properties: { openday_agevolato: true } },
+    })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).not.toHaveProperty('OPENDAY_INVITO_DATA')
+    expect(vi.mocked(trackEvent).mock.calls[0][0].properties).not.toHaveProperty('openday_agevolato')
+  })
+
+  it('other forms do not load open day details', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: {} } as never)
+    vi.mocked(loadOpendayDetails).mockClear()
+    await call({ contact: { email: TEST_EMAIL, attributes: { NOME: 'Anna' } } })
+    expect(loadOpendayDetails).not.toHaveBeenCalled()
   })
 
   it('non restituisce mai i dati del contatto al browser', async () => {
@@ -147,9 +256,19 @@ describe('/api/crm', () => {
     expect(upsertContact).toHaveBeenCalledTimes(2)
     expect(vi.mocked(upsertContact).mock.calls[1][0]).toEqual({
       email: TEST_EMAIL,
-      attributes: { NOME: 'Prova', COGNOME: 'Test', SMS: '+393331234567' },
+      attributes: { NOME: 'Prova', COGNOME: 'Test', SMS: '+393331234567', ORIGINE_CONTATTO_DATA: OGGI },
       listIds: [16],
     })
+  })
+
+  it('data di creazione: solo per il contatto nuovo, mai dal modulo', async () => {
+    vi.mocked(getContact).mockResolvedValue({ attributes: { NOME: 'Prova' } } as never)
+    await call({ contact: { email: TEST_EMAIL, attributes: { NOME: 'Prova', ORIGINE_CONTATTO_DATA: '2020-01-01' } } })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({ NOME: 'Prova' })
+
+    newContact()
+    await call({ contact: { email: TEST_EMAIL, attributes: { ORIGINE_CONTATTO_DATA: '2020-01-01' } } })
+    expect(vi.mocked(upsertContact).mock.calls[1][0].attributes).toEqual({ ORIGINE_CONTATTO_DATA: OGGI })
   })
 
   it('se Brevo non risponde, il modulo riceve un errore generico', async () => {
@@ -165,10 +284,13 @@ describe('/api/crm', () => {
       last: { source: 'newsletter', medium: 'email', campaign: 'reminder', date: '2026-10-10T10:00:00Z' },
     }
 
-    it('spenta (default): nessun attributo ORIGINE o ULTIMA', async () => {
+    it('spenta (default): nessun attributo di provenienza, solo la data di creazione', async () => {
       newContact()
       await call({ contact: { email: TEST_EMAIL, attributes: { NOME: 'Prova' } }, source })
-      expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({ NOME: 'Prova' })
+      expect(vi.mocked(upsertContact).mock.calls[0][0].attributes).toEqual({
+        NOME: 'Prova',
+        ORIGINE_CONTATTO_DATA: OGGI,
+      })
     })
 
     it('accesa: nuovo contatto riceve ORIGINE e ULTIMA', async () => {
@@ -204,5 +326,27 @@ describe('/api/crm', () => {
       const attributes = vi.mocked(upsertContact).mock.calls[0][0].attributes!
       expect(attributes).not.toHaveProperty('ORIGINE_SORGENTE')
     })
+
+    it('accesa: la provenienza va anche nell’evento Brevo che avvia le automazioni', async () => {
+      vi.stubEnv('CRM_SOURCE_ATTRIBUTES', 'on')
+      newContact()
+      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_openday_form' }, source })
+      const properties = vi.mocked(trackEvent).mock.calls[0][0].properties
+      expect(properties).toMatchObject({ ultima_campagna: 'reminder' })
+      // Evento leggero: la prima provenienza resta solo sul contatto
+      expect(properties).not.toHaveProperty('origine_sorgente')
+    })
+
+    it('spenta: l’evento parte senza provenienza', async () => {
+      newContact()
+      await call({ contact: { email: TEST_EMAIL }, event: { event_name: 'submit_openday_form' }, source })
+      expect(vi.mocked(trackEvent).mock.calls[0][0].properties).toEqual({})
+    })
+  })
+
+  it('modulo newsletter: la lista 43 "Studenti - newsletter" è ammessa, la 42 no', async () => {
+    newContact()
+    await call({ contact: { email: TEST_EMAIL, listIds: [43, 42, 18] } })
+    expect(vi.mocked(upsertContact).mock.calls[0][0].listIds).toEqual([43])
   })
 })

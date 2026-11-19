@@ -1,17 +1,7 @@
 import type { Form as FormBlok, Field as FieldBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
-import {
-  Button,
-  Drawer,
-  DrawerContent,
-  DrawerBody,
-  DrawerHeader,
-  DrawerFooter,
-  Spinner,
-  Checkbox,
-  Link,
-  Alert,
-} from '@heroui/react'
+import { Drawer, DrawerContent, DrawerBody, DrawerHeader, DrawerFooter, Spinner, Checkbox, Link, Alert } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { fieldValidation } from '@modules/validations'
 import { getCapitalize } from '@modules/formats'
@@ -24,8 +14,10 @@ import { isStoryResolved } from '@modules/relations'
 import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
 import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
+import { tracciaModulo } from '@modules/tracking'
 import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
 import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
+import { formEventName, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
 
 export interface FieldData {
   id: string
@@ -41,13 +33,15 @@ export interface OptionProps {
   value: string
 }
 
+// "16 novembre 2026": the emails show it as it is
 const dateFormat = {
+  day: 'numeric' as const,
+  month: 'long' as const,
   year: 'numeric' as const,
-  month: '2-digit' as const,
-  day: '2-digit' as const,
+  timeZone: 'Europe/Rome',
 }
 
-type ExtendedFormBlok = FormBlok & {
+export type ExtendedFormBlok = FormBlok & {
   action?: string
   endpoint?: string
 }
@@ -61,7 +55,42 @@ interface FormComponentProps {
 
 type FormStates = 'close' | 'open' | 'search' | 'send' | 'error' | 'done'
 
-function validateFields(data: FormData) {
+/** Sostituisce {{campo}} con i valori del modulo (date in formato italiano). */
+export function parseText(text: string, currentData: FormData) {
+  const keys = text.match(/{{(.*?)}}/g)
+  if (keys && keys.length) {
+    keys.forEach((string) => {
+      const key = string.replace('{{', '').replace('}}', '')
+      if (!currentData[key]?.value) return
+      let value = currentData[key].value
+      if (
+        typeof value === 'string' &&
+        !Number.isNaN(new Date(value).valueOf())
+      ) {
+        value = new Date(value).toLocaleDateString('it-IT')
+      }
+      text = text.replace(string, value)
+    })
+  }
+  return text
+}
+
+// Indirizzo per cui un modulo si è già aperto da solo con ?modulo=apri.
+let apertoPer: string | null = null
+
+/**
+ * Con ?modulo=apri nell'indirizzo (link degli avvisi dei banner) si apre da solo
+ * il primo modulo della pagina, una volta sola.
+ */
+function apriDaIndirizzo(): boolean {
+  if (typeof window === 'undefined') return false
+  if (new URLSearchParams(window.location.search).get('modulo') !== 'apri') return false
+  if (apertoPer === window.location.href) return false
+  apertoPer = window.location.href
+  return true
+}
+
+export function validateFields(data: FormData) {
   const updated = { ...data }
   Object.entries(updated).forEach(([name, field]) => {
     if (!field || typeof field !== 'object') return
@@ -70,23 +99,17 @@ function validateFields(data: FormData) {
   return updated
 }
 
-function buildEvent(
+export function buildEvent(
   data: FormData,
   globalEvents: ProcessedEvent[],
   tracking?: string
 ) {
-  const eventFilterData = [
-    'email',
-    'nome',
-    'cognome',
-    'sms',
-    'newsletter',
-    'validation',
-  ]
   const properties: Record<string, string | number | boolean> = {}
   const today = new Date()
 
   const rawArea =
+    data['interesse_area']?.value ||
+    data['interesse_corso']?.value ||
     data['area']?.value ||
     data['area_disciplinare']?.value ||
     data['enroll']?.value ||
@@ -99,6 +122,8 @@ function buildEvent(
   } else if (typeof rawArea === 'string' && rawArea.trim() !== '') {
     selectedArea = rawArea.toLowerCase()
   }
+  // interior_primo → interior
+  if (selectedArea) selectedArea = selectedArea.split('_')[0]
 
   let opendayEvent: ProcessedEvent | undefined
 
@@ -152,46 +177,50 @@ function buildEvent(
     }
   }
 
+  // Codice dell'open day per la pagina miia.it/open-day/accedi/<codice>
+  if (opendayEvent?.slug) properties['openday_codice'] = opendayEvent.slug
+
   // Docenti dell'open day (campo "Docenti" dell'evento in Storyblok), per le email
   const docenti = joinNames(getDocentiNames(opendayEvent))
   if (docenti) properties['openday_docenti'] = docenti
 
-  Object.entries(data)
-    .filter(([name]) => !eventFilterData.includes(name))
-    .forEach(([name, field]) => {
-      if (!field) return
-      const value = field.value
+  // Light event: only the data of this action (area, level, course); the rest of
+  // the form goes to the contact attributes.
+  for (const [property, ids] of Object.entries(EVENT_FIELDS)) {
+    const value = ids.map((id) => data[id]?.value).find((v) => fieldText(v))
+    if (value !== undefined) properties[property] = fieldText(value)
+  }
+  // interesse_corso holds area and level together (interior_primo)
+  const [courseArea, courseLevel] = fieldText(data['interesse_corso']?.value).split('_')
+  if (courseArea && courseLevel) {
+    properties['area'] = properties['area'] || courseArea
+    properties['programma'] = properties['programma'] || courseLevel
+  }
 
-      if (typeof value === 'number') {
-        properties[name] = value.toString()
-      } else if (Array.isArray(value)) {
-        properties[name] = value.join(', ')
-      } else if (typeof value === 'string' && value.trim() !== '') {
-        const dateValue = new Date(value)
-        if (!isNaN(dateValue.valueOf()) && value.includes('-')) {
-          properties[name] = dateValue.toISOString()
-          properties[name + '_data'] = dateValue.toLocaleDateString(
-            'it-IT',
-            dateFormat
-          )
-        } else {
-          properties[name] = value
-        }
-      } else if (typeof value === 'boolean') {
-        properties[name] = value ? 'Si' : 'No'
-      }
-    })
-
+  const name = formEventName(tracking)
   return {
     identifiers: { email_id: data.email?.value },
-    event_name: `submit_${tracking || 'form'}`,
-    event_properties: properties,
+    event_name: name,
+    event_properties: pickEventProperties(name, properties),
   }
+}
+
+// Form fields that fill the event properties, in order of preference.
+const EVENT_FIELDS: Record<string, string[]> = {
+  area: ['interesse_area', 'area', 'area_disciplinare'],
+  programma: ['programma'],
+  corso: ['corso', 'enroll'],
+}
+
+function fieldText(value: unknown): string {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean).join(', ')
+  if (typeof value === 'number') return String(value)
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 // Il contatto viene identificato solo dall'email. Prefisso del telefono e unione
 // dei valori già presenti in Brevo vengono gestiti dal server (/api/crm).
-function buildContact(data: FormData, list?: any[]) {
+export function buildContact(data: FormData, list?: any[]) {
   const contactFilterData = ['email']
   return {
     email: data.email?.value,
@@ -204,7 +233,97 @@ function buildContact(data: FormData, list?: any[]) {
   }
 }
 
-function mergeForm(blok: ExtendedFormBlok, courses?: Array<OptionProps>): ExtendedFormBlok {
+/**
+ * Data e codice dell'open day da salvare sul contatto: solo dal modulo di
+ * iscrizione all'open day. Gli altri moduli (brochure, richiesta iscrizione)
+ * calcolano il prossimo open day solo per l'evento Brevo, che lo usa nelle email
+ * come invito (proprietà openday_data): se finisse nel contatto, le automazioni
+ * dell'open day tratterebbero la persona come iscritta.
+ */
+export function opendayAttributes(
+  properties: Record<string, string | number | boolean>,
+  tracking?: string
+): Record<string, string> {
+  if (normalizeTracking(tracking) !== 'openday' || !properties['openday']) return {}
+  return {
+    OPENDAY_DATA: String(properties['openday']),
+    ...(properties['openday_codice'] ? { OPENDAY_CODICE: String(properties['openday_codice']) } : {}),
+  }
+}
+
+/**
+ * Invia un modulo già controllato: Brevo (tramite /api/crm), evento GTM e profilo.
+ * Usata dal modulo nella pagina e da quello dentro i banner.
+ */
+export async function inviaModulo(
+  form: ExtendedFormBlok,
+  newData: FormData,
+  globalEvents: ProcessedEvent[],
+  cookieConsent: boolean
+): Promise<{ ok: true; returning: boolean } | { ok: false; error: string }> {
+  // Consenso dato con la casella del modulo: lo registra Iubenda, come dal banner.
+  if (cookieConsent && acceptAllCookies()) {
+    refreshAttributionStorage()
+    window.setTimeout(refreshAttributionStorage, 1000)
+  }
+
+  const event = buildEvent(newData, globalEvents, form.tracking)
+  const contact = buildContact(newData, form.list)
+
+  const rawFieldValues = Object.fromEntries(
+    Object.entries(newData).map(([key, field]) => [key, field?.value])
+  )
+
+  if (event.event_properties['openday']) {
+    rawFieldValues.openday = String(event.event_properties['openday'])
+    rawFieldValues.openday_data = String(event.event_properties['openday_data'])
+  }
+  contact.attributes = {
+    ...contact.attributes,
+    ...opendayAttributes(event.event_properties, form.tracking),
+  }
+
+  const payload = {
+    contact,
+    event,
+    fields: rawFieldValues,
+    company:
+      rawFieldValues.azienda ||
+      rawFieldValues.company ||
+      '',
+    title: rawFieldValues.titolo || rawFieldValues.title || '',
+    description:
+      rawFieldValues.messaggio || rawFieldValues.description || '',
+    location: rawFieldValues.citta || rawFieldValues.location || '',
+    area: Array.isArray(rawFieldValues.area)
+      ? rawFieldValues.area[0]
+      : rawFieldValues.area || '',
+    email: newData.email?.value,
+    source: getAttribution(),
+  }
+
+  try {
+    const response = await fetch('/api/crm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (response.ok) {
+      const result = await response.json().catch(() => null)
+      sendGTMEvent({ event: event.event_name })
+      tracciaModulo(normalizeTracking(form.tracking), event.event_properties['openday'] ? String(event.event_properties['openday']) : undefined)
+      return { ok: true, returning: !!result?.returning }
+    }
+    const errRes = await response.json().catch(() => null)
+    return { ok: false, error: errRes?.message || errors.default }
+  } catch (e) {
+    console.error('[Form Submit Error]', e)
+    return { ok: false, error: errors.default }
+  }
+}
+
+export function mergeForm(blok: ExtendedFormBlok, courses?: Array<OptionProps>): ExtendedFormBlok {
   const alias = isStoryResolved<ExtendedFormBlok>(blok.alias)
     ? (blok.alias as ISbStoryData<ExtendedFormBlok>).content
     : null
@@ -253,7 +372,7 @@ function mergeForm(blok: ExtendedFormBlok, courses?: Array<OptionProps>): Extend
   }
 }
 
-const getData = (fields: Array<FieldBlok> = []) => {
+export const getData = (fields: Array<FieldBlok> = []) => {
   const data: FormData = {}
   fields.forEach(({ id, input, placeholder = '', required, hidden: isHidden }) => {
     if (!id) return
@@ -321,6 +440,10 @@ export default function Form({
     if (state === 'open') setAskCookies(needsCookieConsent())
   }, [state])
 
+  useEffect(() => {
+    if (apriDaIndirizzo()) setState('open')
+  }, [])
+
   const visibleFields = useMemo(
     () => (form.fields || []).filter((f) => !f.hidden),
     [form.fields]
@@ -356,76 +479,16 @@ export default function Form({
     setState('send')
     setError(null)
 
-    // Consenso dato con la casella del modulo: lo registra Iubenda, come dal banner.
-    if (askCookies && cookieConsent && acceptAllCookies()) {
-      refreshAttributionStorage()
-      window.setTimeout(refreshAttributionStorage, 1000)
-    }
-
-    const event = buildEvent(newData, globalEvents, form.tracking)
-    const contact = buildContact(newData, form.list)
-
-    const rawFieldValues = Object.fromEntries(
-      Object.entries(newData).map(([key, field]) => [key, field?.value])
-    )
-
-    if (event.event_properties['openday']) {
-      const opendayVal = String(event.event_properties['openday'])
-      const opendayDataVal = String(event.event_properties['openday_data'])
-
-      rawFieldValues.openday = opendayVal
-      rawFieldValues.openday_data = opendayDataVal
-
-      contact.attributes = {
-        ...contact.attributes,
-        OPENDAY: opendayVal,
-        OPENDAY_DATA: opendayDataVal,
-      }
-    }
-
-    const payload = {
-      contact,
-      event,
-      fields: rawFieldValues,
-      company:
-        rawFieldValues.azienda ||
-        rawFieldValues.company ||
-        '',
-      title: rawFieldValues.titolo || rawFieldValues.title || '',
-      description:
-        rawFieldValues.messaggio || rawFieldValues.description || '',
-      location: rawFieldValues.citta || rawFieldValues.location || '',
-      area: Array.isArray(rawFieldValues.area)
-        ? rawFieldValues.area[0]
-        : rawFieldValues.area || '',
-      email: newData.email?.value,
-      source: getAttribution(),
-    }
-
-    try {
-      const response = await fetch('/api/crm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+    const esito = await inviaModulo(form, newData, globalEvents, askCookies && cookieConsent)
+    if (esito.ok) {
+      setMessage({
+        title: parseText(titles[esito.returning ? 'user' : 'new'], newData),
+        body: parseText(form.message || '', newData),
       })
-
-      if (response.ok) {
-        const result = await response.json().catch(() => null)
-        setMessage({
-          title: parseText(titles[result?.returning ? 'user' : 'new'], newData),
-          body: parseText(form.message || '', newData),
-        })
-        setState('done')
-        sendGTMEvent({ event: `submit_${form.tracking || 'form'}_form` })
-      } else {
-        const errRes = await response.json().catch(() => null)
-        setState('error')
-        setError(errRes?.message || errors.default)
-      }
-    } catch (e) {
-      console.error('[Form Submit Error]', e)
+      setState('done')
+    } else {
       setState('error')
-      setError(errors.default)
+      setError(esito.error)
     }
   }
 
@@ -444,26 +507,8 @@ export default function Form({
     setState('close')
   }, [form.terms, handleClear])
 
-  const parseText = useCallback((text: string, currentData: FormData) => {
-    const keys = text.match(/{{(.*?)}}/g)
-    if (keys && keys.length) {
-      keys.forEach((string) => {
-        const key = string.replace('{{', '').replace('}}', '')
-        if (!currentData[key]?.value) return
-        let value = currentData[key].value
-        if (
-          typeof value === 'string' &&
-          !Number.isNaN(new Date(value).valueOf())
-        ) {
-          value = new Date(value).toLocaleDateString('it-IT')
-        }
-        text = text.replace(string, value)
-      })
-    }
-    return text
-  }, [])
 
-  const { button, close, spinner, label, clear } = classes()
+  const { button, close, spinner, label } = classes()
 
   return (
     <>
@@ -628,13 +673,13 @@ export default function Form({
   )
 }
 
-const titles = {
+export const titles = {
   new: '###Benvenuto {{nome}}!',
   user: '###Bentornato {{nome}}!',
   done: '###Grazie {{nome}}!',
 }
 
-const errors = {
+export const errors = {
   default: 'Si è verificato un errore, riprova più tardi',
   agreement: 'Devi accettare l’informativa privacy per procedere',
 }
@@ -642,7 +687,7 @@ const errors = {
 const classes = tv({
   slots: {
     button:
-      'font-medium text-medium col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3',
+      'text-medium col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3',
     close: 'text-xl hover:bg-transparent active:bg-transparent',
     spinner:
       'absolute inset-0 flex items-center justify-center z-20 bg-opacity-30 bg-background backdrop-blur-sm',

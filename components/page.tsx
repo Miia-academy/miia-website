@@ -3,6 +3,10 @@ import type { ISbStoryData } from '@storyblok/react'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import Meta from '@components/meta'
 import Nav from '@components/nav'
+import SlotBanner from '@components/banners/slotBanner'
+import { BANNER } from '@config/tracking'
+import { useRouter } from 'next/router'
+import { Fragment } from 'react'
 
 interface PageComponentProps {
   blok: PageBlok
@@ -12,6 +16,8 @@ interface PageComponentProps {
 export default function Page({ blok, locations = [] }: PageComponentProps) {
   // Guard clause e calcoli sicuri
   const body = blok.body || []
+  const router = useRouter()
+  const home = router.asPath.split(/[?#]/)[0] === '/'
   const singleSection = body.length === 1
 
   // Type narrowing per risolvere in modo sicuro le relazioni in Strict Mode
@@ -25,19 +31,22 @@ export default function Page({ blok, locations = [] }: PageComponentProps) {
 
   return (
     <div {...storyblokEditable(blok as any)}>
-      <Meta {...(blok as any)} />
+      <Meta {...(blok as any)} noindex={!!blok.auth} />
 
       {headerContent && <Nav parent="header" blok={headerContent} />}
 
       <main className="min-h-cover">
         {body.map((bodyBlok: any) => (
-          <StoryblokComponent
-            blok={bodyBlok}
-            parent="page"
-            locations={locations}
-            key={bodyBlok._uid}
-            singleSection={singleSection}
-          />
+          <Fragment key={bodyBlok._uid}>
+            <StoryblokComponent
+              blok={bodyBlok}
+              parent="page"
+              locations={locations}
+              singleSection={singleSection}
+            />
+            {/* Fixed banner place in the home, after "Cosa offriamo" */}
+            {home && bodyBlok.id === BANNER.homeSlotAfterSection && <SlotBanner slot="home" />}
+          </Fragment>
         ))}
       </main>
 
