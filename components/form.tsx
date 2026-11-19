@@ -625,8 +625,9 @@ export default function Form({
                     Cookie policy
                   </Link>
                   <p className="mt-0.5 text-xs italic text-neutral-500">
-                    Funzionalità, esperienza, misurazione e marketing, per contenuti più
-                    utili su sito e social. Puoi cambiare idea quando vuoi.
+                    Funzionalità, esperienza, misurazione e marketing, compreso un profilo dei tuoi
+                    interessi per contenuti più utili su sito, email e social. Puoi cambiare idea
+                    quando vuoi.
                   </p>
                 </div>
               </div>
