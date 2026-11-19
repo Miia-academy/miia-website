@@ -34,12 +34,19 @@ describe('normalizePhone', () => {
     ['+39+393331234567', '+393331234567'],
     ['(333) 123.4567', '+393331234567'],
     ['+41 79 123 45 67', '+41791234567'],
+    // Come lo restituisce Brevo: internazionale senza "+"
+    ['393494519729', '+393494519729'],
+    ['39333123456', '+39333123456'],
+    ['3921234567', '+393921234567'],
+    [393494519729, '+393494519729'],
   ])('%s diventa %s', (input, expected) => {
     expect(normalizePhone(input)).toBe(expected)
   })
 
   it('rifiuta numeri non plausibili', () => {
     expect(normalizePhone('123')).toBeNull()
+    // Prefisso aggiunto due volte: troppe cifre per un numero italiano
+    expect(normalizePhone('+39393494519729')).toBeNull()
     expect(normalizePhone('abc')).toBeNull()
     expect(normalizePhone('')).toBeNull()
     expect(normalizePhone(null)).toBeNull()

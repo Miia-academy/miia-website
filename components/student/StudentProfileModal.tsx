@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Divider, Select, SelectItem, Checkbox } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Divider, Select, SelectItem, Checkbox } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useDataContext } from '@modules/context'
 
 export interface StudentProfileData {
@@ -157,7 +158,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
 
             <ModalBody className="py-6 px-4 sm:px-6 space-y-6">
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Dati Anagrafici & Contatti</span>
+                <span className="type-label text-neutral-400">Dati Anagrafici & Contatti</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Nome" isRequired value={editForm.nome} onValueChange={(v) => setEditForm({ ...editForm, nome: v })} variant="flat" />
                   <Input label="Cognome" isRequired value={editForm.cognome} onValueChange={(v) => setEditForm({ ...editForm, cognome: v })} variant="flat" />
@@ -172,7 +173,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Le tue Competenze</span>
+                <span className="type-label text-neutral-400">Le tue Competenze</span>
                 <Select
                   label="Seleziona competenze"
                   selectionMode="multiple"
@@ -195,7 +196,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Stato e Disponibilità</span>
+                <span className="type-label text-neutral-400">Stato e Disponibilità</span>
                 <div className="flex flex-col gap-3">
                   <Checkbox isSelected={editForm.ricerca_attiva} onValueChange={(v) => setEditForm({ ...editForm, ricerca_attiva: v })}>
                     <span className="text-sm font-medium text-neutral-700">In ricerca attiva di lavoro</span>
@@ -215,18 +216,18 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Divider className="my-1" />
 
               <div className="space-y-4">
-                <span className="text-[11px] font-bold uppercase text-neutral-400 tracking-wider">Documenti</span>
+                <span className="type-label text-neutral-400">Documenti</span>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Curriculum Vitae (PDF max 5MB) <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Curriculum Vitae (PDF max 5MB) <span className="text-danger">*</span></label>
 
                   <div className="flex items-center gap-3 mb-3 bg-neutral-50 p-2.5 rounded-xl border border-neutral-200">
                     {editForm.cv_url ? (
-                      <a href={editForm.cv_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#009245] hover:underline flex items-center gap-1.5 shrink-0">
+                      <a href={editForm.cv_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 shrink-0">
                         📄 CV Caricato
                       </a>
                     ) : (
-                      <span className="text-xs text-red-500 font-medium italic">Nessun CV caricato</span>
+                      <span className="text-xs text-danger font-medium italic">Nessun CV caricato</span>
                     )}
                     <span className="text-[11px] text-neutral-500">
                       {editForm.cv_url ? 'File salvato su Storage. Carica un nuovo PDF solo se desideri sostituirlo.' : 'File obbligatorio per accedere alle candidature.'}
@@ -237,7 +238,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
                     type="file"
                     accept="application/pdf"
                     onChange={(e) => setCvFile(e.target.files?.[0] || null)}
-                    className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#009245]/10 file:text-[#009245] hover:file:bg-[#009245]/20 transition-colors"
+                    className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"
                   />
                 </div>
 
@@ -271,7 +272,7 @@ export function StudentProfileModal({ isOpen, onClose, initialData, onSuccess }:
               <Button variant="flat" onPress={onClose} disabled={loading} className="w-full sm:w-auto">
                 Annulla
               </Button>
-              <Button type="submit" isLoading={loading} className="w-full sm:w-auto bg-black text-white font-bold shadow-sm">
+              <Button color="dark" type="submit" isLoading={loading} className="w-full sm:w-auto shadow-sm">
                 Salva Profilo
               </Button>
             </ModalFooter>

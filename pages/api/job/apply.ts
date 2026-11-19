@@ -17,7 +17,17 @@ async function applyHandler(req: NextApiRequest, res: NextApiResponse, authData:
     return res.status(404).json({ message: 'Inserzione non trovata o chiusa' })
   }
 
-  const cvUrl = authData.cv_url || req.body.cv_url || ''
+  // The CV comes only from the student's own profile (session, or Brevo if the session is behind),
+  // never from the request: otherwise a link to someone else's file would end up in the application.
+  let cvUrl = authData.cv_url || ''
+  if (!cvUrl) {
+    try {
+      const contact = await getContact({ identifier: authData.email })
+      cvUrl = contact?.attributes?.CV_URL || ''
+    } catch (crmError) {
+      console.warn('[API Job Apply] CV non letto dal profilo Brevo:', crmError)
+    }
+  }
   if (!cvUrl) {
     return res.status(400).json({ message: 'CV mancante nel profilo. Aggiorna il tuo profilo prima di candidarti.' })
   }

@@ -14,5 +14,7 @@ export default function exitPreview(req: NextApiRequest, res: NextApiResponse) {
     res.setHeader("Set-Cookie", updated);
   }
 
-  res.redirect(`/${slug}`);
+  // Only paths of this site: "//other.site" or "\\other.site" would leave it
+  const path = String(Array.isArray(slug) ? slug.join("/") : slug).replace(/^[/\\]+/, "");
+  res.redirect(/^[\w\-./]*$/.test(path) ? `/${path}` : "/");
 }

@@ -1,0 +1,163 @@
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { BrevoError, getContact, trackEvent, upsertContact } from '@modules/brevo'
+import { EVENTS, pickEventProperties, siNo } from '@modules/brevo-events'
+import { normalizeEmail } from '@modules/crm-form'
+import {
+  fase,
+  inRitardo,
+  loadOpenday,
+  normalizeCodice,
+  romeDay,
+  scadenzaOfferta,
+  scadenzaTesto,
+} from '@modules/openday-accesso'
+import {
+  attributiDaRisposte,
+  debugAmmesso,
+  domandeDelModulo,
+  loadModuloAccesso,
+  proprietaDaRisposte,
+  risposteValide,
+  tipiAttributi,
+  type Risposte,
+} from '@modules/openday-domande'
+
+// Area dell'evento (interni, moda) → valore negli eventi, come nella brochure: corso-{area}-design-{programma}-livello
+const AREA_EVENTO: Record<string, string> = { interni: 'interior', moda: 'fashion' }
+
+/**
+ * POST { codice, email, risposte? }: la persona ha premuto "Entra nell'open day".
+ *
+ * risposte ({ interesse_inizio: ["prossima"], ... }) sono le domande della pagina, dal modulo
+ * di accesso in Storyblok (@modules/openday-domande): si salvano sul contatto e vanno
+ * nell'evento. Valgono solo valori previsti dal modulo; una domanda saltata non cancella nulla.
+ *
+ * Nell'orario di apertura restituisce il link della call e, se l'email è già un
+ * contatto Brevo, segna la presenza. Non crea contatti nuovi. Serve il clic (POST):
+ * un link aperto da un'anteprima o da un antivirus non segna nessuno come presente.
+ */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST'])
+    return res.status(405).json({ message: 'Metodo non consentito' })
+  }
+
+  const body = req.body && typeof req.body === 'object' ? req.body : {}
+  const codice = normalizeCodice((body as { codice?: unknown }).codice)
+  const email = normalizeEmail((body as { email?: unknown }).email)
+  if (!codice) return res.status(400).json({ message: 'Open day non trovato.' })
+  if (!email) return res.status(400).json({ message: "Scrivi l'email con cui ti sei iscritto." })
+
+  let evento
+  try {
+    evento = (await loadOpenday()).find((e) => e.codice === codice)
+  } catch (error) {
+    console.error('[Open day] Lettura degli eventi da Storyblok non riuscita:', error)
+    return res.status(502).json({ message: 'Si è verificato un errore, riprova tra un momento.' })
+  }
+  if (!evento) return res.status(404).json({ message: 'Open day non trovato.' })
+
+  if ((body as { debug?: unknown }).debug === true && debugAmmesso()) {
+    return res.status(200).json(await provaRisposte(email, evento.modulo, (body as { risposte?: unknown }).risposte))
+  }
+
+  const now = new Date()
+  const stato = fase(evento.inizio, now)
+  if (stato !== 'aperto') return res.status(409).json({ fase: stato })
+  if (!evento.link) {
+    console.error(`[Open day] Manca il link della call nell'evento ${codice}`)
+    return res.status(503).json({
+      message: 'Il link non è ancora pronto: riprova tra un minuto o scrivici.',
+    })
+  }
+
+  try {
+    const contact = await getContact({ identifier: email })
+    const existing = ((contact as { attributes?: Record<string, unknown> })?.attributes || {}) as Record<
+      string,
+      unknown
+    >
+    const risposte = await leggiRisposte(evento.modulo, (body as { risposte?: unknown }).risposte)
+    const ritardo = inRitardo(evento.inizio, now)
+    const area = AREA_EVENTO[evento.area.toLowerCase()]
+    const programma = /^(primo|secondo)$/.test(evento.livello) ? evento.livello : undefined
+    const attributes: Record<string, unknown> = {
+      OPENDAY_PRESENTE: true,
+      OPENDAY_RITARDO: ritardo,
+      OPENDAY_PRESENZA_DATA: romeDay(now),
+      OFFERTA_SCADENZA_TESTO: scadenzaTesto(evento.inizio),
+    }
+    // Il prezzo riservato (letto dall'iscrizione online) a chi entra, anche in ritardo: il prezzo
+    // si presenta alla fine dell'open day (decisione del 30/10). Solo se l'open day lo prevede
+    // (OPENDAY_VALIDO; OD_VALIDO per chi si è iscritto prima del 26/10).
+    const valido = (existing.OPENDAY_VALIDO ?? existing.OD_VALIDO) === true
+    if (valido) {
+      attributes.OFFERTA_SCADENZA_DATA = scadenzaOfferta(evento.inizio)
+    }
+    if (Object.keys(risposte).length) {
+      try {
+        // Le risposte non toccano mai gli attributi della presenza scritti qui sopra
+        for (const [nome, valore] of Object.entries(attributiDaRisposte(risposte, await tipiAttributi()))) {
+          if (!(nome in attributes)) attributes[nome] = valore
+        }
+      } catch (error) {
+        console.error('[Open day] Tipi degli attributi Brevo non letti, risposte solo nell’evento:', error)
+      }
+    }
+    await upsertContact({ email, attributes })
+    // Event for the automations: who entered which open day, and whether late
+    await trackEvent({
+      eventName: EVENTS.presence,
+      email,
+      properties: {
+        // Le risposte alle domande della pagina, con il nome del campo (interesse_inizio...)
+        ...proprietaDaRisposte(risposte),
+        ...pickEventProperties(EVENTS.presence, {
+          openday: romeDay(evento.inizio),
+          openday_codice: codice,
+          // "si"/"no": Brevo mostra i booleani degli eventi come "0"/"1", e "0" nelle condizioni vale vero
+          ritardo: siNo(ritardo),
+          // Per il blocco delle agevolazioni nella prima email: OFFERTA_SCADENZA_DATA può restare da un open day precedente
+          openday_agevolato: siNo(valido),
+          // Il corso dell'open day, per il pulsante "Iscriviti online" nelle email del dopo open day
+          area,
+          programma,
+          corso: area && programma ? `corso-${area}-design-${programma}-livello` : undefined,
+        }),
+      },
+    })
+  } catch (error) {
+    // Email sconosciuta o Brevo non raggiungibile: la persona entra lo stesso.
+    if (!(error instanceof BrevoError && error.status === 404)) {
+      console.error('[Open day] Presenza non segnata in Brevo:', error)
+    }
+  }
+
+  return res.status(200).json({ ok: true, link: evento.link })
+}
+
+/** Risposte valide per il modulo di accesso dell'evento; nessuna se il modulo non si legge. */
+async function leggiRisposte(modulo: string, raw: unknown): Promise<Risposte> {
+  if (!raw || typeof raw !== 'object' || !Object.keys(raw).length) return {}
+  try {
+    return risposteValide(domandeDelModulo(await loadModuloAccesso(modulo)), raw)
+  } catch (error) {
+    console.error('[Open day] Modulo di accesso non letto, risposte ignorate:', error)
+    return {}
+  }
+}
+
+/** ?debug=1 (vedi debugAmmesso): salva solo le risposte e dice cosa ha scritto. */
+async function provaRisposte(email: string, modulo: string, raw: unknown) {
+  try {
+    await getContact({ identifier: email })
+  } catch (error) {
+    if (error instanceof BrevoError && error.status === 404)
+      return { ok: true, debug: true, salvato: {}, message: 'Email non in Brevo: nessun dato salvato.' }
+    throw error
+  }
+  const risposte = await leggiRisposte(modulo, raw)
+  const salvato = Object.keys(risposte).length ? attributiDaRisposte(risposte, await tipiAttributi()) : {}
+  if (Object.keys(salvato).length) await upsertContact({ email, attributes: salvato })
+  return { ok: true, debug: true, salvato, evento: proprietaDaRisposte(risposte) }
+}

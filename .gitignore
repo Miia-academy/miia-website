@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Sources
 /csv/*
+
+# prove nel browser (Playwright)
+/e2e-report/
+/e2e-results/

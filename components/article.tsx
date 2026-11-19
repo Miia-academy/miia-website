@@ -1,10 +1,14 @@
 import type { Article as ArticleBlok } from '@types'
 import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
+import SlotBanner from '@components/banners/slotBanner'
+import Meta from '@components/meta'
 import { compiler } from 'markdown-to-jsx'
-import { Image as HeroImage } from '@heroui/react'
+import { Image as HeroImage } from '@components/ui/image'
+import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
+import { useRouter } from 'next/router'
 import { Typography } from './typography'
-import { getLongDate } from '@modules/formats'
+import { getLongDate, parentPath } from '@modules/formats'
 
 interface ArticleProps {
   blok: ArticleBlok
@@ -12,6 +16,20 @@ interface ArticleProps {
 }
 
 export default function Article({ blok, fullSlug }: ArticleProps) {
+  const router = useRouter()
+  const backHref = fullSlug ? parentPath(fullSlug) : '/blog'
+  // Coming from another page of the site (a list, maybe filtered): go back to it as it was
+  const goBack = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof document === 'undefined' || window.history.length < 2) return
+    try {
+      if (new URL(document.referrer).origin !== window.location.origin) return
+    } catch {
+      return
+    }
+    event.preventDefault()
+    router.back()
+  }
+
   // Tema 'light' per garantire il contrasto sul background scuro dell'Hero
   const heroTypography = Typography({ theme: 'light' })
 
@@ -27,6 +45,7 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
 
   return (
     <article {...storyblokEditable(blok as any)} className="w-full">
+      <Meta title={blok.title} description={blok.description} image={blok.image} type="article" />
       {/* 1. HERO SECTION */}
       <section className="relative flex min-h-[70vh] w-full flex-col justify-between overflow-hidden bg-neutral-950 text-white">
         {/* Immagine di Copertina */}
@@ -34,7 +53,8 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
           <div className="absolute inset-0 z-0 h-full w-full">
             <HeroImage
               removeWrapper
-              src={blok.image.filename}
+              {...responsiveImage(blok.image.filename, '100vw')}
+              fetchPriority="high"
               alt={blok.image.alt || blok.title || ''}
               className="h-full w-full object-cover opacity-60"
               radius="none"
@@ -48,7 +68,8 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
         {/* Back Link */}
         <div className="relative z-20 mx-auto w-full max-w-[1280px] p-6 pt-8">
           <NextLink
-            href="/blog"
+            href={backHref}
+            onClick={goBack}
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-200 transition-colors hover:text-white"
           >
             <i className="iconoir-arrow-left text-base" />
@@ -81,7 +102,7 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
 
             {/* Titolo Principale: Blur Rimosso */}
             {typeof blok.title === 'string' && blok.title.trim() !== '' ? (
-              <h1 className="w-fit inline-block font-serif break-words text-3xl md:text-6xl xl:text-7xl font-black leading-tight md:leading-tight xl:leading-none">
+              <h1 className="w-fit inline-block font-serif break-words type-display">
                 {blok.title}
               </h1>
             ) : null}
@@ -100,7 +121,8 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
       </section>
 
       {/* 2. DYNAMIC BODY BLOCKS */}
-      <div className="w-full">
+      {/* Bottom space so the text ends clear of the page edge and the WhatsApp button */}
+      <div className="w-full pb-20 md:pb-24">
         {blok.body &&
           blok.body.map((nestedBlok) => (
             <StoryblokComponent
@@ -110,6 +132,9 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
             />
           ))}
       </div>
+
+      {/* Fixed banner place, at the end */}
+      <SlotBanner slot="articles" />
     </article>
   )
 }

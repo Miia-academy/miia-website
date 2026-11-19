@@ -11,6 +11,9 @@ import {
   sanitizeEventProperties,
   sanitizeLists,
 } from '@modules/crm-form'
+import { pickEventProperties, siNo, sourceEventProperties } from '@modules/brevo-events'
+import { loadOpendayDetails, type OpendayDetails } from '@modules/openday-details'
+import { romeDate } from '@modules/enrollment/dates'
 
 /**
  * Invio dei moduli pubblici del sito verso Brevo.
@@ -59,7 +62,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (isSourceTrackingEnabled()) {
       Object.assign(attributes, sanitizeAttribution(source, existing))
     }
+    // Contatto creato adesso: la data serve alle email (blocco di benvenuto)
+    if (!returning) attributes.ORIGINE_CONTATTO_DATA = romeDate()
     const listIds = sanitizeLists(contact?.listIds)
+    const eventName = sanitizeEventName(event?.event_name)
+    const eventProperties = sanitizeEventProperties(event?.event_properties)
+    // Only the server says whether an open day gives the reserved price
+    delete eventProperties.openday_agevolato
+    let details: OpendayDetails = {}
+    // Nuova iscrizione a un open day: la presenza e il ritardo della volta prima non
+    // valgono più (li segna di nuovo la pagina miia.it/open-day/accedi).
+    if (attributes.OPENDAY_DATA) {
+      attributes.OPENDAY_PRESENTE = false
+      attributes.OPENDAY_RITARDO = false
+      // Date, start, teachers and course of that open day, for the emails
+      if (attributes.OPENDAY_CODICE) {
+        details = await loadOpendayDetails(attributes.OPENDAY_CODICE)
+        Object.assign(attributes, details)
+      }
+    } else if (eventProperties.openday_codice) {
+      // Open day offered by another form (brochure): its date on the contact, so the
+      // automations can check it is still to come when they send an email about it
+      const at = new Date(String(eventProperties.openday))
+      if (!isNaN(at.valueOf())) attributes.OPENDAY_INVITO_DATA = romeDate(at)
+      details = await loadOpendayDetails(eventProperties.openday_codice)
+    }
+    const agevolato = siNo(details.OPENDAY_VALIDO)
+    if (agevolato) eventProperties.openday_agevolato = agevolato
 
     try {
       await upsertContact({ email, attributes, listIds })
@@ -70,21 +99,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!(error instanceof BrevoError && error.status === 400)) throw error
       console.error('[CRM] Attributi rifiutati da Brevo, salvo i dati essenziali:', error.message)
       const essentials: Record<string, unknown> = {}
-      for (const key of ['NOME', 'COGNOME', 'SMS']) {
+      for (const key of ['NOME', 'COGNOME', 'SMS', 'ORIGINE_CONTATTO_DATA']) {
         if (attributes[key] !== undefined) essentials[key] = attributes[key]
       }
       await upsertContact({ email, attributes: essentials, listIds })
     }
 
-    const eventName = sanitizeEventName(event?.event_name)
     if (eventName) {
       await trackEvent({
         eventName,
         email,
-        properties: {
-          ...sanitizeEventProperties(event?.event_properties),
-          ...(isSourceTrackingEnabled() ? attributionEventProperties(source) : {}),
-        },
+        // Light event: only the fixed list of properties (see @modules/brevo-events)
+        properties: pickEventProperties(eventName, {
+          ...eventProperties,
+          ...(isSourceTrackingEnabled() ? sourceEventProperties(attributionEventProperties(source)) : {}),
+        }),
       })
     }
 

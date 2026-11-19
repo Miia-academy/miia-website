@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 import { AlertModal } from '@components/shared/AlertModal'
 
 interface AdminApplicationsListProps {
@@ -57,9 +59,9 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
 
   return (
     <>
-      <Card shadow="sm" className="border border-neutral-200">
+      <Card>
         <CardHeader className="py-4 px-6 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-neutral-900">Gestione Candidature</h2>
+          <h2 className="type-subtitle text-neutral-900">Gestione Candidature</h2>
           <span className="text-xs font-semibold text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-full">
             Totale: {applications.length}
           </span>
@@ -99,7 +101,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                           <Link
                             href={`/lavoro/inserzioni/${app.job_id}`}
                             target="_blank"
-                            className="font-bold text-neutral-900 hover:text-[#009245] hover:underline transition-colors truncate max-w-[280px]"
+                            className="font-bold text-neutral-900 hover:text-primary hover:underline transition-colors truncate max-w-[280px]"
                           >
                             {app.job_title}
                           </Link>
@@ -161,7 +163,7 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                         href={`/admin/studenti/${encodeURIComponent(app.student_email)}`}
                         variant="flat"
                         size="sm"
-                        className="font-semibold text-xs h-8"
+                        className="text-xs h-8"
                       >
                         Vedi Profilo
                       </Button>
@@ -174,16 +176,16 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
                             size="sm"
                             isLoading={loadingId === app.application_id}
                             onPress={() => handleUpdateStatus(app.application_id, 'rifiutata')}
-                            className="font-bold text-xs h-8"
+                            className="text-xs h-8"
                           >
                             Rifiuta
                           </Button>
                           <Button
-                            color="success"
+                            color="primary"
                             size="sm"
                             isLoading={loadingId === app.application_id}
                             onPress={() => handleUpdateStatus(app.application_id, 'validata')}
-                            className="text-white font-bold text-xs h-8 bg-[#009245]"
+                            className="text-xs h-8"
                           >
                             Valida
                           </Button>
@@ -192,12 +194,12 @@ export function AdminApplicationsList({ initialApplications }: AdminApplications
 
                       {isRifiutata && (
                         <Button
-                          color="success"
+                          color="primary"
                           variant="solid"
                           size="sm"
                           isLoading={loadingId === app.application_id}
                           onPress={() => handleUpdateStatus(app.application_id, 'validata')}
-                          className="font-bold text-xs h-8 text-white bg-[#009245]"
+                          className="text-xs h-8"
                         >
                           Rivalida Candidatura
                         </Button>

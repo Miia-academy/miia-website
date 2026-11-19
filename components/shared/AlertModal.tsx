@@ -1,5 +1,6 @@
 import React from 'react'
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react'
+import { Button } from '@components/ui/button'
 
 export interface AlertModalProps {
   isOpen: boolean
@@ -15,7 +16,7 @@ export function AlertModal({ isOpen, onOpenChange, title, message, isError = fal
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className={`text-xl font-bold ${isError ? 'text-red-600' : 'text-[#009245]'}`}>
+            <ModalHeader className={`text-xl font-bold ${isError ? 'text-danger-600' : 'text-primary'}`}>
               {title}
             </ModalHeader>
             <ModalBody>

@@ -6,7 +6,9 @@ import { getContact } from '@modules/brevo'
 import { getStudentApplications } from '@modules/applications/db'
 import type { AuthPayload } from '@modules/auth'
 import { useDataContext } from '@modules/context'
-import { Card, CardHeader, CardBody, Chip, Button, Divider } from '@heroui/react'
+import { CardHeader, CardBody, Chip, Divider } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 import { getJwtSecret } from '@modules/jwt-secret'
 
 interface StudentDetailProps {
@@ -99,7 +101,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           &larr; Torna al Pannello
         </Link>
 
-        <Card shadow="sm" className="border border-neutral-200">
+        <Card>
           <CardHeader className="pt-6 px-6 pb-4 flex flex-col items-start gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
@@ -122,7 +124,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
               )}
             </div>
 
-            <h1 className="text-3xl font-extrabold text-neutral-900 mt-2">
+            <h1 className="type-title-3 text-neutral-900 mt-2">
               {fullName || student.email}
             </h1>
             <p className="text-sm text-neutral-500">{student.email}</p>
@@ -134,28 +136,28 @@ export default function AdminStudentView({ student, applications }: StudentDetai
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Email</span>
+                <span className="block type-label text-neutral-400">Email</span>
                 <span className="text-base font-semibold text-neutral-800 break-all">{student.email}</span>
               </div>
 
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Telefono / SMS</span>
+                <span className="block type-label text-neutral-400">Telefono / SMS</span>
                 <span className="text-base font-semibold text-neutral-800">
-                  {student.sms || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.sms || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Provincia</span>
+                <span className="block type-label text-neutral-400">Provincia</span>
                 <span className="text-base font-semibold text-neutral-800 uppercase">
-                  {student.provincia || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.provincia || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
 
               <div>
-                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Indirizzo</span>
+                <span className="block type-label text-neutral-400">Indirizzo</span>
                 <span className="text-base font-medium text-neutral-800">
-                  {student.indirizzo || <span className="text-red-500 italic text-sm">Mancante</span>}
+                  {student.indirizzo || <span className="text-danger italic text-sm">Mancante</span>}
                 </span>
               </div>
             </div>
@@ -163,7 +165,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Mobilità e Disponibilità
               </span>
               <div className="flex flex-wrap gap-2">
@@ -176,14 +178,14 @@ export default function AdminStudentView({ student, applications }: StudentDetai
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Competenze
               </span>
               {detailedSkills.length > 0 ? (
                 <div className="space-y-4 mt-2">
                   {detailedSkills.map((skill, idx) => (
                     <div key={idx} className="flex items-start gap-3">
-                      <span className="w-2 h-2 rounded-full bg-[#009245] mt-1.5 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                       <div className="space-y-0.5">
                         <h3 className="text-sm font-bold text-neutral-900 leading-snug">
                           {skill.title}
@@ -205,22 +207,21 @@ export default function AdminStudentView({ student, applications }: StudentDetai
             <Divider />
 
             <div>
-              <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
+              <span className="block type-label text-neutral-400 mb-3">
                 Allegati Candidato
               </span>
               <div className="flex flex-wrap gap-3 items-center">
                 {student.cv_url ? (
-                  <Button
+                  <Button color="primary"
                     as="a"
                     href={student.cv_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-white bg-[#009245]"
                   >
                     📄 Download Curriculum (PDF)
                   </Button>
                 ) : (
-                  <span className="text-sm text-red-500 italic font-semibold">Curriculum: Mancante</span>
+                  <span className="text-sm text-danger italic font-semibold">Curriculum: Mancante</span>
                 )}
 
                 {student.portfolio_url ? (
@@ -230,7 +231,6 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     target="_blank"
                     rel="noreferrer"
                     variant="flat"
-                    className="font-bold"
                   >
                     🔗 Vedi Portfolio
                   </Button>
@@ -243,9 +243,9 @@ export default function AdminStudentView({ student, applications }: StudentDetai
           </CardBody>
         </Card>
 
-        <Card shadow="sm" className="border border-neutral-200">
+        <Card>
           <CardHeader className="pt-6 px-6 pb-2 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-neutral-900">
+            <h2 className="type-subtitle text-neutral-900">
               Candidature Inviate ({applications.length})
             </h2>
           </CardHeader>
@@ -267,7 +267,7 @@ export default function AdminStudentView({ student, applications }: StudentDetai
                     <div className="space-y-1">
                       <Link
                         href={`/lavoro/inserzioni/${app.job_id}`}
-                        className="text-base font-bold text-neutral-900 hover:text-[#009245] transition-colors"
+                        className="text-base font-bold text-neutral-900 hover:text-primary transition-colors"
                       >
                         {app.title}
                       </Link>

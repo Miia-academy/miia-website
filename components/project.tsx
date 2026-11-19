@@ -1,7 +1,10 @@
 import type { Project as ProjectBlok } from '@types'
 import { storyblokEditable, StoryblokComponent } from '@storyblok/react'
+import SlotBanner from '@components/banners/slotBanner'
+import Meta from '@components/meta'
 import { compiler } from 'markdown-to-jsx'
-import { Image as HeroImage } from '@heroui/react'
+import { Image as HeroImage } from '@components/ui/image'
+import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
 import { Typography } from './typography'
 
@@ -32,6 +35,7 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
 
   return (
     <article {...storyblokEditable(blok as any)} className="w-full">
+      <Meta title={blok.title} description={blok.subtitle} image={blok.cover} type="article" />
       {/* 1. HERO SECTION */}
       <section className="relative flex min-h-[70vh] w-full flex-col justify-between overflow-hidden bg-neutral-950 text-white">
         {/* Immagine di Copertina */}
@@ -39,7 +43,8 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
           <div className="absolute inset-0 z-0 h-full w-full">
             <HeroImage
               removeWrapper
-              src={blok.cover.filename}
+              {...responsiveImage(blok.cover.filename, '100vw')}
+              fetchPriority="high"
               alt={blok.cover.alt || blok.title || ''}
               className="h-full w-full object-cover opacity-60"
               radius="none"
@@ -96,6 +101,9 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
             />
           ))}
       </div>
+
+      {/* Fixed banner place, at the end */}
+      <SlotBanner slot="projects" />
     </article>
   )
 }

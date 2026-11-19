@@ -18,8 +18,11 @@ export interface Alias {
   title?: string;
   image?: StoryblokAsset;
   resource: "next-event" | "last-article";
+  articolo?: ISbStoryData<Article> | string;
   filter?: string;
   submit?: Form[];
+  persone?: boolean;
+  persone_titolo?: string;
   component: "alias";
   _uid: string;
   [k: string]: unknown;
@@ -42,12 +45,14 @@ export interface Article {
 export interface Aside {
   id?: string;
   enrollment?: unknown;
+  price_text?: string;
+  filter?: string;
   amount?: string;
   steps?: string;
   discount?: string;
   due_date?: string;
   courses?: (ISbStoryData<Course> | string)[];
-  forms: Form[];
+  forms: (Form | Action)[];
   contents: (Process | Text | Action | Wrapper | Alias)[];
   theme?: "" | "dark";
   component: "aside";
@@ -123,6 +128,8 @@ export interface Event {
   location?: ISbStoryData<Location> | string;
   date?: string;
   docenti?: (ISbStoryData<Person> | string)[];
+  link_meet?: string;
+  prezzo_agevolato?: boolean;
   page?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   form?: ISbStoryData<Form> | string;
   component: "event";
@@ -147,7 +154,7 @@ export interface Form {
   alias?: ISbStoryData<Form> | string;
   action?: "" | "/api/jobs" | "/api/company";
   list?: ("" | 31 | 32 | 25 | 26 | 35 | 16 | 15 | 17 | 28 | 19 | 30 | 33 | 24 | 29 | "23")[];
-  tracking?: "" | "enroll" | "open_day" | "download" | "project" | "recruit" | "partnership";
+  tracking?: "" | "news" | "brochure" | "info" | "openday" | "enroll" | "open_day" | "download" | "contact" | "project" | "recruit" | "partnership";
   new?: unknown;
   title?: string;
   label?: string;
@@ -177,6 +184,8 @@ export interface Grid {
   title?: string;
   subtitle?: string;
   filter?: string;
+  visibility?: "" | "hidden" | "all";
+  controls?: ("" | "tags" | "categories" | "authors")[];
   columns?: string;
   limit?: string;
   dark?: boolean;

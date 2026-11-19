@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /aziende/profilo
+Disallow: /aziende/candidati
+Disallow: /studenti/profilo
+Disallow: /open-day/accedi
+Disallow: /conferma
+
+Sitemap: https://miia.it/sitemap.xml

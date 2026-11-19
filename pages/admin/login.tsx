@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Card, CardHeader, CardBody, Input, Button } from '@heroui/react'
+import { CardHeader, CardBody, Input } from '@heroui/react'
+import { Card } from '@components/ui/card'
+import { Button } from '@components/ui/button'
 
 export default function AdminLogin() {
   const router = useRouter()
@@ -37,14 +39,14 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4">
-      <Card shadow="sm" className="w-full max-w-md border border-neutral-200">
+      <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col items-center pt-10 pb-4">
           <div className="w-14 h-14 bg-neutral-900 text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-5 shadow-sm">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight">Area Backoffice</h1>
+          <h1 className="type-title-4 tracking-tight text-neutral-900">Area Backoffice</h1>
           <p className="text-sm text-neutral-500 mt-1">Accesso riservato all'amministrazione</p>
         </CardHeader>
 
@@ -53,7 +55,7 @@ export default function AdminLogin() {
 
             {/* Banner di errore */}
             {error && (
-              <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm font-medium border border-red-100 text-center">
+              <div className="bg-danger-50 text-danger-700 p-3 rounded-xl text-sm font-medium border border-danger-100 text-center">
                 {error}
               </div>
             )}
@@ -79,10 +81,10 @@ export default function AdminLogin() {
               />
             </div>
 
-            <Button
+            <Button color="dark" size="lg"
               type="submit"
               isLoading={loading}
-              className="w-full bg-neutral-900 text-white font-bold h-12 shadow-sm"
+              className="w-full shadow-sm"
             >
               Accedi al Gestionale
             </Button>

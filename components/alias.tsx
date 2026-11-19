@@ -3,11 +3,14 @@ import type { Alias as AliasBlok, Form as FormBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
-import { Image } from '@heroui/react'
+import { Image } from '@components/ui/image'
+import { responsiveImage, storyblokImageUrl } from '@modules/images'
 import NextLink from 'next/link'
 import { tv } from 'tailwind-variants'
 import { useDataContext } from '@modules/context'
 import type { ProcessedArticle, ProcessedEvent } from '@modules/cache'
+import Person from './person'
+import { getDocentiStories } from '@modules/events'
 
 interface AliasComponentProps {
   blok: AliasBlok
@@ -21,7 +24,7 @@ const getCleanUrl = (url?: string | null): string | null => {
 }
 
 export default function Alias({ blok }: AliasComponentProps) {
-  const { articles, events } = useDataContext()
+  const { articles, events, persons } = useDataContext()
 
   const isArticle = blok.resource === 'last-article'
   const isEvent = blok.resource === 'next-event'
@@ -50,11 +53,16 @@ export default function Alias({ blok }: AliasComponentProps) {
     }
 
     if (isArticle) {
-      setSelectedArticle(articles[0] || null)
+      // Article chosen in Storyblok ("articolo" field, a story uuid or a resolved story);
+      // when empty or not found (e.g. unpublished), fall back to the latest article.
+      const chosen = blok.articolo
+      const chosenUuid = typeof chosen === 'string' ? chosen : chosen?.uuid
+      const pinned = chosenUuid ? articles.find((a) => a.uuid === chosenUuid) : undefined
+      setSelectedArticle(pinned || articles[0] || null)
     }
 
     setIsClientReady(true)
-  }, [events, articles, isEvent, isArticle, blok.filter])
+  }, [events, articles, isEvent, isArticle, blok.filter, blok.articolo])
 
   if (!isClientReady) return null
 
@@ -87,18 +95,20 @@ export default function Alias({ blok }: AliasComponentProps) {
 
     const cleanUrl = getCleanUrl(pageUrl)
     const submitForms = (blok.submit as FormBlok[]) || []
+    const persone = getDocentiStories(selectedEvent, persons)
 
     return (
       <div
         {...storyblokEditable(blok as any)}
-        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:items-center sm:gap-8"
+        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-8"
       >
         {/* Box Data con Immagine */}
         <div
           className="relative flex aspect-[4/3] min-h-48 w-full min-w-56 flex-none overflow-hidden rounded-xl bg-cover bg-center sm:w-64"
           style={{
             backgroundImage: blok.image?.filename
-              ? `url(${blok.image.filename})`
+              ? // Quoted: the resized address contains "quality(70)", whose ")" ends an unquoted url()
+                `url("${storyblokImageUrl(blok.image.filename, 640)}")`
               : 'none',
           }}
         >
@@ -122,7 +132,7 @@ export default function Alias({ blok }: AliasComponentProps) {
         {/* Dettagli Evento */}
         <div className="flex flex-1 flex-col justify-center space-y-4 py-2">
           {selectedEvent.title && (!cleanUrl || submitForms.length > 0) ? (
-            <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
+            <h3 className="font-sans type-title-3">
               {selectedEvent.title}
             </h3>
           ) : (
@@ -130,7 +140,7 @@ export default function Alias({ blok }: AliasComponentProps) {
               href={cleanUrl || '#'}
               className="inline-block transition-opacity hover:opacity-85"
             >
-              <h3 className="font-sans text-xl font-bold leading-tight sm:text-2xl md:text-3xl xl:text-4xl">
+              <h3 className="font-sans type-title-3">
                 {selectedEvent.title}
               </h3>
             </NextLink>
@@ -166,6 +176,25 @@ export default function Alias({ blok }: AliasComponentProps) {
             </div>
           )}
         </div>
+
+        {/* Persone dell'evento (campo "Docenti"), solo se "Mostra persone" è spuntato */}
+        {blok.persone && persone.length > 0 && (
+          <div className="w-full basis-full space-y-6 pt-6 sm:pt-10">
+            {blok.persone_titolo && (
+              <h3 className="font-serif type-title-2">
+                {blok.persone_titolo}
+              </h3>
+            )}
+            <div className="grid grid-cols-12 gap-6">
+              {persone.map((persona) => (
+                <Person
+                  key={persona.uuid}
+                  blok={{ component: 'person', _uid: persona.uuid, alias: persona }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -186,7 +215,7 @@ export default function Alias({ blok }: AliasComponentProps) {
                   wrapper: 'w-full aspect-[16/10] overflow-hidden rounded-xl',
                   img: 'w-full h-full object-cover',
                 }}
-                src={selectedArticle.image.filename}
+                {...responsiveImage(selectedArticle.image.filename, '(min-width: 768px) 58vw, 100vw')}
                 alt={selectedArticle.image.alt || selectedArticle.title || ''}
                 radius="lg"
               />
@@ -202,7 +231,7 @@ export default function Alias({ blok }: AliasComponentProps) {
             href={articleSlug}
             className="inline-block space-y-3 transition-opacity hover:opacity-85"
           >
-            <h4 className="font-serif text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
+            <h4 className="font-serif type-title-3">
               {selectedArticle.title}
             </h4>
           </NextLink>

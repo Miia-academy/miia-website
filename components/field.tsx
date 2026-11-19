@@ -1,15 +1,6 @@
 import type { Field as FieldBlok } from '@types'
-import {
-  Input,
-  Select,
-  SelectItem,
-  Checkbox,
-  DatePicker,
-  Textarea,
-  Slider,
-  Button,
-  Spinner,
-} from '@heroui/react'
+import { Input, Select, SelectItem, Checkbox, DatePicker, Textarea, Slider, Spinner } from '@heroui/react'
+import { Button } from '@components/ui/button'
 import { useState } from 'react'
 import { storyblokEditable } from '@storyblok/react'
 
@@ -309,7 +300,6 @@ const FileField = ({ blok, data, onChange }: FieldComponentProps) => {
             color={data.error ? 'danger' : 'primary'}
             isDisabled={uploading}
             size="sm"
-            className="font-medium"
           >
             {uploading ? (
               <div className="flex items-center gap-2">
