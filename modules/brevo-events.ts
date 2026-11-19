@@ -98,3 +98,24 @@ export function sourceEventProperties(raw: Record<string, unknown>): Record<stri
 
 /** Brevo shows booleans in events as "0"/"1", and "0" counts as true in a template condition: "si"/"no" reads safely */
 export const siNo = (value: unknown) => (typeof value === 'boolean' ? (value ? 'si' : 'no') : undefined)
+
+/**
+ * GTM dataLayer event of a site form: the event name plus what the ad tags need
+ * to tell the funnel steps apart (course, area, level and, for the open day, its code).
+ * Nothing personal: the email and the other fields stay in Brevo.
+ */
+export function gtmFormEvent(
+  eventName: string,
+  properties: Record<string, string | number | boolean>
+): Record<string, string> {
+  const text = (key: string) => {
+    const value = properties[key]
+    return typeof value === 'string' || typeof value === 'number' ? String(value) : ''
+  }
+  const data: Record<string, string> = { event: eventName }
+  if (text('corso')) data.course = text('corso')
+  if (text('area')) data.area = text('area')
+  if (text('programma')) data.programma = text('programma')
+  if (eventName === EVENTS.openday && text('openday_codice')) data.openday_codice = text('openday_codice')
+  return data
+}

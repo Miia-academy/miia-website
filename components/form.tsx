@@ -17,7 +17,7 @@ import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { tracciaModulo } from '@modules/tracking'
 import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
 import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
-import { formEventName, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
+import { formEventName, gtmFormEvent, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
 
 export interface FieldData {
   id: string
@@ -311,7 +311,7 @@ export async function inviaModulo(
 
     if (response.ok) {
       const result = await response.json().catch(() => null)
-      sendGTMEvent({ event: event.event_name })
+      sendGTMEvent(gtmFormEvent(event.event_name, event.event_properties))
       tracciaModulo(normalizeTracking(form.tracking), event.event_properties['openday'] ? String(event.event_properties['openday']) : undefined)
       return { ok: true, returning: !!result?.returning }
     }
