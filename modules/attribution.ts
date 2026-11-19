@@ -4,11 +4,13 @@
  * Gli UTM sono nell'indirizzo solo della prima pagina: li salviamo all'arrivo e
  * li leggiamo quando viene inviato un modulo, anche dopo alcune pagine.
  *
- * - Senza consenso alla misurazione: solo `sessionStorage`, cioè la visita in
- *   corso. I dati restano nel browser e partono solo con l'invio di un modulo.
- * - Con il consenso: anche un cookie di prima parte da 90 giorni, per ricordare
- *   la prima provenienza a chi torna più tardi. Se il consenso arriva durante la
- *   visita, quanto già salvato nella sessione viene copiato nel cookie.
+ * - Senza consenso alla misurazione: niente nel browser (né cookie né
+ *   sessionStorage). La provenienza resta solo in memoria mentre si naviga nel
+ *   sito e parte solo con l'invio di un modulo; si perde se la pagina viene
+ *   ricaricata.
+ * - Con il consenso: `sessionStorage` per la visita in corso e un cookie di prima
+ *   parte da 90 giorni, per ricordare la prima provenienza a chi torna più tardi.
+ *   Se il consenso arriva durante la visita, quanto già in memoria viene salvato.
  *
  * `first` è la prima provenienza nota e non viene più sovrascritta.
  * `last` è l'ultima provenienza con una campagna (o la prima della visita):
@@ -36,6 +38,8 @@ const STORAGE_KEY = 'miia_src'
 const COOKIE_NAME = 'miia_src'
 const COOKIE_DAYS = 90
 const MAX_LENGTH = 150
+
+const canUseCookie = () => hasConsent(PURPOSE.measurement)
 
 const UTM_KEYS: Array<[keyof Touch, string]> = [
   ['source', 'utm_source'],
@@ -115,20 +119,34 @@ function parse(raw: string | null): Attribution | null {
   }
 }
 
+// Provenienza della visita in corso, solo in memoria (si perde ricaricando la pagina).
+let memory: Attribution | null = null
+
 function readSession(): Attribution | null {
+  if (memory) return memory
+  if (!canUseCookie()) return null
   try {
-    return parse(window.sessionStorage.getItem(STORAGE_KEY))
+    memory = parse(window.sessionStorage.getItem(STORAGE_KEY))
+    return memory
   } catch {
     return null
   }
 }
 
 function writeSession(value: Attribution) {
+  memory = value
   try {
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value))
+    // Nel browser solo con il consenso alla misurazione; senza, via quanto salvato prima.
+    if (canUseCookie()) window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value))
+    else window.sessionStorage.removeItem(STORAGE_KEY)
   } catch {
     // sessionStorage non disponibile (navigazione privata su alcuni browser)
   }
+}
+
+/** Solo per i test: dimentica la provenienza in memoria. */
+export function resetAttributionMemory() {
+  memory = null
 }
 
 function readStoredCookie(): Attribution | null {
@@ -151,7 +169,6 @@ function deleteCookie() {
   document.cookie = `${COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`
 }
 
-const canUseCookie = () => hasConsent(PURPOSE.measurement)
 
 /**
  * Da chiamare a ogni pagina vista (primo caricamento e cambio pagina).
@@ -198,7 +215,9 @@ function syncCookie(session: Attribution, newTouch?: Touch) {
 export function refreshAttributionStorage() {
   if (typeof window === 'undefined') return
   const session = readSession()
-  if (session) syncCookie(session)
+  if (!session) return
+  writeSession(session)
+  syncCookie(session)
 }
 
 /** La provenienza da inviare con il modulo: il cookie se c'è, altrimenti la sessione. */

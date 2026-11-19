@@ -12,6 +12,9 @@ export const IUBENDA_COOKIE_POLICY_ID =
 
 export const COOKIE_POLICY_URL = `https://www.iubenda.com/privacy-policy/${IUBENDA_COOKIE_POLICY_ID}/cookie-policy`
 
+/** Informativa sui cookie del sito e sulla profilazione (pagina in Storyblok). */
+export const SITE_COOKIES_URL = '/cookie-e-profilazione'
+
 export const PURPOSE = {
   functionality: 2,
   experience: 3,

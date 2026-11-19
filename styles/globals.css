@@ -107,3 +107,18 @@
     line-height: 1.4;
   }
 }
+
+/*
+ * Chat di Brevo Conversations: non la vogliamo sul sito (19/11/2026).
+ * Il tracker Brevo caricato da GTM ("cHTML - Brevo") la aggiunge da solo
+ * quando un operatore è online. Il tracker resta, la chat non si mostra.
+ */
+#brevo-conversations,
+#sib-conversations,
+.brevo-conversations,
+.sib-conversations,
+[id^='brevo-conversations'],
+[id^='sib-conversations'] {
+  display: none !important;
+  visibility: hidden !important;
+}
