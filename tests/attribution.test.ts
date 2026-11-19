@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { captureAttribution, getAttribution, refreshAttributionStorage } from '@modules/attribution'
+import {
+  captureAttribution,
+  getAttribution,
+  refreshAttributionStorage,
+  resetAttributionMemory,
+} from '@modules/attribution'
 import { IUBENDA_COOKIE_POLICY_ID } from '@modules/consent'
 
 const CONSENT_COOKIE = `_iub_cs-${IUBENDA_COOKIE_POLICY_ID}`
@@ -26,11 +31,30 @@ const hasSourceCookie = () => document.cookie.includes('miia_src=')
 
 beforeEach(() => {
   window.sessionStorage.clear()
+  resetAttributionMemory()
   clearCookies()
 })
 
 afterEach(() => {
   clearCookies()
+})
+
+describe('provenienza senza consenso', () => {
+  it('non salva niente nel browser ma la tiene in memoria per il modulo', () => {
+    visit('/corsi/interior?utm_source=google&utm_campaign=openday')
+    visit('/contatti')
+    expect(window.sessionStorage.getItem('miia_src')).toBeNull()
+    expect(hasSourceCookie()).toBe(false)
+    expect(getAttribution().first).toMatchObject({ source: 'google', campaign: 'openday' })
+  })
+
+  it('salva nel browser quando arriva il consenso alla misurazione', () => {
+    visit('/corsi/interior?utm_source=google&utm_campaign=openday')
+    giveConsent({ '4': true })
+    refreshAttributionStorage()
+    expect(window.sessionStorage.getItem('miia_src')).not.toBeNull()
+    expect(hasSourceCookie()).toBe(true)
+  })
 })
 
 describe('provenienza della visita', () => {

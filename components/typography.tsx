@@ -156,7 +156,8 @@ const classes = tv({
     subtitle: 'font-sans',
     text: 'font-sans',
     list: 'list-disc list-outside ml-4 md:ml-6', // Aggiunto un leggero margine sinistro per le liste
-    link: 'text-md opacity-90 hover:opacity-100 hover:underline',
+    // underlined: links inside a text must be recognisable without hovering
+    link: 'underline underline-offset-2 decoration-1 hover:decoration-2',
   },
   variants: {
     theme: {

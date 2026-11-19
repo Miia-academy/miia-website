@@ -6,7 +6,7 @@ import { StoryblokComponent } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BANNER } from '@config/tracking'
-import { COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
+import { COOKIE_POLICY_URL, needsCookieConsent, SITE_COOKIES_URL } from '@modules/consent'
 import { useDataContext } from '@modules/context'
 import { getCapitalize } from '@modules/formats'
 import { fieldValidation } from '@modules/validations'
@@ -200,6 +200,13 @@ export default function BannerForm({ form: blok, area, dark, onSent, onClose }: 
             <Link href={COOKIE_POLICY_URL} target="_blank" rel="noopener noreferrer" className={`text-sm underline underline-offset-1 ${linkColor}`}>
               Cookie policy
             </Link>
+            <span> · </span>
+            <Link href={SITE_COOKIES_URL} target="_blank" rel="noopener noreferrer" className={`text-sm underline underline-offset-1 ${linkColor}`}>
+              Cookie del sito e profilazione
+            </Link>
+            <p className="mt-0.5 text-xs italic opacity-70">
+              Funzionalità, esperienza, misurazione e marketing, compreso un profilo dei tuoi interessi per contenuti più utili su sito, email e social. Puoi cambiare idea quando vuoi.
+            </p>
           </div>
         </div>
       )}
