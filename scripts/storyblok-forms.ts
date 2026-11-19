@@ -41,13 +41,21 @@ function env(...names: string[]): string {
   throw new Error(`Missing ${names.join(' or ')} in .env.local`)
 }
 
+/** Storyblok allows 6 requests per second: on 429 wait a little longer each time and try again. */
 async function storyblok<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${MAPI}${path}`, {
-    ...init,
-    headers: { Authorization: env('STORYBLOK_MANAGEMENT'), 'Content-Type': 'application/json', ...init.headers },
-  })
-  if (!res.ok) throw new Error(`Storyblok ${init.method || 'GET'} ${path}: ${res.status} ${await res.text()}`)
-  return (await res.json()) as T
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    const res = await fetch(`${MAPI}${path}`, {
+      ...init,
+      headers: { Authorization: env('STORYBLOK_MANAGEMENT'), 'Content-Type': 'application/json', ...init.headers },
+    })
+    if (res.status === 429 && attempt < 6) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000))
+      continue
+    }
+    if (!res.ok) throw new Error(`Storyblok ${init.method || 'GET'} ${path}: ${res.status} ${await res.text()}`)
+    return (await res.json()) as T
+  }
+  throw new Error(`Storyblok ${path}: too many requests, try again in a few minutes`)
 }
 
 async function brevoAttributes(): Promise<BrevoAttribute[]> {
