@@ -15,7 +15,7 @@ import { useDataContext } from '@modules/context'
 import type { ProcessedEvent } from '@modules/cache'
 import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { tracciaModulo } from '@modules/tracking'
-import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent } from '@modules/consent'
+import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent, SITE_COOKIES_URL } from '@modules/consent'
 import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
 import { formEventName, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
 
@@ -623,6 +623,15 @@ export default function Form({
                     className="inline-block text-sm underline underline-offset-1"
                   >
                     Cookie policy
+                  </Link>
+                  <span> · </span>
+                  <Link
+                    href={SITE_COOKIES_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm underline underline-offset-1"
+                  >
+                    Cookie del sito e profilazione
                   </Link>
                   <p className="mt-0.5 text-xs italic text-neutral-500">
                     Funzionalità, esperienza, misurazione e marketing, compreso un profilo dei tuoi
