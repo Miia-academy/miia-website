@@ -67,3 +67,34 @@ describe('findOpendayByDate', () => {
     expect(findOpendayByDate(events, 'non-una-data')).toBeUndefined()
   })
 })
+
+describe('gtmFormEvent', () => {
+  it('passes course, area and level to GTM, without personal data', async () => {
+    const { gtmFormEvent } = await import('@modules/brevo-events')
+    expect(
+      gtmFormEvent('submit_brochure_form', {
+        corso: 'corso-interior-design-primo-livello',
+        area: 'interior',
+        programma: 'primo',
+        openday: '2026-12-14T19:00:00.000Z',
+        openday_codice: 'openday-interni-dicembre',
+        ultima_sorgente: 'facebook',
+      })
+    ).toEqual({
+      event: 'submit_brochure_form',
+      course: 'corso-interior-design-primo-livello',
+      area: 'interior',
+      programma: 'primo',
+    })
+  })
+
+  it('adds the open day code only to the open day event', async () => {
+    const { gtmFormEvent } = await import('@modules/brevo-events')
+    expect(gtmFormEvent('submit_openday_form', { area: 'interior', openday_codice: 'openday-interni-dicembre' })).toEqual({
+      event: 'submit_openday_form',
+      area: 'interior',
+      openday_codice: 'openday-interni-dicembre',
+    })
+    expect(gtmFormEvent('submit_news_form', {})).toEqual({ event: 'submit_news_form' })
+  })
+})
