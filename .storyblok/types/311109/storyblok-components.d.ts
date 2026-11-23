@@ -359,6 +359,7 @@ export interface Text {
   theme?: "" | "primary" | "secondary" | "dark" | "light";
   order?: string;
   hide?: "" | "title" | "description" | "all";
+  text_style?: "" | "highlight" | "standard" | "section" | "compact";
   component: "text";
   _uid: string;
   [k: string]: unknown;
