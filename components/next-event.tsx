@@ -108,7 +108,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   const docenti = persone.length > 0 && (
     <div className="space-y-3">
       {blok.persone_titolo && <h4 className="type-body-lg text-center font-semibold lg:text-left">{blok.persone_titolo}</h4>}
-      <ul className="flex flex-wrap justify-center gap-4 lg:justify-start">
+      <ul className="flex flex-wrap justify-center gap-4 lg:flex-nowrap lg:justify-start">
         {persone.map((persona) => {
           const { title: name, image } = persona.content
           return (
@@ -132,16 +132,16 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   )
 
   // Registrazione (mockup 24/11): su mobile data e titolo affiancati, poi testi, "Registrati" e
-  // docenti a tutta larghezza; su desktop griglia a 12 colonne come il sito: data e "Registrati" in 2 colonne,
-  // testi in 7 (10 senza docenti), docenti in 3.
+  // docenti a tutta larghezza; su desktop data e "Registrati" larghi 2 colonne della griglia del sito (12 colonne, gap-6),
+  // testi nello spazio restante, docenti a destra su una sola riga.
   // I contenitori "contents" spariscono su mobile, così i figli si dispongono nella griglia.
   if (hasForm) {
     return (
       <div
         {...storyblokEditable(blok as any)}
-        className="col-span-12 grid w-full grid-cols-[5rem_1fr] items-center gap-x-4 gap-y-4 sm:grid-cols-[6rem_1fr] lg:grid-cols-12 lg:items-start lg:gap-x-6"
+        className="col-span-12 grid w-full grid-cols-[5rem_1fr] items-center gap-x-4 gap-y-4 sm:grid-cols-[6rem_1fr] lg:grid-cols-[calc((100%-16.5rem)/6+1.5rem)_minmax(0,1fr)_auto] lg:items-start lg:gap-x-6"
       >
-        <div className="contents lg:col-span-2 lg:row-start-1 lg:flex lg:flex-col lg:items-center lg:gap-4">
+        <div className="contents lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:items-center lg:gap-4">
           {dateBlock && <div className="col-start-1 row-start-1">{dateBlock}</div>}
           <div className="col-span-2 row-start-3 lg:w-full [&_button]:w-full">
             {submitForms.map((form) => (
@@ -149,11 +149,11 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
             ))}
           </div>
         </div>
-        <div className={`contents lg:row-start-1 lg:block lg:min-w-0 lg:space-y-2 ${docenti ? 'lg:col-span-7' : 'lg:col-span-10'}`}>
+        <div className={`contents lg:row-start-1 lg:block lg:min-w-0 lg:space-y-2 ${docenti ? 'lg:col-start-2' : 'lg:col-span-2 lg:col-start-2'}`}>
           {title && <div className={`row-start-1 ${dateBlock ? 'col-start-2' : 'col-span-2'}`}>{title}</div>}
           {texts && <div className="col-span-2 row-start-2">{texts}</div>}
         </div>
-        {docenti && <div className="col-span-2 row-start-4 lg:col-span-3 lg:row-start-1">{docenti}</div>}
+        {docenti && <div className="col-span-2 row-start-4 lg:col-span-1 lg:col-start-3 lg:row-start-1">{docenti}</div>}
       </div>
     )
   }
