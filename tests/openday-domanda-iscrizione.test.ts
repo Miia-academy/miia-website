@@ -99,17 +99,22 @@ describe('eventParts (campo "Mostra" dell\'alias)', () => {
       descrizione: true,
       docenti: true,
       agevolazione: false,
+      pulsante: true,
+      modulo: false,
     })
     expect(eventParts({ mostra: [] }).docenti).toBe(false)
+    expect(eventParts({ submit: [{}] }).pulsante).toBe(false)
   })
 
   it('scelto: solo le parti spuntate', () => {
-    expect(eventParts({ persone: true, mostra: ['data', 'agevolazione', 'sconosciuto'] })).toEqual({
+    expect(eventParts({ persone: true, mostra: ['data', 'agevolazione', 'modulo', 'sconosciuto'] })).toEqual({
       data: true,
       titolo: false,
       descrizione: false,
       docenti: false,
       agevolazione: true,
+      pulsante: false,
+      modulo: true,
     })
   })
 })

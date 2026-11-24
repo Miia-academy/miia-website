@@ -24,7 +24,7 @@ export interface Alias {
   persone?: boolean;
   persone_titolo?: string;
   persone_testo?: string;
-  mostra?: ("" | "data" | "titolo" | "descrizione" | "docenti" | "agevolazione")[];
+  mostra?: ("" | "data" | "titolo" | "descrizione" | "docenti" | "agevolazione" | "pulsante" | "modulo")[];
   agevolazione_testo?: string;
   testo?: string;
   pulsante?: string;

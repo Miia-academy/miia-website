@@ -7,6 +7,7 @@ import { Image } from '@components/ui/image'
 import { responsiveImage } from '@modules/images'
 import type { ProcessedEvent } from '@modules/cache'
 import { getDocentiStories } from '@modules/events'
+import { isStoryResolved } from '@modules/relations'
 import { eventParts, AGEVOLAZIONE_TESTO } from '@modules/next-event'
 import Person from './person'
 
@@ -47,7 +48,14 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   const pageUrl =
     rawPage?.cached_url || rawPage?.cachedUrl || rawPage?.url || (typeof rawPage === 'string' ? rawPage : null)
   const cleanUrl = getCleanUrl(pageUrl)
-  const submitForms = (blok.submit as FormBlok[]) || []
+  // Form: quella dell'alias ("Iscrizione"); altrimenti, con "Modulo" in Mostra,
+  // il modulo scelto nel campo "Form" dell'evento
+  const eventForm = parts.modulo && isStoryResolved<FormBlok>(event.form) ? event.form.content : null
+  const submitForms: FormBlok[] = (blok.submit as FormBlok[])?.length
+    ? (blok.submit as FormBlok[])
+    : eventForm
+      ? [{ ...eventForm, _uid: `${event.uuid}-form` }]
+      : []
   const hasForm = submitForms.length > 0
   const persone = parts.docenti ? getDocentiStories(event, persons) : []
   const agevolazione = parts.agevolazione && event.prezzo_agevolato === true
@@ -130,7 +138,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
     </div>
   )
 
-  const button = !hasForm && cleanUrl && (
+  const button = parts.pulsante && cleanUrl && (
     <div className="pt-2">
       <NextLink
         href={cleanUrl}
@@ -152,6 +160,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
             {dateBlock}
             {texts}
             {reservedBox}
+            {button}
           </div>
         ) : (
           /* Richiamo (home, corsi): data a sinistra, riga e pulsante a destra */
