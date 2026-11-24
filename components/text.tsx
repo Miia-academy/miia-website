@@ -4,7 +4,7 @@ import { storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { tv } from 'tailwind-variants'
 import { textStyle } from '@components/ui/text-styles'
-import { wrapperWidthClasses } from '@components/ui/wrapper-width'
+import { blokWidths, gridBaseClass, widthList, wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // Definizioni type-safe per Tailwind Variants
 type JustifyVariant = 'right' | 'center' | 'left'
@@ -20,6 +20,9 @@ interface TextComponentProps {
 type ThemeVariant = 'primary' | 'secondary' | 'dark' | 'light' | undefined;
 
 export default function Text({ blok, parent }: TextComponentProps) {
+  // Larghezze per dispositivo (campi nuovi) o dal vecchio campo Larghezza
+  const widths = blokWidths(blok as any)
+  const widthItems = widthList(widths)
 
   // 2. Sanifica il dato di Storyblok: se è una stringa vuota, diventa undefined
   const typography = {
@@ -50,11 +53,11 @@ export default function Text({ blok, parent }: TextComponentProps) {
       className={textClasses({
         order: orderAttr,
         justify: blok.justify as JustifyVariant | undefined,
-        sm: isWrapperChild ? undefined : (blok.width?.[0] as WidthVariant | undefined),
-        md: isWrapperChild ? undefined : (blok.width?.[1] as WidthVariant | undefined),
-        lg: isWrapperChild ? undefined : (blok.width?.[2] as WidthVariant | undefined),
-        xl: isWrapperChild ? undefined : (blok.width?.[3] as WidthVariant | undefined),
-        class: isWrapperChild ? wrapperWidthClasses(blok.width) : undefined,
+        sm: isWrapperChild ? undefined : (widthItems[0] as WidthVariant | undefined),
+        md: isWrapperChild ? undefined : (widthItems[1] as WidthVariant | undefined),
+        lg: isWrapperChild ? undefined : (widthItems[2] as WidthVariant | undefined),
+        xl: isWrapperChild ? undefined : (widthItems[3] as WidthVariant | undefined),
+        class: isWrapperChild ? wrapperWidthClasses(widths) : gridBaseClass(widths),
       })}
       {...storyblokEditable(blok as any)}
     >

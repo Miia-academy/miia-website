@@ -2,7 +2,7 @@ import type { Video as VideoBlok } from '@types'
 import { YouTubeEmbed } from '@next/third-parties/google'
 import { storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
-import { wrapperWidthClasses } from '@components/ui/wrapper-width'
+import { blokWidths, gridBaseClass, widthList, wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // Tipizzazioni strette per Tailwind Variants
 type OrderVariant = '1' | '2' | '3' | '4' | '5' | '6' | undefined
@@ -34,6 +34,9 @@ function extractYouTubeId(urlOrId?: string): string | null {
 }
 
 export default function Video({ blok, parent }: VideoComponentProps) {
+  // Larghezze per dispositivo (campi nuovi) o dal vecchio campo Larghezza
+  const widths = blokWidths(blok as any)
+  const widthItems = widthList(widths)
   const videoId = extractYouTubeId(blok.source)
 
   if (!videoId) return null
@@ -46,13 +49,14 @@ export default function Video({ blok, parent }: VideoComponentProps) {
       className={
         // In un Wrapper (flex) il col-span della griglia non vale: la larghezza viene da wrapperWidthClasses
         parent === 'wrapper'
-          ? classes({ order: orderAttr, class: wrapperWidthClasses(blok.width) })
+          ? classes({ order: orderAttr, class: wrapperWidthClasses(widths) })
           : classes({
               order: orderAttr,
-              sm: blok.width?.[0] as WidthVariant,
-              md: blok.width?.[1] as WidthVariant,
-              lg: blok.width?.[2] as WidthVariant,
-              xl: blok.width?.[3] as WidthVariant,
+              sm: widthItems[0] as WidthVariant,
+              md: widthItems[1] as WidthVariant,
+              lg: widthItems[2] as WidthVariant,
+              xl: widthItems[3] as WidthVariant,
+              class: gridBaseClass(widths),
             })
       }
     >

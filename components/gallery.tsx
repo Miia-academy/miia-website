@@ -7,7 +7,7 @@ import {
 } from '@heroui/react'
 import { Image as HeroImage } from '@components/ui/image'
 import { tv } from 'tailwind-variants'
-import { wrapperWidthClasses } from '@components/ui/wrapper-width'
+import { blokWidths, gridBaseClass, widthList, wrapperWidthClasses } from '@components/ui/wrapper-width'
 import { default as NextImage } from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
@@ -28,6 +28,9 @@ const THUMB_SIZES = '(min-width: 640px) 33vw, 50vw'
 const THUMB_WIDTHS = [320, 640, 1024]
 
 export default function Gallery({ blok, parent }: GalleryComponentProps) {
+  // Larghezze per dispositivo (campi nuovi) o dal vecchio campo Larghezza
+  const widths = blokWidths(blok as any)
+  const widthItems = widthList(widths)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [current, setCurrent] = useState(0)
 
@@ -52,7 +55,7 @@ export default function Gallery({ blok, parent }: GalleryComponentProps) {
   const sizes = [256, 512, 768, 1024, 1280]
 
   // Slides fill the gallery column, or the screen when they open from the thumbnails
-  const slideSizes = blok.fullScreen ? '100vw' : gridSizes(blok.width)
+  const slideSizes = blok.fullScreen ? '100vw' : gridSizes(widthItems)
 
   // Estrazione misure tramite la tua utility
   const images = rawImages.map((image) => getImageSizes(image))
@@ -153,13 +156,14 @@ export default function Gallery({ blok, parent }: GalleryComponentProps) {
       className={
         // In un Wrapper (flex) il col-span della griglia non vale: la larghezza viene da wrapperWidthClasses
         parent === 'wrapper'
-          ? galleryClasses({ isFullScreen: blok.fullScreen, class: wrapperWidthClasses(blok.width) })
+          ? galleryClasses({ isFullScreen: blok.fullScreen, class: wrapperWidthClasses(widths) })
           : galleryClasses({
               isFullScreen: blok.fullScreen,
-              smWidth: (blok.width?.[0] as WidthVariant) || undefined,
-              mdWidth: (blok.width?.[1] as WidthVariant) || undefined,
-              lgWidth: (blok.width?.[2] as WidthVariant) || undefined,
-              xlWidth: (blok.width?.[3] as WidthVariant) || undefined,
+              smWidth: (widthItems[0] as WidthVariant) || undefined,
+              mdWidth: (widthItems[1] as WidthVariant) || undefined,
+              lgWidth: (widthItems[2] as WidthVariant) || undefined,
+              xlWidth: (widthItems[3] as WidthVariant) || undefined,
+              class: gridBaseClass(widths),
             })
       }
     >

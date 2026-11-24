@@ -1,7 +1,7 @@
 import type { Wrapper as WrapperBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
-import { wrapperWidthClasses } from '@components/ui/wrapper-width'
+import { blokWidths, gridBaseClass, widthList, wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // Tipizzazioni strette per Tailwind Variants
 type OrderVariant = 'none' | '1' | '2' | '3' | '4' | '5' | '6'
@@ -14,6 +14,9 @@ interface WrapperComponentProps {
 }
 
 export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) {
+  // Larghezze per dispositivo (campi nuovi) o dal vecchio campo Larghezza
+  const widths = blokWidths(blok as any)
+  const widthItems = widthList(widths)
   // 1. Protection Fallback: gestiamo array undefined dal CMS
   const rawContents = blok.contents || []
 
@@ -40,15 +43,15 @@ export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) 
       {...storyblokEditable(blok as any)}
       className={classes({
         order: orderAttr,
-        smWidth: isWrapperChild ? undefined : (blok.width?.[0] as WidthVariant),
-        mdWidth: isWrapperChild ? undefined : (blok.width?.[1] as WidthVariant),
-        lgWidth: isWrapperChild ? undefined : (blok.width?.[2] as WidthVariant),
-        xlWidth: isWrapperChild ? undefined : (blok.width?.[3] as WidthVariant),
+        smWidth: isWrapperChild ? undefined : (widthItems[0] as WidthVariant),
+        mdWidth: isWrapperChild ? undefined : (widthItems[1] as WidthVariant),
+        lgWidth: isWrapperChild ? undefined : (widthItems[2] as WidthVariant),
+        xlWidth: isWrapperChild ? undefined : (widthItems[3] as WidthVariant),
         row: blok.row,
         justify: justifyKey as any,
         hasBackground: !!background,
         isCarouselChild,
-        class: isWrapperChild ? wrapperWidthClasses(blok.width) : undefined,
+        class: isWrapperChild ? wrapperWidthClasses(widths) : gridBaseClass(widths),
       })}
     >
       {/* Renderizziamo SOLO i contenuti (escluso il componente background) */}
