@@ -107,7 +107,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
 
   const docenti = persone.length > 0 && (
     <div className="space-y-3">
-      {blok.persone_titolo && <h4 className="type-body-sm font-semibold">{blok.persone_titolo}</h4>}
+      {blok.persone_titolo && <h4 className="type-body-lg text-center font-semibold lg:text-left">{blok.persone_titolo}</h4>}
       <ul className="flex flex-wrap justify-center gap-4 lg:justify-start">
         {persone.map((persona) => {
           const { title: name, image } = persona.content
@@ -132,15 +132,16 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   )
 
   // Registrazione (mockup 24/11): su mobile data e titolo affiancati, poi testi, "Registrati" e
-  // docenti a tutta larghezza; su desktop data con "Registrati" sotto, testi al centro, docenti a destra.
+  // docenti a tutta larghezza; su desktop griglia a 12 colonne come il sito: data e "Registrati" in 2 colonne,
+  // testi in 7 (10 senza docenti), docenti in 3.
   // I contenitori "contents" spariscono su mobile, così i figli si dispongono nella griglia.
   if (hasForm) {
     return (
       <div
         {...storyblokEditable(blok as any)}
-        className="col-span-12 grid w-full grid-cols-[5rem_1fr] items-center gap-x-4 gap-y-4 sm:grid-cols-[6rem_1fr] lg:flex lg:items-start lg:gap-8"
+        className="col-span-12 grid w-full grid-cols-[5rem_1fr] items-center gap-x-4 gap-y-4 sm:grid-cols-[6rem_1fr] lg:grid-cols-12 lg:items-start lg:gap-x-6"
       >
-        <div className="contents lg:flex lg:w-40 lg:shrink-0 lg:flex-col lg:items-center lg:gap-4">
+        <div className="contents lg:col-span-2 lg:row-start-1 lg:flex lg:flex-col lg:items-center lg:gap-4">
           {dateBlock && <div className="col-start-1 row-start-1">{dateBlock}</div>}
           <div className="col-span-2 row-start-3 lg:w-full [&_button]:w-full">
             {submitForms.map((form) => (
@@ -148,20 +149,20 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
             ))}
           </div>
         </div>
-        <div className="contents lg:block lg:min-w-0 lg:flex-1 lg:space-y-2">
+        <div className={`contents lg:row-start-1 lg:block lg:min-w-0 lg:space-y-2 ${docenti ? 'lg:col-span-7' : 'lg:col-span-10'}`}>
           {title && <div className={`row-start-1 ${dateBlock ? 'col-start-2' : 'col-span-2'}`}>{title}</div>}
           {texts && <div className="col-span-2 row-start-2">{texts}</div>}
         </div>
-        {docenti && <div className="col-span-2 row-start-4 lg:shrink-0">{docenti}</div>}
+        {docenti && <div className="col-span-2 row-start-4 lg:col-span-3 lg:row-start-1">{docenti}</div>}
       </div>
     )
   }
 
   // Collegamento: data a sinistra; titolo, testo breve e pulsante accanto
   return (
-    <div {...storyblokEditable(blok as any)} className="col-span-12 flex w-full items-start gap-4 sm:gap-6 lg:gap-8">
-      {dateBlock && <div className="w-20 shrink-0 sm:w-24 lg:w-40">{dateBlock}</div>}
-      <div className="flex min-w-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-10">
+    <div {...storyblokEditable(blok as any)} className="col-span-12 flex w-full items-start gap-4 sm:gap-6 lg:grid lg:grid-cols-12 lg:gap-x-6">
+      {dateBlock && <div className="w-20 shrink-0 sm:w-24 lg:col-span-2 lg:w-auto">{dateBlock}</div>}
+      <div className={`flex min-w-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-6 ${dateBlock ? 'lg:col-span-10' : 'lg:col-span-12'}`}>
         <div className="min-w-0 flex-1 space-y-2">
           {title}
           {texts}
