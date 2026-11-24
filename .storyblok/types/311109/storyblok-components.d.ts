@@ -27,6 +27,7 @@ export interface Alias {
   mostra?: ("" | "data" | "titolo" | "descrizione" | "docenti" | "agevolazione" | "pulsante" | "modulo")[];
   agevolazione_testo?: string;
   testo?: string;
+  descrizione?: string;
   pulsante?: string;
   component: "alias";
   _uid: string;

@@ -70,7 +70,10 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
 
   const persone: ISbStoryData<PersonBlok>[] = parts.docenti ? getDocentiStories(event, persons) : []
   const agevolazioneTesto = String(blok.agevolazione_testo || '').trim() || AGEVOLAZIONE_TESTO
+  // Testo breve e testo esteso scritti nell'alias; senza testo esteso, con "Descrizione dell'evento"
+  // in Mostra, vale la descrizione dell'evento
   const line = String(blok.testo || '').trim()
+  const longText = String(blok.descrizione || '').trim() || (parts.descrizione ? String(event.description || '').trim() : '')
   // Titolo: quello scritto nell'alias (campo "Titolo"), altrimenti, con "Titolo dell'evento", quello dell'evento
   const heading = String(blok.title || '').trim() || (parts.titolo ? event.title : '')
   const buttonLabel = String(blok.pulsante || '').trim() || 'Vai alla pagina'
@@ -106,7 +109,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
         <div className="min-w-0 flex-1 space-y-2">
           {heading && <h3 className="font-sans type-subtitle font-bold">{heading}</h3>}
           {line && smallText(line, 'type-body-sm text-foreground/70')}
-          {parts.descrizione && event.description && smallText(event.description, 'type-body-sm text-foreground/70')}
+          {longText && smallText(longText, 'type-body-sm text-foreground/70')}
           {agevolazione && smallText(agevolazioneTesto, 'type-body-sm font-semibold text-foreground/80')}
           {parts.pulsante && cleanUrl && (
             <div className="pt-3">
