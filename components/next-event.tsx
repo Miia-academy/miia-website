@@ -71,6 +71,8 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   const persone: ISbStoryData<PersonBlok>[] = parts.docenti ? getDocentiStories(event, persons) : []
   const agevolazioneTesto = String(blok.agevolazione_testo || '').trim() || AGEVOLAZIONE_TESTO
   const line = String(blok.testo || '').trim()
+  // Titolo: quello scritto nell'alias (campo "Titolo"), altrimenti, con "Titolo dell'evento", quello dell'evento
+  const heading = String(blok.title || '').trim() || (parts.titolo ? event.title : '')
   const buttonLabel = String(blok.pulsante || '').trim() || 'Vai alla pagina'
 
   const day = eventDate.toLocaleDateString('it-IT', { day: 'numeric', timeZone: ROME })
@@ -102,7 +104,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
       {/* Testi a sinistra, docenti a destra su desktop; tutto in colonna su mobile */}
       <div className="flex min-w-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-10">
         <div className="min-w-0 flex-1 space-y-2">
-          {parts.titolo && event.title && <h3 className="font-sans type-subtitle font-bold">{event.title}</h3>}
+          {heading && <h3 className="font-sans type-subtitle font-bold">{heading}</h3>}
           {line && smallText(line, 'type-body-sm text-foreground/70')}
           {parts.descrizione && event.description && smallText(event.description, 'type-body-sm text-foreground/70')}
           {agevolazione && smallText(agevolazioneTesto, 'type-body-sm font-semibold text-foreground/80')}
