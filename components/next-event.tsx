@@ -84,35 +84,87 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   const month = eventDate.toLocaleDateString('it-IT', { month: 'long', timeZone: ROME })
   const year = eventDate.toLocaleDateString('it-IT', { year: 'numeric', timeZone: ROME })
 
-  const hasDateColumn = parts.data || submitForms.length > 0
   // Agevolazione: solo nella versione con iscrizione, e solo se l'evento ha "Prezzo agevolato"
   const agevolazione = parts.agevolazione && submitForms.length > 0 && event.prezzo_agevolato === true
 
-  return (
-    <div {...storyblokEditable(blok as any)} className="col-span-12 flex w-full items-start gap-4 sm:gap-6">
-      {/* Data impilata, e sotto la form (il pulsante che apre il modulo) */}
-      {hasDateColumn && (
-        <div className="flex w-20 shrink-0 flex-col items-center gap-3 text-center sm:w-24 [&_button]:w-full [&_button]:min-w-0 [&_button]:px-2 [&_button]:text-xs sm:[&_button]:text-sm">
-          {parts.data && (
-            <p className="font-serif font-bold leading-none">
-              <span className="block text-6xl tracking-tighter sm:text-7xl">{day}</span>
-              <span className="mt-1 block text-base sm:text-lg">{month}</span>
-              <span className="block text-sm sm:text-base">{year}</span>
-            </p>
-          )}
-          {submitForms.map((form) => (
-            <StoryblokComponent blok={form} openday={openday} key={form._uid} />
-          ))}
-        </div>
-      )}
+  const hasForm = submitForms.length > 0
 
-      {/* Testi a sinistra, docenti a destra su desktop; tutto in colonna su mobile */}
+  const dateBlock = parts.data && (
+    <p className="font-serif font-bold leading-none text-center">
+      <span className="block text-6xl tracking-tighter sm:text-7xl">{day}</span>
+      <span className="mt-1 block text-base sm:text-lg">{month}</span>
+      <span className="block text-sm sm:text-base">{year}</span>
+    </p>
+  )
+  const title = heading && <h3 className="font-sans type-subtitle font-bold">{heading}</h3>
+  const texts = (line || longText || agevolazione) && (
+    <div className="space-y-2">
+      {line && smallText(line, 'type-body-sm text-foreground/70')}
+      {longText && smallText(longText, 'type-body-sm text-foreground/70')}
+      {agevolazione && smallText(agevolazioneTesto, 'type-body-sm font-semibold text-foreground/80')}
+    </div>
+  )
+
+  const docenti = persone.length > 0 && (
+    <div className="space-y-3">
+      {blok.persone_titolo && <h4 className="type-body-sm font-semibold">{blok.persone_titolo}</h4>}
+      <ul className="flex flex-wrap justify-center gap-4 lg:justify-start">
+        {persone.map((persona) => {
+          const { title: name, image } = persona.content
+          return (
+            <li key={persona.uuid} className="flex w-16 flex-col items-center gap-2 text-center sm:w-20">
+              <div className="aspect-square w-full overflow-hidden rounded-full bg-content2">
+                {image?.filename && (
+                  <Image
+                    classNames={{ wrapper: 'w-full h-full !max-w-full', img: 'w-full h-full object-cover' }}
+                    {...responsiveImage(image.filename, '80px', [160])}
+                    alt={image.alt || name || ''}
+                    radius="full"
+                  />
+                )}
+              </div>
+              <span className="type-caption leading-tight">{name}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+
+  // Registrazione (mockup 24/11): su mobile data e titolo affiancati, poi testi, "Registrati" e
+  // docenti a tutta larghezza; su desktop data con "Registrati" sotto, testi al centro, docenti a destra.
+  // I contenitori "contents" spariscono su mobile, così i figli si dispongono nella griglia.
+  if (hasForm) {
+    return (
+      <div
+        {...storyblokEditable(blok as any)}
+        className="col-span-12 grid w-full grid-cols-[5rem_1fr] items-center gap-x-4 gap-y-4 sm:grid-cols-[6rem_1fr] lg:flex lg:items-start lg:gap-8"
+      >
+        <div className="contents lg:flex lg:w-40 lg:shrink-0 lg:flex-col lg:items-center lg:gap-4">
+          {dateBlock && <div className="col-start-1 row-start-1">{dateBlock}</div>}
+          <div className="col-span-2 row-start-3 lg:w-full [&_button]:w-full">
+            {submitForms.map((form) => (
+              <StoryblokComponent blok={form} openday={openday} key={form._uid} />
+            ))}
+          </div>
+        </div>
+        <div className="contents lg:block lg:min-w-0 lg:flex-1 lg:space-y-2">
+          {title && <div className={`row-start-1 ${dateBlock ? 'col-start-2' : 'col-span-2'}`}>{title}</div>}
+          {texts && <div className="col-span-2 row-start-2">{texts}</div>}
+        </div>
+        {docenti && <div className="col-span-2 row-start-4 lg:shrink-0">{docenti}</div>}
+      </div>
+    )
+  }
+
+  // Collegamento: data a sinistra; titolo, testo breve e pulsante accanto
+  return (
+    <div {...storyblokEditable(blok as any)} className="col-span-12 flex w-full items-start gap-4 sm:gap-6 lg:gap-8">
+      {dateBlock && <div className="w-20 shrink-0 sm:w-24 lg:w-40">{dateBlock}</div>}
       <div className="flex min-w-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-10">
         <div className="min-w-0 flex-1 space-y-2">
-          {heading && <h3 className="font-sans type-subtitle font-bold">{heading}</h3>}
-          {line && smallText(line, 'type-body-sm text-foreground/70')}
-          {longText && smallText(longText, 'type-body-sm text-foreground/70')}
-          {agevolazione && smallText(agevolazioneTesto, 'type-body-sm font-semibold text-foreground/80')}
+          {title}
+          {texts}
           {parts.pulsante && cleanUrl && (
             <div className="pt-3">
               <Button as={NextLink} href={cleanUrl} color="primary" size="md">
@@ -121,32 +173,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
             </div>
           )}
         </div>
-
-        {persone.length > 0 && (
-          <div className="shrink-0 space-y-3">
-            {blok.persone_titolo && <h4 className="type-body-sm font-semibold">{blok.persone_titolo}</h4>}
-            <ul className="flex flex-wrap gap-4">
-              {persone.map((persona) => {
-                const { title, image } = persona.content
-                return (
-                  <li key={persona.uuid} className="flex w-16 flex-col items-center gap-2 text-center sm:w-20">
-                    <div className="aspect-square w-full overflow-hidden rounded-full bg-content2">
-                      {image?.filename && (
-                        <Image
-                          classNames={{ wrapper: 'w-full h-full !max-w-full', img: 'w-full h-full object-cover' }}
-                          {...responsiveImage(image.filename, '80px', [160])}
-                          alt={image.alt || title || ''}
-                          radius="full"
-                        />
-                      )}
-                    </div>
-                    <span className="type-caption leading-tight">{title}</span>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
+        {docenti && <div className="shrink-0">{docenti}</div>}
       </div>
     </div>
   )
