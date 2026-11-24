@@ -3,6 +3,7 @@ import { Typography } from './typography'
 import { storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { tv } from 'tailwind-variants'
+import { textStyle } from '@components/ui/text-styles'
 
 // Definizioni type-safe per Tailwind Variants
 type JustifyVariant = 'right' | 'center' | 'left'
@@ -22,6 +23,9 @@ export default function Text({ blok }: TextComponentProps) {
   const typography = {
     theme: (blok.theme === "" ? undefined : blok.theme) as ThemeVariant,
   };
+
+  // Size combination of title and description ("Dimensioni" field); none = sizes of today
+  const style = textStyle(blok.text_style)
 
   // 1. Parsing super-sicuro per il campo "hide" (previene crash se undefined)
   const hideOptions = Array.isArray(blok.hide)
@@ -54,7 +58,7 @@ export default function Text({ blok }: TextComponentProps) {
         <div className={titleClasses({ hide: hideTitle })}>
           {compiler(blok.title, {
             wrapper: null,
-            overrides: Typography(typography),
+            overrides: Typography({ ...typography, heading: style?.title }),
           })}
         </div>
       ) : null}
@@ -63,7 +67,7 @@ export default function Text({ blok }: TextComponentProps) {
         <div className={descriptionClasses({ hide: hideDescription })}>
           {compiler(blok.description, {
             wrapper: null,
-            overrides: Typography(typography),
+            overrides: Typography({ ...typography, size: style?.description }),
           })}
         </div>
       ) : null}
