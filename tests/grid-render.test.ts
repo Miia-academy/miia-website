@@ -15,3 +15,17 @@ it('default as today, then hidden, tags and interactive filters', () => {
   expect(render({ visibility: 'hidden' })).toContain('1 articoli')
   expect(render({ filter: 'storia, interni-primo-livello', visibility: 'all' })).toContain('2 articoli')
 })
+it('progetti: su mobile solo i primi 3, poi "Carica altri"', () => {
+  const p = (i: number) => ({ uuid: 'pr' + i, slug: 'pr' + i, fullSlug: '/progetti/pr' + i, title: 'Progetto ' + i, tagList: [], firstPublishedAt: `2026-01-${10 + i}` })
+  const renderProjects = (n: number) =>
+    renderToString(h(DataProvider, { data: { ...data, projects: Array.from({ length: n }, (_, i) => p(i)) }, children: h(Grid, { blok: { component: 'grid', _uid: 'g', resource: 'projects', limit: '6' } }) }))
+  const six = renderProjects(6)
+  expect(six).toContain('max-md:[&amp;&gt;*:nth-child(n+4)]:hidden')
+  expect(six).toContain('Carica altri')
+  expect(six).toMatch(/md:hidden[^"]*">.*?3<\/span>/)
+  // Progetti più recenti per primi (data di prima pubblicazione)
+  expect(six.indexOf('Progetto 5')).toBeLessThan(six.indexOf('Progetto 0'))
+  const three = renderProjects(3)
+  expect(three).not.toContain('nth-child(n+4)')
+  expect(three).not.toContain('Carica altri')
+})
