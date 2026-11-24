@@ -1,6 +1,7 @@
 import type { Location as LocationBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 import Link from 'next/link'
 import { storyblokEditable } from '@storyblok/react'
 import { resolveAlias } from '@modules/relations'
@@ -8,6 +9,7 @@ import { resolveAlias } from '@modules/relations'
 interface LocationComponentProps {
   blok: LocationBlok
   story?: ISbStoryData<LocationBlok>
+  parent?: string
 }
 
 // Spostiamo la configurazione delle classi all'esterno del componente
@@ -15,7 +17,9 @@ const containerClasses = tv({
   base: 'col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 block',
 })
 
-export default function Location({ blok, story }: LocationComponentProps) {
+export default function Location({ blok, story, parent }: LocationComponentProps) {
+  // In un Wrapper (flex) il col-span non vale: stessa larghezza della griglia (1/2, 1/3, 1/4)
+  const container = containerClasses({ class: parent === 'wrapper' ? wrapperWidthClasses(['1/2', '1/3', '1/4']) : undefined })
   // 1. Risoluzione safe del pattern Alias/Mirror
   const { content: location } = resolveAlias<LocationBlok>(
     blok.alias as ISbStoryData<LocationBlok> | string | undefined,
@@ -45,7 +49,7 @@ export default function Location({ blok, story }: LocationComponentProps) {
     return (
       <Link
         href={href}
-        className={containerClasses()}
+        className={container}
         target={href.startsWith('http') ? '_blank' : undefined}
         rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
         {...storyblokEditable(blok as any)}
@@ -56,7 +60,7 @@ export default function Location({ blok, story }: LocationComponentProps) {
   }
 
   return (
-    <div className={containerClasses()} {...storyblokEditable(blok as any)}>
+    <div className={container} {...storyblokEditable(blok as any)}>
       {innerContent}
     </div>
   )
