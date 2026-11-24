@@ -7,11 +7,13 @@ import { PORTRAIT_SIZES, PORTRAIT_WIDTHS, responsiveImage } from '@modules/image
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 import { YouTubeEmbed } from '@next/third-parties/google'
 import { isStoryResolved } from '@modules/relations'
 
 interface PersonComponentProps {
   blok: PersonBlok
+  parent?: string
 }
 
 // 1. Escludiamo esplicitamente la stringa vuota dal tipo 'role' generato dalla CLI Storyblok
@@ -57,7 +59,7 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
-const Person = ({ blok }: PersonComponentProps) => {
+const Person = ({ blok, parent }: PersonComponentProps) => {
   // Type Narrowing dell'alias
   const aliasContent = isStoryResolved<PersonBlok>(blok.alias)
     ? blok.alias.content
@@ -115,7 +117,8 @@ const Person = ({ blok }: PersonComponentProps) => {
   return (
     <article
       id={blok._uid}
-      className={cardClasses()}
+      // In un Wrapper (flex) il col-span non vale: stessa larghezza della griglia (1/2, 1/3, 1/4)
+      className={cardClasses({ class: parent === 'wrapper' ? CARD_IN_WRAPPER : undefined })}
       {...storyblokEditable(blok as any)}
     >
       {person.image?.filename && (
@@ -201,15 +204,17 @@ const Person = ({ blok }: PersonComponentProps) => {
   )
 }
 
+const CARD_IN_WRAPPER = wrapperWidthClasses(['1/2', '1/3', '1/4'])
+
 const classes = tv({
   slots: {
-    cardClasses:
-      'col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 flex flex-col items-center gap-3 max-w-40 mx-auto md:max-w-full',
-    headerClasses:
-      'flex items-center justify-center w-full aspect-square relative cursor-pointer sm:max-w-32 min-w-32',
+    // Card a tutta larghezza della colonna o della slide: la larghezza non dipende dalla lunghezza del nome
+    cardClasses: 'col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 flex w-full flex-col items-center gap-3',
+    // Ritratto di misura fissa (come nella card della griglia), uguale per tutti nel carosello
+    headerClasses: 'flex items-center justify-center w-32 shrink-0 aspect-square relative cursor-pointer',
     iconClasses: 'text-foreground transition-all pointer-events-none',
     thumbClasses: 'absolute inset-0 rounded-full overflow-hidden z-10',
-    bodyClasses: 'sm:text-center space-y-2',
+    bodyClasses: 'text-center space-y-2',
     titleClasses: 'font-semibold text-xl',
     roleClasses: 'text-sm leading-none inline-flex items-center gap-2',
     textClasses: 'text-small',

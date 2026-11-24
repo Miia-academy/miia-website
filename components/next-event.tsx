@@ -96,7 +96,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
       <span className="block text-sm sm:text-base">{year}</span>
     </p>
   )
-  const title = heading && <h3 className="font-sans type-subtitle font-bold">{heading}</h3>
+  const title = heading && <h3 className="font-serif type-title-3">{heading}</h3>
   const texts = (line || longText || agevolazione) && (
     <div className="space-y-2">
       {line && smallText(line, 'type-body-sm text-foreground/70')}

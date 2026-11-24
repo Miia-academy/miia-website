@@ -4,6 +4,7 @@ import { compiler } from 'markdown-to-jsx'
 import { Typography } from '@components/typography'
 import { Accordion, AccordionItem } from '@heroui/react'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // 1. Definiamo i tipi esatti attesi da Tailwind Variants
 type SizeVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | undefined
@@ -12,9 +13,10 @@ interface ListComponentProps {
   blok: ListBlok
   /** In una sezione con sfondo fotografico: la fisarmonica sta su un vetro smerigliato. */
   onBackground?: boolean
+  parent?: string
 }
 
-export default function List({ blok, onBackground }: ListComponentProps) {
+export default function List({ blok, onBackground, parent }: ListComponentProps) {
   // 2. Fallback di sicurezza in caso l'array arrivi vuoto
   const items = blok.items || []
 
@@ -22,7 +24,12 @@ export default function List({ blok, onBackground }: ListComponentProps) {
 
   return (
     <Accordion
-      className={classes({ size: blok.size as SizeVariant, glass: !!onBackground })}
+      className={
+        parent === 'wrapper'
+          ? // In un Wrapper (flex) il col-span della griglia non vale: la larghezza viene da wrapperWidthClasses
+            classes({ glass: !!onBackground, class: wrapperWidthClasses(listWidths(blok.size as SizeVariant)) })
+          : classes({ size: blok.size as SizeVariant, glass: !!onBackground })
+      }
       {...storyblokEditable(blok as any)}
     >
       {items.map((item: any) => (
@@ -52,6 +59,12 @@ export default function List({ blok, onBackground }: ListComponentProps) {
   )
 }
 
+/** La "Dimensione" della lista per breakpoint [sm, md, lg, xl], come nella griglia (1/4 parte da md). */
+function listWidths(size: SizeVariant): Array<string | undefined> {
+  if (!size) return []
+  return size === '1/4' ? [undefined, size] : [size]
+}
+
 const classes = tv({
   base: 'col-span-12 gap-4',
   variants: {
@@ -62,9 +75,10 @@ const classes = tv({
       '2/3': 'sm:col-span-8',
       '3/4': 'sm:col-span-9',
     },
-    // Vetro smerigliato sopra la foto di sfondo: sfoca e scurisce (o schiarisce) quel che sta sotto
+    // Vetro smerigliato sopra la foto di sfondo
     glass: {
-      true: 'rounded-large bg-background/50 px-4 py-2 shadow-medium backdrop-blur-md sm:px-6',
+      // Come nella cover di articoli e progetti: solo sfocatura, nessun colore né ombra sopra la foto
+      true: 'rounded-2xl px-4 py-2 -mx-4 backdrop-blur-sm',
     },
   },
 })
