@@ -6,10 +6,12 @@ import { tv } from 'tailwind-variants'
 interface TypographyComponents {
   theme?: 'primary' | 'secondary' | 'light' | 'dark'
   size?: 'small' | 'large'
+  // Size class that replaces the one of every heading (see components/ui/text-styles.ts)
+  heading?: string
   error?: boolean
 }
 
-export const Typography = ({ theme, size, error }: TypographyComponents) => {
+export const Typography = ({ theme, size, heading, error }: TypographyComponents) => {
   const { title, subtitle, text, list, link } = classes()
 
   return {
@@ -18,7 +20,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h1
           className={title({
             class:
-              'type-display',
+              heading ?? 'type-display',
             theme: theme,
           })}
         >
@@ -31,7 +33,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h2
           className={title({
             class:
-              'type-title-1',
+              heading ?? 'type-title-1',
             theme: theme,
           })}
         >
@@ -44,7 +46,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h3
           className={title({
             class:
-              'type-title-2',
+              heading ?? 'type-title-2',
             theme: theme,
           })}
         >
@@ -57,7 +59,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h4
           className={subtitle({
             class:
-              'type-title-4',
+              heading ?? 'type-title-4',
             theme: theme,
           })}
         >
@@ -70,7 +72,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h5
           className={subtitle({
             class:
-              'type-subtitle',
+              heading ?? 'type-subtitle',
             theme: theme,
           })}
         >
@@ -83,7 +85,7 @@ export const Typography = ({ theme, size, error }: TypographyComponents) => {
         <h6
           className={subtitle({
             class:
-              'type-subtitle',
+              heading ?? 'type-subtitle',
             theme: theme,
           })}
         >

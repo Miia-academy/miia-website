@@ -3,6 +3,8 @@ import { Typography } from './typography'
 import { storyblokEditable } from '@storyblok/react'
 import { compiler } from 'markdown-to-jsx'
 import { tv } from 'tailwind-variants'
+import { textStyle } from '@components/ui/text-styles'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // Definizioni type-safe per Tailwind Variants
 type JustifyVariant = 'right' | 'center' | 'left'
@@ -11,17 +13,21 @@ type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1'
 
 interface TextComponentProps {
   blok: TextBlok
+  parent?: string
 }
 
 // 1. Definisci il tipo esatto atteso da Typography
 type ThemeVariant = 'primary' | 'secondary' | 'dark' | 'light' | undefined;
 
-export default function Text({ blok }: TextComponentProps) {
+export default function Text({ blok, parent }: TextComponentProps) {
 
   // 2. Sanifica il dato di Storyblok: se è una stringa vuota, diventa undefined
   const typography = {
     theme: (blok.theme === "" ? undefined : blok.theme) as ThemeVariant,
   };
+
+  // Size combination of title and description ("Dimensioni" field); none = sizes of today
+  const style = textStyle(blok.text_style)
 
   // 1. Parsing super-sicuro per il campo "hide" (previene crash se undefined)
   const hideOptions = Array.isArray(blok.hide)
@@ -35,6 +41,8 @@ export default function Text({ blok }: TextComponentProps) {
   const hideDescription = hideAll || hideOptions.includes('description')
 
   const orderAttr = blok.order ? (blok.order.toString() as OrderVariant) : undefined
+  // Inside a Wrapper (flex) the grid col-span does nothing: width comes from wrapperWidthClasses
+  const isWrapperChild = parent === 'wrapper'
 
   return (
     <article
@@ -42,10 +50,11 @@ export default function Text({ blok }: TextComponentProps) {
       className={textClasses({
         order: orderAttr,
         justify: blok.justify as JustifyVariant | undefined,
-        sm: blok.width?.[0] as WidthVariant | undefined,
-        md: blok.width?.[1] as WidthVariant | undefined,
-        lg: blok.width?.[2] as WidthVariant | undefined,
-        xl: blok.width?.[3] as WidthVariant | undefined,
+        sm: isWrapperChild ? undefined : (blok.width?.[0] as WidthVariant | undefined),
+        md: isWrapperChild ? undefined : (blok.width?.[1] as WidthVariant | undefined),
+        lg: isWrapperChild ? undefined : (blok.width?.[2] as WidthVariant | undefined),
+        xl: isWrapperChild ? undefined : (blok.width?.[3] as WidthVariant | undefined),
+        class: isWrapperChild ? wrapperWidthClasses(blok.width) : undefined,
       })}
       {...storyblokEditable(blok as any)}
     >
@@ -54,7 +63,7 @@ export default function Text({ blok }: TextComponentProps) {
         <div className={titleClasses({ hide: hideTitle })}>
           {compiler(blok.title, {
             wrapper: null,
-            overrides: Typography(typography),
+            overrides: Typography({ ...typography, heading: style?.title }),
           })}
         </div>
       ) : null}
@@ -63,7 +72,7 @@ export default function Text({ blok }: TextComponentProps) {
         <div className={descriptionClasses({ hide: hideDescription })}>
           {compiler(blok.description, {
             wrapper: null,
-            overrides: Typography(typography),
+            overrides: Typography({ ...typography, size: style?.description }),
           })}
         </div>
       ) : null}

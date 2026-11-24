@@ -56,6 +56,7 @@ export default function Section({
             blok={content}
             theme={blok.dark ? 'dark' : 'light'}
             parent={blok.component}
+            onBackground={!!background}
           />
         ))}
       </div>

@@ -6,6 +6,7 @@ import {
 } from '@heroui/react'
 import { Image as HeroImage } from '@components/ui/image'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 import { gridSizes, responsiveImage } from '@modules/images'
 import { storyblokEditable } from '@storyblok/react'
 
@@ -26,6 +27,7 @@ export default function Image({ blok, parent }: ImageComponentProps) {
   if (!blok.image?.filename) return null
 
   const isFullWith = blok.width?.[0] === '1/1'
+  const isWrapperChild = parent === 'wrapper'
   const orderAttr = blok.order ? (blok.order.toString() as OrderVariant) : undefined
   const image = responsiveImage(blok.image.filename, gridSizes(blok.width))
 
@@ -43,11 +45,13 @@ export default function Image({ blok, parent }: ImageComponentProps) {
         classNames={{
           wrapper: wrapperClasses({
             order: orderAttr,
-            wrapperChild: parent === 'wrapper',
-            sm: (blok.width?.[0] as WidthVariant) || undefined,
-            md: (blok.width?.[1] as WidthVariant) || undefined,
-            lg: (blok.width?.[2] as WidthVariant) || undefined,
-            xl: (blok.width?.[3] as WidthVariant) || undefined,
+            wrapperChild: isWrapperChild,
+            // In a Wrapper (flex) the grid col-span does nothing: width comes from wrapperWidthClasses
+            sm: isWrapperChild ? undefined : (blok.width?.[0] as WidthVariant) || undefined,
+            md: isWrapperChild ? undefined : (blok.width?.[1] as WidthVariant) || undefined,
+            lg: isWrapperChild ? undefined : (blok.width?.[2] as WidthVariant) || undefined,
+            xl: isWrapperChild ? undefined : (blok.width?.[3] as WidthVariant) || undefined,
+            class: isWrapperChild ? wrapperWidthClasses(blok.width) : undefined,
           }),
           img: imageClasses({
             order: orderAttr,

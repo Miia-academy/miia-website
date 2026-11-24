@@ -47,3 +47,7 @@ next-env.d.ts
 # prove nel browser (Playwright)
 /e2e-report/
 /e2e-results/
+
+# Local docs
+/docs
+/docs/*

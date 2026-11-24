@@ -1,6 +1,7 @@
 import type { Wrapper as WrapperBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // Tipizzazioni strette per Tailwind Variants
 type OrderVariant = 'none' | '1' | '2' | '3' | '4' | '5' | '6'
@@ -25,6 +26,8 @@ export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) 
   )
 
   const isCarouselChild = parent === 'carousel'
+  // Inside another Wrapper (flex) the grid col-span does nothing: width comes from wrapperWidthClasses
+  const isWrapperChild = parent === 'wrapper'
   const orderAttr: OrderVariant = blok.order
     ? (blok.order.toString() as OrderVariant)
     : 'none'
@@ -37,14 +40,15 @@ export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) 
       {...storyblokEditable(blok as any)}
       className={classes({
         order: orderAttr,
-        smWidth: blok.width?.[0] as WidthVariant,
-        mdWidth: blok.width?.[1] as WidthVariant,
-        lgWidth: blok.width?.[2] as WidthVariant,
-        xlWidth: blok.width?.[3] as WidthVariant,
+        smWidth: isWrapperChild ? undefined : (blok.width?.[0] as WidthVariant),
+        mdWidth: isWrapperChild ? undefined : (blok.width?.[1] as WidthVariant),
+        lgWidth: isWrapperChild ? undefined : (blok.width?.[2] as WidthVariant),
+        xlWidth: isWrapperChild ? undefined : (blok.width?.[3] as WidthVariant),
         row: blok.row,
         justify: justifyKey as any,
         hasBackground: !!background,
         isCarouselChild,
+        class: isWrapperChild ? wrapperWidthClasses(blok.width) : undefined,
       })}
     >
       {/* Renderizziamo SOLO i contenuti (escluso il componente background) */}
@@ -73,7 +77,8 @@ const gradientClasses = tv({
 })
 
 const classes = tv({
-  base: 'col-span-12 flex flex-col flex-wrap gap-4 min-h-12 sm:order-none items-start',
+  // --gap is the fixed space between children, also used by their width (see wrapper-width.ts)
+  base: 'col-span-12 flex flex-col flex-wrap [--gap:0.5rem] sm:[--gap:1rem] md:[--gap:1.5rem] gap-[--gap] min-h-12 sm:order-none items-start',
   variants: {
     row: {
       true: 'flex-row sm:max-md:col-span-12',
