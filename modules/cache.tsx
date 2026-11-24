@@ -47,6 +47,8 @@ export type ProcessedProject = {
   slug: string
   fullSlug: string
   firstPublishedAt: string
+  /** Posizione nella cartella di Storyblok (ordine trascinando nell'elenco): più bassa = prima. */
+  position?: number
   tagList: string[]
   title?: string
   cover_image?: any
@@ -189,6 +191,7 @@ export async function getCachedData(version: 'draft' | 'published' = 'published'
       slug: s.slug,
       fullSlug: formatSlug(s.full_slug),
       firstPublishedAt: s.first_published_at,
+      position: typeof s.position === 'number' ? s.position : undefined,
       tagList: s.tag_list || [],
       title: s.content?.title,
       cover_image: s.content?.cover_image || s.content?.cover,

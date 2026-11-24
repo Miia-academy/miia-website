@@ -11,7 +11,7 @@ import ProjectCard from '@components/cards/projectCard'
 
 import GridHeading from './heading'
 import FilterGroup from './filters'
-import { authorOptions, byVisibility, categoryOptions, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
+import { authorOptions, byFolderOrder, byVisibility, categoryOptions, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
 
 import type { Grid as GridBlokType } from '@types'
 
@@ -83,7 +83,7 @@ export default function Grid({ blok }: GridComponentProps) {
       case 'projects':
         rawItems = [...projects]
         if (keys.length) rawItems = rawItems.filter((project) => keys.some((key) => hasTag(project, key)))
-        rawItems.sort((a, b) => new Date(b.firstPublishedAt || 0).getTime() - new Date(a.firstPublishedAt || 0).getTime())
+        rawItems.sort(byFolderOrder)
         break
 
       default:
