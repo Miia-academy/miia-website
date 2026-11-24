@@ -13,6 +13,7 @@ import {
 } from '@modules/crm-form'
 import { pickEventProperties, siNo, sourceEventProperties } from '@modules/brevo-events'
 import { loadOpendayDetails, type OpendayDetails } from '@modules/openday-details'
+import { domandaIscrizione } from '@modules/openday-domande'
 import { romeDate } from '@modules/enrollment/dates'
 
 /**
@@ -70,6 +71,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Only the server says whether an open day gives the reserved price
     delete eventProperties.openday_agevolato
     let details: OpendayDetails = {}
+    // "Cosa vuoi approfondire?" del modulo di iscrizione all'open day (protetto altrove)
+    if (eventName === 'submit_openday_form') {
+      const raw = (contact?.attributes || {}) as Record<string, unknown>
+      const domanda = await domandaIscrizione(raw.OPENDAY_DOMANDA ?? raw.openday_domanda)
+      if (domanda) attributes.OPENDAY_DOMANDA = domanda
+    }
     // Nuova iscrizione a un open day: la presenza e il ritardo della volta prima non
     // valgono più (li segna di nuovo la pagina miia.it/open-day/accedi).
     if (attributes.OPENDAY_DATA) {

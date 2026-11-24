@@ -23,6 +23,11 @@ export interface Alias {
   submit?: Form[];
   persone?: boolean;
   persone_titolo?: string;
+  versione?: "" | "collegamento" | "registrazione";
+  agevolazione_testo?: string;
+  testo?: string;
+  descrizione?: string;
+  pulsante?: string;
   component: "alias";
   _uid: string;
   [k: string]: unknown;
