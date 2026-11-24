@@ -7,11 +7,13 @@ import { PORTRAIT_SIZES, PORTRAIT_WIDTHS, responsiveImage } from '@modules/image
 import { compiler } from 'markdown-to-jsx'
 import { Typography } from './typography'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 import { YouTubeEmbed } from '@next/third-parties/google'
 import { isStoryResolved } from '@modules/relations'
 
 interface PersonComponentProps {
   blok: PersonBlok
+  parent?: string
 }
 
 // 1. Escludiamo esplicitamente la stringa vuota dal tipo 'role' generato dalla CLI Storyblok
@@ -57,7 +59,7 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
-const Person = ({ blok }: PersonComponentProps) => {
+const Person = ({ blok, parent }: PersonComponentProps) => {
   // Type Narrowing dell'alias
   const aliasContent = isStoryResolved<PersonBlok>(blok.alias)
     ? blok.alias.content
@@ -115,7 +117,8 @@ const Person = ({ blok }: PersonComponentProps) => {
   return (
     <article
       id={blok._uid}
-      className={cardClasses()}
+      // In un Wrapper (flex) il col-span non vale: stessa larghezza della griglia (1/2, 1/3, 1/4)
+      className={cardClasses({ class: parent === 'wrapper' ? CARD_IN_WRAPPER : undefined })}
       {...storyblokEditable(blok as any)}
     >
       {person.image?.filename && (
@@ -200,6 +203,8 @@ const Person = ({ blok }: PersonComponentProps) => {
     </article>
   )
 }
+
+const CARD_IN_WRAPPER = wrapperWidthClasses(['1/2', '1/3', '1/4'])
 
 const classes = tv({
   slots: {

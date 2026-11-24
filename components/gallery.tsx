@@ -7,6 +7,7 @@ import {
 } from '@heroui/react'
 import { Image as HeroImage } from '@components/ui/image'
 import { tv } from 'tailwind-variants'
+import { wrapperWidthClasses } from '@components/ui/wrapper-width'
 import { default as NextImage } from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
@@ -16,6 +17,7 @@ import { storyblokEditable } from '@storyblok/react'
 
 interface GalleryComponentProps {
   blok: GalleryBlok
+  parent?: string
 }
 
 // Definizioni type-safe per evitare conflitti con tailwind-variants
@@ -25,7 +27,7 @@ type SizeVariant = '1/8' | '1/4' | '1/2'
 const THUMB_SIZES = '(min-width: 640px) 33vw, 50vw'
 const THUMB_WIDTHS = [320, 640, 1024]
 
-export default function Gallery({ blok }: GalleryComponentProps) {
+export default function Gallery({ blok, parent }: GalleryComponentProps) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [current, setCurrent] = useState(0)
 
@@ -148,13 +150,18 @@ export default function Gallery({ blok }: GalleryComponentProps) {
   return (
     <div
       {...storyblokEditable(blok as any)}
-      className={galleryClasses({
-        isFullScreen: blok.fullScreen,
-        smWidth: (blok.width?.[0] as WidthVariant) || undefined,
-        mdWidth: (blok.width?.[1] as WidthVariant) || undefined,
-        lgWidth: (blok.width?.[2] as WidthVariant) || undefined,
-        xlWidth: (blok.width?.[3] as WidthVariant) || undefined,
-      })}
+      className={
+        // In un Wrapper (flex) il col-span della griglia non vale: la larghezza viene da wrapperWidthClasses
+        parent === 'wrapper'
+          ? galleryClasses({ isFullScreen: blok.fullScreen, class: wrapperWidthClasses(blok.width) })
+          : galleryClasses({
+              isFullScreen: blok.fullScreen,
+              smWidth: (blok.width?.[0] as WidthVariant) || undefined,
+              mdWidth: (blok.width?.[1] as WidthVariant) || undefined,
+              lgWidth: (blok.width?.[2] as WidthVariant) || undefined,
+              xlWidth: (blok.width?.[3] as WidthVariant) || undefined,
+            })
+      }
     >
       {blok.fullScreen ? FullScreen : SlideShow}
     </div>
