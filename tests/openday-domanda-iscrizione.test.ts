@@ -91,7 +91,7 @@ describe('/api/crm con "Cosa vuoi approfondire?"', () => {
   })
 })
 
-describe('eventParts (campo "Mostra" dell\'alias)', () => {
+describe('eventParts (campo "Versione" dell\'alias)', () => {
   it('vuoto: come prima, docenti solo con "Mostra persone", agevolazione solo con iscrizione', () => {
     expect(eventParts({ persone: true })).toEqual({
       data: true,
@@ -102,20 +102,27 @@ describe('eventParts (campo "Mostra" dell\'alias)', () => {
       pulsante: true,
       modulo: false,
     })
-    expect(eventParts({ mostra: [] }).docenti).toBe(false)
-    expect(eventParts({ submit: [{}] }).pulsante).toBe(false)
-    expect(eventParts({ submit: [{}] }).agevolazione).toBe(true)
+    expect(eventParts({}).docenti).toBe(false)
+    expect(eventParts({ submit: [{}] })).toMatchObject({ pulsante: false, agevolazione: true })
   })
 
-  it('scelto: solo le parti spuntate', () => {
-    expect(eventParts({ persone: true, mostra: ['data', 'agevolazione', 'modulo', 'sconosciuto'] })).toEqual({
-      data: true,
-      titolo: false,
-      descrizione: false,
+  it('collegamento: pulsante verso la pagina, niente form, docenti né agevolazione', () => {
+    expect(eventParts({ versione: 'collegamento', persone: true, submit: [{}] })).toMatchObject({
+      pulsante: true,
+      modulo: false,
       docenti: false,
-      agevolazione: true,
+      agevolazione: false,
+      descrizione: false,
+    })
+  })
+
+  it('registrazione: form, docenti e agevolazione, senza pulsante', () => {
+    expect(eventParts({ versione: 'registrazione' })).toMatchObject({
       pulsante: false,
       modulo: true,
+      docenti: true,
+      agevolazione: true,
+      descrizione: true,
     })
   })
 })

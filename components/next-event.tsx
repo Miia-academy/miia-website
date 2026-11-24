@@ -40,7 +40,7 @@ const smallText = (text: string, className: string) =>
  * - colonna stretta a sinistra: data impilata (giorno grande, mese, anno) e sotto la form;
  * - accanto: titolo, testo breve o descrizione, agevolazione, pulsante verso la pagina;
  * - docenti: piccoli ritratti tondi, a destra su desktop, sotto il testo su mobile.
- * Quali parti mostrare si sceglie nel campo "Mostra" dell'alias (vedi eventParts).
+ * La versione (collegamento o registrazione) si sceglie nel campo "Versione" dell'alias (vedi eventParts).
  * La form riceve la data esatta dell'evento: è quella che finisce in Brevo (OPENDAY_DATA, OPENDAY_CODICE).
  */
 export default function NextEvent({ blok, event, persons = [] }: NextEventProps) {
@@ -59,11 +59,13 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
     rawPage?.cached_url || rawPage?.cachedUrl || rawPage?.url || (typeof rawPage === 'string' ? rawPage : null)
   const cleanUrl = getCleanUrl(pageUrl)
 
-  // Form: quella dell'alias ("Iscrizione"); altrimenti, con "Modulo" in Mostra,
+  // Form: quella dell'alias ("Iscrizione"); altrimenti, nella versione "registrazione",
   // il modulo scelto nel campo "Form" dell'evento
   const eventForm = parts.modulo && isStoryResolved<FormBlok>(event.form) ? event.form.content : null
-  const submitForms: FormBlok[] = (blok.submit as FormBlok[])?.length
-    ? (blok.submit as FormBlok[])
+  // Nella versione "collegamento" niente form, anche se l'alias ne ha una
+  const aliasForms = blok.versione === 'collegamento' ? [] : ((blok.submit as FormBlok[]) || [])
+  const submitForms: FormBlok[] = aliasForms.length
+    ? aliasForms
     : eventForm
       ? [{ ...eventForm, _uid: `${event.uuid}-form` }]
       : []
@@ -71,7 +73,7 @@ export default function NextEvent({ blok, event, persons = [] }: NextEventProps)
   const persone: ISbStoryData<PersonBlok>[] = parts.docenti ? getDocentiStories(event, persons) : []
   const agevolazioneTesto = String(blok.agevolazione_testo || '').trim() || AGEVOLAZIONE_TESTO
   // Testo breve e testo esteso scritti nell'alias; senza testo esteso, con "Descrizione dell'evento"
-  // in Mostra, vale la descrizione dell'evento
+  // nella versione "registrazione", vale la descrizione dell'evento
   const line = String(blok.testo || '').trim()
   const longText = String(blok.descrizione || '').trim() || (parts.descrizione ? String(event.description || '').trim() : '')
   // Titolo: quello scritto nell'alias (campo "Titolo"), altrimenti, con "Titolo dell'evento", quello dell'evento

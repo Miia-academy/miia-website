@@ -23,8 +23,7 @@ export interface Alias {
   submit?: Form[];
   persone?: boolean;
   persone_titolo?: string;
-  persone_testo?: string;
-  mostra?: ("" | "data" | "titolo" | "descrizione" | "docenti" | "agevolazione" | "pulsante" | "modulo")[];
+  versione?: "" | "collegamento" | "registrazione";
   agevolazione_testo?: string;
   testo?: string;
   descrizione?: string;
