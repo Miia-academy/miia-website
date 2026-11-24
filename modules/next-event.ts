@@ -8,14 +8,13 @@ export type EventPart = (typeof EVENT_PARTS)[number]
  * Testo standard del riquadro agevolazione, quando il campo "Testo agevolazione" è vuoto.
  * L'agevolazione è il prezzo della soluzione unica, pagabile anche a rate, per chi partecipa.
  */
-export const AGEVOLAZIONE_TESTO =
-  "**Riservato a chi partecipa**\n\nSe ti colleghi all'open day, hai il prezzo della soluzione unica anche pagando a rate."
+export const AGEVOLAZIONE_TESTO = "Ai partecipanti all'open day è riservata l'agevolazione sulla retta."
 
 /**
  * Cosa mostrare. Campo "Mostra" vuoto = come prima del campo: data, titolo e descrizione,
  * docenti solo con "Mostra persone", pulsante verso la pagina se l'alias non ha "Iscrizione".
- * Il riquadro agevolazione si sceglie solo dal campo (e compare solo se l'evento ha
- * "Prezzo agevolato"). "Pulsante" = link alla pagina dell'evento; "Modulo" = il modulo
+ * L'agevolazione compare solo nella versione con iscrizione e se l'evento ha "Prezzo agevolato"
+ * (con "Mostra" vuoto vale quando l'alias ha "Iscrizione"). "Pulsante" = link alla pagina dell'evento; "Modulo" = il modulo
  * scelto nel campo "Form" dell'evento, usato quando l'alias non ha una sua "Iscrizione".
  */
 export function eventParts(
@@ -31,7 +30,7 @@ export function eventParts(
       titolo: true,
       descrizione: true,
       docenti: !!blok.persone,
-      agevolazione: false,
+      agevolazione: hasSubmit,
       pulsante: !hasSubmit,
       modulo: false,
     }

@@ -92,7 +92,7 @@ describe('/api/crm con "Cosa vuoi approfondire?"', () => {
 })
 
 describe('eventParts (campo "Mostra" dell\'alias)', () => {
-  it('vuoto: come prima, docenti solo con "Mostra persone", niente agevolazione', () => {
+  it('vuoto: come prima, docenti solo con "Mostra persone", agevolazione solo con iscrizione', () => {
     expect(eventParts({ persone: true })).toEqual({
       data: true,
       titolo: true,
@@ -104,6 +104,7 @@ describe('eventParts (campo "Mostra" dell\'alias)', () => {
     })
     expect(eventParts({ mostra: [] }).docenti).toBe(false)
     expect(eventParts({ submit: [{}] }).pulsante).toBe(false)
+    expect(eventParts({ submit: [{}] }).agevolazione).toBe(true)
   })
 
   it('scelto: solo le parti spuntate', () => {
