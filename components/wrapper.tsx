@@ -11,9 +11,10 @@ interface WrapperComponentProps {
   blok: WrapperBlok
   theme?: 'dark' | 'light'
   parent?: string
+  onBackground?: boolean
 }
 
-export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) {
+export default function Wrapper({ blok, theme, parent, onBackground }: WrapperComponentProps) {
   // Larghezze per dispositivo (campi nuovi) o dal vecchio campo Larghezza
   const widths = blokWidths(blok as any)
   const widthItems = widthList(widths)
@@ -61,6 +62,8 @@ export default function Wrapper({ blok, theme, parent }: WrapperComponentProps) 
           blok={content}
           parent={blok.component}
           theme={theme}
+          // Sfondo fotografico della sezione o del wrapper stesso: serve al vetro della fisarmonica
+          onBackground={!!background || !!onBackground}
         />
       ))}
 
