@@ -115,6 +115,16 @@ export default {
         '3/4': '3 / 4',
         '4/9': '4 / 9',
       },
+      // Striscia loghi: scorre di metà larghezza (la lista è ripetuta due volte)
+      keyframes: {
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee var(--marquee-duration, 40s) linear infinite',
+      },
       boxShadow: {
         aside: [
           '0 0.125rem 0.5rem rgba(0, 0, 0, 0.2)',
