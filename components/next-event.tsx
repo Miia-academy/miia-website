@@ -27,13 +27,20 @@ const getCleanUrl = (url?: string | null): string | null => {
 
 const ROME = 'Europe/Rome'
 
-/** Testi piccoli dell'evento (descrizione, riga dell'alias, agevolazione): la classe sta sul contenitore. */
-const smallText = (text: string, className: string) =>
-  compiler(text, {
-    wrapper: ({ children }: { children?: ReactNode }) => <div className={`space-y-2 ${className}`}>{children}</div>,
-    forceWrapper: true,
-    overrides: { p: { component: ({ children }: { children?: ReactNode }) => <p>{children}</p> } },
-  })
+/**
+ * Testi piccoli dell'evento (descrizione, riga dell'alias, agevolazione): la classe sta sul contenitore.
+ * Il contenitore è nostro e il markdown va senza wrapper, come in text.tsx: il wrapper di markdown-to-jsx
+ * ha sempre key "outer", e due testi affiancati con la stessa key facevano duplicare la descrizione
+ * a ogni aggiornamento dell'editor di Storyblok.
+ */
+const smallText = (text: string, className: string) => (
+  <div className={`space-y-2 ${className}`}>
+    {compiler(text, {
+      wrapper: null,
+      overrides: { p: { component: ({ children }: { children?: ReactNode }) => <p>{children}</p> } },
+    })}
+  </div>
+)
 
 /**
  * Prossimo evento richiamato dall'alias ("Prossimo evento"), sul mockup di Mirko (24/11/2026):
