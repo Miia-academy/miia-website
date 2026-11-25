@@ -3,6 +3,7 @@ import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
+import { LogoStrip, isLogo } from '@components/ui/logo-strip'
 
 interface CarouselComponentProps {
   blok: CarouselBlok
@@ -16,6 +17,21 @@ export default function Carousel({ blok, parent }: CarouselComponentProps) {
   // Conversione safe dei valori numerici generati come stringa dalla CLI
   const delayNum = blok.delay ? parseFloat(blok.delay) : 0
   const viewNum = blok.view ? parseInt(blok.view, 10) : 0
+
+  const Tag = parent === 'page' ? 'section' : 'div'
+
+  // Solo loghi (immagini piccole): striscia continua invece di un logo grande alla volta
+  if (slidesList.every(isLogo)) {
+    return (
+      <Tag
+        id={blok.id ? blok.id.replaceAll(' ', '-') : undefined}
+        className="order-last sm:order-none w-full col-span-12"
+        {...storyblokEditable(blok as any)}
+      >
+        <LogoStrip logos={slidesList as any} />
+      </Tag>
+    )
+  }
 
   const slides = slidesList.map((slide) => (
     <SwiperSlide
@@ -32,8 +48,6 @@ export default function Carousel({ blok, parent }: CarouselComponentProps) {
       )}
     </SwiperSlide>
   ))
-
-  const Tag = parent === 'page' ? 'section' : 'div'
 
   // ✅ Prendiamo la stringa così com'è o la convalidiamo con la variante
   const orderAttr = (blok.order as OrderVariant) || undefined

@@ -221,3 +221,43 @@ export async function attributiContatto(email: string): Promise<Record<string, u
 export function debugAmmesso(): boolean {
   return process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview'
 }
+
+const VOCE = /^[a-z][a-z0-9_-]{0,39}$/
+let vociCache: { at: number; voci: string[] } | null = null
+
+/** Nomi delle voci del datasource "Domande open day" in Storyblok, tenuti 10 minuti. */
+async function vociDomande(): Promise<string[]> {
+  if (vociCache && Date.now() - vociCache.at < TIPI_DURATA) return vociCache.voci
+  const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW
+  if (!token) throw new Error('NEXT_PUBLIC_STORYBLOK_PREVIEW mancante')
+  const query = new URLSearchParams({ token, datasource: 'domande-open-day', per_page: '100' })
+  const res = await fetch(`${CDN}/datasource_entries?${query}`)
+  if (!res.ok) throw new Error(`Storyblok datasource domande-open-day: ${res.status}`)
+  const data = (await res.json()) as { datasource_entries?: Array<{ name?: string }> }
+  const voci = (data.datasource_entries || []).map((e) => String(e.name || '').trim()).filter(Boolean)
+  vociCache = { at: Date.now(), voci }
+  return voci
+}
+
+/** Solo per i test. */
+export function svuotaCacheVoci() {
+  vociCache = null
+}
+
+/**
+ * Domanda scelta nel modulo di iscrizione all'open day (campo openday_domanda, "Cosa vuoi
+ * approfondire?"). OPENDAY_DOMANDA è protetto per i moduli pubblici: si accetta solo da qui,
+ * e solo se il valore è una voce del datasource "Domande open day" (le stesse dei link nelle
+ * email e della domanda prima di entrare). Altrimenti null, e l'attributo non si tocca.
+ */
+export async function domandaIscrizione(raw: unknown): Promise<string | null> {
+  const valore = (Array.isArray(raw) ? raw[0] : raw)
+  const voce = typeof valore === 'string' ? valore.trim().toLowerCase() : ''
+  if (!VOCE.test(voce)) return null
+  try {
+    return (await vociDomande()).includes(voce) ? voce : null
+  } catch (error) {
+    console.error('[Open day] Voci delle domande non disponibili:', error)
+    return null
+  }
+}

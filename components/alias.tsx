@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react'
-import type { Alias as AliasBlok, Form as FormBlok } from '@types'
-import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
-import { compiler } from 'markdown-to-jsx'
-import { Typography } from './typography'
+import type { Alias as AliasBlok } from '@types'
+import { storyblokEditable } from '@storyblok/react'
 import { Image } from '@components/ui/image'
-import { responsiveImage, storyblokImageUrl } from '@modules/images'
+import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
-import { tv } from 'tailwind-variants'
 import { useDataContext } from '@modules/context'
 import type { ProcessedArticle, ProcessedEvent } from '@modules/cache'
-import Person from './person'
-import { getDocentiStories } from '@modules/events'
+import NextEvent from './next-event'
 
 interface AliasComponentProps {
   blok: AliasBlok
@@ -67,136 +63,7 @@ export default function Alias({ blok }: AliasComponentProps) {
   if (!isClientReady) return null
 
   if (isEvent && selectedEvent && selectedEvent.date) {
-    const eventDate = new Date(selectedEvent.date)
-
-    const openday = {
-      id: 'openday',
-      value: eventDate.toISOString(),
-      required: true,
-      error: null,
-    }
-
-    const dateClasses = tv({
-      base: 'flex flex-col justify-end h-full w-full p-4 text-white relative z-10',
-      variants: {
-        hasImage: {
-          true: 'bg-gradient-to-t from-black/80 via-black/40 to-transparent',
-          false: 'bg-neutral-800',
-        },
-      },
-    })
-
-    const rawPage = selectedEvent.page as any
-    const pageUrl =
-      rawPage?.cached_url ||
-      rawPage?.cachedUrl ||
-      rawPage?.url ||
-      (typeof rawPage === 'string' ? rawPage : null)
-
-    const cleanUrl = getCleanUrl(pageUrl)
-    const submitForms = (blok.submit as FormBlok[]) || []
-    const persone = getDocentiStories(selectedEvent, persons)
-
-    return (
-      <div
-        {...storyblokEditable(blok as any)}
-        className="col-span-12 flex w-full flex-col items-stretch gap-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-8"
-      >
-        {/* Box Data con Immagine */}
-        <div
-          className="relative flex aspect-[4/3] min-h-48 w-full min-w-56 flex-none overflow-hidden rounded-xl bg-cover bg-center sm:w-64"
-          style={{
-            backgroundImage: blok.image?.filename
-              ? // Quoted: the resized address contains "quality(70)", whose ")" ends an unquoted url()
-                `url("${storyblokImageUrl(blok.image.filename, 640)}")`
-              : 'none',
-          }}
-        >
-          <div className={dateClasses({ hasImage: !!blok.image?.filename })}>
-            <p className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-              <span className="block">
-                {eventDate.toLocaleDateString('it-IT', {
-                  day: '2-digit',
-                  month: 'long',
-                })}
-              </span>
-              <span className="block text-lg font-medium opacity-90 sm:text-xl">
-                {eventDate.toLocaleDateString('it-IT', {
-                  year: 'numeric',
-                })}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* Dettagli Evento */}
-        <div className="flex flex-1 flex-col justify-center space-y-4 py-2">
-          {selectedEvent.title && (!cleanUrl || submitForms.length > 0) ? (
-            <h3 className="font-sans type-title-3">
-              {selectedEvent.title}
-            </h3>
-          ) : (
-            <NextLink
-              href={cleanUrl || '#'}
-              className="inline-block transition-opacity hover:opacity-85"
-            >
-              <h3 className="font-sans type-title-3">
-                {selectedEvent.title}
-              </h3>
-            </NextLink>
-          )}
-
-          {selectedEvent.description &&
-            compiler(selectedEvent.description, {
-              wrapper: 'div',
-              forceWrapper: true,
-              overrides: Typography({ theme: 'dark' }),
-            })}
-
-          {cleanUrl && submitForms.length === 0 && (
-            <div className="pt-2">
-              <NextLink
-                href={cleanUrl}
-                className="inline-flex rounded-xl border-2 border-foreground px-4 py-2 text-sm font-medium transition-all hover:bg-foreground hover:text-background"
-              >
-                Vai alla pagina
-              </NextLink>
-            </div>
-          )}
-
-          {submitForms.length > 0 && (
-            <div className="flex flex-wrap gap-3 pt-2">
-              {submitForms.map((form) => (
-                <StoryblokComponent
-                  blok={form}
-                  openday={openday}
-                  key={form._uid}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Persone dell'evento (campo "Docenti"), solo se "Mostra persone" è spuntato */}
-        {blok.persone && persone.length > 0 && (
-          <div className="w-full basis-full space-y-6 pt-6 sm:pt-10">
-            {blok.persone_titolo && (
-              <h3 className="font-serif type-title-2">
-                {blok.persone_titolo}
-              </h3>
-            )}
-            <div className="grid grid-cols-12 gap-6">
-              {persone.map((persona) => (
-                <Person
-                  key={persona.uuid}
-                  blok={{ component: 'person', _uid: persona.uuid, alias: persona }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    )
+    return <NextEvent blok={blok} event={selectedEvent} persons={persons} />
   }
 
   if (isArticle && selectedArticle) {

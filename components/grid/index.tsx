@@ -11,7 +11,7 @@ import ProjectCard from '@components/cards/projectCard'
 
 import GridHeading from './heading'
 import FilterGroup from './filters'
-import { authorOptions, byVisibility, categoryOptions, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
+import { authorOptions, byFolderOrder, byVisibility, categoryOptions, filterKeys, gridControls, hasTag, tagLabel, tagOptions } from '@modules/grid'
 
 import type { Grid as GridBlokType } from '@types'
 
@@ -34,6 +34,9 @@ export default function Grid({ blok }: GridComponentProps) {
   const [activeAuthor, setActiveAuthor] = useState('')
 
   const isDarkSection = !!blok.dark
+
+  // Progetti su mobile (una colonna): ne mostra solo MOBILE_PROJECTS finché non si preme "Carica altri"
+  const [mobileExpanded, setMobileExpanded] = useState(false)
 
   const filteredAndSortedItems = useMemo(() => {
     let rawItems: any[] = []
@@ -80,7 +83,7 @@ export default function Grid({ blok }: GridComponentProps) {
       case 'projects':
         rawItems = [...projects]
         if (keys.length) rawItems = rawItems.filter((project) => keys.some((key) => hasTag(project, key)))
-        rawItems.sort((a, b) => new Date(b.firstPublishedAt || 0).getTime() - new Date(a.firstPublishedAt || 0).getTime())
+        rawItems.sort(byFolderOrder)
         break
 
       default:
@@ -119,7 +122,13 @@ export default function Grid({ blok }: GridComponentProps) {
   const visibleItems = useMemo(() => shownItems.slice(0, visibleCount), [shownItems, visibleCount])
 
   const hasMore = visibleCount < shownItems.length
-  const handleLoadMore = () => setVisibleCount((prev) => prev + pageSize)
+  const mobileCapped = blok.resource === 'projects' && !mobileExpanded && visibleItems.length > MOBILE_PROJECTS
+  const handleLoadMore = () => {
+    const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
+    // Su mobile il primo tocco mostra i progetti già caricati; su desktop (o dopo) ne carica altri
+    if (mobileCapped && !isDesktop) setMobileExpanded(true)
+    else setVisibleCount((prev) => prev + pageSize)
+  }
 
   const columnsClass = useMemo(() => {
     if (blok.resource === 'persons') return 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
@@ -154,6 +163,7 @@ export default function Grid({ blok }: GridComponentProps) {
                 onChange={(value) => {
                   setActiveTag(value)
                   setVisibleCount(pageSize)
+                  setMobileExpanded(false)
                 }}
               />
             )}
@@ -166,6 +176,7 @@ export default function Grid({ blok }: GridComponentProps) {
                 onChange={(value) => {
                   setActiveCategory(value)
                   setVisibleCount(pageSize)
+                  setMobileExpanded(false)
                 }}
               />
             )}
@@ -178,13 +189,16 @@ export default function Grid({ blok }: GridComponentProps) {
                 onChange={(value) => {
                   setActiveAuthor(value)
                   setVisibleCount(pageSize)
+                  setMobileExpanded(false)
                 }}
               />
             )}
           </div>
         )}
 
-        <div className={`grid ${blok.resource === 'persons' ? 'gap-4 sm:gap-6' : 'gap-6 sm:gap-8'} ${columnsClass}`}>
+        <div
+          className={`grid ${blok.resource === 'persons' ? 'gap-4 sm:gap-6' : 'gap-6 sm:gap-8'} ${columnsClass} ${mobileCapped ? MOBILE_PROJECTS_CLASS : ''}`}
+        >
           {(blok.resource === 'articles' || !blok.resource) &&
             visibleItems.map((article) => (
               <ArticleCard key={article.uuid} article={article} isDark={isDarkSection} />
@@ -199,8 +213,8 @@ export default function Grid({ blok }: GridComponentProps) {
             ))}
         </div>
 
-        {hasMore && (
-          <div className="mt-12 flex justify-center">
+        {(hasMore || mobileCapped) && (
+          <div className={`mt-12 flex justify-center ${hasMore ? '' : 'md:hidden'}`}>
             <Button
               color={isDarkSection ? 'default' : 'primary'}
               variant="ghost"
@@ -208,7 +222,15 @@ export default function Grid({ blok }: GridComponentProps) {
               onPress={handleLoadMore}
               className="px-8"
             >
-              Carica altri {shownItems.length - visibleCount}
+              Carica altri{' '}
+              {mobileCapped ? (
+                <>
+                  <span className="md:hidden">{shownItems.length - MOBILE_PROJECTS}</span>
+                  <span className="hidden md:inline">{shownItems.length - visibleCount}</span>
+                </>
+              ) : (
+                shownItems.length - visibleCount
+              )}
             </Button>
           </div>
         )}
@@ -216,6 +238,11 @@ export default function Grid({ blok }: GridComponentProps) {
     </section>
   )
 }
+
+/** Progetti visibili su mobile prima di "Carica altri". */
+const MOBILE_PROJECTS = 3
+/** Nasconde sotto md le card dalla quarta in poi (classe scritta per intero per Tailwind). */
+const MOBILE_PROJECTS_CLASS = 'max-md:[&>*:nth-child(n+4)]:hidden'
 
 const wrapperClasses = tv({
   base: 'w-full py-12 md:py-16 lg:py-24 transition-colors',

@@ -23,6 +23,11 @@ export interface Alias {
   submit?: Form[];
   persone?: boolean;
   persone_titolo?: string;
+  versione?: "" | "collegamento" | "registrazione";
+  agevolazione_testo?: string;
+  testo?: string;
+  descrizione?: string;
+  pulsante?: string;
   component: "alias";
   _uid: string;
   [k: string]: unknown;
@@ -174,6 +179,10 @@ export interface Gallery {
   size?: "" | "1/2" | "1/4" | "1/8";
   aspect?: "" | "1/1" | "3/4" | "4/3";
   width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
+  width_mobile?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_tablet?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_desktop?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_wide?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
   component: "gallery";
   _uid: string;
   [k: string]: unknown;
@@ -197,8 +206,13 @@ export interface Grid {
 export interface Image {
   image: StoryblokAsset;
   width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
-  size?: "" | "sm" | "md" | "lg";
+  width_mobile?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_tablet?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_desktop?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_wide?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  size?: "" | "sm" | "md" | "lg" | "xl";
   aspect?: "" | "1/1" | "3/4" | "4/9" | "4/3" | "9/4";
+  contain?: boolean;
   order?: string;
   fullScreen?: boolean;
   author?: ISbStoryData<Person> | string;
@@ -356,9 +370,14 @@ export interface Text {
   description?: string;
   justify?: "" | "right" | "center" | "left";
   width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
+  width_mobile?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_tablet?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_desktop?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_wide?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
   theme?: "" | "primary" | "secondary" | "dark" | "light";
   order?: string;
   hide?: "" | "title" | "description" | "all";
+  text_style?: "" | "highlight" | "standard" | "section" | "compact";
   component: "text";
   _uid: string;
   [k: string]: unknown;
@@ -367,6 +386,10 @@ export interface Text {
 export interface Video {
   source: string;
   width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
+  width_mobile?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_tablet?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_desktop?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_wide?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
   order?: string;
   component: "video";
   _uid: string;
@@ -394,6 +417,10 @@ export interface Wrapper {
   )[];
   row?: boolean;
   width?: ("" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1")[];
+  width_mobile?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_tablet?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_desktop?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
+  width_wide?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
   justify?: "" | "right" | "center" | "left";
   order?: string;
   component: "wrapper";

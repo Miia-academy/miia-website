@@ -17,7 +17,7 @@ import { getAttribution, refreshAttributionStorage } from '@modules/attribution'
 import { tracciaModulo } from '@modules/tracking'
 import { acceptAllCookies, COOKIE_POLICY_URL, needsCookieConsent, SITE_COOKIES_URL } from '@modules/consent'
 import { findOpendayByDate, getDocentiNames, joinNames } from '@modules/events'
-import { formEventName, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
+import { formEventName, gtmFormEvent, normalizeTracking, pickEventProperties } from '@modules/brevo-events'
 
 export interface FieldData {
   id: string
@@ -311,7 +311,7 @@ export async function inviaModulo(
 
     if (response.ok) {
       const result = await response.json().catch(() => null)
-      sendGTMEvent({ event: event.event_name })
+      sendGTMEvent(gtmFormEvent(event.event_name, event.event_properties))
       tracciaModulo(normalizeTracking(form.tracking), event.event_properties['openday'] ? String(event.event_properties['openday']) : undefined)
       return { ok: true, returning: !!result?.returning }
     }
@@ -357,18 +357,19 @@ export function mergeForm(blok: ExtendedFormBlok, courses?: Array<OptionProps>):
     }
   }
 
+  // Quello che è scritto nel blocco vince; l'alias fa da valore di base
   return {
     ...blok,
     ...alias,
     list: mergedList as any,
     fields: mergedFields,
-    title: alias.title || blok.title,
-    label: alias.label || blok.label,
+    title: blok.title || alias.title,
+    label: blok.label || alias.label,
     message: [alias.message, blok.message].filter(Boolean).join('\n'),
-    tracking: alias.tracking || blok.tracking,
-    terms: alias.terms || blok.terms,
-    action: alias.action || blok.action,
-    endpoint: alias.endpoint || blok.endpoint,
+    tracking: blok.tracking || alias.tracking,
+    terms: blok.terms || alias.terms,
+    action: blok.action || alias.action,
+    endpoint: blok.endpoint || alias.endpoint,
   }
 }
 

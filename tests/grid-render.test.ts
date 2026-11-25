@@ -15,3 +15,28 @@ it('default as today, then hidden, tags and interactive filters', () => {
   expect(render({ visibility: 'hidden' })).toContain('1 articoli')
   expect(render({ filter: 'storia, interni-primo-livello', visibility: 'all' })).toContain('2 articoli')
 })
+it('progetti: su mobile solo i primi 3, poi "Carica altri"', () => {
+  const p = (i: number) => ({ uuid: 'pr' + i, slug: 'pr' + i, fullSlug: '/progetti/pr' + i, title: 'Progetto ' + i, tagList: [], firstPublishedAt: `2026-01-${10 + i}` })
+  const renderProjects = (n: number) =>
+    renderToString(h(DataProvider, { data: { ...data, projects: Array.from({ length: n }, (_, i) => p(i)) }, children: h(Grid, { blok: { component: 'grid', _uid: 'g', resource: 'projects', limit: '6' } }) }))
+  const six = renderProjects(6)
+  expect(six).toContain('max-md:[&amp;&gt;*:nth-child(n+4)]:hidden')
+  expect(six).toContain('Carica altri')
+  expect(six).toMatch(/md:hidden[^"]*">.*?3<\/span>/)
+  // Senza posizione: più recenti per primi (data di prima pubblicazione)
+  expect(six.indexOf('Progetto 5')).toBeLessThan(six.indexOf('Progetto 0'))
+  const three = renderProjects(3)
+  expect(three).not.toContain('nth-child(n+4)')
+  expect(three).not.toContain('Carica altri')
+})
+
+it('progetti: ordine della cartella in Storyblok (position), poi data', () => {
+  const projects = [
+    { uuid: 'a', slug: 'a', fullSlug: '/progetti/a', title: 'Giugno 2024', tagList: [], position: -390, firstPublishedAt: '2026-09-10T15:27:31Z' },
+    { uuid: 'b', slug: 'b', fullSlug: '/progetti/b', title: 'Giugno 2026', tagList: [], position: -530, firstPublishedAt: '2026-09-10T15:27:28Z' },
+    { uuid: 'c', slug: 'c', fullSlug: '/progetti/c', title: 'Marzo 2025', tagList: [], position: -430, firstPublishedAt: '2026-09-10T15:27:30Z' },
+  ]
+  const html = renderToString(h(DataProvider, { data: { ...data, projects }, children: h(Grid, { blok: { component: 'grid', _uid: 'g', resource: 'projects' } }) }))
+  expect(html.indexOf('Giugno 2026')).toBeLessThan(html.indexOf('Marzo 2025'))
+  expect(html.indexOf('Marzo 2025')).toBeLessThan(html.indexOf('Giugno 2024'))
+})

@@ -87,3 +87,16 @@ export function articleAuthor(value: unknown, persons: { uuid: string; name: str
   const name = story.content?.title || story.name
   return story.uuid && name ? { uuid: story.uuid, name } : undefined
 }
+
+type FolderOrdered = { position?: number; firstPublishedAt?: string }
+
+/**
+ * Ordine della cartella in Storyblok (si cambia trascinando nell'elenco): posizione più bassa prima.
+ * A parità di posizione, o senza posizione, il più recente per data di prima pubblicazione.
+ */
+export function byFolderOrder(a: FolderOrdered, b: FolderOrdered): number {
+  const pa = a.position ?? Number.POSITIVE_INFINITY
+  const pb = b.position ?? Number.POSITIVE_INFINITY
+  if (pa !== pb) return pa < pb ? -1 : 1
+  return new Date(b.firstPublishedAt || 0).getTime() - new Date(a.firstPublishedAt || 0).getTime()
+}
