@@ -210,8 +210,9 @@ export interface Image {
   width_tablet?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
   width_desktop?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
   width_wide?: "" | "1/4" | "1/3" | "1/2" | "2/3" | "3/4" | "1/1";
-  size?: "" | "sm" | "md" | "lg";
+  size?: "" | "sm" | "md" | "lg" | "xl";
   aspect?: "" | "1/1" | "3/4" | "4/9" | "4/3" | "9/4";
+  contain?: boolean;
   order?: string;
   fullScreen?: boolean;
   author?: ISbStoryData<Person> | string;
