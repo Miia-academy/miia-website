@@ -15,7 +15,7 @@ it('modulo con alias: vince quello che è scritto nel blocco', () => {
 })
 
 it('Nascondi da mobile: nascosto sotto i 480px, colonne invariate', () => {
-  const hidden = renderToStaticMarkup(h(HideMobile, { blok: { hide_mobile: true } }, h('p', null, 'x')))
+  const hidden = renderToStaticMarkup(h(HideMobile as any, { blok: { hide_mobile: true } }, h('p', null, 'x')))
   expect(hidden).toBe('<div class="contents max-sm:hidden"><p>x</p></div>')
-  expect(renderToStaticMarkup(h(HideMobile, { blok: {} }, h('p', null, 'x')))).toBe('<p>x</p>')
+  expect(renderToStaticMarkup(h(HideMobile as any, { blok: {} }, h('p', null, 'x')))).toBe('<p>x</p>')
 })
