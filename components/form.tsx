@@ -357,18 +357,19 @@ export function mergeForm(blok: ExtendedFormBlok, courses?: Array<OptionProps>):
     }
   }
 
+  // Quello che è scritto nel blocco vince; l'alias fa da valore di base
   return {
     ...blok,
     ...alias,
     list: mergedList as any,
     fields: mergedFields,
-    title: alias.title || blok.title,
-    label: alias.label || blok.label,
+    title: blok.title || alias.title,
+    label: blok.label || alias.label,
     message: [alias.message, blok.message].filter(Boolean).join('\n'),
-    tracking: alias.tracking || blok.tracking,
-    terms: alias.terms || blok.terms,
-    action: alias.action || blok.action,
-    endpoint: alias.endpoint || blok.endpoint,
+    tracking: blok.tracking || alias.tracking,
+    terms: blok.terms || alias.terms,
+    action: blok.action || alias.action,
+    endpoint: blok.endpoint || alias.endpoint,
   }
 }
 

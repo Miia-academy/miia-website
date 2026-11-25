@@ -1,6 +1,7 @@
 import type { Wrapper as WrapperBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
+import { HideMobile } from '@components/hide-mobile'
 import { blokWidths, gridBaseClass, widthList, wrapperWidthClasses } from '@components/ui/wrapper-width'
 
 // Tipizzazioni strette per Tailwind Variants
@@ -57,14 +58,15 @@ export default function Wrapper({ blok, theme, parent, onBackground }: WrapperCo
     >
       {/* Renderizziamo SOLO i contenuti (escluso il componente background) */}
       {contents.map((content: any) => (
-        <StoryblokComponent
-          key={content._uid}
-          blok={content}
-          parent={blok.component}
-          theme={theme}
-          // Sfondo fotografico della sezione o del wrapper stesso: serve al vetro della fisarmonica
-          onBackground={!!background || !!onBackground}
-        />
+        <HideMobile key={content._uid} blok={content}>
+          <StoryblokComponent
+            blok={content}
+            parent={blok.component}
+            theme={theme}
+            // Sfondo fotografico della sezione o del wrapper stesso: serve al vetro della fisarmonica
+            onBackground={!!background || !!onBackground}
+          />
+        </HideMobile>
       ))}
 
       {/* Sfondo posizionato in overlay */}

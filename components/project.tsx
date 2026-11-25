@@ -7,6 +7,7 @@ import { Image as HeroImage } from '@components/ui/image'
 import { responsiveImage } from '@modules/images'
 import NextLink from 'next/link'
 import { Typography } from './typography'
+import { HideMobile } from '@components/hide-mobile'
 
 interface ProjectProps {
   blok: ProjectBlok
@@ -94,11 +95,9 @@ export default function Project({ blok, fullSlug }: ProjectProps) {
       <div className="w-full">
         {blok.body &&
           blok.body.map((nestedBlok) => (
-            <StoryblokComponent
-              blok={nestedBlok}
-              parent={nestedBlok.component}
-              key={nestedBlok._uid}
-            />
+            <HideMobile key={nestedBlok._uid} blok={nestedBlok as any}>
+              <StoryblokComponent blok={nestedBlok} parent={nestedBlok.component} />
+            </HideMobile>
           ))}
       </div>
 

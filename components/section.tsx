@@ -1,6 +1,7 @@
 import type { Section as SectionBlok } from '@types'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import { tv } from 'tailwind-variants'
+import { HideMobile } from '@components/hide-mobile'
 
 // Tipizzazioni strette per Tailwind Variants
 type AlignVariant = 'start' | 'center' | 'end' | 'stretch' | undefined
@@ -51,13 +52,14 @@ export default function Section({
         })}
       >
         {contents.map((content: any) => (
-          <StoryblokComponent
-            key={content._uid}
-            blok={content}
-            theme={blok.dark ? 'dark' : 'light'}
-            parent={blok.component}
-            onBackground={!!background}
-          />
+          <HideMobile key={content._uid} blok={content}>
+            <StoryblokComponent
+              blok={content}
+              theme={blok.dark ? 'dark' : 'light'}
+              parent={blok.component}
+              onBackground={!!background}
+            />
+          </HideMobile>
         ))}
       </div>
       {!!background && (
