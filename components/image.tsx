@@ -13,7 +13,7 @@ import { storyblokEditable } from '@storyblok/react'
 // Definizioni type-safe per Tailwind Variants
 type WidthVariant = '1/4' | '1/3' | '1/2' | '2/3' | '3/4' | '1/1'
 type OrderVariant = '1' | '2' | '3' | '4' | '5' | '6'
-type SizeVariant = 'sm' | 'md' | 'lg'
+type SizeVariant = 'sm' | 'md' | 'lg' | 'xl'
 type AspectVariant = '9/4' | '4/3' | '1/1' | '3/4' | '4/9'
 
 interface ImageComponentProps {
@@ -23,7 +23,12 @@ interface ImageComponentProps {
 
 export default function Image({ blok, parent }: ImageComponentProps) {
   // Larghezze per dispositivo (campi nuovi) o dal vecchio campo Larghezza
-  const widths = blokWidths(blok as any)
+  const ownWidths = blokWidths(blok as any)
+  // Immagine con Dimensione messa direttamente nella sezione: tiene la sua colonna
+  // (un quarto se la larghezza è vuota) e l'immagine sta centrata lì dentro
+  const sizedInSection = !!blok.size && parent === 'section'
+  const hasWidth = Object.values(ownWidths).some(Boolean)
+  const widths = sizedInSection && !hasWidth ? { sm: '1/4' as const } : ownWidths
   const widthItems = widthList(widths)
   const { isOpen, onOpen, onClose } = useDisclosure()
 
@@ -44,11 +49,12 @@ export default function Image({ blok, parent }: ImageComponentProps) {
         alt={blok.image.alt || ''}
         onClick={onOpen}
         width="100%"
-        removeWrapper={!!blok.size}
+        removeWrapper={!!blok.size && !sizedInSection}
         classNames={{
           wrapper: wrapperClasses({
             order: orderAttr,
             wrapperChild: isWrapperChild,
+            sizedInSection,
             // In a Wrapper (flex) the grid col-span does nothing: width comes from wrapperWidthClasses
             sm: isWrapperChild ? undefined : (widthItems[0] as WidthVariant) || undefined,
             md: isWrapperChild ? undefined : (widthItems[1] as WidthVariant) || undefined,
@@ -61,6 +67,8 @@ export default function Image({ blok, parent }: ImageComponentProps) {
             normalized: !!blok.size || isFullWith,
             size: (blok.size as SizeVariant) || undefined,
             aspect: (blok.aspect as AspectVariant) || undefined,
+            contain: !!blok.contain,
+            sizedInSection,
           }),
         }}
       />
@@ -94,6 +102,9 @@ const wrapperClasses = tv({
   variants: {
     wrapperChild: {
       false: 'self-stretch',
+    },
+    sizedInSection: {
+      true: 'flex items-center justify-center',
     },
     order: {
       '1': '-order-1',
@@ -145,6 +156,7 @@ const imageClasses = tv({
       sm: 'max-w-32',
       md: 'max-w-48',
       lg: 'max-w-64',
+      xl: 'max-w-96',
     },
     normalized: {
       true: 'h-full sm:aspect-auto md:object-cover',
@@ -164,6 +176,14 @@ const imageClasses = tv({
       '1/1': 'sm:aspect-square md:aspect-square',
       '3/4': 'sm:aspect-3/4 md:aspect-3/4',
       '4/9': 'sm:aspect-4/9 md:aspect-4/9',
+    },
+    // Mostra intera: niente ritaglio (loghi), l'immagine sta tutta nel suo spazio
+    contain: {
+      true: 'object-contain md:object-contain',
+    },
+    // Nella sezione l'altezza segue la larghezza (e l'Aspetto), non l'altezza della riga
+    sizedInSection: {
+      true: 'h-auto sm:h-auto w-full',
     },
   },
 })
