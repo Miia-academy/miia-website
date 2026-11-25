@@ -2,6 +2,7 @@ import type { Page as PageBlok, Location as LocationBlok } from '@types'
 import type { ISbStoryData } from '@storyblok/react'
 import { StoryblokComponent, storyblokEditable } from '@storyblok/react'
 import Meta from '@components/meta'
+import { HideMobile } from '@components/hide-mobile'
 import Nav from '@components/nav'
 import SlotBanner from '@components/banners/slotBanner'
 import { BANNER } from '@config/tracking'
@@ -38,12 +39,14 @@ export default function Page({ blok, locations = [] }: PageComponentProps) {
       <main className="min-h-cover">
         {body.map((bodyBlok: any) => (
           <Fragment key={bodyBlok._uid}>
-            <StoryblokComponent
-              blok={bodyBlok}
-              parent="page"
-              locations={locations}
-              singleSection={singleSection}
-            />
+            <HideMobile blok={bodyBlok}>
+              <StoryblokComponent
+                blok={bodyBlok}
+                parent="page"
+                locations={locations}
+                singleSection={singleSection}
+              />
+            </HideMobile>
             {/* Fixed banner place in the home, after "Cosa offriamo" */}
             {home && bodyBlok.id === BANNER.homeSlotAfterSection && <SlotBanner slot="home" />}
           </Fragment>

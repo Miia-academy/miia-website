@@ -9,6 +9,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { Typography } from './typography'
 import { getLongDate, parentPath } from '@modules/formats'
+import { HideMobile } from '@components/hide-mobile'
 
 interface ArticleProps {
   blok: ArticleBlok
@@ -125,11 +126,9 @@ export default function Article({ blok, fullSlug }: ArticleProps) {
       <div className="w-full pb-20 md:pb-24">
         {blok.body &&
           blok.body.map((nestedBlok) => (
-            <StoryblokComponent
-              blok={nestedBlok}
-              parent={nestedBlok.component}
-              key={nestedBlok._uid}
-            />
+            <HideMobile key={nestedBlok._uid} blok={nestedBlok as any}>
+              <StoryblokComponent blok={nestedBlok} parent={nestedBlok.component} />
+            </HideMobile>
           ))}
       </div>
 

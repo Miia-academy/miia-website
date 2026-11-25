@@ -1,5 +1,6 @@
 import type { Aside as AsideBlok } from "@types";
 import { StoryblokComponent, storyblokEditable } from "@storyblok/react";
+import { HideMobile } from "@components/hide-mobile";
 import { Accordion, AccordionItem } from "@heroui/react";
 import { Button } from "@components/ui/button";
 import { tv } from "tailwind-variants";
@@ -208,12 +209,13 @@ export default function Aside({ blok }: AsideComponentProps) {
         {contents.length > 0 && (
           <div className="order-last col-span-full space-y-4 md:order-1 md:col-span-8 md:space-y-6">
             {contents.map((content) => (
-              <StoryblokComponent
-                blok={content}
-                parent={content.component}
-                key={content._uid}
-                theme={blok.theme || "light"}
-              />
+              <HideMobile key={content._uid} blok={content as any}>
+                <StoryblokComponent
+                  blok={content}
+                  parent={content.component}
+                  theme={blok.theme || "light"}
+                />
+              </HideMobile>
             ))}
           </div>
         )}
