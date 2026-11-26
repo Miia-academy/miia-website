@@ -50,10 +50,12 @@ interface ResolvedPerson {
   links: ActionBlok[] | null
 }
 
-function isEmpty(value: unknown): boolean {
+export function isEmpty(value: unknown): boolean {
   if (!value) return true // null, undefined, '', 0, false
   if (Array.isArray(value)) return value.length === 0 || value.every(isEmpty)
-  if (typeof value === 'object' && 'filename' in value) {
+  // Immagine vuota: Storyblok a volte manda solo { fieldtype: 'asset', meta_data: {} },
+  // senza filename. Va trattata come vuota, altrimenti copre la foto dell'alias.
+  if (typeof value === 'object' && ('filename' in value || (value as { fieldtype?: string }).fieldtype === 'asset')) {
     return !(value as { filename?: string }).filename
   }
   return false
