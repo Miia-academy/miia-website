@@ -17,7 +17,7 @@ test('Pagina corso (interior design primo livello)', async ({ page }, testInfo) 
   const errori = raccogliErrori(page)
   await apri(page, '/')
   const corso =
-    (await trovaLink(page, /corso-interior-design-primo-livello/)) || (await trovaLink(page, /\/corsi\/.+/))
+    (await trovaLink(page, /interior-design-arredo|corso-interior-design-primo-livello/)) || (await trovaLink(page, /\/corsi\/.+/))
   test.skip(!corso, 'Nessun link a una pagina corso nella home')
   await apri(page, corso!)
   await controlliGrafici(page, testInfo, 'Pagina corso', errori)
@@ -51,7 +51,7 @@ test('Risposta a un dubbio cliccato in un’email, dopo l’open day', async ({ 
   // La risposta viene da Storyblok › Datasources › "Domande open day", voce "pagamenti"
   await expect(page.locator('p').filter({ hasText: /rate/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /telefonata di 15 minuti/ })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Iscriviti online' })).toHaveAttribute('href', '/iscrizione/corso-interior-design-primo-livello')
+  await expect(page.getByRole('link', { name: 'Iscriviti online' })).toHaveAttribute('href', '/iscrizione/interior-design-arredo')
   await controlliGrafici(page, testInfo, 'Risposta dopo open day', errori)
 })
 

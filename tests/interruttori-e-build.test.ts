@@ -66,8 +66,13 @@ describe('interruttore ENROLLMENT_ONLINE', () => {
       data: { stories: [{ full_slug: 'corsi/interni/corso-interior-design-primo-livello/treviso-sabato' }] },
     })
     const { getStaticProps } = await import('@pages/iscrizione/[corso]')
-    const ok = (await getStaticProps({ params: { corso: 'corso-interior-design-primo-livello' } } as any)) as any
+    // Indirizzo nuovo; il codice del corso resta quello di sempre
+    const ok = (await getStaticProps({ params: { corso: 'interior-design-arredo' } } as any)) as any
     expect(ok.props.corso).toBe('corso-interior-design-primo-livello')
+    expect(ok.props.titolo).toBe('Interior design, primo livello')
+    // Vecchio indirizzo: porta al nuovo
+    const old = (await getStaticProps({ params: { corso: 'corso-interior-design-primo-livello' } } as any)) as any
+    expect(old.redirect).toEqual({ destination: '/iscrizione/interior-design-arredo', permanent: true })
     const missing = await getStaticProps({ params: { corso: 'corso-che-non-esiste' } } as any)
     expect(missing).toMatchObject({ notFound: true })
   })

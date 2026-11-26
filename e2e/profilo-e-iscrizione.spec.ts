@@ -16,7 +16,7 @@ test('Riquadro ?debug=profilo con il consenso simulato', async ({ page }, testIn
 
 test('Iscrizione online: pagina del corso', async ({ page }, testInfo) => {
   const errori = raccogliErrori(page)
-  const risposta = await apri(page, '/iscrizione/corso-interior-design-primo-livello')
+  const risposta = await apri(page, '/iscrizione/interior-design-arredo')
   if (risposta?.status() === 404) {
     // Interruttore ENROLLMENT_ONLINE spento: la pagina non deve esistere.
     testInfo.annotations.push({ type: 'Iscrizione online', description: 'spenta (pagina 404, come previsto)' })

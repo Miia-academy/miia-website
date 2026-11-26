@@ -57,7 +57,11 @@ describe('recesso e numero del contratto', () => {
 describe('pulsante "Iscriviti online"', () => {
   const SLUG = 'corsi/interior-design/corso-interior-design-primo-livello/edizioni/treviso-sabato'
   it('porta alla pagina del corso con l’edizione già scelta', () => {
-    expect(enrollHref(SLUG, 'abc:2026-11-07')).toBe('/iscrizione/corso-interior-design-primo-livello?edizione=abc%3A2026-11-07')
+    expect(enrollHref(SLUG, 'abc:2026-11-07')).toBe('/iscrizione/interior-design-arredo?edizione=abc%3A2026-11-07')
+    // Cartella nuova del corso (corsi/interior-design-arredo/...)
+    expect(enrollHref('corsi/interior-design-arredo/corsi-interni-primo-livello/treviso-sabato', null)).toBe('/iscrizione/interior-design-arredo')
+    // Corso non in tabella: come prima
+    expect(enrollHref('corsi/fashion-design/corso-fashion-design-secondo-livello/x/treviso-serale', null)).toBe('/iscrizione/corso-fashion-design-secondo-livello')
     expect(enrollHref('pagine/chi-siamo', 'abc:2026-11-07')).toBeNull()
   })
 
@@ -76,7 +80,7 @@ describe('pulsante "Iscriviti online"', () => {
     expect(mainEnrollHref([piena], { 'a:2026-10-17': 12 })).toBeNull()
     // Una con posti: pulsante al corso, edizione da scegliere al passo 2.
     expect(mainEnrollHref([piena, libera], { 'a:2026-10-17': 12, 'b:2026-10-24': 3 })).toBe(
-      '/iscrizione/corso-interior-design-primo-livello'
+      '/iscrizione/interior-design-arredo'
     )
   })
 })
