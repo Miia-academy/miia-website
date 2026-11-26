@@ -1,15 +1,16 @@
-import { courseFromEditionSlug } from '@modules/enrollment/courses'
+import { courseFromEditionSlug, coursePath } from '@modules/enrollment/courses'
 import { seatsLabel } from '@components/enrollment/use-seats'
 
 /**
  * Link alla pagina di iscrizione online per un'edizione mostrata sul sito,
- * con l'edizione già scelta al passo 2: /iscrizione/<cartella del corso>?edizione=<chiave>.
+ * con l'edizione già scelta al passo 2: /iscrizione/<indirizzo del corso>?edizione=<chiave>.
  * null se dalla storia non si ricava il corso.
  */
 export function enrollHref(fullSlug: string | undefined | null, key: string | null): string | null {
   const corso = courseFromEditionSlug(fullSlug)
   if (!corso) return null
-  return key ? `/iscrizione/${corso}?edizione=${encodeURIComponent(key)}` : `/iscrizione/${corso}`
+  const path = coursePath(corso)
+  return key ? `/iscrizione/${path}?edizione=${encodeURIComponent(key)}` : `/iscrizione/${path}`
 }
 
 /**

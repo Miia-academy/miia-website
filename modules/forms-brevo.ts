@@ -13,6 +13,8 @@ import { isFormWritableAttribute } from '@modules/crm-form'
 import { CATEGORY_IDS, interestCourse, isCategoryAttribute } from '@modules/brevo-attributes'
 import { normalizeTracking } from '@modules/brevo-events'
 import { DEFAULT_PRICE_TEXT, filterFromPageSlug } from '@modules/aside'
+import { coursePath, findCourse } from '@modules/enrollment/courses'
+import { SEDI } from '@config/corsi'
 import { isEnrollAction } from '@components/enrollment/enroll-link'
 
 export interface BrevoAttribute {
@@ -397,7 +399,7 @@ export function migrateForm(blok: FormBlok, attributes: BrevoAttribute[]): strin
 
 /** The enrollment button that replaces the enrollment request form in the aside. */
 export function enrollAction(course: string) {
-  const url = `/iscrizione/${course}`
+  const url = `/iscrizione/${coursePath(course)}`
   return {
     _uid: randomUUID(),
     component: 'action',
@@ -437,14 +439,14 @@ export function migrateStory(
     if (obj.component === 'aside' && Array.isArray(obj.forms) && course) {
       let forms: unknown[] = obj.forms.map((f) => {
         if (!isEnrollFormBlok(f, aliases)) return f
-        changes.push(`sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/${course}`)
+        changes.push(`sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/${coursePath(course)}`)
         return enrollAction(course)
       })
       // Every course page gets the enrollment button (it hides itself when seats are over)
       // (the aside takes at most 3 buttons: a full one is left as it is)
       if (!forms.some((f) => isEnrollAction(f as Record<string, unknown>)) && forms.length < 3) {
         forms = [enrollAction(course), ...forms]
-        changes.push(`sidebar: aggiunto il pulsante /iscrizione/${course}`)
+        changes.push(`sidebar: aggiunto il pulsante /iscrizione/${coursePath(course)}`)
       }
       obj.forms = forms
       const filter = filterFromPageSlug(pageSlug)
@@ -470,8 +472,16 @@ export function migrateStory(
   return changes
 }
 
-/** Course folder of a course page: corsi/<area>/corso-x-primo-livello-padova → corso-x-primo-livello. */
+/**
+ * Course code of a course page: corsi/<area>/corso-x-primo-livello-padova → corso-x-primo-livello,
+ * corsi/interior-design-arredo/padova → corso-interior-design-primo-livello.
+ */
 export function courseFromPageSlug(fullSlug: string): string | null {
+  const parts = fullSlug.replace(/\/+$/, '').split('/')
+  if (parts[0] === 'corsi' && parts.length <= 3) {
+    const course = findCourse(parts[1])
+    if (course && course.indirizzo === parts[1] && (parts.length === 2 || (SEDI as readonly string[]).includes(parts[2]))) return course.codice
+  }
   const match = fullSlug.match(/^corsi\/[^/]+\/(corso-[a-z0-9-]+?)(-(?:padova|treviso|bassano))?\/?$/)
   return match ? match[1] : null
 }

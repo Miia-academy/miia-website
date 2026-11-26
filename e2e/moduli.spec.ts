@@ -35,7 +35,7 @@ test('Modulo di una pagina corso: provenienza della visita e casella cookie', as
   // Arrivo da una campagna: gli UTM devono arrivare fino al modulo, anche dopo un cambio pagina.
   await apri(page, '/?utm_source=prova&utm_medium=browser&utm_campaign=prove-automatiche')
   const corso =
-    (await trovaLink(page, /corso-interior-design-primo-livello/)) || (await trovaLink(page, /\/corsi\/.+/))
+    (await trovaLink(page, /interior-design-arredo|corso-interior-design-primo-livello/)) || (await trovaLink(page, /\/corsi\/.+/))
   test.skip(!corso, 'Nessun link a una pagina corso nella home')
   await apri(page, corso!)
 

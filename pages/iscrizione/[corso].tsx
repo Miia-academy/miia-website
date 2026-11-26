@@ -17,7 +17,7 @@ import { Consensi } from '@components/enrollment/consensi'
 import { Conferma, Firma } from '@components/enrollment/firma'
 import { EnrollmentStepper, Summary, type StepItem } from '@components/enrollment/stepper'
 import { isEnrollmentEnabled } from '@modules/enrollment/config'
-import { courseFromEditionSlug, courseTitle } from '@modules/enrollment/courses'
+import { courseCode, courseFromEditionSlug, coursePath, courseTitle } from '@modules/enrollment/courses'
 import type { EnrollmentState } from '@modules/enrollment/state'
 import type { CourseOffer, EditionOption } from '@modules/enrollment/offer'
 import { AREA_LABELS, ORE_LABELS, SETTORE_LABELS, SITUAZIONE_LABELS, SOURCE_LABELS, TITOLO_LABELS } from '@modules/enrollment/profile'
@@ -314,8 +314,13 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   // Finché l'interruttore è spento la pagina non esiste.
   if (!isEnrollmentEnabled()) return { notFound: true, revalidate: 60 }
 
-  const corso = normalizeCourseSlug(params?.corso)
-  if (!corso) return { notFound: true }
+  const param = normalizeCourseSlug(params?.corso)
+  if (!param) return { notFound: true }
+  // L'indirizzo è quello del corso (/iscrizione/interior-design-arredo); il codice resta il nome interno.
+  const corso = courseCode(param)!
+  if (coursePath(corso) !== param) {
+    return { redirect: { destination: `/iscrizione/${coursePath(corso)}`, permanent: true } }
+  }
 
   // Il corso esiste se in Storyblok ha almeno un'edizione pubblicata.
   try {

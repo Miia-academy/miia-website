@@ -9,6 +9,8 @@ describe('pagina risposte: pulsante per fase', () => {
     expect(parseFase('post-openday')).toBe('post-openday')
     expect(parseFase('dopo')).toBeNull()
     expect(parseCorso(interni)).toBe(interni)
+    // Dall'indirizzo nuovo si torna al codice del corso
+    expect(parseCorso('interior-design-arredo')).toBe(interni)
     expect(parseCorso('interni-primo')).toBeNull()
     expect(parseCorso('corso-x/../y')).toBeNull()
   })
@@ -20,7 +22,7 @@ describe('pagina risposte: pulsante per fase', () => {
   })
 
   it('dopo l’open day: iscriviti online al corso del link', () => {
-    expect(ctaFor('post-openday', interni)).toEqual({ label: 'Iscriviti online', href: `/iscrizione/${interni}` })
+    expect(ctaFor('post-openday', interni)).toEqual({ label: 'Iscriviti online', href: '/iscrizione/interior-design-arredo' })
     expect(ctaFor('post-openday', null)).toBeNull()
   })
 

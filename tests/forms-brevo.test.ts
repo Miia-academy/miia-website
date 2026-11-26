@@ -139,14 +139,14 @@ describe('modifiche Storyblok al passaggio a main', () => {
       component: 'action',
       label: 'Iscriviti online',
       button: true,
-      link: { url: '/iscrizione/corso-interior-design-primo-livello' },
+      link: { url: '/iscrizione/interior-design-arredo' },
     })
     expect(brochure.fields).toEqual([
       expect.objectContaining({ id: 'interesse_area', input: 'multiple', hidden: true, placeholder: 'interior' }),
       expect.objectContaining({ id: 'interesse_corso', input: 'text', hidden: true, placeholder: 'interior_primo' }),
     ])
     expect(changes).toEqual([
-      'sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/corso-interior-design-primo-livello',
+      'sidebar: modulo di richiesta iscrizione → pulsante /iscrizione/interior-design-arredo',
       'sidebar: filtro edizioni "interni,primo,padova"',
       'sidebar: titolo prezzo dal listino',
       'sidebar: tolti i campi vecchi courses',
@@ -178,7 +178,7 @@ describe('modifiche Storyblok al passaggio a main', () => {
       forms: [{ component: 'form', alias: 'uuid-brochure', fields: [] }],
     }
     const changes = migrateStory(content, ALIASES, ATTRIBUTES, 'corso-interior-design-secondo-livello', 'corsi/interior-design/corso-interior-design-secondo-livello/')
-    expect(changes).toContain('sidebar: aggiunto il pulsante /iscrizione/corso-interior-design-secondo-livello')
+    expect(changes).toContain('sidebar: aggiunto il pulsante /iscrizione/interior-design-cantiere')
     expect(changes).toContain('sidebar: filtro edizioni "interni,secondo"')
     expect((content.forms as any[]).map((f) => f.component)).toEqual(['action', 'form'])
   })

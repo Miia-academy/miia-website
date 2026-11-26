@@ -3,6 +3,7 @@
  * price list, and the editions picked by a filter instead of one by one.
  */
 import type { PriceList } from '@modules/enrollment/types'
+import { CORSI, SEDI } from '@config/corsi'
 
 /** Price list values that can be shown on public pages (the open day offer stays private). */
 export type PublicPrices = Pick<PriceList, 'unica' | 'rata5' | 'rata10' | 'esame'>
@@ -65,20 +66,25 @@ const AREA_ALIASES: Record<string, string[]> = {
 
 /**
  * Words an edition can be filtered by: area, level and the words of its own slug
- * (city, frequency), e.g. corsi/interior-design/corso-interior-design-primo-livello/x/bassano-sabato
+ * (city, frequency), e.g. corsi/interior-design-arredo/x/bassano-sabato
  * → interni, interior, primo, primo-livello, bassano, sabato.
  */
 export function editionTags(fullSlug: string | null | undefined): Set<string> {
   const tags = new Set<string>()
-  const match = typeof fullSlug === 'string' ? fullSlug.match(/^corsi\/([^/]+)\/(corso-[a-z0-9-]+)\/(?:.*\/)?([^/]+)\/?$/) : null
-  if (!match) return tags
-  const [, area, course, edition] = match
+  if (typeof fullSlug !== 'string') return tags
+  // Corso in tabella: corsi/<indirizzo>/(.../)<edizione>; gli altri: corsi/<area>/<codice>/(.../)<edizione>
+  const parts = fullSlug.replace(/\/+$/, '').split('/')
+  const inTable = parts[0] === 'corsi' && parts.length > 2 ? CORSI.find((c) => c.indirizzo === parts[1]) : undefined
+  const match = inTable ? null : fullSlug.match(/^corsi\/([^/]+)\/(corso-[a-z0-9-]+)\/(?:.*\/)?([^/]+)\/?$/)
+  if (!inTable && !match) return tags
+  const area = inTable ? inTable.area : match![1]
+  const level = inTable ? inTable.livello : match![2].match(/(primo|secondo|terzo)-livello/)?.[1]
+  const edition = inTable ? parts[parts.length - 1] : match![3]
   tags.add(area)
   AREA_ALIASES[area]?.forEach((a) => tags.add(a))
-  const level = course.match(/(primo|secondo|terzo)-livello/)
   if (level) {
-    tags.add(level[1])
-    tags.add(level[0])
+    tags.add(level)
+    tags.add(`${level}-livello`)
   }
   edition.split('-').forEach((w) => w && tags.add(w))
   return tags
@@ -116,9 +122,17 @@ export const DEFAULT_PRICE_TEXT = 'A partire da **{rata10}€** per 10 mesi _*iv
 
 /**
  * Filter that picks the same editions a course page shows today:
- * corsi/interior-design/corso-interior-design-primo-livello-padova → "interni,primo,padova".
+ * corsi/interior-design/corso-interior-design-primo-livello-padova → "interni,primo,padova" (vecchi indirizzi).
  */
 export function filterFromPageSlug(fullSlug: string): string | null {
+  // Corso in tabella: corsi/interior-design-arredo/padova → "interni,primo,padova"
+  const parts = fullSlug.replace(/\/+$/, '').split('/')
+  const course = parts[0] === 'corsi' ? CORSI.find((c) => c.indirizzo === parts[1]) : undefined
+  if (course && parts.length <= 3) {
+    const city = parts[2]
+    if (city && !(SEDI as readonly string[]).includes(city)) return null
+    return [AREA_ALIASES[course.area][0], course.livello, city].filter(Boolean).join(',')
+  }
   const match = fullSlug.match(/^corsi\/([^/]+)\/corso-[a-z0-9-]*?(primo|secondo|terzo)-livello(?:-([a-z]+))?\/?$/)
   if (!match) return null
   const [, area, level, city] = match
