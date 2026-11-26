@@ -8,6 +8,7 @@ import { Button } from '@components/ui/button'
 import Link from 'next/link'
 import { sendGTMEvent } from '@next/third-parties/google'
 import { EVENTS } from '@modules/brevo-events'
+import { courseByAreaLevel } from '@modules/enrollment/courses'
 
 export default function Feedback() {
   const router = useRouter()
@@ -61,7 +62,11 @@ export default function Feedback() {
       ? params.corso[0]
       : params.corso
     const paths = corsoParam.split('-')
-    collegamentoCorso = `corsi/${paths[0]}/corso-${paths[0]}-${paths[1]}-livello`
+    // "interior-primo" → pagina del corso (/corsi/interior-design-arredo); corsi non in tabella come prima
+    const course = courseByAreaLevel(paths[0], paths[1])
+    collegamentoCorso = course
+      ? `/corsi/${course.indirizzo}`
+      : `corsi/${paths[0]}/corso-${paths[0]}-${paths[1]}-livello`
   }
 
   const { title, description, wrapper } = classes()

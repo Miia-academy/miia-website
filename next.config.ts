@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { redirectCorsi } from './config/corsi'
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -23,6 +24,8 @@ const nextConfig: NextConfig = {
   // Redirects
   async redirects() {
     return [
+      // Pagine corso spostate sotto corsi/ con il nome nuovo (config/corsi.ts)
+      ...redirectCorsi(),
       // Basic redirect
       // {
       //   source: '/',

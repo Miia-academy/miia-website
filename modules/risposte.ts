@@ -7,6 +7,8 @@
  * La fase cambia solo il pulsante finale, non la risposta.
  */
 
+import { courseCode, coursePath } from '@modules/enrollment/courses'
+
 export const FASI = ['brochure', 'pre-openday', 'post-openday'] as const
 export type Fase = (typeof FASI)[number]
 
@@ -19,11 +21,11 @@ export const TELEFONATA_URL = 'https://meet.brevo.com/miia/telefonata'
 export const WHATSAPP_URL = 'https://wa.me/393484463000'
 export const WHATSAPP_NUMERO = '348 446 3000'
 
-// Corso come nel resto del sito (cartella Storyblok): "corso-interior-design-primo-livello"
+// Codice del corso ("corso-interior-design-primo-livello"), anche dall'indirizzo ("interior-design-arredo")
 const CORSO = /^corso-[a-z0-9]+(-[a-z0-9]+)*$/
 
 export function parseCorso(value: unknown): string | null {
-  const corso = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  const corso = courseCode(typeof value === 'string' ? value.trim().toLowerCase() : '') || ''
   return corso.length <= 80 && CORSO.test(corso) ? corso : null
 }
 
@@ -42,7 +44,7 @@ export function ctaFor(fase: Fase | null, corso: string | null): Cta | null {
     return page ? { label: 'Vieni al prossimo open day', href: page } : null
   }
   if (fase === 'post-openday' && corso) {
-    return { label: 'Iscriviti online', href: `/iscrizione/${corso}` }
+    return { label: 'Iscriviti online', href: `/iscrizione/${coursePath(corso)}` }
   }
   return null
 }
